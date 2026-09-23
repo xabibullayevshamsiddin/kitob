@@ -22,7 +22,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-manrope">{{ $user->name }}</h1>
-                        <p class="text-sm text-slate-400 font-medium">@{{ $user->username }}</p>
+                        <p class="text-sm text-slate-400 font-medium">{{ '@' . $user->username }}</p>
                     </div>
 
                     <!-- Action Button -->

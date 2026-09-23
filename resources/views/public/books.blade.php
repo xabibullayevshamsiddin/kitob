@@ -161,23 +161,23 @@
     <div :class="scrolled ? 'glass shadow-soft' : 'bg-transparent'" class="transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 lg:h-20">
-                <a href="/" class="flex items-center gap-2 group">
+                <a href="{{ url('/') }}" class="flex items-center gap-2 group">
                     <div class="w-9 h-9 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform duration-300">📚</div>
                     <span class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Kitob<span class="text-indigo-600">xon</span></span>
                 </a>
                 <nav class="hidden lg:flex items-center gap-8">
-                    <a href="/" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">Bosh sahifa</a>
-                    <a href="/books" class="nav-link text-indigo-600 dark:text-indigo-400 font-semibold transition-colors duration-200">Kitoblar</a>
-                    <a href="/about" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">Haqimizda</a>
-                    <a href="/contact" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">Aloqa</a>
-                    <a href="/faq" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">FAQ</a>
+                    <a href="{{ url('/') }}" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">Bosh sahifa</a>
+                    <a href="{{ url('books') }}" class="nav-link text-indigo-600 dark:text-indigo-400 font-semibold transition-colors duration-200">Kitoblar</a>
+                    <a href="{{ url('about') }}" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">Haqimizda</a>
+                    <a href="{{ url('contact') }}" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">Aloqa</a>
+                    <a href="{{ url('faq') }}" class="nav-link text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors duration-200">FAQ</a>
                 </nav>
                 <div class="hidden lg:flex items-center gap-3">
                     <button @click="darkMode = !darkMode" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200">
                         <span x-show="!darkMode">🌙</span><span x-show="darkMode">☀️</span>
                     </button>
-                    <a href="/login" class="px-4 py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-all duration-200">Kirish</a>
-                    <a href="/register" class="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl hover:from-indigo-700 hover:to-violet-700 shadow-glow hover:shadow-none transition-all duration-300 hover:scale-105">Ro'yxatdan o'tish</a>
+                    <a href="{{ url('login') }}" class="px-4 py-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-all duration-200">Kirish</a>
+                    <a href="{{ url('register') }}" class="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl hover:from-indigo-700 hover:to-violet-700 shadow-glow hover:shadow-none transition-all duration-300 hover:scale-105">Ro'yxatdan o'tish</a>
                 </div>
                 <button @click="mobileMenu = !mobileMenu" class="lg:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                     <span :class="mobileMenu ? 'rotate-45 translate-y-2' : ''" class="w-5 h-0.5 bg-slate-700 dark:bg-slate-300 transition-transform duration-300"></span>
@@ -195,14 +195,14 @@
              x-transition:leave-end="opacity-0 -translate-y-4"
              class="lg:hidden glass border-t border-white/20 dark:border-slate-700/50">
             <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-2">
-                <a href="/" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">Bosh sahifa</a>
-                <a href="/books" class="px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-950 font-semibold text-indigo-600 dark:text-indigo-400 transition-colors">Kitoblar</a>
-                <a href="/about" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">Haqimizda</a>
-                <a href="/contact" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">Aloqa</a>
-                <a href="/faq" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">FAQ</a>
+                <a href="{{ url('/') }}" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">Bosh sahifa</a>
+                <a href="{{ url('books') }}" class="px-4 py-3 rounded-xl bg-indigo-50 dark:bg-indigo-950 font-semibold text-indigo-600 dark:text-indigo-400 transition-colors">Kitoblar</a>
+                <a href="{{ url('about') }}" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">Haqimizda</a>
+                <a href="{{ url('contact') }}" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">Aloqa</a>
+                <a href="{{ url('faq') }}" class="px-4 py-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 font-medium text-slate-700 dark:text-slate-300 transition-colors">FAQ</a>
                 <div class="flex gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <a href="/login" class="flex-1 py-2.5 text-center font-semibold text-indigo-600 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-colors">Kirish</a>
-                    <a href="/register" class="flex-1 py-2.5 text-center font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl transition-all">Ro'yxatdan o'tish</a>
+                    <a href="{{ url('login') }}" class="flex-1 py-2.5 text-center font-semibold text-indigo-600 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-colors">Kirish</a>
+                    <a href="{{ url('register') }}" class="flex-1 py-2.5 text-center font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl transition-all">Ro'yxatdan o'tish</a>
                 </div>
             </div>
         </div>
@@ -238,7 +238,7 @@
                         <p class="font-bold text-slate-800 dark:text-white text-sm">To'liq kirish uchun</p>
                         <p class="text-slate-500 dark:text-slate-400 text-xs">Bepul ro'yxatdan o'ting</p>
                     </div>
-                    <a href="/register" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-glow hover:shadow-none transition-all duration-300 hover:scale-105 whitespace-nowrap">
+                    <a href="{{ url('register') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-glow hover:shadow-none transition-all duration-300 hover:scale-105 whitespace-nowrap">
                         Boshlash →
                     </a>
                 </div>
@@ -257,7 +257,7 @@
                 <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
-                <form method="GET" action="/books">
+                <form method="GET" action="{{ url('books') }}">
                     <input type="text"
                            name="search"
                            value="{{ request('search') }}"
@@ -267,7 +267,7 @@
             </div>
 
             <!-- Genre Filter -->
-            <form method="GET" action="/books" class="flex flex-wrap gap-2 items-center">
+            <form method="GET" action="{{ url('books') }}" class="flex flex-wrap gap-2 items-center">
                 @if(request('search'))
                     <input type="hidden" name="search" value="{{ request('search') }}">
                 @endif
@@ -302,7 +302,7 @@
             <!-- Sort + View Toggle -->
             <div class="flex items-center gap-2 ml-auto">
                 <!-- Sort -->
-                <form method="GET" action="/books">
+                <form method="GET" action="{{ url('books') }}">
                     @if(request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif
                     @if(request('genre'))<input type="hidden" name="genre" value="{{ request('genre') }}">@endif
                     <select name="sort" onchange="this.form.submit()"
@@ -346,7 +346,7 @@
                 <a href="{{ request()->fullUrlWithQuery(['genre' => null]) }}" class="hover:text-red-500 transition-colors">✕</a>
             </span>
             @endif
-            <a href="/books" class="text-xs text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors ml-2">Tozalash</a>
+            <a href="{{ url('books') }}" class="text-xs text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors ml-2">Tozalash</a>
         </div>
         @endif
     </div>
@@ -413,7 +413,7 @@
                     Bu filtr bo'yicha hozircha kitob mavjud emas.
                 @endif
             </p>
-            <a href="/books" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all duration-300 hover:scale-105">
+            <a href="{{ url('books') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all duration-300 hover:scale-105">
                 🔄 Barcha kitoblarni ko'rish
             </a>
         </div>
@@ -464,7 +464,7 @@
 
                     <!-- Hover Overlay -->
                     <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                        <a href="/register"
+                        <a href="{{ url('register') }}"
                            class="px-5 py-2.5 bg-white text-slate-900 font-bold text-sm rounded-xl hover:bg-indigo-50 transition-all duration-200 transform translate-y-4 group-hover:translate-y-0 shadow-lg">
                             📖 O'qishni boshlash
                         </a>
@@ -518,7 +518,7 @@
                     </div>
 
                     <!-- CTA Button -->
-                    <a href="/register"
+                    <a href="{{ url('register') }}"
                        class="group/btn flex items-center justify-center gap-2 w-full py-3 px-4 text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white border border-indigo-100 dark:border-indigo-900 hover:border-indigo-600 dark:hover:border-indigo-600 rounded-xl transition-all duration-300">
                         <span>Batafsil</span>
                         <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
@@ -573,7 +573,7 @@
 
                 <!-- CTA -->
                 <div class="flex-shrink-0">
-                    <a href="/register"
+                    <a href="{{ url('register') }}"
                        class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white border border-indigo-100 dark:border-indigo-900 hover:border-indigo-600 rounded-xl transition-all duration-300 whitespace-nowrap">
                         Batafsil
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
@@ -664,12 +664,12 @@
             Bepul hisob yarating va 50+ kitobga darhol kirish qiling. Karta talab etilmaydi.
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="/register"
+            <a href="{{ url('register') }}"
                class="group w-full sm:w-auto px-8 py-4 font-black text-indigo-700 bg-white rounded-2xl hover:bg-indigo-50 shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2 text-lg">
                 🎉 Bepul Ro'yxatdan O'tish
                 <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
             </a>
-            <a href="/login"
+            <a href="{{ url('login') }}"
                class="w-full sm:w-auto px-8 py-4 font-bold text-white bg-white/10 backdrop-blur rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2 text-lg">
                 🔐 Kirish
             </a>
@@ -682,7 +682,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
             <div>
-                <a href="/" class="flex items-center gap-2 mb-4">
+                <a href="{{ url('/') }}" class="flex items-center gap-2 mb-4">
                     <div class="w-9 h-9 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center">📚</div>
                     <span class="text-xl font-black text-white">Kitob<span class="text-indigo-400">xon</span></span>
                 </a>
@@ -691,7 +691,7 @@
             <div>
                 <h4 class="font-bold text-white mb-4">Platforma</h4>
                 <ul class="space-y-2.5">
-                    @foreach([['Kitoblar','/books'],['Haqimizda','/about'],['FAQ','/faq'],['Aloqa','/contact']] as $link)
+                    @foreach([['Kitoblar', url('books')],['Haqimizda', url('about')],['FAQ', url('faq')],['Aloqa', url('contact')]] as $link)
                     <li><a href="{{ $link[1] }}" class="text-slate-500 hover:text-indigo-400 transition-colors text-sm">{{ $link[0] }}</a></li>
                     @endforeach
                 </ul>
@@ -699,7 +699,7 @@
             <div>
                 <h4 class="font-bold text-white mb-4">Huquqiy</h4>
                 <ul class="space-y-2.5">
-                    @foreach([['Maxfiylik','/privacy'],['Shartlar','/terms'],['Cookie','/cookies']] as $link)
+                    @foreach([['Maxfiylik', url('privacy')],['Shartlar', url('terms')]] as $link)
                     <li><a href="{{ $link[1] }}" class="text-slate-500 hover:text-indigo-400 transition-colors text-sm">{{ $link[0] }}</a></li>
                     @endforeach
                 </ul>
@@ -716,9 +716,9 @@
         <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p class="text-slate-600 text-sm">© {{ date('Y') }} Kitobxon. Barcha huquqlar himoyalangan.</p>
             <div class="flex gap-5">
-                <a href="/privacy" class="text-slate-600 hover:text-indigo-400 text-sm transition-colors">Maxfiylik</a>
-                <a href="/terms" class="text-slate-600 hover:text-indigo-400 text-sm transition-colors">Shartlar</a>
-                <a href="/contact" class="text-slate-600 hover:text-indigo-400 text-sm transition-colors">Aloqa</a>
+                <a href="{{ url('privacy') }}" class="text-slate-600 hover:text-indigo-400 text-sm transition-colors">Maxfiylik</a>
+                <a href="{{ url('terms') }}" class="text-slate-600 hover:text-indigo-400 text-sm transition-colors">Shartlar</a>
+                <a href="{{ url('contact') }}" class="text-slate-600 hover:text-indigo-400 text-sm transition-colors">Aloqa</a>
             </div>
             <div class="flex items-center gap-2 text-slate-600 text-sm">
                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>

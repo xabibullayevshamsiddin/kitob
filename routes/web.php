@@ -82,17 +82,11 @@ Route::middleware(['auth'])->group(function () {
 */
 Route::middleware(['auth', 'onboarding.complete'])->group(function () {
 
-    // Dashboard — barcha login bo'lgan foydalanuvchilar (role-ga qarab redirect qiladi)
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        if ($user && $user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
-        }
-        if ($user && $user->hasRole('teacher')) {
-            return redirect()->route('teacher.dashboard');
-        }
-        return app(\App\Http\Livewire\Dashboard::class)();
-    })->name('dashboard');
+    // Dashboard — studentlar uchun Livewire to'liq sahifa komponenti.
+    // Admin/teacher 'staff.redirect' middleware orqali o'z panellariga yo'naltiriladi.
+    Route::get('/dashboard', Dashboard::class)
+        ->middleware('staff.redirect')
+        ->name('dashboard');
 
     // Books & Reading
     Route::get('/catalog', CatalogPage::class)->name('books.catalog');

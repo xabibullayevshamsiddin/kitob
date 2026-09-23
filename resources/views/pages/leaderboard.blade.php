@@ -77,7 +77,7 @@
                             <img src="{{ $u->avatar_url }}" class="w-10 h-10 rounded-xl object-cover shrink-0">
                             <div class="min-w-0">
                                 <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate block">{{ $u->name }}</span>
-                                <span class="text-[11px] text-slate-400 truncate block">@{{ $u->username }}</span>
+                                <span class="text-[11px] text-slate-400 truncate block">{{ '@' . $u->username }}</span>
                             </div>
                         </a>
                     </div>

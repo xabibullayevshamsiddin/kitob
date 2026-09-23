@@ -97,7 +97,7 @@
                 <div class="flex flex-col items-center text-center">
                     <img src="{{ auth()->user()->avatar_url }}" class="w-16 h-16 rounded-full ring-4 ring-indigo-100 dark:ring-indigo-900 object-cover mb-3">
                     <h4 class="font-bold text-slate-900 dark:text-white">{{ auth()->user()->name }}</h4>
-                    <p class="text-xs text-slate-400 mb-3">@{{ auth()->user()->username }}</p>
+                    <p class="text-xs text-slate-400 mb-3">{{ '@' . auth()->user()->username }}</p>
                     <div class="flex items-center gap-4 text-center">
                         <div>
                             <p class="text-lg font-black text-indigo-600">{{ number_format(auth()->user()->total_points) }}</p>

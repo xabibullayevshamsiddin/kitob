@@ -65,7 +65,7 @@
                         class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50">
                         <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
                             <p class="text-xs font-bold text-slate-800 dark:text-white truncate">{{ auth()->user()->name }}</p>
-                            <p class="text-[11px] text-slate-400 truncate">@{{ auth()->user()->username }}</p>
+                            <p class="text-[11px] text-slate-400 truncate">{{ '@' . auth()->user()->username }}</p>
                         </div>
                         <a href="{{ route('profile.show', auth()->user()->username) }}" class="block px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">Profilim</a>
                         <a href="{{ route('settings') }}" class="block px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">Sozlamalar</a>

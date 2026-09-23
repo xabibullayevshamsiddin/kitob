@@ -30,7 +30,7 @@
                                     <img src="{{ $student->avatar_url }}" class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700">
                                     <div>
                                         <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ $student->name }}</p>
-                                        <p class="text-xs text-slate-400">@{{ $student->username }}</p>
+                                        <p class="text-xs text-slate-400">{{ '@' . $student->username }}</p>
                                     </div>
                                 </div>
                             </td>

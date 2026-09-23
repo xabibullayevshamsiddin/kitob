@@ -43,6 +43,7 @@ class Kernel extends HttpKernel
         'throttle'           => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified'           => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'onboarding.complete'=> \App\Http\Middleware\EnsureOnboardingIsComplete::class,
+        'staff.redirect'     => \App\Http\Middleware\RedirectStaffFromDashboard::class,
         'role.admin'         => \App\Http\Middleware\IsAdmin::class,
         'role.teacher'       => \App\Http\Middleware\IsTeacher::class,
         'role'               => \Spatie\Permission\Middlewares\RoleMiddleware::class,

@@ -70,7 +70,7 @@
                     <img src="{{ auth()->user()->avatar_url }}" class="w-9 h-9 rounded-full ring-2 ring-indigo-500/30 object-cover">
                     <div class="flex-1 min-w-0">
                         <span class="text-xs font-bold text-slate-800 dark:text-white truncate block group-hover:text-indigo-500 transition-colors">{{ auth()->user()->name }}</span>
-                        <span class="text-[11px] text-slate-400 truncate block">@{{ auth()->user()->username }}</span>
+                        <span class="text-[11px] text-slate-400 truncate block">{{ '@' . auth()->user()->username }}</span>
                     </div>
                 </a>
             </div>
