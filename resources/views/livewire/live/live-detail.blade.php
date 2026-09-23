@@ -4,7 +4,10 @@
         eventId: {{ $event->id }},
         startedAt: {{ $event->started_at ? $event->started_at->timestamp : ($event->created_at ? $event->created_at->timestamp : now()->timestamp) }},
         serverNow: {{ now()->timestamp }},
-        permissionMode: @js($event->permission_mode)
+        permissionMode: @js($event->permission_mode),
+        signalSendUrl: @js(route('live.signal.send', $event)),
+        signalPollUrl: @js(route('live.signal.poll', $event)),
+        csrfToken: @js(csrf_token()),
     })" 
     x-init="initStudio()">
 
@@ -111,21 +114,22 @@
                     <div>
                         <h3 class="text-base sm:text-lg font-bold text-white">{{ $event->hostUser?->name ?? 'Ustoz' }}</h3>
                         <p class="text-xs text-slate-400 font-mono">
-                            <span x-text="isMicOn ? '🎙️ Ovoz uzatilmoqda (Kamera o\'chiq)' : '🔇 Mikrofon va kamera o\'chiq'"></span>
+                            <span x-text="hasRemoteStream ? (isMicOn ? '🎙️ Ovoz uzatilmoqda (Kamera o\'chiq)' : '🔇 Mikrofon va kamera o\'chiq') : (isHost ? (isMicOn ? '🎙️ Ovoz uzatilmoqda (Kamera o\'chiq)' : '🔇 Mikrofon va kamera o\'chiq') : '📡 Ustoz efiri kutilmoqda (Video/Audio tayyorlanmoqda)')"></span>
                         </p>
                     </div>
                 </div>
 
-                <!-- Viewer Connecting / Waiting for Host Overlay -->
-                <div x-show="!isHost && !hasRemoteStream" class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-sm p-6 text-center space-y-3">
-                    <div class="relative flex items-center justify-center">
-                        <div class="w-12 h-12 rounded-full border-4 border-rose-500/20 border-t-rose-500 animate-spin"></div>
-                        <span class="absolute text-lg">📡</span>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-white">Ustoz jonli efiriga ulanmoqda...</h4>
-                        <p class="text-xs text-slate-400 mt-1">Jonli video va audio oqim sozlanmoqda</p>
-                    </div>
+                <!-- Viewer Connecting / Status Pill (Non-blocking) -->
+                <div x-show="!isHost && !hasRemoteStream" class="absolute top-4 left-32 z-20 flex items-center gap-2 bg-indigo-950/90 border border-indigo-500/40 text-indigo-200 text-xs px-3.5 py-1 rounded-full backdrop-blur-md animate-pulse shadow-lg">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+                    <span>📡 Efirga ulanmoqda...</span>
+                </div>
+
+                <!-- Reconnect Button if stream takes more than 2 attempts -->
+                <div x-show="!isHost && !hasRemoteStream && connectionAttempts >= 2" class="absolute bottom-12 left-1/2 -translate-x-1/2 z-20">
+                    <button @click="reconnect()" class="px-4 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/20 text-white font-bold text-xs flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95">
+                        <span>🔄 Qayta ulanish</span>
+                    </button>
                 </div>
 
                 <!-- Viewer Unmute prompt banner (when browser policy requires user gesture for sound) -->
@@ -481,7 +485,14 @@ function liveStudioController(config) {
         pollInterval: null,
         heartbeatInterval: null,
 
-        // WebRTC Signaling
+        // WebRTC Signaling & Dynamic URLs
+        signalSendUrl: config.signalSendUrl,
+        signalPollUrl: config.signalPollUrl,
+        csrfToken: config.csrfToken,
+        connectionAttempts: 0,
+        isHostOnline: isHost ? true : false,
+        pendingViewerIds: new Set(),
+
         myPeerId: isHost ? 'host' : ('viewer_' + Math.random().toString(36).substring(2, 9)),
         lastSignalId: 0,
         processedSignalKeys: new Set(),
@@ -528,12 +539,13 @@ function liveStudioController(config) {
                 // Viewer startup: send join announcement to host
                 this.sendSignal('join', 'host', { ts: Date.now() });
 
-                // If remote stream hasn't arrived yet, ping host every 3 seconds
+                // If remote stream hasn't arrived yet, ping host every 2.5 seconds
                 this.heartbeatInterval = setInterval(() => {
                     if (!this.hasRemoteStream) {
+                        this.connectionAttempts++;
                         this.sendSignal('join', 'host', { ts: Date.now() });
                     }
-                }, 3000);
+                }, 2500);
             }
 
             // Scroll chat to bottom
@@ -543,6 +555,17 @@ function liveStudioController(config) {
                     window.Livewire.hook('message.processed', () => this.scrollChat());
                 }
             });
+        },
+
+        reconnect() {
+            this.connectionAttempts++;
+            this.hasRemoteStream = false;
+            this.isConnecting = true;
+            if (this.peerConnection) {
+                try { this.peerConnection.close(); } catch (e) {}
+                this.peerConnection = null;
+            }
+            this.sendSignal('join', 'host', { ts: Date.now() });
         },
 
         scrollChat() {
@@ -582,12 +605,16 @@ function liveStudioController(config) {
 
             // B. HTTP Polling: Cross-browser & Cross-device
             this.pollSignals();
-            this.pollInterval = setInterval(() => this.pollSignals(), 800);
+            this.pollInterval = setInterval(() => this.pollSignals(), 700);
         },
 
         async pollSignals() {
+            if (!this.signalPollUrl) return;
             try {
-                const res = await fetch(`/live/${this.eventId}/signals?peer_id=${encodeURIComponent(this.myPeerId)}&since_id=${this.lastSignalId}`);
+                const url = `${this.signalPollUrl}?peer_id=${encodeURIComponent(this.myPeerId)}&since_id=${this.lastSignalId}`;
+                const res = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
                 if (!res.ok) return;
                 const data = await res.json();
                 if (data.signals && data.signals.length > 0) {
@@ -620,21 +647,24 @@ function liveStudioController(config) {
             }
 
             // 2. HTTP POST dispatch
-            try {
-                await fetch(`/live/${this.eventId}/signal`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sender_id: msg.sender_id,
-                        receiver_id: msg.receiver_id,
-                        type: msg.type,
-                        payload: msg.payload
-                    })
-                });
-            } catch (e) {}
+            if (this.signalSendUrl) {
+                try {
+                    await fetch(this.signalSendUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': this.csrfToken || ''
+                        },
+                        body: JSON.stringify({
+                            sender_id: msg.sender_id,
+                            receiver_id: msg.receiver_id,
+                            type: msg.type,
+                            payload: msg.payload
+                        })
+                    });
+                } catch (e) {}
+            }
         },
 
         async handleSignalMessage(msg) {
@@ -682,6 +712,12 @@ function liveStudioController(config) {
         },
 
         async createPeerForViewer(viewerId) {
+            const activeStream = this.isScreenSharing ? this.screenStream : this.localStream;
+            if (!activeStream) {
+                this.pendingViewerIds.add(viewerId);
+                return;
+            }
+
             if (this.peers[viewerId]) {
                 try { this.peers[viewerId].close(); } catch (e) {}
             }
@@ -690,11 +726,16 @@ function liveStudioController(config) {
             this.peers[viewerId] = pc;
 
             // Add audio & video tracks from host active stream
-            const activeStream = this.isScreenSharing ? this.screenStream : this.localStream;
-            if (activeStream) {
-                activeStream.getTracks().forEach(track => {
-                    pc.addTrack(track, activeStream);
-                });
+            activeStream.getTracks().forEach(track => {
+                try { pc.addTrack(track, activeStream); } catch(e) {}
+            });
+
+            // Ensure video and audio transceivers exist
+            if (!pc.getSenders().some(s => s.track && s.track.kind === 'video')) {
+                try { pc.addTransceiver('video', { direction: 'sendonly' }); } catch(e) {}
+            }
+            if (!pc.getSenders().some(s => s.track && s.track.kind === 'audio')) {
+                try { pc.addTransceiver('audio', { direction: 'sendonly' }); } catch(e) {}
             }
 
             pc.onicecandidate = (event) => {
@@ -744,6 +785,9 @@ function liveStudioController(config) {
                 if (typeof msg.payload.isMicOn === 'boolean') {
                     this.isMicOn = msg.payload.isMicOn;
                 }
+                if (msg.payload.isHostOnline) {
+                    this.isHostOnline = true;
+                }
             }
         },
 
@@ -755,6 +799,9 @@ function liveStudioController(config) {
             const pc = new RTCPeerConnection(this.rtcConfig);
             this.peerConnection = pc;
 
+            try { pc.addTransceiver('video', { direction: 'recvonly' }); } catch(e) {}
+            try { pc.addTransceiver('audio', { direction: 'recvonly' }); } catch(e) {}
+
             pc.ontrack = (event) => {
                 const videoEl = document.getElementById('liveVideoPlayer');
                 if (videoEl && event.streams && event.streams[0]) {
@@ -765,7 +812,6 @@ function liveStudioController(config) {
                     videoEl.play().then(() => {
                         this.needsUnmute = false;
                     }).catch(err => {
-                        console.warn('Autoplay with audio blocked by browser policy, muting video:', err);
                         videoEl.muted = true;
                         videoEl.play().catch(()=>{});
                         this.needsUnmute = true;
@@ -854,6 +900,12 @@ function liveStudioController(config) {
 
                 this.setupAudioAnalyser(stream);
                 await this.scanMediaDevices();
+
+                // Process any viewers that joined before localStream was ready
+                if (this.pendingViewerIds.size > 0) {
+                    this.pendingViewerIds.forEach(vid => this.createPeerForViewer(vid));
+                    this.pendingViewerIds.clear();
+                }
 
                 // Update tracks for any active viewers
                 this.replaceTracksOnAllPeers(stream);
