@@ -20,17 +20,21 @@ class LiveEvent extends Model
 
     protected $fillable = [
         'book_id',
+        'host_user_id',
         'title',
         'description',
         'cover',
         'scheduled_at',
         'stream_url',
         'status',
+        'permission_mode',
+        'is_recording',
         'replay_url',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'is_recording' => 'boolean',
     ];
 
     // -------------------------------------------------------------------------
@@ -40,6 +44,11 @@ class LiveEvent extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function hostUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'host_user_id');
     }
 
     public function questions(): HasMany

@@ -1,6 +1,18 @@
 <div class="max-w-4xl mx-auto h-[calc(100vh-8rem)] flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-soft overflow-hidden"
-     x-data="{ sendMessage() { this.$wire.sendMessage(); } }"
-     x-on:chat-scroll-bottom.window="setTimeout(() => { const c = document.getElementById('chat-container'); if (c) c.scrollTop = c.scrollHeight; }, 100)">
+     wire:poll.visible.2s
+     x-data
+     x-init="(() => {
+         const c = document.getElementById('chat-container');
+         if (!c) return;
+         let stick = true;
+         c.addEventListener('scroll', () => { stick = c.scrollHeight - c.scrollTop - c.clientHeight < 120; });
+         if (window.Livewire) {
+             Livewire.hook('message.processed', () => {
+                 if (stick && document.body.contains(c)) c.scrollTop = c.scrollHeight;
+             });
+         }
+         c.scrollTop = c.scrollHeight;
+     })()">
 
     <!-- Chat Header -->
     <div class="p-4 sm:px-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md">
