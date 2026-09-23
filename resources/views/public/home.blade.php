@@ -159,9 +159,12 @@
                 </div>
             </a>
 
-            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-                <a href="#features" class="hover:text-amber-400 transition-colors">Imkoniyatlar</a>
-                <a href="{{ route('books.public') }}" class="hover:text-amber-400 transition-colors">Kitoblar</a>
+            <nav class="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-medium text-slate-300">
+                <a href="{{ route('books.catalog') }}" class="hover:text-amber-400 transition-colors">Kitoblar</a>
+                <a href="{{ route('leaderboard') }}" class="hover:text-amber-400 transition-colors">Reyting</a>
+                <a href="{{ route('chat') }}" class="hover:text-amber-400 transition-colors">Umumiy Chat</a>
+                <a href="{{ route('groups.index') }}" class="hover:text-amber-400 transition-colors">Guruhlar</a>
+                <a href="{{ route('live.index') }}" class="hover:text-amber-400 transition-colors">Jonli Efirlar</a>
                 <a href="{{ route('about') }}" class="hover:text-amber-400 transition-colors">Biz haqimizda</a>
                 <a href="{{ route('faq') }}" class="hover:text-amber-400 transition-colors">FAQ</a>
                 <a href="{{ route('contact') }}" class="hover:text-amber-400 transition-colors">Aloqa</a>
@@ -170,18 +173,36 @@
             <div class="hidden sm:flex items-center gap-3">
                 @auth
                     @if(auth()->user()->hasRole('admin'))
-                        <a href="{{ route('admin.dashboard') }}" class="px-5 py-2.5 rounded-xl bg-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider hover:bg-amber-400 active:scale-95 transition-all shadow-md shadow-amber-500/20">
+                        <a href="{{ route('admin.dashboard') }}" class="px-4 py-2 rounded-xl bg-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider hover:bg-amber-400 active:scale-95 transition-all shadow-md shadow-amber-500/20">
                             Boshqaruv paneli →
                         </a>
                     @elseif(auth()->user()->hasRole('teacher'))
-                        <a href="{{ route('teacher.dashboard') }}" class="px-5 py-2.5 rounded-xl bg-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider hover:bg-amber-400 active:scale-95 transition-all shadow-md shadow-amber-500/20">
+                        <a href="{{ route('teacher.dashboard') }}" class="px-4 py-2 rounded-xl bg-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider hover:bg-amber-400 active:scale-95 transition-all shadow-md shadow-amber-500/20">
                             O'qituvchi paneli →
                         </a>
-                    @else
-                        <a href="{{ route('dashboard') }}" class="px-5 py-2.5 rounded-xl bg-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider hover:bg-amber-400 active:scale-95 transition-all shadow-md shadow-amber-500/20">
-                            Dashboard →
-                        </a>
                     @endif
+
+                    <!-- User Account Dropdown (no Dashboard button for ordinary students) -->
+                    <div x-data="{ userMenuOpen: false }" class="relative">
+                        <button @click="userMenuOpen = !userMenuOpen" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors focus:outline-none">
+                            <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover ring-1 ring-amber-400/40">
+                            <span class="text-xs font-semibold text-slate-200 hidden md:inline">{{ auth()->user()->name }}</span>
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="userMenuOpen" @click.away="userMenuOpen = false" x-cloak
+                             class="absolute right-0 mt-2 w-48 bg-ink-900 border border-white/10 rounded-2xl shadow-2xl py-2 z-50">
+                            <div class="px-4 py-2 border-b border-white/10">
+                                <p class="text-xs font-bold text-white truncate">{{ auth()->user()->name }}</p>
+                                <p class="text-[11px] text-slate-400 truncate">{{ '@' . auth()->user()->username }}</p>
+                            </div>
+                            <a href="{{ route('profile.show', auth()->user()->username) }}" class="block px-4 py-2 text-xs text-slate-300 hover:text-amber-400 hover:bg-white/5">Profilim</a>
+                            <a href="{{ route('settings') }}" class="block px-4 py-2 text-xs text-slate-300 hover:text-amber-400 hover:bg-white/5">Sozlamalar</a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-xs text-rose-400 hover:bg-rose-500/10">Tizimdan chiqish</button>
+                            </form>
+                        </div>
+                    </div>
                 @else
                     <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
                         Kirish
@@ -192,19 +213,41 @@
                 @endauth
             </div>
 
-            <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white focus:outline-none">
+            <button @click="mobileMenu = !mobileMenu" class="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white focus:outline-none">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
             </button>
         </div>
 
-        <div x-show="mobileMenu" x-cloak @click.away="mobileMenu = false" class="md:hidden border-b border-white/10 bg-ink-900/95 px-6 py-4 space-y-3">
-            <a href="#features" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Imkoniyatlar</a>
-            <a href="{{ route('books.public') }}" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Kitoblar</a>
-            <a href="{{ route('about') }}" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Biz haqimizda</a>
-            <a href="{{ route('faq') }}" class="block text-sm py-2 text-slate-200 hover:text-amber-400">FAQ</a>
-            <a href="{{ route('contact') }}" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Aloqa</a>
+        <div x-show="mobileMenu" x-cloak @click.away="mobileMenu = false" class="lg:hidden border-b border-white/10 bg-ink-900/95 px-6 py-4 space-y-3">
+            <a href="{{ route('books.catalog') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Kitoblar</a>
+            <a href="{{ route('leaderboard') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Reyting</a>
+            <a href="{{ route('chat') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Umumiy Chat</a>
+            <a href="{{ route('groups.index') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Guruhlar</a>
+            <a href="{{ route('live.index') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Jonli Efirlar</a>
+            <a href="{{ route('about') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Biz haqimizda</a>
+            <a href="{{ route('faq') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">FAQ</a>
+            <a href="{{ route('contact') }}" @click="mobileMenu = false" class="block text-sm py-2 text-slate-200 hover:text-amber-400">Aloqa</a>
+
+            <div class="pt-3 border-t border-white/10 space-y-2">
+                @auth
+                    @if(auth()->user()->hasRole('admin'))
+                        <a href="{{ route('admin.dashboard') }}" class="block w-full text-center px-4 py-2.5 rounded-xl bg-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider mb-2">Boshqaruv paneli →</a>
+                    @elseif(auth()->user()->hasRole('teacher'))
+                        <a href="{{ route('teacher.dashboard') }}" class="block w-full text-center px-4 py-2.5 rounded-xl bg-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider mb-2">O'qituvchi paneli →</a>
+                    @endif
+                    <a href="{{ route('profile.show', auth()->user()->username) }}" class="block text-sm py-1.5 text-slate-300 hover:text-amber-400">Profilim ({{ auth()->user()->name }})</a>
+                    <a href="{{ route('settings') }}" class="block text-sm py-1.5 text-slate-300 hover:text-amber-400">Sozlamalar</a>
+                    <form method="POST" action="{{ route('logout') }}" class="pt-1">
+                        @csrf
+                        <button type="submit" class="text-xs text-rose-400 hover:underline">Tizimdan chiqish</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="block text-sm py-2 text-slate-200 hover:text-white">Kirish</a>
+                    <a href="{{ route('register') }}" class="block w-full text-center px-4 py-2.5 rounded-xl bg-white text-ink-950 font-bold text-xs uppercase tracking-wider">Ro'yxatdan o'tish</a>
+                @endauth
+            </div>
         </div>
     </header>
 

@@ -30,7 +30,7 @@ class OnboardingWizard extends Component
     {
         $user = Auth::user();
         if ($user && $user->profile && $user->profile->reading_place) {
-            return redirect()->route('dashboard');
+            return redirect()->route('home');
         }
 
         if ($user && $user->bio) {
@@ -102,7 +102,7 @@ class OnboardingWizard extends Component
         );
 
         session()->flash('success', 'Xush kelibsiz! Onboarding muvaffaqiyatli yakunlandi va 50 ball hisobingizga qo\'shildi! 🎉');
-        return redirect()->route('dashboard');
+        return redirect()->route('home');
     }
 
     public function render()
