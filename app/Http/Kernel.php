@@ -46,6 +46,7 @@ class Kernel extends HttpKernel
         'staff.redirect'     => \App\Http\Middleware\RedirectStaffFromDashboard::class,
         'role.admin'         => \App\Http\Middleware\IsAdmin::class,
         'role.teacher'       => \App\Http\Middleware\IsTeacher::class,
+        'role.student'       => \App\Http\Middleware\IsStudent::class,
         'role'               => \Spatie\Permission\Middlewares\RoleMiddleware::class,
         'permission'         => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
     ];

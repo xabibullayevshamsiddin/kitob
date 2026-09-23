@@ -87,18 +87,18 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| AUTHENTICATED STUDENT ROUTES
+| AUTHENTICATED STUDENT ROUTES — faqat student va admin kirishi mumkin
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'onboarding.complete'])->group(function () {
+Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(function () {
 
     // Dashboard — studentlar uchun Livewire to'liq sahifa komponenti.
-    // Admin/teacher 'staff.redirect' middleware orqali o'z panellariga yo'naltiriladi.
+    // Admin 'staff.redirect' middleware orqali o'z paneliga yo'naltiriladi.
     Route::get('/dashboard', Dashboard::class)
         ->middleware('staff.redirect')
         ->name('dashboard');
 
-    // Books & Reading
+    // Books & Reading (O'quvchilar uchun)
     Route::get('/catalog', CatalogPage::class)->name('books.catalog');
 
     Route::get('/books/{slug}', function ($slug) {
@@ -139,10 +139,17 @@ Route::middleware(['auth', 'onboarding.complete'])->group(function () {
     Route::get('/live', LiveIndex::class)->name('live.index');
     Route::get('/live/{event}', LiveDetail::class)->name('live.show');
 
-    // AI Chatbot
+    // AI Chatbot (faqat student)
     Route::get('/ai-chat', AiChat::class)->name('ai-chat');
+});
 
-    // User Profile & Settings
+/*
+|--------------------------------------------------------------------------
+| SHARED AUTH ROUTES — barcha login bo'lgan foydalanuvchilar (student, teacher, admin)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    // Profil, Sozlamalar, Bildirishnomalar — barcha rollar uchun
     Route::get('/profile/{username}', ProfilePage::class)->name('profile.show');
     Route::get('/settings', SettingsPage::class)->name('settings');
     Route::get('/notifications', NotificationList::class)->name('notifications');
