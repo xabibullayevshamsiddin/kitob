@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-xl font-black text-slate-800 dark:text-white">🔴 Jonli efirlar</h2>
-            <p class="text-sm text-slate-500">Rejalashtirilgan va o'tgan efirlar</p>
+            <p class="text-sm text-slate-500">Rejalashtirilgan va faol efirlar</p>
         </div>
     </div>
 
@@ -18,8 +18,8 @@
                     <p class="text-xs text-slate-400 mt-0.5">{{ $event->scheduled_at?->format('d.m.Y H:i') }}</p>
                 </div>
                 @php
-                    $colors = ['scheduled' => 'blue', 'live' => 'rose', 'ended' => 'slate'];
-                    $labels = ['scheduled' => '📅 Rejalashtirilgan', 'live' => '🔴 Efirda', 'ended' => '✓ Tugagan'];
+                    $colors = ['scheduled' => 'blue', 'live' => 'rose'];
+                    $labels = ['scheduled' => '📅 Rejalashtirilgan', 'live' => '🔴 Efirda'];
                     $c = $colors[$event->status] ?? 'slate';
                     $l = $labels[$event->status] ?? $event->status;
                 @endphp

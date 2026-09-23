@@ -216,7 +216,7 @@ Route::prefix('teacher')
 
     // Jonli efirlar
     Route::get('/live', function () {
-        $events = \App\Models\LiveEvent::latest()->paginate(10);
+        $events = \App\Models\LiveEvent::whereIn('status', ['scheduled', 'live'])->latest()->paginate(10);
         return view('teacher.live.index', compact('events'));
     })->name('live.index');
 });

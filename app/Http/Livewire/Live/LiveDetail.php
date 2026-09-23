@@ -55,19 +55,19 @@ class LiveDetail extends Component
         session()->flash('success', 'Tashrif buyuruvchilar ruxsat rejimi yangilandi!');
     }
 
-    public function endLiveStream(): void
+    public function endLiveStream()
     {
         if (!$this->isHost) {
             session()->flash('error', 'Faqat efir muallifi efirni yakunlashi mumkin.');
-            return;
+            return null;
         }
 
-        $this->event->update([
-            'status' => LiveEvent::STATUS_ENDED,
-        ]);
-        $this->event->refresh();
+        // Foydalanuvchi talabi: o'tib ketgan / yakunlangan efirlar saytda saqlanib qolmasin
+        $this->event->questions()->delete();
+        $this->event->delete();
 
-        session()->flash('success', 'Jonli efir yakunlandi.');
+        session()->flash('success', 'Jonli efir muvaffaqiyatli yakunlandi va saytdan o\'chirildi.');
+        return redirect()->route('live.index');
     }
 
     public function restartLiveStream(): void

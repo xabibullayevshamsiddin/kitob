@@ -107,15 +107,18 @@ class LiveIndex extends Component
 
     public function render()
     {
+        // Foydalanuvchi talabi: o'tib ketgan / yakunlangan efirlar saytda saqlanib qolmasin
+        LiveEvent::where('status', LiveEvent::STATUS_ENDED)
+            ->orWhere(function ($q) {
+                $q->where('status', LiveEvent::STATUS_SCHEDULED)
+                  ->where('scheduled_at', '<', now()->subHours(6));
+            })
+            ->delete();
+
         $upcoming = LiveEvent::with(['book', 'hostUser'])
             ->whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE])
             ->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
             ->orderBy('scheduled_at')
-            ->get();
-
-        $ended = LiveEvent::with(['book', 'hostUser'])
-            ->ended()
-            ->take(10)
             ->get();
 
         $myQuestions = LiveQuestion::where('user_id', Auth::id())
@@ -127,7 +130,6 @@ class LiveIndex extends Component
 
         return view('livewire.live.live-index', [
             'upcoming'    => $upcoming,
-            'ended'       => $ended,
             'myQuestions' => $myQuestions,
             'books'       => $books,
         ])->layout('layouts.app', ['title' => 'Jonli efirlar']);

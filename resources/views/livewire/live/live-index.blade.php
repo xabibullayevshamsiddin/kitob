@@ -240,24 +240,4 @@
         </div>
     @endif
 
-    <!-- Ended events -->
-    @if ($ended->isNotEmpty())
-        <div class="space-y-3 pt-4">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white">O'tgan efirlar</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                @foreach ($ended as $event)
-                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3" wire:key="ended-{{ $event->id }}">
-                        <div class="min-w-0">
-                            <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $event->title }}</h4>
-                            <span class="text-[11px] text-slate-400">{{ $event->scheduled_at?->timezone('Asia/Tashkent')->format('d M Y') }}</span>
-                        </div>
-                        <a href="{{ route('live.show', $event) }}" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0">
-                            Zalga kirish →
-                        </a>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
 </div>
