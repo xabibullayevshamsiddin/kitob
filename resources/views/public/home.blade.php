@@ -137,6 +137,9 @@
 </head>
 <body class="bg-ink-950 text-slate-200 font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
 
+    <!-- ── Page Transition & Loader ── -->
+    @include('components.page-loader')
+
     <!-- ── Ambient Floating Glows (Cinematic Depth) ── -->
     <div class="fixed top-[-120px] left-1/2 -translate-x-1/2 w-[950px] h-[500px] bg-gradient-to-b from-amber-500/15 via-indigo-600/8 to-transparent rounded-full blur-[150px] pointer-events-none -z-10 orb-animate-1"></div>
     <div class="fixed bottom-[-100px] right-[-80px] w-[650px] h-[650px] bg-indigo-900/12 rounded-full blur-[160px] pointer-events-none -z-10 orb-animate-2"></div>

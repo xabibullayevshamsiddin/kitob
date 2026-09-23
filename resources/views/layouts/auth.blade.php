@@ -44,6 +44,8 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-center relative overflow-x-hidden font-sans selection:bg-indigo-500 selection:text-white">
 
+    @include('components.page-loader')
+
     <!-- Background Ambient Glow -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>

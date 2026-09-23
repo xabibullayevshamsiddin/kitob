@@ -57,6 +57,8 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
 
+    @include('components.page-loader')
+
     <div class="flex h-screen overflow-hidden">
         <!-- Desktop Sidebar -->
         <x-nav.sidebar />
