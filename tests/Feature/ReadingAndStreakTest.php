@@ -10,10 +10,28 @@ use Tests\TestCase;
 
 class ReadingAndStreakTest extends TestCase
 {
+    protected function getStudentUser(): User
+    {
+        $user = User::firstOrCreate(
+            ['email' => 'reader_test@kitobxon.uz'],
+            [
+                'name' => 'Reader Test',
+                'username' => 'reader_test',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $user->syncRoles(['student']);
+        \App\Models\UserProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            ['reading_place' => 'home']
+        );
+        return $user;
+    }
+
     /** @test */
     public function catalog_page_is_accessible()
     {
-        $user = User::first();
+        $user = $this->getStudentUser();
         $response = $this->actingAs($user)->get('/books');
         $response->assertStatus(200);
     }
@@ -21,7 +39,7 @@ class ReadingAndStreakTest extends TestCase
     /** @test */
     public function book_detail_page_is_accessible()
     {
-        $user = User::first();
+        $user = $this->getStudentUser();
         $book = Book::first();
 
         $response = $this->actingAs($user)->get("/books/{$book->slug}");
@@ -31,7 +49,7 @@ class ReadingAndStreakTest extends TestCase
     /** @test */
     public function reader_page_is_accessible()
     {
-        $user = User::first();
+        $user = $this->getStudentUser();
         $book = Book::first();
         $chapter = BookChapter::where('book_id', $book->id)->first();
 
@@ -42,7 +60,7 @@ class ReadingAndStreakTest extends TestCase
     /** @test */
     public function streak_service_records_activity_and_increments_streak()
     {
-        $user = User::first();
+        $user = $this->getStudentUser();
         $streakService = new StreakService();
 
         $streak = $streakService->recordActivity($user);

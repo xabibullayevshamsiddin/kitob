@@ -25,6 +25,7 @@ class LiveEvent extends Model
         'description',
         'cover',
         'scheduled_at',
+        'started_at',
         'stream_url',
         'status',
         'permission_mode',
@@ -34,6 +35,7 @@ class LiveEvent extends Model
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'started_at'   => 'datetime',
         'is_recording' => 'boolean',
     ];
 

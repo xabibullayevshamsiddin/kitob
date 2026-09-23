@@ -85,6 +85,8 @@ Route::get('/groups/{group}', GroupDetail::class)->name('groups.show');
 // Jonli efirlar (hamma ko'ra oladi)
 Route::get('/live', LiveIndex::class)->name('live.index');
 Route::get('/live/{event}', LiveDetail::class)->name('live.show');
+Route::post('/live/{event}/signal', [\App\Http\Controllers\LiveSignalController::class, 'send'])->name('live.signal.send');
+Route::get('/live/{event}/signals', [\App\Http\Controllers\LiveSignalController::class, 'poll'])->name('live.signal.poll');
 
 // Error sahifalari dizaynini ko'rish (Preview routes)
 Route::prefix('errors')->group(function () {
@@ -124,6 +126,9 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
         return view('pages.book-detail', compact('book'));
     })->name('books.show');
 
+    // Kitobni PDF sifatida yuklab olish
+    // (endi SHARED AUTH guruhida — barcha rollar uchun)
+
     Route::get('/books/{book}/read/{chapter}', function ($book, $chapter) {
         $book    = \App\Models\Book::findOrFail($book);
         $chapter = \App\Models\BookChapter::where('book_id', $book->id)->findOrFail($chapter);
@@ -156,6 +161,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/{username}', ProfilePage::class)->name('profile.show');
     Route::get('/settings', SettingsPage::class)->name('settings');
     Route::get('/notifications', NotificationList::class)->name('notifications');
+
+    // Kitobni PDF sifatida yuklab olish — barcha login bo'lgan foydalanuvchilar uchun
+    Route::get('/books/{book}/pdf', [\App\Http\Controllers\BookPdfController::class, 'download'])
+        ->name('books.pdf');
 });
 
 /*
@@ -188,7 +197,14 @@ Route::prefix('teacher')
             'author'      => 'required|string|max:255',
             'description' => 'required|string',
             'genre'       => 'required|string|max:100',
+            'pdf_file'    => 'nullable|file|mimes:pdf|max:20480',
         ]);
+
+        $pdfPath = null;
+        if ($req->hasFile('pdf_file')) {
+            $pdfPath = $req->file('pdf_file')->store('books/pdf', 'public');
+        }
+
         \App\Models\Book::create([
             'title'        => $req->title,
             'author'       => $req->author,
@@ -196,10 +212,11 @@ Route::prefix('teacher')
             'genre'        => $req->genre,
             'slug'         => \Illuminate\Support\Str::slug($req->title),
             'week_number'  => \App\Models\Book::max('week_number') + 1,
+            'pdf_path'     => $pdfPath,
             'published_at' => now(),
             'is_active'    => false,
         ]);
-        return redirect()->route('teacher.books.index')->with('success', 'Kitob qo\'shildi!');
+        return redirect()->route('teacher.books.index')->with('success', "Kitob qo'shildi!" . ($pdfPath ? ' PDF fayl yuklandi. 📕' : ''));
     })->name('books.store');
 
     // Quiz boshqarish
@@ -325,7 +342,14 @@ Route::prefix('admin')
             'author'      => 'required|string|max:255',
             'description' => 'required|string',
             'genre'       => 'required|string|max:100',
+            'pdf_file'    => 'nullable|file|mimes:pdf|max:20480',
         ]);
+
+        $pdfPath = null;
+        if ($req->hasFile('pdf_file')) {
+            $pdfPath = $req->file('pdf_file')->store('books/pdf', 'public');
+        }
+
         \App\Models\Book::create([
             'title'        => $req->title,
             'author'       => $req->author,
@@ -333,10 +357,16 @@ Route::prefix('admin')
             'genre'        => $req->genre,
             'slug'         => \Illuminate\Support\Str::slug($req->title) . '-' . uniqid(),
             'week_number'  => $req->week_number ?? ((\App\Models\Book::max('week_number') ?? 0) + 1),
+            'pdf_path'     => $pdfPath,
             'published_at' => now(),
             'is_active'    => $req->has('is_active'),
         ]);
-        return redirect()->route('admin.books.index')->with('success', 'Yangi kitob muvaffaqiyatli qo\'shildi!');
+
+        $msg = $pdfPath
+            ? "Kitob qo'shildi va PDF fayl yuklandi! 📕"
+            : "Yangi kitob muvaffaqiyatli qo'shildi!";
+
+        return redirect()->route('admin.books.index')->with('success', $msg);
     })->name('books.store');
 
     Route::get('/books/{book}/edit', function (\App\Models\Book $book) {

@@ -22,6 +22,11 @@ class LiveDetail extends Component
     public function mount(LiveEvent $event): void
     {
         $this->event = $event;
+
+        if ($this->event->status === LiveEvent::STATUS_LIVE && !$this->event->started_at) {
+            $this->event->update(['started_at' => $this->event->created_at ?? now()]);
+            $this->event->refresh();
+        }
     }
 
     public function getIsHostProperty(): bool
@@ -77,7 +82,8 @@ class LiveDetail extends Component
         }
 
         $this->event->update([
-            'status' => LiveEvent::STATUS_LIVE,
+            'status'     => LiveEvent::STATUS_LIVE,
+            'started_at' => now(),
         ]);
         $this->event->refresh();
 

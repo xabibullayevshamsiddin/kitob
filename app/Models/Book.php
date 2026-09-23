@@ -19,6 +19,7 @@ class Book extends Model
         'author',
         'description',
         'cover_image',
+        'pdf_path',
         'genre',
         'week_number',
         'published_at',

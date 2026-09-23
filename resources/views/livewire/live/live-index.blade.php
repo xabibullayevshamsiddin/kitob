@@ -38,120 +38,126 @@
 
     <!-- ── EFIRNI SOZLASH VA BOSHLASH MODALI ── -->
     @if($showStudioModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6 animate-scale-in"
-                 @click.away="$wire.closeStudioModal()">
+        <div class="fixed inset-0 z-[9999] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <!-- Fullscreen Dark Blur Backdrop covering whole screen including header -->
+            <div class="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity" wire:click="closeStudioModal"></div>
 
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white text-lg shadow-md">
-                            🎙️
+            <!-- Centering container with scrolling padding -->
+            <div class="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
+                <div class="relative w-full max-w-2xl transform rounded-3xl bg-ink-900 border border-white/10 shadow-2xl text-left my-8 overflow-hidden z-10"
+                     @click.stop>
+
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between border-b border-white/10 p-5 sm:p-6 bg-white/[0.02]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white text-lg shadow-md shadow-rose-500/20 shrink-0">
+                                🎙️
+                            </div>
+                            <div>
+                                <h2 class="text-base sm:text-lg font-black text-white font-manrope">Yangi Jonli Efirni Sozlash</h2>
+                                <p class="text-xs text-slate-400">Ruxsatlar va efir ma'lumotlarini belgilang</p>
+                            </div>
                         </div>
+                        <button type="button" wire:click="closeStudioModal" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Form Body with max-h and scroll if needed on short screens -->
+                    <form wire:submit.prevent="startLiveStream" class="p-5 sm:p-6 space-y-4 max-h-[calc(85vh-130px)] overflow-y-auto">
+                        <!-- Title -->
                         <div>
-                            <h2 class="text-lg font-black text-slate-900 dark:text-white font-manrope">Yangi Jonli Efirni Sozlash</h2>
-                            <p class="text-xs text-slate-400">Ruxsatlar va efir ma'lumotlarini belgilang</p>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                                Efir Mavzusi / Sarlavhasi <span class="text-rose-400">*</span>
+                            </label>
+                            <input type="text" wire:model.defer="newTitle" placeholder="Masalan: 1-Bob Tahlili va Jonli Savol-Javob..."
+                                class="w-full px-4 py-2.5 bg-ink-950 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            @error('newTitle') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
-                    </div>
-                    <button wire:click="closeStudioModal" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        ✕
-                    </button>
+
+                        <!-- Book Select -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                                Bog'langan Kitob (ixtiyoriy)
+                            </label>
+                            <select wire:model.defer="newBookId"
+                                class="w-full px-4 py-2.5 bg-ink-950 border border-white/10 rounded-xl text-sm text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="">-- Umumiy efir (kitob bog'lanmagan) --</option>
+                                @foreach($books as $b)
+                                    <option value="{{ $b->id }}">{{ $b->title }} ({{ $b->author }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                                Qisqacha Tavsif
+                            </label>
+                            <textarea wire:model.defer="newDescription" rows="2" placeholder="Ushbu efirda qaysi mavzular ko'rib chiqiladi..."
+                                class="w-full px-4 py-2 bg-ink-950 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+                        </div>
+
+                        <!-- Permission Mode Selector -->
+                        <div class="space-y-2 pt-1">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                ⚙️ Tashrif buyuruvchilar (O'quvchilar) ruxsat rejimi
+                            </label>
+                            <p class="text-xs text-slate-400 mb-2">Efir davomida kirgan o'quvchilar nima qila olishini belgilang:</p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <!-- Option 1: Both -->
+                                <label class="relative flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'both' ? 'bg-amber-400/10 border-amber-400/50 ring-1 ring-amber-400/30' : 'bg-ink-950 border-white/10 hover:border-white/20' }}">
+                                    <input type="radio" wire:model="newPermissionMode" value="both" class="mt-0.5 text-amber-500 focus:ring-amber-500">
+                                    <div class="text-xs">
+                                        <span class="font-bold text-white block">✨ Ikkalasi ham mumkin</span>
+                                        <span class="text-slate-400 text-[11px] block mt-0.5">Chatda yozish va mikrofon orqali ovozli savol berish ochiq</span>
+                                    </div>
+                                </label>
+
+                                <!-- Option 2: Chat only -->
+                                <label class="relative flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'chat_only' ? 'bg-amber-400/10 border-amber-400/50 ring-1 ring-amber-400/30' : 'bg-ink-950 border-white/10 hover:border-white/20' }}">
+                                    <input type="radio" wire:model="newPermissionMode" value="chat_only" class="mt-0.5 text-amber-500 focus:ring-amber-500">
+                                    <div class="text-xs">
+                                        <span class="font-bold text-white block">💬 Faqat yoza olsin</span>
+                                        <span class="text-slate-400 text-[11px] block mt-0.5">Faqat yozma chat ochiq, mikrofonlar o'chirilgan</span>
+                                    </div>
+                                </label>
+
+                                <!-- Option 3: Voice only -->
+                                <label class="relative flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'voice_only' ? 'bg-amber-400/10 border-amber-400/50 ring-1 ring-amber-400/30' : 'bg-ink-950 border-white/10 hover:border-white/20' }}">
+                                    <input type="radio" wire:model="newPermissionMode" value="voice_only" class="mt-0.5 text-amber-500 focus:ring-amber-500">
+                                    <div class="text-xs">
+                                        <span class="font-bold text-white block">🎙️ Faqat gapira olsin</span>
+                                        <span class="text-slate-400 text-[11px] block mt-0.5">Ovozli navbat ochiq, yozma chat yopiq</span>
+                                    </div>
+                                </label>
+
+                                <!-- Option 4: View only -->
+                                <label class="relative flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'view_only' ? 'bg-amber-400/10 border-amber-400/50 ring-1 ring-amber-400/30' : 'bg-ink-950 border-white/10 hover:border-white/20' }}">
+                                    <input type="radio" wire:model="newPermissionMode" value="view_only" class="mt-0.5 text-amber-500 focus:ring-amber-500">
+                                    <div class="text-xs">
+                                        <span class="font-bold text-white block">🔒 Ikkalasi ham mumkin emas</span>
+                                        <span class="text-slate-400 text-[11px] block mt-0.5">Faqat ma'ruza: chat va ovoz to'liq cheklangan</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Modal Actions Footer (Pinned) -->
+                        <div class="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                            <button type="button" wire:click="closeStudioModal"
+                                class="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white transition-colors">
+                                Bekor qilish
+                            </button>
+                            <button type="submit"
+                                class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-rose-600/30 active:scale-95 transition-all">
+                                🔴 Efirni Boshlash →
+                            </button>
+                        </div>
+                    </form>
+
                 </div>
-
-                <!-- Form -->
-                <form wire:submit.prevent="startLiveStream" class="space-y-5">
-                    <!-- Title -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                            Efir Mavzusi / Sarlavhasi <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="text" wire:model.defer="newTitle" placeholder="Masalan: 1-Bob Tahlili va Jonli Savol-Javob..."
-                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-rose-500 focus:outline-none">
-                        @error('newTitle') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-
-                    <!-- Book Select (Optional) -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                            Bog'langan Kitob (ixtiyoriy)
-                        </label>
-                        <select wire:model.defer="newBookId"
-                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
-                            <option value="">-- Umumiy efir (kitob bog'lanmagan) --</option>
-                            @foreach($books as $b)
-                                <option value="{{ $b->id }}">{{ $b->title }} ({{ $b->author }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                            Qisqacha Tavsif
-                        </label>
-                        <textarea wire:model.defer="newDescription" rows="2" placeholder="Ushbu efirda qaysi mavzular ko'rib chiqiladi..."
-                            class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-rose-500 focus:outline-none"></textarea>
-                    </div>
-
-                    <!-- ── PERMISSION MODE (Tashrif buyuruvchilar huquqi) ── -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                            ⚙️ Tashrif buyuruvchilar (O'quvchilar) ruxsat rejimi
-                        </label>
-                        <p class="text-xs text-slate-400 mb-2">Efir davomida kirgan o'quvchilar nima qila olishini belgilang:</p>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <!-- Option 1: Both -->
-                            <label class="relative flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'both' ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/20' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300' }}">
-                                <input type="radio" wire:model="newPermissionMode" value="both" class="mt-1 text-indigo-600 focus:ring-indigo-500">
-                                <div class="text-xs">
-                                    <span class="font-bold text-slate-900 dark:text-white block">✨ Ikkalasi ham mumkin</span>
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px] block mt-0.5">Chatda yozish va mikrofon orqali ovozli savol berish ochiq</span>
-                                </div>
-                            </label>
-
-                            <!-- Option 2: Chat only -->
-                            <label class="relative flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'chat_only' ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/20' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300' }}">
-                                <input type="radio" wire:model="newPermissionMode" value="chat_only" class="mt-1 text-indigo-600 focus:ring-indigo-500">
-                                <div class="text-xs">
-                                    <span class="font-bold text-slate-900 dark:text-white block">💬 Faqat yoza olsin</span>
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px] block mt-0.5">Faqat yozma chat ochiq, mikrofonlar o'chirilgan</span>
-                                </div>
-                            </label>
-
-                            <!-- Option 3: Voice only -->
-                            <label class="relative flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'voice_only' ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/20' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300' }}">
-                                <input type="radio" wire:model="newPermissionMode" value="voice_only" class="mt-1 text-indigo-600 focus:ring-indigo-500">
-                                <div class="text-xs">
-                                    <span class="font-bold text-slate-900 dark:text-white block">🎙️ Faqat gapira olsin</span>
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px] block mt-0.5">Ovozli navbat ochiq, yozma chat yopiq</span>
-                                </div>
-                            </label>
-
-                            <!-- Option 4: View only -->
-                            <label class="relative flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all {{ $newPermissionMode === 'view_only' ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/20' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-slate-300' }}">
-                                <input type="radio" wire:model="newPermissionMode" value="view_only" class="mt-1 text-indigo-600 focus:ring-indigo-500">
-                                <div class="text-xs">
-                                    <span class="font-bold text-slate-900 dark:text-white block">🔒 Ikkalasi ham mumkin emas</span>
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px] block mt-0.5">Faqat ma'ruza / monolog: chat va ovoz to'liq cheklangan</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Modal Actions -->
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <button type="button" wire:click="closeStudioModal"
-                            class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                            Bekor qilish
-                        </button>
-                        <button type="submit"
-                            class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-rose-600/25 active:scale-95 transition-all">
-                            🔴 Efirni Boshlash →
-                        </button>
-                    </div>
-                </form>
-
             </div>
         </div>
     @endif

@@ -1,4 +1,12 @@
-<div class="max-w-7xl mx-auto space-y-6 pb-16" x-data="liveStudioController(@js($isHost), @js($event->permission_mode))" x-init="initStudio()">
+<div class="max-w-7xl mx-auto space-y-6 pb-16" 
+    x-data="liveStudioController({
+        isHost: @js($isHost),
+        eventId: {{ $event->id }},
+        startedAt: {{ $event->started_at ? $event->started_at->timestamp : ($event->created_at ? $event->created_at->timestamp : now()->timestamp) }},
+        serverNow: {{ now()->timestamp }},
+        permissionMode: @js($event->permission_mode)
+    })" 
+    x-init="initStudio()">
 
     <!-- ── 1. TOP HEADER & STATUS BAR ── -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-3xl shadow-soft">
@@ -90,7 +98,7 @@
                        :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }">
                 </video>
 
-                <!-- Avatar Backdrop when Camera is Off -->
+                <!-- Avatar Backdrop when Camera is Off or audio-only -->
                 <div x-show="!isVideoOn" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
                     <div class="relative">
                         <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-rose-500 to-amber-500 p-1 shadow-2xl">
@@ -106,6 +114,26 @@
                             <span x-text="isMicOn ? '🎙️ Ovoz uzatilmoqda (Kamera o\'chiq)' : '🔇 Mikrofon va kamera o\'chiq'"></span>
                         </p>
                     </div>
+                </div>
+
+                <!-- Viewer Connecting / Waiting for Host Overlay -->
+                <div x-show="!isHost && !hasRemoteStream" class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-sm p-6 text-center space-y-3">
+                    <div class="relative flex items-center justify-center">
+                        <div class="w-12 h-12 rounded-full border-4 border-rose-500/20 border-t-rose-500 animate-spin"></div>
+                        <span class="absolute text-lg">📡</span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Ustoz jonli efiriga ulanmoqda...</h4>
+                        <p class="text-xs text-slate-400 mt-1">Jonli video va audio oqim sozlanmoqda</p>
+                    </div>
+                </div>
+
+                <!-- Viewer Unmute prompt banner (when browser policy requires user gesture for sound) -->
+                <div x-show="!isHost && needsUnmute" class="absolute inset-0 z-40 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+                    <button @click="unmuteAudio()" class="px-6 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-2xl flex items-center gap-2.5 transform hover:scale-105 active:scale-95 transition-all">
+                        <span class="text-lg">🔊</span>
+                        <span>Ovozni yoqish (Tinglash uchun bosing)</span>
+                    </button>
                 </div>
 
                 <!-- Top Left Overlays (LIVE badge + Timer) -->
@@ -407,23 +435,34 @@
 
 <!-- ── 3. WEBRTC / MEDIA STUDIO JAVASCRIPT CONTROLLER ── -->
 <script>
-function liveStudioController(isHost, initialPermission) {
+function liveStudioController(config) {
+    const isHost = Boolean(config.isHost);
+    const eventId = Number(config.eventId);
+    const startedAt = Number(config.startedAt || Math.floor(Date.now() / 1000));
+    const serverNow = Number(config.serverNow || Math.floor(Date.now() / 1000));
+
     return {
         isHost: isHost,
-        permissionMode: initialPermission,
+        eventId: eventId,
+        permissionMode: config.permissionMode || 'both',
+
+        // Media states
         isMicOn: true,
-        isVideoOn: true,
+        isVideoOn: isHost ? true : false,
+        hasRemoteStream: false,
+        isConnecting: !isHost,
+        needsUnmute: false,
         isScreenSharing: false,
         isRecording: false,
         showDeviceSettings: false,
 
-        // Devices
+        // Hardware devices (host)
         audioDevices: [],
         videoDevices: [],
         selectedAudioDevice: '',
         selectedVideoDevice: '',
 
-        // Stream instances
+        // Media streams
         localStream: null,
         screenStream: null,
         mediaRecorder: null,
@@ -432,23 +471,69 @@ function liveStudioController(isHost, initialPermission) {
         // Audio Analyser
         audioContext: null,
         analyser: null,
-        audioVolume: 20,
+        audioVolume: 0,
 
         // Timers
         durationSeconds: 0,
         recordSeconds: 0,
         durationInterval: null,
         recordInterval: null,
+        pollInterval: null,
+        heartbeatInterval: null,
+
+        // WebRTC Signaling
+        myPeerId: isHost ? 'host' : ('viewer_' + Math.random().toString(36).substring(2, 9)),
+        lastSignalId: 0,
+        processedSignalKeys: new Set(),
+        broadcastChannel: null,
+        peers: {}, // Host: map of viewerId -> RTCPeerConnection
+        peerConnection: null, // Viewer: RTCPeerConnection
+        iceCandidateQueue: [],
+
+        rtcConfig: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        },
 
         async initStudio() {
-            // Start duration ticker
-            this.durationInterval = setInterval(() => {
-                this.durationSeconds++;
-            }, 1000);
+            // 1. Duration Synchronizer (server-clock aligned)
+            const clientNow = Math.floor(Date.now() / 1000);
+            const clockSkew = clientNow - serverNow;
+            const updateTimer = () => {
+                const nowSec = Math.floor(Date.now() / 1000) - clockSkew;
+                this.durationSeconds = Math.max(0, nowSec - startedAt);
+            };
+            updateTimer();
+            this.durationInterval = setInterval(updateTimer, 1000);
 
+            // 2. Setup WebRTC Signaling (BroadcastChannel + HTTP Polling fallback)
+            this.setupSignaling();
+
+            // 3. Role-specific startup
             if (this.isHost) {
                 await this.scanMediaDevices();
                 await this.startMediaStream();
+
+                // Periodic heartbeat from Host to announce presence
+                this.heartbeatInterval = setInterval(() => {
+                    this.sendSignal('stream-status', 'all', {
+                        isVideoOn: this.isVideoOn,
+                        isMicOn: this.isMicOn,
+                        isHostOnline: true
+                    });
+                }, 3000);
+            } else {
+                // Viewer startup: send join announcement to host
+                this.sendSignal('join', 'host', { ts: Date.now() });
+
+                // If remote stream hasn't arrived yet, ping host every 3 seconds
+                this.heartbeatInterval = setInterval(() => {
+                    if (!this.hasRemoteStream) {
+                        this.sendSignal('join', 'host', { ts: Date.now() });
+                    }
+                }, 3000);
             }
 
             // Scroll chat to bottom
@@ -468,9 +553,10 @@ function liveStudioController(isHost, initialPermission) {
         },
 
         get formattedDuration() {
-            const h = String(Math.floor(this.durationSeconds / 3600)).padStart(2, '0');
-            const m = String(Math.floor((this.durationSeconds % 3600) / 60)).padStart(2, '0');
-            const s = String(this.durationSeconds % 60).padStart(2, '0');
+            const total = this.durationSeconds;
+            const h = String(Math.floor(total / 3600)).padStart(2, '0');
+            const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+            const s = String(total % 60).padStart(2, '0');
             return `${h}:${m}:${s}`;
         },
 
@@ -480,14 +566,256 @@ function liveStudioController(isHost, initialPermission) {
             return `${m}:${s}`;
         },
 
-        // 1. Enumerate all hardware microphones & cameras
+        // ── SIGNALING SYSTEM ──
+        setupSignaling() {
+            // A. BroadcastChannel: 0ms latency for same-origin tabs
+            if ('BroadcastChannel' in window) {
+                try {
+                    this.broadcastChannel = new BroadcastChannel('kitobxon_live_' + this.eventId);
+                    this.broadcastChannel.onmessage = (event) => {
+                        this.handleSignalMessage(event.data);
+                    };
+                } catch (e) {
+                    console.warn('BroadcastChannel error:', e);
+                }
+            }
+
+            // B. HTTP Polling: Cross-browser & Cross-device
+            this.pollSignals();
+            this.pollInterval = setInterval(() => this.pollSignals(), 800);
+        },
+
+        async pollSignals() {
+            try {
+                const res = await fetch(`/live/${this.eventId}/signals?peer_id=${encodeURIComponent(this.myPeerId)}&since_id=${this.lastSignalId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.signals && data.signals.length > 0) {
+                    for (const sig of data.signals) {
+                        if (sig.id > this.lastSignalId) {
+                            this.lastSignalId = sig.id;
+                        }
+                        this.handleSignalMessage(sig);
+                    }
+                }
+            } catch (err) {
+                // Ignore transient network errors
+            }
+        },
+
+        async sendSignal(type, receiverId, payload) {
+            const msg = {
+                msg_id: 'sig_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8),
+                sender_id: this.myPeerId,
+                receiver_id: receiverId,
+                type: type,
+                payload: payload
+            };
+
+            // 1. BroadcastChannel dispatch
+            if (this.broadcastChannel) {
+                try {
+                    this.broadcastChannel.postMessage(msg);
+                } catch (e) {}
+            }
+
+            // 2. HTTP POST dispatch
+            try {
+                await fetch(`/live/${this.eventId}/signal`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender_id: msg.sender_id,
+                        receiver_id: msg.receiver_id,
+                        type: msg.type,
+                        payload: msg.payload
+                    })
+                });
+            } catch (e) {}
+        },
+
+        async handleSignalMessage(msg) {
+            if (!msg || !msg.type || msg.sender_id === this.myPeerId) return;
+
+            // De-duplicate duplicate messages from dual channels
+            const dedupeKey = msg.msg_id || (msg.id ? `id_${msg.id}` : `${msg.sender_id}_${msg.type}_${JSON.stringify(msg.payload).slice(0, 30)}`);
+            if (this.processedSignalKeys.has(dedupeKey)) return;
+            this.processedSignalKeys.add(dedupeKey);
+            if (this.processedSignalKeys.size > 250) {
+                const first = this.processedSignalKeys.values().next().value;
+                this.processedSignalKeys.delete(first);
+            }
+
+            if (this.isHost) {
+                await this.handleHostSignal(msg);
+            } else {
+                await this.handleViewerSignal(msg);
+            }
+        },
+
+        // ── HOST SIGNAL HANDLERS ──
+        async handleHostSignal(msg) {
+            const viewerId = msg.sender_id;
+
+            if (msg.type === 'join') {
+                await this.createPeerForViewer(viewerId);
+            } else if (msg.type === 'answer') {
+                const pc = this.peers[viewerId];
+                if (pc && pc.signalingState !== 'stable') {
+                    try {
+                        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+                    } catch (e) {
+                        console.warn('Host setRemoteDescription error:', e);
+                    }
+                }
+            } else if (msg.type === 'ice-candidate') {
+                const pc = this.peers[viewerId];
+                if (pc && msg.payload) {
+                    try {
+                        await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
+                    } catch (e) {}
+                }
+            }
+        },
+
+        async createPeerForViewer(viewerId) {
+            if (this.peers[viewerId]) {
+                try { this.peers[viewerId].close(); } catch (e) {}
+            }
+
+            const pc = new RTCPeerConnection(this.rtcConfig);
+            this.peers[viewerId] = pc;
+
+            // Add audio & video tracks from host active stream
+            const activeStream = this.isScreenSharing ? this.screenStream : this.localStream;
+            if (activeStream) {
+                activeStream.getTracks().forEach(track => {
+                    pc.addTrack(track, activeStream);
+                });
+            }
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    this.sendSignal('ice-candidate', viewerId, event.candidate);
+                }
+            };
+
+            pc.onconnectionstatechange = () => {
+                if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+                    delete this.peers[viewerId];
+                }
+            };
+
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                await this.sendSignal('offer', viewerId, offer);
+
+                // Broadcast current stream status to viewer
+                await this.sendSignal('stream-status', viewerId, {
+                    isVideoOn: this.isVideoOn,
+                    isMicOn: this.isMicOn,
+                    isHostOnline: true
+                });
+            } catch (err) {
+                console.error('Host offer creation error:', err);
+            }
+        },
+
+        // ── VIEWER SIGNAL HANDLERS ──
+        async handleViewerSignal(msg) {
+            if (msg.type === 'offer') {
+                await this.handleOfferFromHost(msg.payload);
+            } else if (msg.type === 'ice-candidate') {
+                if (this.peerConnection && this.peerConnection.remoteDescription) {
+                    try {
+                        await this.peerConnection.addIceCandidate(new RTCIceCandidate(msg.payload));
+                    } catch (e) {}
+                } else if (msg.payload) {
+                    this.iceCandidateQueue.push(msg.payload);
+                }
+            } else if (msg.type === 'stream-status') {
+                if (typeof msg.payload.isVideoOn === 'boolean') {
+                    this.isVideoOn = msg.payload.isVideoOn;
+                }
+                if (typeof msg.payload.isMicOn === 'boolean') {
+                    this.isMicOn = msg.payload.isMicOn;
+                }
+            }
+        },
+
+        async handleOfferFromHost(offer) {
+            if (this.peerConnection) {
+                try { this.peerConnection.close(); } catch (e) {}
+            }
+
+            const pc = new RTCPeerConnection(this.rtcConfig);
+            this.peerConnection = pc;
+
+            pc.ontrack = (event) => {
+                const videoEl = document.getElementById('liveVideoPlayer');
+                if (videoEl && event.streams && event.streams[0]) {
+                    const stream = event.streams[0];
+                    if (videoEl.srcObject !== stream) {
+                        videoEl.srcObject = stream;
+                    }
+                    videoEl.play().then(() => {
+                        this.needsUnmute = false;
+                    }).catch(err => {
+                        console.warn('Autoplay with audio blocked by browser policy, muting video:', err);
+                        videoEl.muted = true;
+                        videoEl.play().catch(()=>{});
+                        this.needsUnmute = true;
+                    });
+
+                    this.hasRemoteStream = true;
+                    this.isConnecting = false;
+                    this.setupAudioAnalyser(stream);
+                }
+            };
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    this.sendSignal('ice-candidate', 'host', event.candidate);
+                }
+            };
+
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+                while (this.iceCandidateQueue.length > 0) {
+                    const cand = this.iceCandidateQueue.shift();
+                    try {
+                        await pc.addIceCandidate(new RTCIceCandidate(cand));
+                    } catch (e) {}
+                }
+
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                await this.sendSignal('answer', 'host', answer);
+            } catch (err) {
+                console.error('Viewer error processing host offer:', err);
+            }
+        },
+
+        unmuteAudio() {
+            const videoEl = document.getElementById('liveVideoPlayer');
+            if (videoEl) {
+                videoEl.muted = false;
+                videoEl.play().catch(()=>{});
+            }
+            this.needsUnmute = false;
+        },
+
+        // ── MEDIA STREAM & DEVICE MANAGEMENT (HOST) ──
         async scanMediaDevices() {
             try {
                 if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
                     return;
                 }
-
-                // Initial permission prompt if labels are empty
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 this.audioDevices = devices.filter(d => d.kind === 'audioinput');
                 this.videoDevices = devices.filter(d => d.kind === 'videoinput');
@@ -503,7 +831,6 @@ function liveStudioController(isHost, initialPermission) {
             }
         },
 
-        // 2. Start or update local camera & mic stream
         async startMediaStream() {
             try {
                 if (this.localStream) {
@@ -520,19 +847,46 @@ function liveStudioController(isHost, initialPermission) {
 
                 const videoEl = document.getElementById('liveVideoPlayer');
                 if (videoEl) {
+                    videoEl.muted = true; // Host local preview is muted to prevent acoustic feedback loop
                     videoEl.srcObject = stream;
                     videoEl.play().catch(() => {});
                 }
 
                 this.setupAudioAnalyser(stream);
-                await this.scanMediaDevices(); // Rescan to populate labels after permission granted
+                await this.scanMediaDevices();
+
+                // Update tracks for any active viewers
+                this.replaceTracksOnAllPeers(stream);
+
+                this.sendSignal('stream-status', 'all', {
+                    isVideoOn: this.isVideoOn,
+                    isMicOn: this.isMicOn,
+                    isHostOnline: true
+                });
             } catch (err) {
                 console.warn('Kamera yoki mikrofonga ulanish imkoni bo\'lmadi:', err);
                 this.isVideoOn = false;
             }
         },
 
-        // 3. Audio VU Meter setup via Web Audio API
+        replaceTracksOnAllPeers(newStream) {
+            if (!this.peers) return;
+            const newTracks = newStream.getTracks();
+            Object.values(this.peers).forEach(pc => {
+                if (pc && pc.getSenders) {
+                    const senders = pc.getSenders();
+                    newTracks.forEach(newTrack => {
+                        const sender = senders.find(s => s.track && s.track.kind === newTrack.kind);
+                        if (sender) {
+                            sender.replaceTrack(newTrack).catch(()=>{});
+                        } else {
+                            try { pc.addTrack(newTrack, newStream); } catch(e){}
+                        }
+                    });
+                }
+            });
+        },
+
         setupAudioAnalyser(stream) {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -542,6 +896,17 @@ function liveStudioController(isHost, initialPermission) {
                     this.audioContext = new AudioCtx();
                 }
 
+                if (this.audioContext.state === 'suspended') {
+                    const resume = () => {
+                        this.audioContext.resume();
+                        document.removeEventListener('click', resume);
+                    };
+                    document.addEventListener('click', resume);
+                }
+
+                const audioTracks = stream.getAudioTracks();
+                if (!audioTracks || audioTracks.length === 0) return;
+
                 const source = this.audioContext.createMediaStreamSource(stream);
                 this.analyser = this.audioContext.createAnalyser();
                 this.analyser.fftSize = 64;
@@ -549,7 +914,7 @@ function liveStudioController(isHost, initialPermission) {
 
                 const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
                 const updateVolume = () => {
-                    if (!this.isMicOn || !this.localStream) {
+                    if (!this.isMicOn) {
                         this.audioVolume = 0;
                         requestAnimationFrame(updateVolume);
                         return;
@@ -567,12 +932,11 @@ function liveStudioController(isHost, initialPermission) {
             } catch (e) {}
         },
 
-        // 4. Change Microphone source dynamically
         async changeAudioSource(deviceId) {
             this.selectedAudioDevice = deviceId;
             if (this.localStream) {
-                const audioTracks = this.localStream.getAudioTracks();
-                audioTracks.forEach(t => t.stop());
+                const oldTracks = this.localStream.getAudioTracks();
+                oldTracks.forEach(t => t.stop());
 
                 try {
                     const newAudioStream = await navigator.mediaDevices.getUserMedia({
@@ -581,22 +945,21 @@ function liveStudioController(isHost, initialPermission) {
                     const newAudioTrack = newAudioStream.getAudioTracks()[0];
                     newAudioTrack.enabled = this.isMicOn;
 
-                    // Replace track
-                    this.localStream.removeTrack(audioTracks[0]);
+                    if (oldTracks[0]) this.localStream.removeTrack(oldTracks[0]);
                     this.localStream.addTrack(newAudioTrack);
                     this.setupAudioAnalyser(this.localStream);
+                    this.replaceTracksOnAllPeers(this.localStream);
                 } catch (e) {
                     console.error('Mikrofon almashtirishda xatolik:', e);
                 }
             }
         },
 
-        // 5. Change Video source dynamically
         async changeVideoSource(deviceId) {
             this.selectedVideoDevice = deviceId;
             if (this.localStream) {
-                const videoTracks = this.localStream.getVideoTracks();
-                videoTracks.forEach(t => t.stop());
+                const oldTracks = this.localStream.getVideoTracks();
+                oldTracks.forEach(t => t.stop());
 
                 try {
                     const newVideoStream = await navigator.mediaDevices.getUserMedia({
@@ -605,37 +968,45 @@ function liveStudioController(isHost, initialPermission) {
                     const newVideoTrack = newVideoStream.getVideoTracks()[0];
                     newVideoTrack.enabled = this.isVideoOn;
 
-                    this.localStream.removeTrack(videoTracks[0]);
+                    if (oldTracks[0]) this.localStream.removeTrack(oldTracks[0]);
                     this.localStream.addTrack(newVideoTrack);
 
                     const videoEl = document.getElementById('liveVideoPlayer');
                     if (videoEl) videoEl.srcObject = this.localStream;
+
+                    this.replaceTracksOnAllPeers(this.localStream);
                 } catch (e) {
                     console.error('Kamera almashtirishda xatolik:', e);
                 }
             }
         },
 
-        // 6. Mic On/Off toggle
         toggleMic() {
             this.isMicOn = !this.isMicOn;
-            if (this.localStream) {
-                this.localStream.getAudioTracks().forEach(t => t.enabled = this.isMicOn);
+            const stream = this.isScreenSharing ? this.screenStream : this.localStream;
+            if (stream) {
+                stream.getAudioTracks().forEach(t => t.enabled = this.isMicOn);
             }
+            this.sendSignal('stream-status', 'all', {
+                isVideoOn: this.isVideoOn,
+                isMicOn: this.isMicOn
+            });
         },
 
-        // 7. Video On/Off toggle
         toggleVideo() {
             this.isVideoOn = !this.isVideoOn;
-            if (this.localStream) {
-                this.localStream.getVideoTracks().forEach(t => t.enabled = this.isVideoOn);
+            const stream = this.isScreenSharing ? this.screenStream : this.localStream;
+            if (stream) {
+                stream.getVideoTracks().forEach(t => t.enabled = this.isVideoOn);
             }
+            this.sendSignal('stream-status', 'all', {
+                isVideoOn: this.isVideoOn,
+                isMicOn: this.isMicOn
+            });
         },
 
-        // 8. Screen Share (Ekran ulashish)
         async toggleScreenShare() {
             if (this.isScreenSharing) {
-                // Stop screen share and revert to webcam
                 if (this.screenStream) {
                     this.screenStream.getTracks().forEach(t => t.stop());
                 }
@@ -652,7 +1023,12 @@ function liveStudioController(isHost, initialPermission) {
                         videoEl.srcObject = screenStream;
                     }
 
-                    // Auto revert when user stops sharing from browser toolbar
+                    this.replaceTracksOnAllPeers(screenStream);
+                    this.sendSignal('stream-status', 'all', {
+                        isVideoOn: true,
+                        isMicOn: this.isMicOn
+                    });
+
                     screenStream.getVideoTracks()[0].onended = () => {
                         this.isScreenSharing = false;
                         this.startMediaStream();
@@ -663,10 +1039,8 @@ function liveStudioController(isHost, initialPermission) {
             }
         },
 
-        // 9. Video Recording (MediaRecorder API - Zapis)
         toggleRecording() {
             if (this.isRecording) {
-                // Stop recording & trigger download
                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                     this.mediaRecorder.stop();
                 }
@@ -674,7 +1048,6 @@ function liveStudioController(isHost, initialPermission) {
                 clearInterval(this.recordInterval);
                 this.recordSeconds = 0;
             } else {
-                // Start recording
                 const streamToRecord = this.isScreenSharing ? this.screenStream : this.localStream;
                 if (!streamToRecord) {
                     alert('Yozib olish uchun faol kamera yoki mikrofon mavjud emas.');
@@ -710,7 +1083,7 @@ function liveStudioController(isHost, initialPermission) {
                         }, 100);
                     };
 
-                    this.mediaRecorder.start(1000); // 1-second chunks
+                    this.mediaRecorder.start(1000);
                     this.isRecording = true;
                     this.recordSeconds = 0;
                     this.recordInterval = setInterval(() => {

@@ -66,6 +66,7 @@ class LiveIndex extends Component
             'permission_mode' => $this->newPermissionMode,
             'status'          => LiveEvent::STATUS_LIVE,
             'scheduled_at'    => now(),
+            'started_at'      => now(),
         ]);
 
         $this->showStudioModal = false;

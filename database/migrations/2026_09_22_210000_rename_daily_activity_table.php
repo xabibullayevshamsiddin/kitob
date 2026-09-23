@@ -13,11 +13,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::rename('daily_activity', 'daily_activities');
+        if (Schema::hasTable('daily_activity') && !Schema::hasTable('daily_activities')) {
+            Schema::rename('daily_activity', 'daily_activities');
+        }
     }
 
     public function down(): void
     {
-        Schema::rename('daily_activities', 'daily_activity');
+        if (Schema::hasTable('daily_activities') && !Schema::hasTable('daily_activity')) {
+            Schema::rename('daily_activities', 'daily_activity');
+        }
     }
 };

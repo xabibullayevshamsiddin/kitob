@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark" x-data="{ darkMode: true, mobileMenu: false }" :class="{ 'dark': darkMode }">
+<html lang="uz" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,15 +36,7 @@
 <body class="bg-ink-950 text-slate-200 font-sans antialiased min-h-screen noise-bg">
     @include('components.page-loader')
     <div id="smooth-page-wrapper">
-    <header id="site-header" class="sticky top-0 z-50 w-full backdrop-blur-xl bg-ink-950/80 border-b border-white/[0.07]">
-        <div class="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
-            <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-ink-950 font-black text-xl shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">📖</div>
-                <span class="font-bold text-white text-base group-hover:text-amber-400 transition-colors">Kitobxon</span>
-            </a>
-            <a href="{{ route('home') }}" class="text-xs font-mono text-amber-400 hover:underline">← Bosh sahifaga qaytish</a>
-        </div>
-    </header>
+    <x-nav.main-header />
 
     <main class="legal-content py-16 max-w-4xl mx-auto px-6 space-y-8">
         <div>

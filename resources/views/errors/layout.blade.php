@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark" x-data="{ darkMode: true }">
+<html lang="uz" class="scroll-smooth dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

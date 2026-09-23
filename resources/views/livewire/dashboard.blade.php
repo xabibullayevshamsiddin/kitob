@@ -103,6 +103,15 @@
                             <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             <span>Video dars</span>
                         </a>
+
+                        @if($featuredBook->chapters()->where('is_published', true)->exists())
+                            <a href="{{ route('books.pdf', $featuredBook->id) }}" 
+                               class="px-5 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold text-xs uppercase tracking-wider rounded-xl border border-rose-500/30 hover:border-rose-400/50 transition-all active:scale-[0.98] flex items-center gap-2"
+                               title="Butun kitobni PDF sifatida yuklab olish">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span>PDF yuklash</span>
+                            </a>
+                        @endif
                     </div>
                 </div>
 
