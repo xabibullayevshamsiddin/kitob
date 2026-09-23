@@ -362,7 +362,14 @@
     }
 
     // Intercept clicks on links for seamless page transitions
+    // Guard: Only activate PJAX on pages that have #smooth-page-wrapper (public pages).
+    // Dashboard, auth, and other layout pages must not intercept clicks.
     document.addEventListener('click', (e) => {
+        // ── PJAX Guard ─────────────────────────────────────────────────────
+        // If the CURRENT page doesn't have the smooth wrapper, skip interception.
+        if (!document.getElementById('smooth-page-wrapper')) return;
+        // ───────────────────────────────────────────────────────────────────
+
         const link = e.target.closest('a');
         if (!link) return;
 
@@ -401,6 +408,8 @@
 
     // Handle browser Back / Forward buttons seamlessly
     window.addEventListener('popstate', (e) => {
+        // Only use PJAX if the current page supports it
+        if (!document.getElementById('smooth-page-wrapper')) return;
         seamlessNavigateTo(window.location.href, false);
     });
 
