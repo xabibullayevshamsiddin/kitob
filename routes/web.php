@@ -66,6 +66,16 @@ Route::get('/books', function () {
     return view('public.books', compact('books'));
 })->name('books.public');
 
+// Error sahifalari dizaynini ko'rish (Preview routes)
+Route::prefix('errors')->group(function () {
+    Route::get('/404', fn() => response()->view('errors.404', [], 404))->name('error.404');
+    Route::get('/403', fn() => response()->view('errors.403', [], 403))->name('error.403');
+    Route::get('/500', fn() => response()->view('errors.500', [], 500))->name('error.500');
+    Route::get('/419', fn() => response()->view('errors.419', [], 419))->name('error.419');
+    Route::get('/429', fn() => response()->view('errors.429', [], 429))->name('error.429');
+    Route::get('/503', fn() => response()->view('errors.503', [], 503))->name('error.503');
+});
+
 /*
 |--------------------------------------------------------------------------
 | ONBOARDING

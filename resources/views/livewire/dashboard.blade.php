@@ -24,7 +24,7 @@
 
     <!-- ── Hero Section: Haftalik Kitob (Restrained & High-contrast) ── -->
     @if ($featuredBook)
-        <div class="relative overflow-hidden rounded-3xl bg-slate-900 border border-white/10 p-6 sm:p-10 shadow-xl">
+        <div class="relative overflow-hidden rounded-3xl bg-ink-800/70 border border-white/10 p-6 sm:p-10 shadow-xl">
             <!-- Subtle warm background glow -->
             <div class="absolute -right-24 -top-24 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -120,7 +120,7 @@
             @auth
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     
-                    <div class="p-5 rounded-2xl bg-slate-900 border border-white/10 hover:border-amber-400/30 transition-all">
+                    <div class="p-5 rounded-2xl bg-ink-800/70 border border-white/10 hover:border-amber-400/30 transition-all">
                         <div class="flex items-center gap-2 text-amber-500 mb-2 font-mono text-xs font-bold uppercase">
                             <span>🔥</span>
                             <span>Streak</span>
@@ -128,7 +128,7 @@
                         <p class="text-2xl font-black text-white font-mono">{{ $user->current_streak }} <span class="text-xs text-slate-500 font-sans">kun</span></p>
                     </div>
 
-                    <div class="p-5 rounded-2xl bg-slate-900 border border-white/10 hover:border-indigo-400/30 transition-all">
+                    <div class="p-5 rounded-2xl bg-ink-800/70 border border-white/10 hover:border-indigo-400/30 transition-all">
                         <div class="flex items-center gap-2 text-indigo-400 mb-2 font-mono text-xs font-bold uppercase">
                             <span>⭐️</span>
                             <span>Ballar</span>
@@ -136,7 +136,7 @@
                         <p class="text-2xl font-black text-white font-mono">{{ number_format($user->total_points) }}</p>
                     </div>
 
-                    <div class="p-5 rounded-2xl bg-slate-900 border border-white/10 hover:border-amber-400/30 transition-all">
+                    <div class="p-5 rounded-2xl bg-ink-800/70 border border-white/10 hover:border-amber-400/30 transition-all">
                         <div class="flex items-center gap-2 text-amber-400 mb-2 font-mono text-xs font-bold uppercase">
                             <span>🪙</span>
                             <span>Tangalar</span>
@@ -144,7 +144,7 @@
                         <p class="text-2xl font-black text-white font-mono">{{ number_format($user->coin_balance) }}</p>
                     </div>
 
-                    <div class="p-5 rounded-2xl bg-slate-900 border border-white/10 hover:border-emerald-400/30 transition-all">
+                    <div class="p-5 rounded-2xl bg-ink-800/70 border border-white/10 hover:border-emerald-400/30 transition-all">
                         <div class="flex items-center gap-2 text-emerald-400 mb-2 font-mono text-xs font-bold uppercase">
                             <span>⏱️</span>
                             <span>Mutolaa</span>
@@ -157,7 +157,7 @@
 
             <!-- Daily Quote Card (Editorial Style) -->
             @if ($todayQuote)
-                <div class="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-white/10 relative overflow-hidden">
+                <div class="p-6 sm:p-8 rounded-3xl bg-ink-800/70 border border-white/10 relative overflow-hidden">
                     <div class="flex items-center justify-between mb-4">
                         <span class="text-xs font-mono font-semibold text-amber-400 uppercase tracking-widest flex items-center gap-2">
                             <span>✨</span> Kunlik tavsiya
@@ -193,7 +193,7 @@
 
         <!-- Right 1 Col: Leaderboard (Clean high-contrast ranks) -->
         <div class="space-y-6">
-            <div class="p-6 rounded-3xl bg-slate-900 border border-white/10 shadow-sm">
+            <div class="p-6 rounded-3xl bg-ink-800/70 border border-white/10 shadow-sm">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-base font-bold text-white flex items-center gap-2">
                         <span>🏆</span> Peshqadamlar

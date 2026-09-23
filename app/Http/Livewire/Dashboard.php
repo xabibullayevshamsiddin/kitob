@@ -110,6 +110,6 @@ class Dashboard extends Component
             'upcomingLive' => $upcomingLive,
             'topUsers'     => $topUsers,
             'user'         => $user,
-        ])->layout('layouts.app', ['title' => 'Boshqaruv paneli']);
+        ])->layout('layouts.dashboard', ['title' => 'Boshqaruv paneli']);
     }
 }
