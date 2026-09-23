@@ -66,6 +66,26 @@ Route::get('/books', function () {
     return view('public.books', compact('books'));
 })->name('books.public');
 
+// Kitoblar katalogi (login shart emas — hamma ko'ra oladi)
+Route::get('/catalog', CatalogPage::class)->name('books.catalog');
+
+// Reyting sahifasi (hamma ko'ra oladi)
+Route::get('/leaderboard', function () {
+    $topUsers = \App\Models\User::orderByDesc('total_points')->take(20)->get();
+    return view('pages.leaderboard', compact('topUsers'));
+})->name('leaderboard');
+
+// Umumiy Chat (hamma ko'ra oladi, yozish uchun login kerak bo'ladi Livewire tomonida)
+Route::get('/chat', GlobalChat::class)->name('chat');
+
+// Guruhlar (hamma ko'ra oladi)
+Route::get('/groups', GroupList::class)->name('groups.index');
+Route::get('/groups/{group}', GroupDetail::class)->name('groups.show');
+
+// Jonli efirlar (hamma ko'ra oladi)
+Route::get('/live', LiveIndex::class)->name('live.index');
+Route::get('/live/{event}', LiveDetail::class)->name('live.show');
+
 // Error sahifalari dizaynini ko'rish (Preview routes)
 Route::prefix('errors')->group(function () {
     Route::get('/404', fn() => response()->view('errors.404', [], 404))->name('error.404');
@@ -98,9 +118,7 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
         ->middleware('staff.redirect')
         ->name('dashboard');
 
-    // Books & Reading (O'quvchilar uchun)
-    Route::get('/catalog', CatalogPage::class)->name('books.catalog');
-
+    // Books & Reading (O'quvchilar uchun — login kerak)
     Route::get('/books/{slug}', function ($slug) {
         $book = \App\Models\Book::where('slug', $slug)->firstOrFail();
         return view('pages.book-detail', compact('book'));
@@ -124,22 +142,7 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
 
     Route::get('/books/{book}/quiz', TakeQuiz::class)->name('quiz.show');
 
-    // Gamification
-    Route::get('/leaderboard', function () {
-        $topUsers = \App\Models\User::orderByDesc('total_points')->take(20)->get();
-        return view('pages.leaderboard', compact('topUsers'));
-    })->name('leaderboard');
-
-    // Community
-    Route::get('/chat', GlobalChat::class)->name('chat');
-    Route::get('/groups', GroupList::class)->name('groups.index');
-    Route::get('/groups/{group}', GroupDetail::class)->name('groups.show');
-
-    // Live events
-    Route::get('/live', LiveIndex::class)->name('live.index');
-    Route::get('/live/{event}', LiveDetail::class)->name('live.show');
-
-    // AI Chatbot (faqat student)
+    // AI Chatbot (faqat student — login kerak)
     Route::get('/ai-chat', AiChat::class)->name('ai-chat');
 });
 
