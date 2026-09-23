@@ -211,7 +211,7 @@
                                 <img src="{{ $topUser->avatar_url }}" class="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-white/10">
                                 <div class="min-w-0">
                                     <p class="text-xs font-bold text-slate-200 truncate">{{ $topUser->name }}</p>
-                                    <p class="text-[10px] text-slate-500 font-mono truncate">@{{ $topUser->username }}</p>
+                                    <p class="text-[10px] text-slate-500 font-mono truncate">{{ '@' . $topUser->username }}</p>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
