@@ -45,6 +45,7 @@ class CreateNewUser implements CreatesNewUsers
             'username' => strtolower($input['username']),
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
+            'email_verified_at' => now(),
             'role' => 'reader',
             'total_points' => 0,
             'coin_balance' => 0,
