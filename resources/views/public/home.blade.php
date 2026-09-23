@@ -144,6 +144,7 @@
     <div class="fixed top-[-120px] left-1/2 -translate-x-1/2 w-[950px] h-[500px] bg-gradient-to-b from-amber-500/15 via-indigo-600/8 to-transparent rounded-full blur-[150px] pointer-events-none -z-10 orb-animate-1"></div>
     <div class="fixed bottom-[-100px] right-[-80px] w-[650px] h-[650px] bg-indigo-900/12 rounded-full blur-[160px] pointer-events-none -z-10 orb-animate-2"></div>
 
+    <div id="smooth-page-wrapper">
     <!-- ── Header Navigation (GSAP Nav Entrance) ── -->
     <header id="site-header" class="sticky top-0 z-50 w-full backdrop-blur-xl bg-ink-950/80 border-b border-white/[0.07] transition-all">
         <div class="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
@@ -530,6 +531,7 @@
             </div>
         </div>
     </footer>
+    </div>
 
     <!-- ── Advanced Motion & Physics Script (GSAP + ScrollTrigger + Dynamic Tilt + Counters) ── -->
     <script>

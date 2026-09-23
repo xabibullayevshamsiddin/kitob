@@ -111,6 +111,7 @@
     <div class="fixed top-[-100px] left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-amber-500/12 via-indigo-600/8 to-transparent rounded-full blur-[140px] pointer-events-none -z-10 orb-float-1"></div>
     <div class="fixed bottom-[-120px] right-[-100px] w-[650px] h-[650px] bg-indigo-900/15 rounded-full blur-[160px] pointer-events-none -z-10 orb-float-2"></div>
 
+    <div id="smooth-page-wrapper" class="flex-1 flex flex-col justify-between">
     <!-- ── Minimal Top Header ── -->
     <header id="site-header" class="w-full backdrop-blur-xl bg-ink-950/70 border-b border-white/[0.07] z-40">
         <div class="max-w-7xl mx-auto px-6 h-[70px] flex items-center justify-between">
@@ -185,6 +186,7 @@
                 <a href="{{ url('/errors/503') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*503') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">503 (Ta'mirlash)</a>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- ── Advanced Motion & Physics Script ── -->

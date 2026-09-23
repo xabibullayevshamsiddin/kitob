@@ -35,6 +35,7 @@
 </head>
 <body class="bg-ink-950 text-slate-200 font-sans antialiased min-h-screen noise-bg">
     @include('components.page-loader')
+    <div id="smooth-page-wrapper">
     <header id="site-header" class="sticky top-0 z-50 w-full backdrop-blur-xl bg-ink-950/80 border-b border-white/[0.07]">
         <div class="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
             <a href="{{ route('home') }}" class="flex items-center gap-3 group">
@@ -58,6 +59,7 @@
             <p>3. <strong>Xavfsizlik kafolati:</strong> Barcha parollar zamonaviy xesh algoritmlari yordamida himoyalangan.</p>
         </div>
     </main>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

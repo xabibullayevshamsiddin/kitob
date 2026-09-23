@@ -126,6 +126,7 @@
     <div class="fixed top-[-100px] left-1/2 -translate-x-1/2 w-[1000px] h-[480px] bg-gradient-to-b from-amber-500/12 via-indigo-600/6 to-transparent rounded-full blur-[140px] pointer-events-none -z-10 orb-animate-1"></div>
     <div class="fixed bottom-[-100px] right-[-100px] w-[600px] h-[600px] bg-indigo-900/12 rounded-full blur-[150px] pointer-events-none -z-10 orb-animate-2"></div>
 
+    <div id="smooth-page-wrapper">
     <!-- ── Header ── -->
     <header id="site-header" class="sticky top-0 z-50 w-full backdrop-blur-xl bg-ink-950/80 border-b border-white/[0.07]">
         <div class="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
@@ -278,6 +279,7 @@
             </div>
         </div>
     </footer>
+    </div>
 
     <!-- ── Advanced Motion & Physics Script ── -->
     <script>
