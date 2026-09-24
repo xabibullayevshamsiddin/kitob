@@ -94,15 +94,16 @@
         <div class="lg:col-span-7 xl:col-span-8 space-y-5">
 
             <!-- Video Screen Viewport -->
-            <div class="relative w-full aspect-video rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center group">
+            <div class="relative w-full aspect-video rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center group"
+                 @click="if (!isHost && (needsUnmute || isViewerMuted)) unmuteAudio()">
                 
                 <!-- Live Video Element (Webcam / Stream) -->
                 <video id="liveVideoPlayer" autoplay playsinline class="w-full h-full object-cover transition-opacity duration-300"
                        :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }">
                 </video>
 
-                <!-- Dedicated Audio Element for WebRTC audio stream playback -->
-                <audio id="liveAudioPlayer" autoplay playsinline class="hidden"></audio>
+                <!-- Dedicated Audio Element for WebRTC audio stream playback (off-screen, never display:none) -->
+                <audio id="liveAudioPlayer" autoplay playsinline style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></audio>
 
                 <!-- Avatar Backdrop when Camera is Off or audio-only -->
                 <div x-show="!isVideoOn" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
@@ -176,10 +177,18 @@
 
                     <!-- Viewer Mute/Unmute Quick Toggle -->
                     <template x-if="!isHost && hasRemoteStream">
-                        <button @click="toggleViewerMute()"
-                            class="flex items-center gap-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 text-white text-xs font-medium transition-colors">
-                            <span x-text="isViewerMuted ? '🔇 Ovozsiz' : '🔊 Ovoz'"></span>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button @click="unmuteAudio()"
+                                x-show="needsUnmute || isViewerMuted"
+                                class="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/20 text-white text-xs font-bold transition-all shadow-lg active:scale-95 animate-pulse">
+                                <span>🔊 Ovozni Yoqish</span>
+                            </button>
+                            <button @click="toggleViewerMute()"
+                                x-show="!needsUnmute && !isViewerMuted"
+                                class="flex items-center gap-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 text-white text-xs font-medium transition-colors">
+                                <span>🔊 Ovoz Yoqilgan</span>
+                            </button>
+                        </div>
                     </template>
                 </div>
 
@@ -936,42 +945,59 @@ function liveStudioController(config) {
                 const track = event.track;
                 if (!track) return;
 
-                // [DEBUG] Log incoming track from host
                 console.log('[VIEWER] ontrack received:', track.kind, 'id=' + track.id, 'readyState=' + track.readyState, 'enabled=' + track.enabled);
 
-                // Add to persistent remoteStream
+                // Add track to persistent remoteStream
                 if (!this.remoteStream.getTracks().some(t => t.id === track.id)) {
                     this.remoteStream.addTrack(track);
                 }
 
-                console.log('[VIEWER] remoteStream now has tracks:', this.remoteStream.getTracks().map(t => t.kind + ' enabled=' + t.enabled));
+                console.log('[VIEWER] remoteStream tracks:', this.remoteStream.getTracks().map(t => t.kind + '(enabled=' + t.enabled + ')'));
 
                 const videoEl = document.getElementById('liveVideoPlayer');
                 const audioEl = document.getElementById('liveAudioPlayer');
 
-                // 1. Video stream binding
-                if (videoEl && videoEl.srcObject !== this.remoteStream) {
-                    videoEl.srcObject = this.remoteStream;
-                    videoEl.play().catch(() => {});
+                // Update UI state for tracks
+                if (track.kind === 'video') {
+                    this.isVideoOn = true;
+                }
+                if (track.kind === 'audio') {
+                    this.isMicOn = true;
                 }
 
-                // 2. Audio stream dedicated playback
+                // 1. Video Element Binding (Always refresh srcObject so newly added tracks are recognized)
+                if (videoEl) {
+                    videoEl.srcObject = this.remoteStream;
+                    videoEl.volume = 1.0;
+                    videoEl.muted = this.isViewerMuted;
+
+                    const vPlay = videoEl.play();
+                    if (vPlay !== undefined) {
+                        vPlay.then(() => {
+                            console.log('[VIEWER] videoEl.play() playing');
+                        }).catch(err => {
+                            console.warn('[VIEWER] videoEl unmuted autoplay blocked, trying muted playback:', err);
+                            // Fallback to muted so video renders on screen
+                            videoEl.muted = true;
+                            videoEl.play().catch(() => {});
+                            this.needsUnmute = true;
+                        });
+                    }
+                }
+
+                // 2. Dedicated Audio Player Fallback
                 if (track.kind === 'audio') {
                     if (audioEl) {
-                        const audioStream = new MediaStream([track]);
-                        audioEl.srcObject = audioStream;
+                        audioEl.srcObject = new MediaStream([track]);
                         audioEl.volume = 1.0;
                         audioEl.muted = this.isViewerMuted;
 
-                        console.log('[VIEWER] audioEl.srcObject set, muted=' + audioEl.muted, 'volume=' + audioEl.volume);
-
-                        const playPromise = audioEl.play();
-                        if (playPromise !== undefined) {
-                            playPromise.then(() => {
+                        const aPlay = audioEl.play();
+                        if (aPlay !== undefined) {
+                            aPlay.then(() => {
                                 console.log('[VIEWER] audioEl.play() succeeded');
-                                this.needsUnmute = false;
                             }).catch(err => {
-                                console.warn('[VIEWER] audioEl.play() blocked by autoplay policy:', err);
+                                console.warn('[VIEWER] audioEl.play() blocked by autoplay:', err);
                                 this.needsUnmute = true;
                             });
                         }
