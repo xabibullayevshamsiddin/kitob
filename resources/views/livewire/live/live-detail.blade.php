@@ -954,61 +954,23 @@ function liveStudioController(config) {
 
                 console.log('[VIEWER] remoteStream tracks:', this.remoteStream.getTracks().map(t => t.kind + '(enabled=' + t.enabled + ')'));
 
-                const videoEl = document.getElementById('liveVideoPlayer');
-                const audioEl = document.getElementById('liveAudioPlayer');
-
-                // Update UI state for tracks
                 if (track.kind === 'video') {
                     this.isVideoOn = true;
                 }
                 if (track.kind === 'audio') {
                     this.isMicOn = true;
-                }
-
-                // 1. Video Element Binding (Always refresh srcObject so newly added tracks are recognized)
-                if (videoEl) {
-                    videoEl.srcObject = this.remoteStream;
-                    videoEl.volume = 1.0;
-                    videoEl.muted = this.isViewerMuted;
-
-                    const vPlay = videoEl.play();
-                    if (vPlay !== undefined) {
-                        vPlay.then(() => {
-                            console.log('[VIEWER] videoEl.play() playing');
-                        }).catch(err => {
-                            console.warn('[VIEWER] videoEl unmuted autoplay blocked, trying muted playback:', err);
-                            // Fallback to muted so video renders on screen
-                            videoEl.muted = true;
-                            videoEl.play().catch(() => {});
-                            this.needsUnmute = true;
-                        });
-                    }
-                }
-
-                // 2. Dedicated Audio Player Fallback
-                if (track.kind === 'audio') {
-                    if (audioEl) {
-                        audioEl.srcObject = new MediaStream([track]);
-                        audioEl.volume = 1.0;
-                        audioEl.muted = this.isViewerMuted;
-
-                        const aPlay = audioEl.play();
-                        if (aPlay !== undefined) {
-                            aPlay.then(() => {
-                                console.log('[VIEWER] audioEl.play() succeeded');
-                            }).catch(err => {
-                                console.warn('[VIEWER] audioEl.play() blocked by autoplay:', err);
-                                this.needsUnmute = true;
-                            });
-                        }
-                    }
-
-                    // Setup VU meter with incoming audio track
                     this.setupAudioAnalyser(new MediaStream([track]));
                 }
 
                 this.hasRemoteStream = true;
                 this.isConnecting = false;
+
+                // Debounce attachment by 60ms so both audio & video tracks arrive before assigning srcObject,
+                // completely eliminating the "AbortError: interrupted by new load request"
+                clearTimeout(this._attachTimer);
+                this._attachTimer = setTimeout(() => {
+                    this.playRemoteStream();
+                }, 60);
             };
 
             pc.onicecandidate = (event) => {
@@ -1049,25 +1011,88 @@ function liveStudioController(config) {
             }
         },
 
-        unmuteAudio() {
+        playRemoteStream() {
+            if (!this.remoteStream) return;
             const videoEl = document.getElementById('liveVideoPlayer');
             const audioEl = document.getElementById('liveAudioPlayer');
 
-            if (audioEl) {
-                audioEl.muted = false;
-                audioEl.volume = 1.0;
-                audioEl.play().catch(() => {});
+            if (this.remoteStream.getVideoTracks().length > 0) {
+                this.isVideoOn = true;
             }
+            if (this.remoteStream.getAudioTracks().length > 0) {
+                this.isMicOn = true;
+            }
+
+            // 1. Primary Video Player (Video display + Speaker audio)
+            if (videoEl) {
+                if (videoEl.srcObject !== this.remoteStream) {
+                    videoEl.srcObject = this.remoteStream;
+                }
+                videoEl.volume = 1.0;
+                videoEl.muted = this.isViewerMuted;
+
+                const vPlay = videoEl.play();
+                if (vPlay !== undefined) {
+                    vPlay.then(() => {
+                        console.log('[VIEWER] videoEl playback ACTIVE (unmuted)');
+                        this.needsUnmute = false;
+                    }).catch(err => {
+                        if (err.name === 'AbortError') {
+                            setTimeout(() => { if (videoEl) videoEl.play().catch(() => {}); }, 120);
+                            return;
+                        }
+                        console.warn('[VIEWER] Autoplay policy blocked unmuted video, starting muted playback:', err);
+                        videoEl.muted = true;
+                        videoEl.play().catch(() => {});
+                        this.needsUnmute = true;
+                    });
+                }
+            }
+
+            // 2. Fallback Audio Player
+            const audioTracks = this.remoteStream.getAudioTracks();
+            if (audioEl && audioTracks.length > 0) {
+                const aStream = new MediaStream([audioTracks[0]]);
+                if (audioEl.srcObject !== aStream) {
+                    audioEl.srcObject = aStream;
+                }
+                audioEl.volume = 1.0;
+                audioEl.muted = this.isViewerMuted;
+
+                const aPlay = audioEl.play();
+                if (aPlay !== undefined) {
+                    aPlay.then(() => {
+                        console.log('[VIEWER] audioEl playback ACTIVE');
+                    }).catch(err => {
+                        if (err.name !== 'AbortError') {
+                            this.needsUnmute = true;
+                        }
+                    });
+                }
+            }
+        },
+
+        unmuteAudio() {
+            this.isViewerMuted = false;
+            this.needsUnmute = false;
+
+            const videoEl = document.getElementById('liveVideoPlayer');
+            const audioEl = document.getElementById('liveAudioPlayer');
+
             if (videoEl) {
                 videoEl.muted = false;
                 videoEl.volume = 1.0;
                 videoEl.play().catch(() => {});
             }
+            if (audioEl) {
+                audioEl.muted = false;
+                audioEl.volume = 1.0;
+                audioEl.play().catch(() => {});
+            }
             if (this.audioContext && this.audioContext.state === 'suspended') {
                 this.audioContext.resume().catch(() => {});
             }
-            this.needsUnmute = false;
-            this.isViewerMuted = false;
+            console.log('[VIEWER] unmuteAudio: all players unmuted, volume=1.0');
         },
 
         toggleViewerMute() {
