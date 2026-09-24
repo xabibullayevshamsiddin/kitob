@@ -574,13 +574,25 @@ function liveStudioController(config) {
                 // Viewer startup: send join announcement to host
                 this.sendSignal('join', 'host', { ts: Date.now() });
 
-                // If remote stream hasn't arrived yet, ping host every 2.5 seconds
+                // Retry join only if we still have no remote stream AND peer is not already connecting
                 this.heartbeatInterval = setInterval(() => {
-                    if (!this.hasRemoteStream) {
-                        this.connectionAttempts++;
-                        this.sendSignal('join', 'host', { ts: Date.now() });
+                    if (this.hasRemoteStream) {
+                        // Already connected — stop heartbeat entirely
+                        clearInterval(this.heartbeatInterval);
+                        return;
                     }
-                }, 2500);
+                    const pc = this.peerConnection;
+                    const pcState = pc ? pc.connectionState : null;
+                    // Do NOT send join if peer is currently connecting (would cause loop)
+                    if (pcState === 'connecting' || pcState === 'new') return;
+                    // If connected but no remote stream yet — also skip (tracks might still be arriving)
+                    if (pcState === 'connected') return;
+
+                    // Only retry on failed/closed/null state
+                    this.connectionAttempts++;
+                    console.log('[VIEWER] Retrying join (attempt #' + this.connectionAttempts + ', peer=' + (pcState ?? 'none') + ')');
+                    this.sendSignal('join', 'host', { ts: Date.now() });
+                }, 4000); // increased to 4s to reduce signal storm
             }
 
             // Scroll chat to bottom
@@ -771,8 +783,17 @@ function liveStudioController(config) {
                 return;
             }
 
-            if (this.peers[viewerId]) {
-                try { this.peers[viewerId].close(); } catch (e) {}
+            // ── GUARD: Do NOT recreate a healthy peer connection ──
+            // Only close and recreate if the existing peer is in a terminal/bad state
+            const existingPc = this.peers[viewerId];
+            if (existingPc) {
+                const state = existingPc.connectionState;
+                if (state === 'new' || state === 'connecting' || state === 'connected') {
+                    console.log('[HOST → ' + viewerId + '] Peer already in state "' + state + '", skipping recreate.');
+                    return;
+                }
+                // Terminal state (failed/closed/disconnected) — close and recreate
+                try { existingPc.close(); } catch (e) {}
             }
 
             const pc = new RTCPeerConnection(this.rtcConfig);
@@ -856,16 +877,22 @@ function liveStudioController(config) {
         },
 
         async handleOfferFromHost(offer) {
+            // ── GUARD: Do not close a healthy peer connection when new offer arrives ──
+            // New offers only arrive because viewer heartbeat sent join again — skip if already OK
             if (this.peerConnection) {
+                const state = this.peerConnection.connectionState;
+                if (state === 'connecting' || state === 'connected') {
+                    console.log('[VIEWER] Ignoring new offer — peer already in state:', state);
+                    return;
+                }
                 try { this.peerConnection.close(); } catch (e) {}
             }
 
             const pc = new RTCPeerConnection(this.rtcConfig);
             this.peerConnection = pc;
 
-            if (!this.remoteStream) {
-                this.remoteStream = new MediaStream();
-            }
+            // Reset remote stream for new connection
+            this.remoteStream = new MediaStream();
 
             pc.ontrack = (event) => {
                 const track = event.track;
