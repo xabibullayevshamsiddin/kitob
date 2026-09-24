@@ -463,20 +463,23 @@
     <script>
 
 /**
- * sanitizeSdp — Chrome's newer versions generate `a=ssrc: ... msid: ...` lines
- * in Unified Plan SDP. Some browser versions/builds reject these as "Invalid SDP line".
- * The msid is already declared via standalone `a=msid:` lines, so removing the
- * a=ssrc msid lines is safe and fixes cross-browser/cross-version compatibility.
+ * normalizeSdp — Ensures RFC 4566 compliance for WebRTC Session Descriptions:
+ * 1. Splits on any line break (\r\n, \r, or \n) regardless of transport corruption
+ * 2. Trims trailing whitespace from each line
+ * 3. Removes blank lines (prohibited by RFC 4566, causes "Invalid SDP line" parser errors)
+ * 4. Rejoins with strict CRLF (\r\n) and ensures a trailing CRLF
  */
-function sanitizeSdp(sdp) {
-    if (!sdp) return sdp;
-    return sdp.split('\r\n')
-        .filter(function(line) {
-            // Remove: a=ssrc:<id> msid:<stream-id> <track-id>   (problematic in some builds)
-            if (line.startsWith('a=ssrc:') && line.indexOf(' msid:') !== -1) return false;
-            return true;
-        })
-        .join('\r\n');
+function normalizeSdp(sdp) {
+    if (!sdp || typeof sdp !== 'string') return sdp || '';
+    const lines = sdp.split(/\r\n|\r|\n/);
+    const cleaned = [];
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trimEnd();
+        if (line.length > 0) {
+            cleaned.push(line);
+        }
+    }
+    return cleaned.join('\r\n') + '\r\n';
 }
 
 function liveStudioController(config) {
@@ -700,22 +703,27 @@ function liveStudioController(config) {
         },
 
         async sendSignal(type, receiverId, payload) {
+            const msgId = 'sig_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+            const wrappedPayload = (payload && typeof payload === 'object')
+                ? { ...payload, _msg_id: msgId }
+                : { data: payload, _msg_id: msgId };
+
             const msg = {
-                msg_id: 'sig_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8),
+                msg_id: msgId,
                 sender_id: this.myPeerId,
                 receiver_id: receiverId,
                 type: type,
-                payload: payload
+                payload: wrappedPayload
             };
 
-            // 1. BroadcastChannel dispatch
+            // 1. BroadcastChannel dispatch (instant local)
             if (this.broadcastChannel) {
                 try {
                     this.broadcastChannel.postMessage(msg);
                 } catch (e) {}
             }
 
-            // 2. HTTP POST dispatch
+            // 2. HTTP POST dispatch (persistent & cross-browser)
             if (this.signalSendUrl) {
                 try {
                     await fetch(this.signalSendUrl, {
@@ -739,11 +747,16 @@ function liveStudioController(config) {
         async handleSignalMessage(msg) {
             if (!msg || !msg.type || msg.sender_id === this.myPeerId) return;
 
-            // De-duplicate duplicate messages from dual channels
-            const dedupeKey = msg.msg_id || (msg.id ? `id_${msg.id}` : `${msg.sender_id}_${msg.type}_${JSON.stringify(msg.payload).slice(0, 30)}`);
+            // Universal deduplication: matches both BroadcastChannel and HTTP polling
+            const payload = msg.payload || {};
+            const dedupeKey = msg.msg_id
+                || payload._msg_id
+                || (msg.id ? `db_${msg.id}` : null)
+                || `${msg.sender_id}_${msg.type}_${payload.type || ''}`;
+
             if (this.processedSignalKeys.has(dedupeKey)) return;
             this.processedSignalKeys.add(dedupeKey);
-            if (this.processedSignalKeys.size > 250) {
+            if (this.processedSignalKeys.size > 500) {
                 const first = this.processedSignalKeys.values().next().value;
                 this.processedSignalKeys.delete(first);
             }
@@ -765,11 +778,11 @@ function liveStudioController(config) {
                 const pc = this.peers[viewerId];
                 if (pc && pc.signalingState !== 'stable') {
                     try {
-                        const sanitizedAnswer = {
+                        const cleanAnswer = {
                             type: msg.payload.type,
-                            sdp: sanitizeSdp(msg.payload.sdp)
+                            sdp: normalizeSdp(msg.payload.sdp)
                         };
-                        await pc.setRemoteDescription(new RTCSessionDescription(sanitizedAnswer));
+                        await pc.setRemoteDescription(new RTCSessionDescription(cleanAnswer));
 
                         // Drain queued ICE candidates if any arrived early
                         if (this.hostIceQueues && this.hostIceQueues[viewerId] && this.hostIceQueues[viewerId].length > 0) {
@@ -858,7 +871,10 @@ function liveStudioController(config) {
             try {
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
-                await this.sendSignal('offer', viewerId, offer);
+                await this.sendSignal('offer', viewerId, {
+                    type: offer.type,
+                    sdp: normalizeSdp(offer.sdp)
+                });
 
                 // Broadcast current stream status to viewer
                 await this.sendSignal('stream-status', viewerId, {
@@ -897,12 +913,14 @@ function liveStudioController(config) {
         },
 
         async handleOfferFromHost(offer) {
-            // ── GUARD: Do not close a healthy peer connection when new offer arrives ──
-            // New offers only arrive because viewer heartbeat sent join again — skip if already OK
+            if (!offer || !offer.sdp) return;
+
+            // ── GUARD: Do not interrupt healthy connection or duplicate offer in flight ──
             if (this.peerConnection) {
                 const state = this.peerConnection.connectionState;
-                if (state === 'connecting' || state === 'connected') {
-                    console.log('[VIEWER] Ignoring new offer — peer already in state:', state);
+                const sigState = this.peerConnection.signalingState;
+                if (state === 'connecting' || state === 'connected' || sigState === 'have-remote-offer' || this.hasRemoteStream) {
+                    console.log('[VIEWER] Ignoring duplicate/in-flight offer — state:', state, 'sigState:', sigState);
                     return;
                 }
                 try { this.peerConnection.close(); } catch (e) {}
@@ -974,14 +992,14 @@ function liveStudioController(config) {
             };
 
             try {
-                // Sanitize offer SDP to remove a=ssrc msid lines that cause "Invalid SDP line" in some Chrome builds
-                const sanitizedOffer = {
+                // Ensure RFC 4566 compliant CRLF SDP line formatting
+                const cleanOffer = {
                     type: offer.type,
-                    sdp: sanitizeSdp(offer.sdp)
+                    sdp: normalizeSdp(offer.sdp)
                 };
-                await pc.setRemoteDescription(new RTCSessionDescription(sanitizedOffer));
+                await pc.setRemoteDescription(new RTCSessionDescription(cleanOffer));
 
-                console.log('[VIEWER] setRemoteDescription done. Offer SDP has audio?', sanitizedOffer.sdp.includes('m=audio'));
+                console.log('[VIEWER] setRemoteDescription done. Offer SDP has audio?', cleanOffer.sdp.includes('m=audio'));
                 console.log('[VIEWER] Receivers after setRemoteDescription:', pc.getReceivers().map(r => r.track?.kind ?? 'no-track'));
 
                 while (this.iceCandidateQueue.length > 0) {
@@ -996,7 +1014,10 @@ function liveStudioController(config) {
 
                 console.log('[VIEWER] Answer SDP has audio?', answer.sdp.includes('m=audio'));
 
-                await this.sendSignal('answer', 'host', answer);
+                await this.sendSignal('answer', 'host', {
+                    type: answer.type,
+                    sdp: normalizeSdp(answer.sdp)
+                });
             } catch (err) {
                 console.error('Viewer error processing host offer:', err);
             }

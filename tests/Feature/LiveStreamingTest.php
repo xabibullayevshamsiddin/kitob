@@ -12,14 +12,13 @@ class LiveStreamingTest extends TestCase
 
     public function test_live_stream_signal_can_be_sent_and_polled(): void
     {
-        $host = User::firstOrCreate(
-            ['email' => 'stream_host@kitobxon.uz'],
-            [
-                'name' => 'Host Teacher',
-                'username' => 'stream_host_' . uniqid(),
-                'password' => bcrypt('password'),
-            ]
-        );
+        $unique = uniqid();
+        $host = User::create([
+            'email'    => "stream_host_{$unique}@kitobxon.uz",
+            'name'     => 'Host Teacher',
+            'username' => 'stream_host_' . $unique,
+            'password' => bcrypt('password'),
+        ]);
         $event = LiveEvent::create([
             'title'           => 'Test WebRTC Live Room',
             'host_user_id'    => $host->id,
@@ -63,14 +62,13 @@ class LiveStreamingTest extends TestCase
 
     public function test_live_stream_detail_page_loads_with_started_at(): void
     {
-        $host = User::firstOrCreate(
-            ['email' => 'stream_host2@kitobxon.uz'],
-            [
-                'name' => 'Host Teacher 2',
-                'username' => 'stream_host2_' . uniqid(),
-                'password' => bcrypt('password'),
-            ]
-        );
+        $unique = uniqid();
+        $host = User::create([
+            'email'    => "stream_host2_{$unique}@kitobxon.uz",
+            'name'     => 'Host Teacher 2',
+            'username' => 'stream_host2_' . $unique,
+            'password' => bcrypt('password'),
+        ]);
         $event = LiveEvent::create([
             'title'           => 'Fizika Jonli Efiri',
             'host_user_id'    => $host->id,
