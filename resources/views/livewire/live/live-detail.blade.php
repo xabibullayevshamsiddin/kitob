@@ -461,6 +461,24 @@
 
     <!-- ── 3. WEBRTC / MEDIA STUDIO JAVASCRIPT CONTROLLER ── -->
     <script>
+
+/**
+ * sanitizeSdp — Chrome's newer versions generate `a=ssrc: ... msid: ...` lines
+ * in Unified Plan SDP. Some browser versions/builds reject these as "Invalid SDP line".
+ * The msid is already declared via standalone `a=msid:` lines, so removing the
+ * a=ssrc msid lines is safe and fixes cross-browser/cross-version compatibility.
+ */
+function sanitizeSdp(sdp) {
+    if (!sdp) return sdp;
+    return sdp.split('\r\n')
+        .filter(function(line) {
+            // Remove: a=ssrc:<id> msid:<stream-id> <track-id>   (problematic in some builds)
+            if (line.startsWith('a=ssrc:') && line.indexOf(' msid:') !== -1) return false;
+            return true;
+        })
+        .join('\r\n');
+}
+
 function liveStudioController(config) {
     const isHost = Boolean(config.isHost);
     const eventId = Number(config.eventId);
@@ -747,7 +765,11 @@ function liveStudioController(config) {
                 const pc = this.peers[viewerId];
                 if (pc && pc.signalingState !== 'stable') {
                     try {
-                        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+                        const sanitizedAnswer = {
+                            type: msg.payload.type,
+                            sdp: sanitizeSdp(msg.payload.sdp)
+                        };
+                        await pc.setRemoteDescription(new RTCSessionDescription(sanitizedAnswer));
 
                         // Drain queued ICE candidates if any arrived early
                         if (this.hostIceQueues && this.hostIceQueues[viewerId] && this.hostIceQueues[viewerId].length > 0) {
@@ -952,9 +974,14 @@ function liveStudioController(config) {
             };
 
             try {
-                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                // Sanitize offer SDP to remove a=ssrc msid lines that cause "Invalid SDP line" in some Chrome builds
+                const sanitizedOffer = {
+                    type: offer.type,
+                    sdp: sanitizeSdp(offer.sdp)
+                };
+                await pc.setRemoteDescription(new RTCSessionDescription(sanitizedOffer));
 
-                console.log('[VIEWER] setRemoteDescription done. Offer SDP has audio?', offer.sdp.includes('m=audio'));
+                console.log('[VIEWER] setRemoteDescription done. Offer SDP has audio?', sanitizedOffer.sdp.includes('m=audio'));
                 console.log('[VIEWER] Receivers after setRemoteDescription:', pc.getReceivers().map(r => r.track?.kind ?? 'no-track'));
 
                 while (this.iceCandidateQueue.length > 0) {
