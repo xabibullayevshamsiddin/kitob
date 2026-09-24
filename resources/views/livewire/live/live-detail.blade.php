@@ -459,10 +459,8 @@
 
     </div>
 
-</div>
-
-<!-- ── 3. WEBRTC / MEDIA STUDIO JAVASCRIPT CONTROLLER ── -->
-<script>
+    <!-- ── 3. WEBRTC / MEDIA STUDIO JAVASCRIPT CONTROLLER ── -->
+    <script>
 function liveStudioController(config) {
     const isHost = Boolean(config.isHost);
     const eventId = Number(config.eventId);
@@ -1343,4 +1341,6 @@ function liveStudioController(config) {
         }
     };
 }
-</script>
+    </script>
+
+</div>
