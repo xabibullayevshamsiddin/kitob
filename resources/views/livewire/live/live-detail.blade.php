@@ -237,6 +237,17 @@
                         </button>
                     </div>
 
+                    <!-- ── EKRAN ULASHISH AUDIO ESLATMASI ── -->
+                    <div x-show="isScreenSharing" x-transition
+                        class="px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2.5">
+                        <span class="text-base shrink-0">💡</span>
+                        <div>
+                            <p class="font-bold mb-0.5">Tizim ovozini ulash uchun:</p>
+                            <p>Brauzer dialog'ida <strong>"Share system audio"</strong> yoki <strong>"Share tab audio"</strong> tickini <strong>albatta belgilang</strong>. Belgilamasangiz, tomoshabinlar faqat video ko'radi, ovoz eshitmaydi.</p>
+                            <p class="mt-1 text-amber-600/70 dark:text-amber-400/70">⚠️ Firefox va Safari'da tizim audiosi ulashish qo'llab-quvvatlanmaydi. Chrome yoki Edge ishlatish tavsiya etiladi.</p>
+                        </div>
+                    </div>
+
                     <!-- ── KOMPYUTER MIKRAFON VA KAMERA SOZLAMALARI (Collapsible) ── -->
                     <div x-show="showDeviceSettings" x-collapse x-cloak class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -785,6 +796,11 @@ function liveStudioController(config) {
                 }
             }
 
+            // [DEBUG] Log local tracks being sent to viewer
+            console.log('[HOST → ' + viewerId + '] Local audio tracks:', activeStream.getAudioTracks().map(t => t.label + ' enabled=' + t.enabled));
+            console.log('[HOST → ' + viewerId + '] Local video tracks:', activeStream.getVideoTracks().map(t => t.label + ' enabled=' + t.enabled));
+            console.log('[HOST → ' + viewerId + '] RTCPeerConnection senders:', pc.getSenders().map(s => s.track?.kind ?? 'no-track'));
+
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
                     this.sendSignal('ice-candidate', viewerId, event.candidate);
@@ -792,6 +808,7 @@ function liveStudioController(config) {
             };
 
             pc.onconnectionstatechange = () => {
+                console.log('[HOST → ' + viewerId + '] Connection state:', pc.connectionState);
                 if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
                     delete this.peers[viewerId];
                 }
@@ -854,10 +871,15 @@ function liveStudioController(config) {
                 const track = event.track;
                 if (!track) return;
 
+                // [DEBUG] Log incoming track from host
+                console.log('[VIEWER] ontrack received:', track.kind, 'id=' + track.id, 'readyState=' + track.readyState, 'enabled=' + track.enabled);
+
                 // Add to persistent remoteStream
                 if (!this.remoteStream.getTracks().some(t => t.id === track.id)) {
                     this.remoteStream.addTrack(track);
                 }
+
+                console.log('[VIEWER] remoteStream now has tracks:', this.remoteStream.getTracks().map(t => t.kind + ' enabled=' + t.enabled));
 
                 const videoEl = document.getElementById('liveVideoPlayer');
                 const audioEl = document.getElementById('liveAudioPlayer');
@@ -876,12 +898,15 @@ function liveStudioController(config) {
                         audioEl.volume = 1.0;
                         audioEl.muted = this.isViewerMuted;
 
+                        console.log('[VIEWER] audioEl.srcObject set, muted=' + audioEl.muted, 'volume=' + audioEl.volume);
+
                         const playPromise = audioEl.play();
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
+                                console.log('[VIEWER] audioEl.play() succeeded');
                                 this.needsUnmute = false;
                             }).catch(err => {
-                                console.warn('Browser requires user gesture to play audio:', err);
+                                console.warn('[VIEWER] audioEl.play() blocked by autoplay policy:', err);
                                 this.needsUnmute = true;
                             });
                         }
@@ -904,6 +929,9 @@ function liveStudioController(config) {
             try {
                 await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
+                console.log('[VIEWER] setRemoteDescription done. Offer SDP has audio?', offer.sdp.includes('m=audio'));
+                console.log('[VIEWER] Receivers after setRemoteDescription:', pc.getReceivers().map(r => r.track?.kind ?? 'no-track'));
+
                 while (this.iceCandidateQueue.length > 0) {
                     const cand = this.iceCandidateQueue.shift();
                     try {
@@ -913,6 +941,9 @@ function liveStudioController(config) {
 
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
+
+                console.log('[VIEWER] Answer SDP has audio?', answer.sdp.includes('m=audio'));
+
                 await this.sendSignal('answer', 'host', answer);
             } catch (err) {
                 console.error('Viewer error processing host offer:', err);
