@@ -101,6 +101,9 @@
                        :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }">
                 </video>
 
+                <!-- Dedicated Audio Element for WebRTC audio stream playback -->
+                <audio id="liveAudioPlayer" autoplay playsinline class="hidden"></audio>
+
                 <!-- Avatar Backdrop when Camera is Off or audio-only -->
                 <div x-show="!isVideoOn" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
                     <div class="relative">
@@ -159,15 +162,25 @@
                     </div>
                 </div>
 
-                <!-- Bottom Left Audio VU Meter (Mikrofon indikatori) -->
-                <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10">
-                    <span class="text-xs" x-text="isMicOn ? '🎙️' : '🔇'"></span>
-                    <div class="flex items-center gap-1 h-3">
-                        <div class="w-1 bg-emerald-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 1.5)) + '%' }"></div>
-                        <div class="w-1 bg-emerald-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2)) + '%' }"></div>
-                        <div class="w-1 bg-amber-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2.5)) + '%' }"></div>
-                        <div class="w-1 bg-rose-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 3)) + '%' }"></div>
+                <!-- Bottom Left Audio VU Meter (Mikrofon indikatori) & Controls -->
+                <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
+                    <div class="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10">
+                        <span class="text-xs" x-text="isMicOn ? '🎙️' : '🔇'"></span>
+                        <div class="flex items-center gap-1 h-3">
+                            <div class="w-1 bg-emerald-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 1.5)) + '%' }"></div>
+                            <div class="w-1 bg-emerald-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2)) + '%' }"></div>
+                            <div class="w-1 bg-amber-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2.5)) + '%' }"></div>
+                            <div class="w-1 bg-rose-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 3)) + '%' }"></div>
+                        </div>
                     </div>
+
+                    <!-- Viewer Mute/Unmute Quick Toggle -->
+                    <template x-if="!isHost && hasRemoteStream">
+                        <button @click="toggleViewerMute()"
+                            class="flex items-center gap-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 text-white text-xs font-medium transition-colors">
+                            <span x-text="isViewerMuted ? '🔇 Ovozsiz' : '🔊 Ovoz'"></span>
+                        </button>
+                    </template>
                 </div>
 
                 <!-- Bottom Right Watermark -->
@@ -456,6 +469,7 @@ function liveStudioController(config) {
         hasRemoteStream: false,
         isConnecting: !isHost,
         needsUnmute: false,
+        isViewerMuted: false,
         isScreenSharing: false,
         isRecording: false,
         showDeviceSettings: false,
@@ -468,6 +482,7 @@ function liveStudioController(config) {
 
         // Media streams
         localStream: null,
+        remoteStream: null,
         screenStream: null,
         mediaRecorder: null,
         recordedChunks: [],
@@ -498,6 +513,7 @@ function liveStudioController(config) {
         processedSignalKeys: new Set(),
         broadcastChannel: null,
         peers: {}, // Host: map of viewerId -> RTCPeerConnection
+        hostIceQueues: {}, // Host: map of viewerId -> candidate[]
         peerConnection: null, // Viewer: RTCPeerConnection
         iceCandidateQueue: [],
 
@@ -536,6 +552,14 @@ function liveStudioController(config) {
                     });
                 }, 3000);
             } else {
+                // Auto-unmute for viewer on first user interaction anywhere on page (click, touch, key)
+                const autoUnmuteHandler = () => {
+                    this.unmuteAudio();
+                };
+                window.addEventListener('click', autoUnmuteHandler, { passive: true });
+                window.addEventListener('touchstart', autoUnmuteHandler, { passive: true });
+                window.addEventListener('keydown', autoUnmuteHandler, { passive: true });
+
                 // Viewer startup: send join announcement to host
                 this.sendSignal('join', 'host', { ts: Date.now() });
 
@@ -564,6 +588,12 @@ function liveStudioController(config) {
             if (this.peerConnection) {
                 try { this.peerConnection.close(); } catch (e) {}
                 this.peerConnection = null;
+            }
+            if (this.remoteStream) {
+                try {
+                    this.remoteStream.getTracks().forEach(t => t.stop());
+                } catch(e) {}
+                this.remoteStream = null;
             }
             this.sendSignal('join', 'host', { ts: Date.now() });
         },
@@ -697,16 +727,28 @@ function liveStudioController(config) {
                 if (pc && pc.signalingState !== 'stable') {
                     try {
                         await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+
+                        // Drain queued ICE candidates if any arrived early
+                        if (this.hostIceQueues && this.hostIceQueues[viewerId] && this.hostIceQueues[viewerId].length > 0) {
+                            while (this.hostIceQueues[viewerId].length > 0) {
+                                const cand = this.hostIceQueues[viewerId].shift();
+                                try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch(e) {}
+                            }
+                        }
                     } catch (e) {
                         console.warn('Host setRemoteDescription error:', e);
                     }
                 }
             } else if (msg.type === 'ice-candidate') {
                 const pc = this.peers[viewerId];
-                if (pc && msg.payload) {
+                if (pc && pc.remoteDescription && pc.remoteDescription.type) {
                     try {
                         await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
                     } catch (e) {}
+                } else if (msg.payload) {
+                    if (!this.hostIceQueues) this.hostIceQueues = {};
+                    if (!this.hostIceQueues[viewerId]) this.hostIceQueues[viewerId] = [];
+                    this.hostIceQueues[viewerId].push(msg.payload);
                 }
             }
         },
@@ -725,17 +767,22 @@ function liveStudioController(config) {
             const pc = new RTCPeerConnection(this.rtcConfig);
             this.peers[viewerId] = pc;
 
+            // Ensure tracks reflect current mute/unmute state before adding
+            activeStream.getAudioTracks().forEach(t => { t.enabled = this.isMicOn; });
+            activeStream.getVideoTracks().forEach(t => { t.enabled = this.isVideoOn; });
+
             // Add audio & video tracks from host active stream
             activeStream.getTracks().forEach(track => {
                 try { pc.addTrack(track, activeStream); } catch(e) {}
             });
 
-            // Ensure video and audio transceivers exist
-            if (!pc.getSenders().some(s => s.track && s.track.kind === 'video')) {
-                try { pc.addTransceiver('video', { direction: 'sendonly' }); } catch(e) {}
-            }
-            if (!pc.getSenders().some(s => s.track && s.track.kind === 'audio')) {
-                try { pc.addTransceiver('audio', { direction: 'sendonly' }); } catch(e) {}
+            // If screen sharing is active, ensure host local microphone audio is also included
+            if (this.isScreenSharing && this.localStream) {
+                const micTrack = this.localStream.getAudioTracks()[0];
+                if (micTrack && !pc.getSenders().some(s => s.track && s.track.kind === 'audio')) {
+                    micTrack.enabled = this.isMicOn;
+                    try { pc.addTrack(micTrack, this.localStream); } catch(e) {}
+                }
             }
 
             pc.onicecandidate = (event) => {
@@ -799,28 +846,53 @@ function liveStudioController(config) {
             const pc = new RTCPeerConnection(this.rtcConfig);
             this.peerConnection = pc;
 
-            try { pc.addTransceiver('video', { direction: 'recvonly' }); } catch(e) {}
-            try { pc.addTransceiver('audio', { direction: 'recvonly' }); } catch(e) {}
+            if (!this.remoteStream) {
+                this.remoteStream = new MediaStream();
+            }
 
             pc.ontrack = (event) => {
-                const videoEl = document.getElementById('liveVideoPlayer');
-                if (videoEl && event.streams && event.streams[0]) {
-                    const stream = event.streams[0];
-                    if (videoEl.srcObject !== stream) {
-                        videoEl.srcObject = stream;
-                    }
-                    videoEl.play().then(() => {
-                        this.needsUnmute = false;
-                    }).catch(err => {
-                        videoEl.muted = true;
-                        videoEl.play().catch(()=>{});
-                        this.needsUnmute = true;
-                    });
+                const track = event.track;
+                if (!track) return;
 
-                    this.hasRemoteStream = true;
-                    this.isConnecting = false;
-                    this.setupAudioAnalyser(stream);
+                // Add to persistent remoteStream
+                if (!this.remoteStream.getTracks().some(t => t.id === track.id)) {
+                    this.remoteStream.addTrack(track);
                 }
+
+                const videoEl = document.getElementById('liveVideoPlayer');
+                const audioEl = document.getElementById('liveAudioPlayer');
+
+                // 1. Video stream binding
+                if (videoEl && videoEl.srcObject !== this.remoteStream) {
+                    videoEl.srcObject = this.remoteStream;
+                    videoEl.play().catch(() => {});
+                }
+
+                // 2. Audio stream dedicated playback
+                if (track.kind === 'audio') {
+                    if (audioEl) {
+                        const audioStream = new MediaStream([track]);
+                        audioEl.srcObject = audioStream;
+                        audioEl.volume = 1.0;
+                        audioEl.muted = this.isViewerMuted;
+
+                        const playPromise = audioEl.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                this.needsUnmute = false;
+                            }).catch(err => {
+                                console.warn('Browser requires user gesture to play audio:', err);
+                                this.needsUnmute = true;
+                            });
+                        }
+                    }
+
+                    // Setup VU meter with incoming audio track
+                    this.setupAudioAnalyser(new MediaStream([track]));
+                }
+
+                this.hasRemoteStream = true;
+                this.isConnecting = false;
             };
 
             pc.onicecandidate = (event) => {
@@ -849,11 +921,31 @@ function liveStudioController(config) {
 
         unmuteAudio() {
             const videoEl = document.getElementById('liveVideoPlayer');
+            const audioEl = document.getElementById('liveAudioPlayer');
+
+            if (audioEl) {
+                audioEl.muted = false;
+                audioEl.volume = 1.0;
+                audioEl.play().catch(() => {});
+            }
             if (videoEl) {
                 videoEl.muted = false;
-                videoEl.play().catch(()=>{});
+                videoEl.volume = 1.0;
+                videoEl.play().catch(() => {});
+            }
+            if (this.audioContext && this.audioContext.state === 'suspended') {
+                this.audioContext.resume().catch(() => {});
             }
             this.needsUnmute = false;
+            this.isViewerMuted = false;
+        },
+
+        toggleViewerMute() {
+            this.isViewerMuted = !this.isViewerMuted;
+            const audioEl = document.getElementById('liveAudioPlayer');
+            const videoEl = document.getElementById('liveVideoPlayer');
+            if (audioEl) audioEl.muted = this.isViewerMuted;
+            if (videoEl) videoEl.muted = this.isViewerMuted;
         },
 
         // ── MEDIA STREAM & DEVICE MANAGEMENT (HOST) ──
@@ -883,13 +975,47 @@ function liveStudioController(config) {
                     this.localStream.getTracks().forEach(t => t.stop());
                 }
 
-                const constraints = {
-                    audio: this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true,
-                    video: this.selectedVideoDevice ? { deviceId: { exact: this.selectedVideoDevice }, width: { ideal: 1280 }, height: { ideal: 720 } } : true
-                };
+                const audioConstraints = this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true;
+                const videoConstraints = this.selectedVideoDevice ? { deviceId: { exact: this.selectedVideoDevice }, width: { ideal: 1280 }, height: { ideal: 720 } } : { width: { ideal: 1280 }, height: { ideal: 720 } };
 
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                let stream = null;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        audio: audioConstraints,
+                        video: videoConstraints
+                    });
+                } catch (e1) {
+                    console.warn('Audio va video birga olinmadi, faqat audio sinab ko\'rilmoqda:', e1);
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            audio: audioConstraints,
+                            video: false
+                        });
+                        this.isVideoOn = false;
+                    } catch (e2) {
+                        console.warn('Audio olinmadi, faqat video sinab ko\'rilmoqda:', e2);
+                        try {
+                            stream = await navigator.mediaDevices.getUserMedia({
+                                audio: false,
+                                video: videoConstraints
+                            });
+                            this.isMicOn = false;
+                        } catch (e3) {
+                            console.error('Audio ham, video ham olinmadi:', e3);
+                        }
+                    }
+                }
+
+                if (!stream) {
+                    console.warn('Hech qanday media oqim topilmadi');
+                    return;
+                }
+
                 this.localStream = stream;
+
+                // Sync track enabled state with UI toggles
+                this.localStream.getAudioTracks().forEach(t => t.enabled = this.isMicOn);
+                this.localStream.getVideoTracks().forEach(t => t.enabled = this.isVideoOn);
 
                 const videoEl = document.getElementById('liveVideoPlayer');
                 if (videoEl) {
@@ -987,9 +1113,6 @@ function liveStudioController(config) {
         async changeAudioSource(deviceId) {
             this.selectedAudioDevice = deviceId;
             if (this.localStream) {
-                const oldTracks = this.localStream.getAudioTracks();
-                oldTracks.forEach(t => t.stop());
-
                 try {
                     const newAudioStream = await navigator.mediaDevices.getUserMedia({
                         audio: { deviceId: { exact: deviceId } }
@@ -997,7 +1120,12 @@ function liveStudioController(config) {
                     const newAudioTrack = newAudioStream.getAudioTracks()[0];
                     newAudioTrack.enabled = this.isMicOn;
 
-                    if (oldTracks[0]) this.localStream.removeTrack(oldTracks[0]);
+                    const oldTracks = this.localStream.getAudioTracks();
+                    oldTracks.forEach(t => {
+                        t.stop();
+                        this.localStream.removeTrack(t);
+                    });
+
                     this.localStream.addTrack(newAudioTrack);
                     this.setupAudioAnalyser(this.localStream);
                     this.replaceTracksOnAllPeers(this.localStream);
@@ -1069,6 +1197,14 @@ function liveStudioController(config) {
                     const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
                     this.screenStream = screenStream;
                     this.isScreenSharing = true;
+
+                    // If host has mic in localStream, add mic track to screenStream so audio continues
+                    if (this.localStream) {
+                        const micTrack = this.localStream.getAudioTracks()[0];
+                        if (micTrack && screenStream.getAudioTracks().length === 0) {
+                            screenStream.addTrack(micTrack);
+                        }
+                    }
 
                     const videoEl = document.getElementById('liveVideoPlayer');
                     if (videoEl) {
