@@ -57,11 +57,17 @@ class LiveSignalController extends Controller
             return response()->json(['signals' => [], 'server_time' => now()->timestamp]);
         }
 
+        // 'host:*' ga yuborilgan signallar barcha host peer'lariga yetib boradi
+        $isHostPeer = str_starts_with($peerId, 'host_');
+
         $signals = LiveSignal::where('live_event_id', $event->id)
             ->where('id', '>', $sinceId)
             ->where('sender_id', '!=', $peerId)
-            ->where(function ($q) use ($peerId) {
+            // Faqat yangi signallar (60 soniya) — eski yozuvlar tirbandligi offer kechikishiga sabab bo'lmasin
+            ->where('created_at', '>', now()->subSeconds(60))
+            ->where(function ($q) use ($peerId, $isHostPeer) {
                 $q->where('receiver_id', $peerId)
+                  ->when($isHostPeer, fn ($qq) => $qq->orWhere('receiver_id', 'host:*')->orWhere('receiver_id', 'host'))
                   ->orWhere('receiver_id', 'all');
             })
             ->orderBy('id', 'asc')

@@ -1,6 +1,7 @@
 <div class="max-w-7xl mx-auto space-y-6 pb-16" 
     x-data="liveStudioController({
         isHost: @js($isHost),
+        userId: @js(auth()->id()),
         eventId: {{ $event->id }},
         startedAt: {{ $event->started_at ? $event->started_at->timestamp : ($event->created_at ? $event->created_at->timestamp : now()->timestamp) }},
         serverNow: {{ now()->timestamp }},
@@ -58,7 +59,7 @@
                 @endif
             </div>
 
-            @if($isHost)
+            @if($isHost || $canManage)
                 @if($event->status === 'live')
                     <button wire:click="endLiveStream" wire:confirm="Rostdan ham efirni yakunlamoqchimisiz?"
                         class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
@@ -546,8 +547,13 @@ function liveStudioController(config) {
         connectionAttempts: 0,
         isHostOnline: isHost ? true : false,
         pendingViewerIds: new Set(),
+        offerHostPeerId: null, // Viewer: qaysi hostdan offer qabul qilingani (duplicate filtrlash uchun)
 
-        myPeerId: isHost ? 'host' : ('viewer_' + Math.random().toString(36).substring(2, 9)),
+        // Peer ID HAR DOIM unikal: rol + foydalanuvchi + tasodifiy qism.
+        // Shu tufayli ikkita admin bir vaqtda kirsaham to'qnashmaydi (signalling buzilmaydi).
+        myPeerId: (isHost ? 'host_' : 'viewer_')
+            + (config.userId || 'anon') + '_'
+            + Math.random().toString(36).substring(2, 9),
         lastSignalId: 0,
         processedSignalKeys: new Set(),
         broadcastChannel: null,
@@ -556,11 +562,25 @@ function liveStudioController(config) {
         peerConnection: null, // Viewer: RTCPeerConnection
         iceCandidateQueue: [],
 
+        // WebRTC ICE serverlari: STUN (ochiq tarmoqlar) + TURN (qattiq NAT/firewall uchun majburiy).
+        // TURN'siz turli tarmoqlarda (Wi-Fi <-> mobil) P2P ulanish o'rnatilmaydi — video/audio yetmaydi.
         rtcConfig: {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun.cloudflare.com:3478' },
+                // Open Relay Project (metrturn) — bepul TURN, test uchun. Production uchun o'z TURN serveringizni qo'ying.
+                {
+                    urls: [
+                        'turn:openrelay.metered.ca:80',
+                        'turn:openrelay.metered.ca:443',
+                        'turn:openrelay.metered.ca:443?transport=tcp',
+                    ],
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject',
+                },
+            ],
+            iceCandidatePoolSize: 10,
         },
 
         async initStudio() {
@@ -600,7 +620,7 @@ function liveStudioController(config) {
                 window.addEventListener('keydown', autoUnmuteHandler, { passive: true });
 
                 // Viewer startup: send join announcement to host
-                this.sendSignal('join', 'host', { ts: Date.now() });
+                this.sendSignal('join', 'host:*', { ts: Date.now() });
 
                 // Retry join only if we still have no remote stream AND peer is not already connecting
                 this.heartbeatInterval = setInterval(() => {
@@ -619,7 +639,7 @@ function liveStudioController(config) {
                     // Only retry on failed/closed/null state
                     this.connectionAttempts++;
                     console.log('[VIEWER] Retrying join (attempt #' + this.connectionAttempts + ', peer=' + (pcState ?? 'none') + ')');
-                    this.sendSignal('join', 'host', { ts: Date.now() });
+                    this.sendSignal('join', 'host:*', { ts: Date.now() });
                 }, 4000); // increased to 4s to reduce signal storm
             }
 
@@ -646,7 +666,7 @@ function liveStudioController(config) {
                 } catch(e) {}
                 this.remoteStream = null;
             }
-            this.sendSignal('join', 'host', { ts: Date.now() });
+            this.sendSignal('join', 'host:*', { ts: Date.now() });
         },
 
         scrollChat() {
@@ -713,9 +733,27 @@ function liveStudioController(config) {
 
         async sendSignal(type, receiverId, payload) {
             const msgId = 'sig_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-            const wrappedPayload = (payload && typeof payload === 'object')
-                ? { ...payload, _msg_id: msgId }
-                : { data: payload, _msg_id: msgId };
+
+            // WebRTC objects (RTCIceCandidate, RTCSessionDescription) have prototype getters.
+            // Using object spread {...payload} drops these getters. We must serialize them via toJSON() or extract them.
+            let plainPayload = payload;
+            if (payload && typeof payload.toJSON === 'function') {
+                plainPayload = payload.toJSON();
+            } else if (payload && typeof payload === 'object' && ('candidate' in payload || 'sdp' in payload)) {
+                plainPayload = {
+                    candidate: payload.candidate,
+                    sdpMid: payload.sdpMid,
+                    sdpMLineIndex: payload.sdpMLineIndex,
+                    usernameFragment: payload.usernameFragment,
+                    type: payload.type,
+                    sdp: payload.sdp,
+                    ...payload
+                };
+            }
+
+            const wrappedPayload = (plainPayload && typeof plainPayload === 'object')
+                ? { ...plainPayload, _msg_id: msgId }
+                : { data: plainPayload, _msg_id: msgId };
 
             const msg = {
                 msg_id: msgId,
@@ -806,14 +844,25 @@ function liveStudioController(config) {
                 }
             } else if (msg.type === 'ice-candidate') {
                 const pc = this.peers[viewerId];
-                if (pc && pc.remoteDescription && pc.remoteDescription.type) {
-                    try {
-                        await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
-                    } catch (e) {}
-                } else if (msg.payload) {
-                    if (!this.hostIceQueues) this.hostIceQueues = {};
-                    if (!this.hostIceQueues[viewerId]) this.hostIceQueues[viewerId] = [];
-                    this.hostIceQueues[viewerId].push(msg.payload);
+                const candData = msg.payload?.candidate !== undefined ? msg.payload : (msg.payload?.data || null);
+                if (candData && candData.candidate) {
+                    const rtcCand = new RTCIceCandidate({
+                        candidate: candData.candidate,
+                        sdpMid: candData.sdpMid ?? '0',
+                        sdpMLineIndex: candData.sdpMLineIndex ?? 0
+                    });
+                    if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+                        try {
+                            await pc.addIceCandidate(rtcCand);
+                            console.log('[HOST → ' + viewerId + '] ICE candidate added');
+                        } catch (e) {
+                            console.warn('[HOST] addIceCandidate error:', e);
+                        }
+                    } else {
+                        if (!this.hostIceQueues) this.hostIceQueues = {};
+                        if (!this.hostIceQueues[viewerId]) this.hostIceQueues[viewerId] = [];
+                        this.hostIceQueues[viewerId].push(rtcCand);
+                    }
                 }
             }
         },
@@ -866,7 +915,13 @@ function liveStudioController(config) {
 
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
-                    this.sendSignal('ice-candidate', viewerId, event.candidate);
+                    const candData = event.candidate.toJSON ? event.candidate.toJSON() : {
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex
+                    };
+                    console.log('[HOST → ' + viewerId + '] ICE candidate generated:', candData.candidate ? candData.candidate.slice(0, 35) : 'null');
+                    this.sendSignal('ice-candidate', viewerId, candData);
                 }
             };
 
@@ -875,6 +930,10 @@ function liveStudioController(config) {
                 if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
                     delete this.peers[viewerId];
                 }
+            };
+
+            pc.oniceconnectionstatechange = () => {
+                console.log('[HOST → ' + viewerId + '] ICE state:', pc.iceConnectionState);
             };
 
             try {
@@ -899,14 +958,28 @@ function liveStudioController(config) {
         // ── VIEWER SIGNAL HANDLERS ──
         async handleViewerSignal(msg) {
             if (msg.type === 'offer') {
-                await this.handleOfferFromHost(msg.payload);
+                await this.handleOfferFromHost(msg.payload, msg.sender_id);
             } else if (msg.type === 'ice-candidate') {
-                if (this.peerConnection && this.peerConnection.remoteDescription) {
-                    try {
-                        await this.peerConnection.addIceCandidate(new RTCIceCandidate(msg.payload));
-                    } catch (e) {}
-                } else if (msg.payload) {
-                    this.iceCandidateQueue.push(msg.payload);
+                if (this.offerHostPeerId && msg.sender_id !== this.offerHostPeerId && !msg.sender_id.startsWith('host_')) {
+                    return;
+                }
+                const candData = msg.payload?.candidate !== undefined ? msg.payload : (msg.payload?.data || null);
+                if (candData && candData.candidate) {
+                    const rtcCand = new RTCIceCandidate({
+                        candidate: candData.candidate,
+                        sdpMid: candData.sdpMid ?? '0',
+                        sdpMLineIndex: candData.sdpMLineIndex ?? 0
+                    });
+                    if (this.peerConnection && this.peerConnection.remoteDescription) {
+                        try {
+                            await this.peerConnection.addIceCandidate(rtcCand);
+                            console.log('[VIEWER] ICE candidate added from host');
+                        } catch (e) {
+                            console.warn('[VIEWER] addIceCandidate error:', e);
+                        }
+                    } else {
+                        this.iceCandidateQueue.push(rtcCand);
+                    }
                 }
             } else if (msg.type === 'stream-status') {
                 if (typeof msg.payload.isVideoOn === 'boolean') {
@@ -921,19 +994,31 @@ function liveStudioController(config) {
             }
         },
 
-        async handleOfferFromHost(offer) {
+        async handleOfferFromHost(offer, senderId = null) {
             if (!offer || !offer.sdp) return;
 
-            // ── GUARD: Do not interrupt healthy connection or duplicate offer in flight ──
+            // ── GUARD: healthy ulanishni buzmaslik + bir xil hostdan duplicate offerni tashlash ──
             if (this.peerConnection) {
                 const state = this.peerConnection.connectionState;
                 const sigState = this.peerConnection.signalingState;
-                if (state === 'connecting' || state === 'connected' || sigState === 'have-remote-offer' || this.hasRemoteStream) {
-                    console.log('[VIEWER] Ignoring duplicate/in-flight offer — state:', state, 'sigState:', sigState);
+                const sameHost = !senderId || senderId === this.offerHostPeerId;
+                if (state === 'connecting' || state === 'connected' || this.hasRemoteStream) {
+                    // Ulanish alla ishlayapti — boshqa hostning (ko-host) offersini e'tiborsiz qoldiramiz
+                    if (!sameHost) {
+                        console.log('[VIEWER] Ignoring offer from secondary host — already connected to primary');
+                        return;
+                    }
+                    if (this.hasRemoteStream) return;
+                    console.log('[VIEWER] Ignoring duplicate offer — connecting:', state);
+                    return;
+                }
+                if (sigState === 'have-remote-offer' && sameHost) {
+                    console.log('[VIEWER] Ignoring duplicate offer from same host');
                     return;
                 }
                 try { this.peerConnection.close(); } catch (e) {}
             }
+            this.offerHostPeerId = senderId;
 
             const pc = new RTCPeerConnection(this.rtcConfig);
             this.peerConnection = pc;
@@ -975,8 +1060,23 @@ function liveStudioController(config) {
 
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
-                    this.sendSignal('ice-candidate', 'host', event.candidate);
+                    const candData = event.candidate.toJSON ? event.candidate.toJSON() : {
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex
+                    };
+                    const targetHostId = this.offerHostPeerId || 'host:*';
+                    console.log('[VIEWER → ' + targetHostId + '] ICE candidate generated:', candData.candidate ? candData.candidate.slice(0, 35) : 'null');
+                    this.sendSignal('ice-candidate', targetHostId, candData);
                 }
+            };
+
+            pc.onconnectionstatechange = () => {
+                console.log('[VIEWER] Connection state:', pc.connectionState);
+            };
+
+            pc.oniceconnectionstatechange = () => {
+                console.log('[VIEWER] ICE state:', pc.iceConnectionState);
             };
 
             try {
@@ -993,7 +1093,8 @@ function liveStudioController(config) {
                 while (this.iceCandidateQueue.length > 0) {
                     const cand = this.iceCandidateQueue.shift();
                     try {
-                        await pc.addIceCandidate(new RTCIceCandidate(cand));
+                        await pc.addIceCandidate(cand instanceof RTCIceCandidate ? cand : new RTCIceCandidate(cand));
+                        console.log('[VIEWER] Drained queued ICE candidate');
                     } catch (e) {}
                 }
 
@@ -1002,7 +1103,7 @@ function liveStudioController(config) {
 
                 console.log('[VIEWER] Answer SDP has audio?', answer.sdp.includes('m=audio'));
 
-                await this.sendSignal('answer', 'host', {
+                await this.sendSignal('answer', 'host:*', {
                     type: answer.type,
                     sdp: normalizeSdp(answer.sdp)
                 });
