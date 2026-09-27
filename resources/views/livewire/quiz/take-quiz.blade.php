@@ -116,4 +116,11 @@
     @endif
 
     @endif
+
+    <!-- Reading Tracker & 5-minute AFK Inactivity Modal -->
+    @include('components.reading-tracker', [
+        'bookId' => $book->id,
+        'chapterId' => null,
+        'pageType' => 'quiz'
+    ])
 </div>

@@ -198,6 +198,13 @@
         <span>Sahifani 2 marta tez bosib yaqinlashtirish (Double-click)</span>
     </div>
 
+    <!-- Reading Tracker & 5-minute AFK Inactivity Modal -->
+    @include('components.reading-tracker', [
+        'bookId' => $book->id,
+        'chapterId' => null,
+        'pageType' => 'flipbook'
+    ])
+
 </div>
 @endsection
 

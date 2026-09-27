@@ -228,16 +228,28 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         $user = auth()->user();
-        $minutes = ceil($request->minutes);
+        $minutes = max(1, (int) round($request->minutes));
         $today = now('Asia/Tashkent')->toDateString();
 
-        \App\Models\ReadingSession::create([
-            'user_id'      => $user->id,
-            'book_id'      => $request->book_id,
-            'chapter_id'   => $request->chapter_id,
-            'minutes_read' => $minutes,
-            'session_date' => $today,
-        ]);
+        // Oxirgi 30 daqiqa ichidagi sessiyani davom ettirish yoki yangi yaratish
+        $session = \App\Models\ReadingSession::where('user_id', $user->id)
+            ->where('book_id', $request->book_id)
+            ->where('session_date', $today)
+            ->where('created_at', '>=', now()->subMinutes(30))
+            ->latest()
+            ->first();
+
+        if ($session) {
+            $session->increment('minutes_read', $minutes);
+        } else {
+            \App\Models\ReadingSession::create([
+                'user_id'      => $user->id,
+                'book_id'      => $request->book_id,
+                'chapter_id'   => $request->chapter_id,
+                'minutes_read' => $minutes,
+                'session_date' => $today,
+            ]);
+        }
 
         $activity = \App\Models\DailyActivity::firstOrCreate(
             ['user_id' => $user->id, 'activity_date' => $today],
@@ -269,9 +281,11 @@ Route::middleware(['auth'])->group(function () {
 
         return response()->json([
             'success'             => true,
+            'minutes_added'       => $minutes,
             'total_minutes_today' => $activity->minutes_read,
-            'total_points'        => $user->fresh()->total_points,
-            'streak'              => $streak->current_streak,
+            'total_minutes_all'   => (int) $user->fresh()->total_reading_minutes,
+            'total_points'        => (int) $user->fresh()->total_points,
+            'streak'              => (int) $streak->current_streak,
         ]);
     })->name('reading.heartbeat');
 

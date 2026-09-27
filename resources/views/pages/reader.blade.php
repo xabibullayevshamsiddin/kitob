@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
       x-data="readerApp()" 
       :class="{ 'dark': theme === 'dark', 'reader-sepia': theme === 'sepia' }">
@@ -141,49 +141,11 @@
                 heartbeatInterval: null,
 
                 init() {
-                    // Track scroll
                     window.addEventListener('scroll', () => {
                         const winScroll = document.documentElement.scrollTop;
                         const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
                         this.scrollPercent = Math.min(100, Math.round((winScroll / height) * 100)) || 0;
-                        this.resetIdleTimer();
-                    });
-
-                    // Track activity (mouse, key, touch)
-                    ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-                        window.addEventListener(evt, () => this.resetIdleTimer(), { passive: true });
-                    });
-
-                    // Timer interval - counts active seconds
-                    setInterval(() => {
-                        if (!this.isIdle) {
-                            this.activeSeconds++;
-                        }
-                    }, 1000);
-
-                    // Heartbeat to server every 60 seconds of active reading
-                    this.heartbeatInterval = setInterval(() => {
-                        if (this.activeSeconds >= 30) {
-                            this.sendHeartbeat();
-                        }
-                    }, 60000);
-
-                    this.resetIdleTimer();
-                },
-
-                resetIdleTimer() {
-                    this.isIdle = false;
-                    clearTimeout(this.idleTimer);
-                    // 60 soniyadan ortiq harakatsizlikda timer pauza bo'ladi
-                    this.idleTimer = setTimeout(() => {
-                        this.isIdle = true;
-                    }, 60000);
-                },
-
-                formatTime(seconds) {
-                    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                    const s = (seconds % 60).toString().padStart(2, '0');
-                    return `${m}:${s}`;
+                    }, { passive: true });
                 },
 
                 toggleFont() {
@@ -210,32 +172,8 @@
                     localStorage.setItem('reader_theme', t);
                 },
 
-                sendHeartbeat() {
-                    const mins = this.activeSeconds / 60;
-                    if (mins < 0.5) return;
-
-                    fetch('/api/reading/heartbeat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            book_id: {{ $book->id }},
-                            chapter_id: {{ $chapter->id }},
-                            minutes: mins
-                        })
-                    }).then(res => res.json()).then(data => {
-                        if (data.success) {
-                            this.activeSeconds = 0; // Reset active session counter after sync
-                        }
-                    }).catch(e => console.error('Heartbeat sync error', e));
-                },
-
                 saveProgress(percent) {
-                    this.sendHeartbeat();
-                    fetch('/api/reading/progress', {
+                    fetch('{{ route('reading.progress') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -250,11 +188,20 @@
                         })
                     }).then(() => {
                         window.location.href = "{{ route('books.show', $book->slug) }}";
+                    }).catch(() => {
+                        window.location.href = "{{ route('books.show', $book->slug) }}";
                     });
                 }
             }
         }
     </script>
+
+    <!-- Reading Tracker & 5-minute AFK Inactivity Modal -->
+    @include('components.reading-tracker', [
+        'bookId' => $book->id,
+        'chapterId' => $chapter->id,
+        'pageType' => 'chapter'
+    ])
 </body>
 </html>
 
