@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-manrope">Kitoblar kutubxonasi</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $books->count() }} ta kitob topildi</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $books->total() }} ta kitob mavjud</p>
         </div>
 
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -70,4 +70,10 @@
             </div>
         @endforelse
     </div>
+
+    @if ($books->hasPages())
+        <div class="pt-4">
+            {{ $books->links('vendor.pagination.taste-livewire') }}
+        </div>
+    @endif
 </div>

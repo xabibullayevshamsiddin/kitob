@@ -21,6 +21,7 @@ class Group extends Model
         'created_by',
         'cover_image',
         'is_private',
+        'password',
         'invite_code',
         'max_members',
     ];

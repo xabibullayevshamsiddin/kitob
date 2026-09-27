@@ -33,6 +33,17 @@
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @endif
     <style>
+        /* Number input spinner tugmalari — dark dizaynga mos (oq tugmachalarni yo'qotish) */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         .reader-sepia { background-color: #fbf0d9 !important; color: #433422 !important; }
         .reader-sepia .reader-card { background-color: #f4e6c8 !important; border-color: #ebd6ae !important; }
         .reader-sepia .reader-text { color: #3b2c1b !important; }

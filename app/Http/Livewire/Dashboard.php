@@ -93,9 +93,12 @@ class Dashboard extends Component
 
         $upcomingLive = null;
         if (class_exists(LiveEvent::class)) {
+            // ENG YANGI efirni ko'rsatamiz (eski navbatdagi emas)
             $upcomingLive = LiveEvent::with('book')
                 ->whereIn('status', ['scheduled', 'live'])
-                ->orderBy('scheduled_at', 'asc')
+                // Eng yangi efir ustunlik bilan ko'rsatiladi
+                ->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+                ->orderByDesc('created_at')
                 ->first();
         }
 

@@ -79,12 +79,24 @@ class StreakService
             ->first();
 
         if ($badge) {
-            UserBadge::firstOrCreate([
+            $created = UserBadge::firstOrCreate([
                 'user_id' => $user->id,
                 'badge_id' => $badge->id,
             ], [
                 'earned_at' => now(),
             ]);
+
+            // Yangi nishon bo'lsa — bildirishnoma yuborish (faqat birinchi marta)
+            if ($created->wasRecentlyCreated) {
+                \App\Services\NotifyUser::send(
+                    $user,
+                    'badge',
+                    'Yangi nishon olindi!',
+                    $badge->icon . ' ' . $badge->name . ' — ' . $badge->description,
+                    '🏅',
+                    '/leaderboard'
+                );
+            }
         }
     }
 }

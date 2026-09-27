@@ -59,7 +59,7 @@
 
     <div class="flex items-center justify-between pt-1">
         <label class="flex items-center cursor-pointer">
-            <input type="checkbox" name="remember" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-800">
+            <input type="checkbox" name="remember" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-800">
             <span class="ml-2 text-xs text-slate-400 select-none">Meni eslab qol</span>
         </label>
     </div>

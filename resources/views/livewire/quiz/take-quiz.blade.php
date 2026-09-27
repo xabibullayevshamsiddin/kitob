@@ -9,8 +9,20 @@
     </div>
 
     @if (count($questions) === 0)
-        <div class="p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft text-center text-sm text-slate-400">
-            Bu test uchun savollar hozircha mavjud emas.
+        <div class="p-12 sm:p-16 rounded-3xl bg-ink-900/80 border border-white/10 text-center space-y-4 shadow-card-depth">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-3xl mx-auto">
+                🧠
+            </div>
+            <h2 class="text-lg font-bold text-white">Bu kitob uchun hozircha test savollari yuklanmagan</h2>
+            <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                Ushbu kitob bo'yicha savol-javoblar tez orada qo'shiladi. Hozirda kitob mutolaasini davom ettirishingiz mumkin.
+            </p>
+            <div class="pt-2">
+                <a href="{{ route('books.show', $book->slug) }}" 
+                   class="inline-block px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all">
+                    📖 Kitob sahifasiga qaytish
+                </a>
+            </div>
         </div>
     @else
 

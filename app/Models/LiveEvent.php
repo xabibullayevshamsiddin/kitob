@@ -58,6 +58,11 @@ class LiveEvent extends Model
         return $this->hasMany(LiveQuestion::class);
     }
 
+    public function signals(): HasMany
+    {
+        return $this->hasMany(\App\Models\LiveSignal::class);
+    }
+
     // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------

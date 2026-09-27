@@ -6,9 +6,13 @@ use App\Models\DailyActivity;
 use App\Models\LiveEvent;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class NotificationList extends Component
 {
+    use WithPagination;
+
+    protected $paginationTheme = 'tailwind';
     public function markAllRead(): void
     {
         Auth::user()->unreadNotifications->markAsRead();
@@ -22,20 +26,32 @@ class NotificationList extends Component
         }
     }
 
+    /** Bildirishnoma havolasiga o'tish (o'qilgan deb belgilab) */
+    public function openNotification(string $id, string $link): void
+    {
+        $this->markRead($id);
+
+        if ($link) {
+            // url() — loyiha base path'ini (/Kitob/public) hisobga oladi
+            $this->redirect(url($link));
+        }
+    }
+
     public function render()
     {
         $user = Auth::user();
 
         $notifications = $user->notifications()
-            ->take(30)
-            ->get()
-            ->map(function ($n) {
+            ->latest()
+            ->paginate(10)
+            ->through(function ($n) {
                 return [
                     'id'        => $n->id,
                     'type'      => data_get($n->data, 'type', 'info'),
                     'title'     => data_get($n->data, 'title', 'Bildirishnoma'),
                     'body'      => data_get($n->data, 'body', ''),
                     'icon'      => data_get($n->data, 'icon', '🔔'),
+                    'link'      => data_get($n->data, 'link', ''),
                     'read_at'   => $n->read_at,
                     'time'      => $n->created_at->timezone('Asia/Tashkent')->diffForHumans(),
                 ];
@@ -55,9 +71,10 @@ class NotificationList extends Component
             ]
             : null;
 
-        // Upcoming live event (real data)
+        // Upcoming live event (real data) — eng yangisi ustunlik bilan
         $upcomingLive = LiveEvent::whereIn('status', ['scheduled', 'live'])
-            ->orderBy('scheduled_at')
+            ->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+            ->orderByDesc('created_at')
             ->first();
 
         return view('livewire.notifications.notification-list', [

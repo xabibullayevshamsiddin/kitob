@@ -58,6 +58,39 @@
             gsap.fromTo('#site-header', { y: -25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" });
             gsap.fromTo('.legal-content', { opacity: 0, y: 30, filter: 'blur(6px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: "power4.out" });
         });
+    
+        // ── Fail-safe: GSAP yuklanmasa yoki xato bo'lsa kontent ko'rinadi ──
+        const __kitobxonSeen = new WeakMap();
+        function __kitobxonVisibilityFailsafe() {
+            document.querySelectorAll('.hero-anim-item, .bento-header, .bento-card, .step-card, .cta-box, .legal-content, .about-stat-card, .value-card, .team-card, .contact-form-col, .contact-info-card, .faq-card, .book-card, .error-anim-item').forEach(el => {
+                const r = el.getBoundingClientRect();
+                if (r.height === 0) return;
+                const s = getComputedStyle(el);
+                if (parseFloat(s.opacity) >= 0.05) { __kitobxonSeen.delete(el); return; }
+
+                // GSAP umuman yuklanmagan bo'lsa — darhol ochamiz
+                if (typeof gsap === 'undefined') {
+                    el.style.opacity = '1'; el.style.filter = 'none'; el.style.transform = 'none';
+                    return;
+                }
+
+                const reached = r.top < window.innerHeight + 100; // ekranda yoki undan yuqorida
+                const first = __kitobxonSeen.get(el);
+                // 4+ soniya opacity:0 da qotgan bo'lsa — animatsiya ishlamagan: ochamiz
+                if (reached || (first && Date.now() - first > 4000)) {
+                    el.style.opacity = '1'; el.style.filter = 'none'; el.style.transform = 'none';
+                    __kitobxonSeen.delete(el);
+                } else if (!first) {
+                    __kitobxonSeen.set(el, Date.now());
+                }
+            });
+        }
+        // Darhol tekshiruv
+        __kitobxonVisibilityFailsafe();
+        // Scroll paytida darhol sinxron tekshiruv (taymer throttling ta'sir qilmaydi)
+        window.addEventListener('scroll', __kitobxonVisibilityFailsafe, { passive: true });
+        // Zaxira interval (PJAX navigatsiyadan keyin ham ishlashi uchun)
+        setInterval(__kitobxonVisibilityFailsafe, 2000);
     </script>
 </body>
 </html>

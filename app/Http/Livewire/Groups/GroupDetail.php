@@ -6,6 +6,7 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\GroupMessage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class GroupDetail extends Component
@@ -13,14 +14,60 @@ class GroupDetail extends Component
     public Group $group;
 
     public string $message = '';
+    public bool $showDeleteModal = false;
+
+    public function openDeleteModal(): void
+    {
+        $user = Auth::user();
+        if (!$user) return;
+
+        $isAdmin = $user->hasRole('admin') || $user->role === 'admin';
+        if ($this->group->created_by !== $user->id && !$isAdmin) {
+            session()->flash('error', 'Sizda bu guruhni o\'chirish huquqi yo\'q!');
+            return;
+        }
+
+        $this->showDeleteModal = true;
+    }
+
+    public function confirmDeleteGroup()
+    {
+        $user = Auth::user();
+        if (!$user) return;
+
+        $isAdmin = $user->hasRole('admin') || $user->role === 'admin';
+        if ($this->group->created_by !== $user->id && !$isAdmin) {
+            session()->flash('error', 'Sizda bu guruhni o\'chirish huquqi yo\'q!');
+            $this->showDeleteModal = false;
+            return;
+        }
+
+        $name = $this->group->name;
+
+        DB::transaction(function () {
+            $this->group->messages()->delete();
+            $this->group->members()->delete();
+            $this->group->delete();
+        });
+
+        session()->flash('success', "«{$name}» guruhi muvaffaqiyatli o'chirildi.");
+        return redirect()->route('groups.index');
+    }
 
     public function mount(Group $group)
     {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
         $isMember = GroupMember::where('group_id', $group->id)
             ->where('user_id', Auth::id())
             ->exists();
 
-        abort_unless($isMember, 403, 'Bu guruh a\'zosi emassiz. Avval guruhga qo\'shiling.');
+        if (!$isMember) {
+            session()->flash('error', '«' . $group->name . '» guruhiga kirish uchun avval guruhga a\'zo bo\'ling.');
+            return redirect()->route('groups.index');
+        }
     }
 
     protected $rules = [
@@ -57,9 +104,13 @@ class GroupDetail extends Component
             ->orderBy('joined_at')
             ->get();
 
+        $user = Auth::user();
+        $canDelete = $user && ($this->group->created_by === $user->id || $user->hasRole('admin') || $user->role === 'admin');
+
         return view('livewire.groups.group-detail', [
-            'messages' => $messages,
-            'members'  => $members,
+            'messages'  => $messages,
+            'members'   => $members,
+            'canDelete' => $canDelete,
         ])->layout('layouts.app', ['title' => $this->group->name]);
     }
 }

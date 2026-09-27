@@ -31,10 +31,15 @@
                 </div>
 
                 {{-- Avatar --}}
-                <div class="flex flex-col items-center px-5 pb-5 -mt-10">
-                    <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-3xl font-bold text-white shadow-2xl shadow-indigo-900/50 border-4 border-slate-900">
-                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                    </div>
+                <div class="relative z-10 flex flex-col items-center px-5 pb-5 -mt-10">
+                    @if ($user->avatar)
+                        <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
+                             class="w-20 h-20 rounded-2xl object-cover shadow-2xl shadow-black/50 border-4 border-slate-900">
+                    @else
+                        <div class="w-20 h-20 rounded-2xl bg-slate-800 border-4 border-slate-900 flex items-center justify-center text-3xl font-bold text-amber-400 shadow-2xl shadow-black/50">
+                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        </div>
+                    @endif
                     <h3 class="mt-3 text-base font-bold text-white text-center">{{ $user->name }}</h3>
                     <p class="text-xs text-slate-500 mt-0.5 text-center">{{ $user->email }}</p>
 
@@ -42,9 +47,12 @@
                     @php
                         $currentRole = $user->roles->first()?->name ?? 'student';
                         $roleConfig = [
-                            'admin'   => ['label' => 'Admin',       'class' => 'bg-red-500/15 text-red-400 border-red-500/20'],
-                            'teacher' => ['label' => "O'qituvchi",  'class' => 'bg-blue-500/15 text-blue-400 border-blue-500/20'],
-                            'student' => ['label' => "O'quvchi",    'class' => 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'],
+                            'admin'     => ['label' => 'Admin',             'class' => 'bg-red-500/15 text-red-400 border-red-500/20'],
+                            'teacher'   => ['label' => "O'qituvchi",        'class' => 'bg-blue-500/15 text-blue-400 border-blue-500/20'],
+                            'student'   => ['label' => "O'quvchi",          'class' => 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'],
+                            'author'    => ['label' => "Muallif",           'class' => 'bg-amber-500/15 text-amber-400 border-amber-500/20'],
+                            'moderator' => ['label' => "Moderator",         'class' => 'bg-violet-500/15 text-violet-400 border-violet-500/20'],
+                            'reader'    => ['label' => "O'quvchi (reader)", 'class' => 'bg-slate-500/15 text-slate-400 border-slate-500/20'],
                         ];
                         $rc = $roleConfig[$currentRole] ?? ['label' => $currentRole, 'class' => 'bg-slate-500/15 text-slate-400 border-slate-500/20'];
                     @endphp
@@ -145,7 +153,7 @@
                                         $isSelected = $user->roles->first()?->name === $role->name;
                                     @endphp
                                     <option value="{{ $role->name }}" {{ $isSelected ? 'selected' : '' }}>
-                                        {{ $role->name === 'admin' ? 'Admin' : ($role->name === 'teacher' ? "O'qituvchi" : "O'quvchi") }}
+                                        {{ ['admin' => 'Admin', 'teacher' => "O'qituvchi", 'student' => "O'quvchi", 'author' => "Muallif", 'reader' => "O'quvchi (reader)", 'moderator' => 'Moderator'][$role->name] ?? $role->name }}
                                     </option>
                                 @endforeach
                             </select>

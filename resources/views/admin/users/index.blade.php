@@ -185,42 +185,8 @@
 
     {{-- Pagination --}}
     @if($users->hasPages())
-        <div class="px-5 py-4 border-t border-slate-800 flex items-center justify-between">
-            <p class="text-xs text-slate-500">
-                {{ $users->firstItem() }}–{{ $users->lastItem() }} / {{ $users->total() }} ta natija
-            </p>
-            <div class="flex items-center gap-1">
-                {{-- Previous --}}
-                @if($users->onFirstPage())
-                    <span class="px-3 py-1.5 text-xs text-slate-600 bg-slate-800 rounded-lg cursor-not-allowed">
-                        ← Oldingi
-                    </span>
-                @else
-                    <a href="{{ $users->previousPageUrl() }}" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">
-                        ← Oldingi
-                    </a>
-                @endif
-
-                {{-- Page numbers --}}
-                @foreach($users->getUrlRange(max(1, $users->currentPage()-2), min($users->lastPage(), $users->currentPage()+2)) as $page => $url)
-                    @if($page == $users->currentPage())
-                        <span class="w-8 h-8 flex items-center justify-center text-xs font-semibold text-white bg-indigo-600 rounded-lg">{{ $page }}</span>
-                    @else
-                        <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">{{ $page }}</a>
-                    @endif
-                @endforeach
-
-                {{-- Next --}}
-                @if($users->hasMorePages())
-                    <a href="{{ $users->nextPageUrl() }}" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">
-                        Keyingi →
-                    </a>
-                @else
-                    <span class="px-3 py-1.5 text-xs text-slate-600 bg-slate-800 rounded-lg cursor-not-allowed">
-                        Keyingi →
-                    </span>
-                @endif
-            </div>
+        <div class="p-4 sm:p-5 border-t border-slate-800">
+            {{ $users->links() }}
         </div>
     @endif
 </div>

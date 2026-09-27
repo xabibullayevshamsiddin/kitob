@@ -66,7 +66,15 @@ class BookVideo extends Model
             ? $this->hls_path
             : $this->video_path;
 
-        return $path ? Storage::url($path) : '';
+        if (!$path) {
+            return '';
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return Storage::url($path);
     }
 
     /**
@@ -74,8 +82,35 @@ class BookVideo extends Model
      */
     public function getThumbnailUrlAttribute(): string
     {
-        return $this->thumbnail
-            ? Storage::url($this->thumbnail)
-            : asset('images/video-placeholder.png');
+        if (!$this->thumbnail) {
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->title) . '&background=4f46e5&color=fff&size=512';
+        }
+
+        if (str_starts_with($this->thumbnail, 'http://') || str_starts_with($this->thumbnail, 'https://')) {
+            return $this->thumbnail;
+        }
+
+        return Storage::url($this->thumbnail);
+    }
+
+    /**
+     * Returns an embeddable URL for YouTube or Vimeo, or null for direct video files.
+     */
+    public function getEmbedUrlAttribute(): ?string
+    {
+        $url = $this->video_path;
+        if (!$url) {
+            return null;
+        }
+
+        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $url, $match)) {
+            return 'https://www.youtube.com/embed/' . $match[1];
+        }
+
+        if (preg_match('/vimeo\.com\/(\d+)/', $url, $match)) {
+            return 'https://player.vimeo.com/video/' . $match[1];
+        }
+
+        return null;
     }
 }

@@ -153,33 +153,61 @@
                     <div class="book-card spotlight-card rounded-3xl p-5 flex flex-col justify-between group">
                         <div>
                             <!-- Cover preview (3D Tilt effect) -->
-                            <div class="book-cover-3d w-full h-56 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-950 via-ink-900 to-slate-900 border border-white/10 flex flex-col justify-between p-4 relative mb-4 shadow-md">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-mono text-amber-400 font-bold bg-ink-950/70 px-2.5 py-1 rounded-md border border-white/10">
-                                        {{ $book->week_number }}-hafta
-                                    </span>
-                                    <div class="flex items-center gap-1">
-                                        <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
-                                        <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
-                                        <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <h3 class="text-lg font-bold text-white leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
-                                        {{ $book->title }}
-                                    </h3>
-                                    <p class="text-xs text-slate-400 mt-1">{{ $book->author }}</p>
-                                </div>
+                            <div class="book-cover-3d w-full h-64 rounded-2xl overflow-hidden relative mb-4 shadow-lg border border-white/10 group-hover:border-amber-400/40 transition-colors bg-slate-900">
+                                @if($book->cover_image)
+                                    <img src="{{ $book->cover_url }}" alt="{{ $book->title }}"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                         onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($book->title) }}&size=512&background=1e1b4b&color=fff&bold=true'">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent"></div>
 
-                                <div class="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
-                                    <span>📖 Matn</span> • <span>🎧 Audio</span> • <span>🎥 Video</span>
-                                </div>
+                                    {{-- Badges on cover image --}}
+                                    <div class="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
+                                        <span class="text-[10px] font-mono text-amber-400 font-bold bg-ink-950/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 shadow">
+                                            {{ $book->week_number }}-hafta
+                                        </span>
+                                        <span class="text-[10px] font-semibold text-white bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md">
+                                            {{ $book->genre }}
+                                        </span>
+                                    </div>
+
+                                    <div class="absolute bottom-3 left-3 right-3 z-10 pointer-events-none">
+                                        <h3 class="text-base font-bold text-white leading-tight line-clamp-1 group-hover:text-amber-300 transition-colors drop-shadow-md">
+                                            {{ $book->title }}
+                                        </h3>
+                                        <p class="text-xs text-slate-300 mt-0.5 drop-shadow line-clamp-1">{{ $book->author }}</p>
+                                    </div>
+                                @else
+                                    <div class="w-full h-full bg-gradient-to-br from-indigo-950 via-ink-900 to-slate-900 flex flex-col justify-between p-4">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-mono text-amber-400 font-bold bg-ink-950/70 px-2.5 py-1 rounded-md border border-white/10">
+                                                {{ $book->week_number }}-hafta
+                                            </span>
+                                            <div class="flex items-center gap-1">
+                                                <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
+                                                <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
+                                                <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 class="text-lg font-bold text-white leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                                                {{ $book->title }}
+                                            </h3>
+                                            <p class="text-xs text-slate-400 mt-1">{{ $book->author }}</p>
+                                        </div>
+
+                                        <div class="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+                                            <span>📖 Matn</span> • <span>🎧 Audio</span> • <span>🎥 Video</span>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
-                            <span class="inline-block px-2.5 py-1 rounded-lg bg-amber-400/10 text-amber-400 font-mono text-[11px] mb-2 font-medium">
-                                {{ $book->genre }}
-                            </span>
+                            @if(!$book->cover_image)
+                                <span class="inline-block px-2.5 py-1 rounded-lg bg-amber-400/10 text-amber-400 font-mono text-[11px] mb-2 font-medium">
+                                    {{ $book->genre }}
+                                </span>
+                            @endif
 
                             <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">
                                 {{ $book->description }}

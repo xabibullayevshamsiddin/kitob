@@ -8,6 +8,7 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
@@ -32,19 +33,33 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
+        // Auth sahifalariga 'guest' middleware: tizimga kirgan foydalanuvchi
+        // login/register/parol tiklash sahifalariga kira olmaydi — bosh sahifaga yo'naltiriladi
         Fortify::loginView(function () {
+            if (Auth::check()) {
+                return redirect()->route('home');
+            }
             return view('auth.login');
         });
 
         Fortify::registerView(function () {
+            if (Auth::check()) {
+                return redirect()->route('home');
+            }
             return view('auth.register');
         });
 
         Fortify::requestPasswordResetLinkView(function () {
+            if (Auth::check()) {
+                return redirect()->route('home');
+            }
             return view('auth.forgot-password');
         });
 
         Fortify::resetPasswordView(function (Request $request) {
+            if (Auth::check()) {
+                return redirect()->route('home');
+            }
             return view('auth.reset-password', ['request' => $request]);
         });
 

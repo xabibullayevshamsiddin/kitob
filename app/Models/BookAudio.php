@@ -57,6 +57,10 @@ class BookAudio extends Model
             return '';
         }
 
+        if (str_starts_with($this->file_path, 'http://') || str_starts_with($this->file_path, 'https://')) {
+            return $this->file_path;
+        }
+
         try {
             return Storage::disk('s3')->temporaryUrl(
                 $this->file_path,

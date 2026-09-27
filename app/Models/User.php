@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -15,7 +16,12 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasRoles {
+        HasRoles::hasRole as spatieHasRole;
+        HasRoles::getRoleNames as spatieGetRoleNames;
+        HasRoles::assignRole as spatieAssignRole;
+    }
 
     protected $fillable = [
         'name',
@@ -202,8 +208,86 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // -------------------------------------------------------------------------
-    // Role Helpers
+    // Role Helpers (zaxira manba: users.role ustuni)
     // -------------------------------------------------------------------------
+
+    /**
+     * Rol tekshiruvi: avval Spatie jadvali, bo'lmasa users.role ustuni.
+     * Shu tufayli Spatie jadvalidan rol o'chib ketsa ham, ustundagi rol ishlaydi.
+     */
+    public function hasRole($roles, string $guard = null): bool
+    {
+        if ($this->spatieHasRole($roles, $guard)) {
+            return true;
+        }
+
+        $columnRole = $this->attributes['role'] ?? null;
+
+        if (!$columnRole) {
+            return false;
+        }
+
+        if (is_string($roles)) {
+            $roles = str_contains($roles, '|') ? explode('|', $roles) : [$roles];
+        }
+
+        if (is_array($roles)) {
+            return in_array($columnRole, $roles, true);
+        }
+
+        return false;
+    }
+
+    /**
+     * Rol nomlari: Spatie rollari + users.role ustuni (agar mavjud bo'lsa).
+     */
+    public function getRoleNames(): Collection
+    {
+        $names = $this->spatieGetRoleNames();
+
+        $columnRole = $this->attributes['role'] ?? null;
+
+        if ($columnRole && !$names->contains($columnRole)) {
+            $names = $names->push($columnRole);
+        }
+
+        return $names;
+    }
+
+    /**
+     * Rol berilganda users.role ustunini ham sinxron tutamiz.
+     */
+    public function assignRole(...$roles)
+    {
+        $result = $this->spatieAssignRole(...$roles);
+
+        $names = collect($roles)
+            ->map(fn ($role) => $role instanceof \Spatie\Permission\Contracts\Role ? $role->name : $role)
+            ->flatten()
+            ->filter(fn ($name) => is_string($name) && $name !== '')
+            ->unique()
+            ->values();
+
+        if ($names->isNotEmpty()) {
+            $this->forceFill(['role' => $this->pickPrimaryRoleName($names)])->saveQuietly();
+        }
+
+        return $result;
+    }
+
+    /**
+     * Bir nechta rol berilsa, asosiy (ustuvor) rolni tanlaydi.
+     */
+    protected function pickPrimaryRoleName(Collection $names): string
+    {
+        foreach (['admin', 'teacher', 'author', 'student', 'reader'] as $priority) {
+            if ($names->contains($priority)) {
+                return $priority;
+            }
+        }
+
+        return (string) $names->first();
+    }
 
     public function isAdmin(): bool
     {

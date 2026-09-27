@@ -64,6 +64,20 @@
         .sidebar-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
         .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
 
+        /* Number input spinner tugmalari — dark dizaynga mos (oq tugmachalarni yo'qotish) */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"]:hover {
+            -moz-appearance: textfield;
+        }
+
         /* Glassmorphism */
         .glass {
             background: rgba(15, 23, 42, 0.8);
@@ -214,6 +228,53 @@
                     <span>Kitoblar</span>
                     @if(request()->routeIs('admin.books.*'))
                         <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
+                    @endif
+                </a>
+
+                {{-- ── KONTENT BOSHQARUVI ── --}}
+                <div class="pt-3">
+                    <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold px-3 pb-2">Kontent</p>
+                </div>
+
+                <!-- Audiolar -->
+                <a href="{{ route('admin.audios.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
+                          {{ request()->routeIs('admin.audios.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                                 {{ request()->routeIs('admin.audios.*') ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
+                        🎵
+                    </span>
+                    <span>Audiolar</span>
+                    @if(request()->routeIs('admin.audios.*'))
+                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse-slow"></span>
+                    @endif
+                </a>
+
+                <!-- Videolar -->
+                <a href="{{ route('admin.videos.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
+                          {{ request()->routeIs('admin.videos.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                                 {{ request()->routeIs('admin.videos.*') ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
+                        🎥
+                    </span>
+                    <span>Videolar</span>
+                    @if(request()->routeIs('admin.videos.*'))
+                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
+                    @endif
+                </a>
+
+                <!-- Test topshiriqlari -->
+                <a href="{{ route('admin.quizzes.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
+                          {{ request()->routeIs('admin.quizzes.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                                 {{ request()->routeIs('admin.quizzes.*') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
+                        📝
+                    </span>
+                    <span>Test topshiriqlari</span>
+                    @if(request()->routeIs('admin.quizzes.*'))
+                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow"></span>
                     @endif
                 </a>
 

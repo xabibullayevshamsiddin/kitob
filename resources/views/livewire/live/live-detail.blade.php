@@ -9,6 +9,7 @@
         signalSendUrl: @js(route('live.signal.send', $event)),
         signalPollUrl: @js(route('live.signal.poll', $event)),
         csrfToken: @js(csrf_token()),
+        liveIndexUrl: @js(route('live.index')),
     })" 
     x-init="initStudio()">
 
@@ -105,6 +106,20 @@
 
                 <!-- Dedicated Audio Element for WebRTC audio stream playback (off-screen, never display:none) -->
                 <audio id="liveAudioPlayer" autoplay playsinline style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></audio>
+
+                <!-- Efir tugadi overlay (host efirni o'chirganda) -->
+                <div x-show="streamEnded" x-cloak
+                    class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
+                    <div class="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-4xl backdrop-blur-md">📺</div>
+                    <div>
+                        <h3 class="text-lg sm:text-xl font-black text-white">Efir tugadi</h3>
+                        <p class="text-xs text-slate-400 mt-2 max-w-sm">Ustoz efirni yakunladi. Rahmat! Boshqa jonli efillarni kuzatib boring.</p>
+                    </div>
+                    <a :href="liveIndexUrl"
+                        class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                        📺 Boshqa jonli efillarni ko'rish →
+                    </a>
+                </div>
 
                 <!-- Avatar Backdrop when Camera is Off or audio-only -->
                 <div x-show="!isVideoOn" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
@@ -300,7 +315,8 @@
                         </div>
                     </div>
 
-                    <!-- ── AUDIENCE PERMISSION SWITCHER (Real-time) ── -->
+                    <!-- ── AUDIENCE PERMISSION SWITCHER (Real-time) — FAQAT HOST ko'radi ── -->
+                    @if($canEditSettings)
                     <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                             ⚙️ Tashrif buyuruvchilar huquqi (Hozirgi sozlama):
@@ -336,6 +352,7 @@
                             </button>
                         </div>
                     </div>
+                    @endif
                 </div>
             @endif
 
@@ -350,121 +367,10 @@
         </div>
 
         <!-- ════ RIGHT: REAL-TIME CHAT & QUESTIONS STREAM (4-5 Cols) ════ -->
-        <div class="lg:col-span-5 xl:col-span-4 flex flex-col h-[650px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-soft overflow-hidden">
-            
-            <!-- Chat Header -->
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-bold text-slate-900 dark:text-white">💬 Jonli Muloqot & Savollar</span>
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                </div>
-
-                <!-- Voice Request Button (If voice allowed) -->
-                @if(in_array($event->permission_mode, ['both', 'voice_only']) && !$isHost)
-                    <button wire:click="requestVoiceSpeech"
-                        class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95 transition-all">
-                        <span>✋ Qo'l ko'tarish</span>
-                    </button>
-                @endif
-            </div>
-
-            <!-- Permission notice strip -->
-            <div class="px-4 py-2 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                <span>
-                    @if($event->permission_mode === 'chat_only')
-                        💬 Faqat yozma chat faol
-                    @elseif($event->permission_mode === 'voice_only')
-                        🎙️ Faqat ovozli savollar qabul qilinadi
-                    @elseif($event->permission_mode === 'view_only')
-                        🔒 Ma'ruza rejimi (savol berish yopiq)
-                    @else
-                        ✨ Chat va mikrofon ruxsat etilgan
-                    @endif
-                </span>
-                <span class="font-mono text-[10px] text-slate-400">{{ $allQuestions->count() }} ta xabar</span>
-            </div>
-
-            <!-- Messages Stream Area -->
-            <div class="flex-1 p-4 overflow-y-auto space-y-3" id="liveChatScroll">
-                @if($allQuestions->isEmpty())
-                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 space-y-2">
-                        <span class="text-3xl">💭</span>
-                        <p class="text-xs">Hozircha savol yoki xabarlar yo'q. Birinchi bo'lib fikringizni bildiring!</p>
-                    </div>
-                @else
-                    @foreach($allQuestions as $msg)
-                        <div class="p-3 rounded-2xl {{ $msg->is_selected ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-slate-50 dark:bg-slate-800/50' }} text-xs space-y-1 group" wire:key="msg-{{ $msg->id }}">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <img src="{{ $msg->user->avatar_url }}" class="w-5 h-5 rounded-full object-cover">
-                                    <span class="font-bold text-slate-900 dark:text-white">{{ $msg->user->name }}</span>
-                                    <span class="text-[10px] text-slate-400 font-mono">{{ $msg->created_at->format('H:i') }}</span>
-                                </div>
-
-                                <!-- Host Controls on Question -->
-                                @if($isHost)
-                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button wire:click="toggleSelectQuestion({{ $msg->id }})" title="Muhim savol sifatida belgilash"
-                                            class="p-1 rounded text-amber-500 hover:bg-amber-500/20">
-                                            {{ $msg->is_selected ? '★' : '☆' }}
-                                        </button>
-                                        <button wire:click="markQuestionAnswered({{ $msg->id }})" title="Javob berildi"
-                                            class="p-1 rounded text-emerald-500 hover:bg-emerald-500/20">
-                                            {{ $msg->is_answered ? '✓' : '○' }}
-                                        </button>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <p class="text-slate-700 dark:text-slate-300 leading-relaxed pl-7">{{ $msg->question }}</p>
-
-                            @if($msg->is_answered)
-                                <div class="pl-7">
-                                    <span class="text-[10px] font-bold text-emerald-500">✓ Efirda javob berildi</span>
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                @endif
-            </div>
-
-            <!-- ── BOTTOM INPUT CONTROLS ── -->
-            <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-                @if($event->permission_mode === 'view_only' && !$isHost)
-                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-center text-xs text-slate-400">
-                        🔒 Ushbu efir faqat ma'ruza rejimida. Savol yozish cheklangan.
-                    </div>
-                @elseif($event->permission_mode === 'voice_only' && !$isHost)
-                    <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
-                        <p class="text-xs text-amber-600 dark:text-amber-400 font-semibold">
-                            🎙️ Ushbu efirda faqat ovozli savollar qabul qilinadi.
-                        </p>
-                        <button wire:click="requestVoiceSpeech"
-                            class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
-                            ✋ Navbatga turish (Ovozli savol so'rash)
-                        </button>
-                    </div>
-                @else
-                    <!-- Chat Input Form -->
-                    @auth
-                        <form wire:submit.prevent="submitQuestion" class="flex items-center gap-2">
-                            <input type="text" wire:model.defer="question" placeholder="Fikringiz yoki savolingiz..." maxlength="300"
-                                class="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-rose-500 focus:outline-none">
-                            <button type="submit"
-                                class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-95 shrink-0">
-                                Yuborish
-                            </button>
-                        </form>
-                    @else
-                        <div class="text-center p-2">
-                            <a href="{{ route('login') }}" class="text-xs font-bold text-rose-500 hover:underline">
-                                Savol berish yoki chatda yozish uchun kiring →
-                            </a>
-                        </div>
-                    @endauth
-                @endif
-            </div>
-
+        {{-- Alo hida chat komponent: wire:poll.2s bilan avtomatik yangilanadi (umumiy chat kabi).
+             WebRTC skripti bu blokda emas — polling video ulanishini BUZMAYDI. --}}
+        <div class="lg:col-span-5 xl:col-span-4 h-[650px]">
+            @livewire('live.live-chat-panel', ['event' => $event, 'isHost' => $isHost], key('live-chat-'.$event->id))
         </div>
 
     </div>
@@ -545,6 +451,8 @@ function liveStudioController(config) {
         signalPollUrl: config.signalPollUrl,
         csrfToken: config.csrfToken,
         connectionAttempts: 0,
+        streamEnded: false,
+        liveIndexUrl: config.liveIndexUrl || '/live',
         isHostOnline: isHost ? true : false,
         pendingViewerIds: new Set(),
         offerHostPeerId: null, // Viewer: qaysi hostdan offer qabul qilingani (duplicate filtrlash uchun)
@@ -676,6 +584,22 @@ function liveStudioController(config) {
             }
         },
 
+        // Viewer faqat KUZATUVCHI: hostning kamera/mikrofon holatini oladi,
+        // hech qachon teskari signallar (stream-status) yubormaydi.
+        // Aks holda viewer signali hostda toggleMic/toggleVideo metodlariga tushib,
+        // host kamerasi/mikrofoni o'z-o'zidan o'chib-qoladi.
+        handleViewerStreamStatus(payload) {
+            if (typeof payload.isVideoOn === 'boolean') {
+                this.isVideoOn = payload.isVideoOn;
+            }
+            if (typeof payload.isMicOn === 'boolean') {
+                this.isMicOn = payload.isMicOn;
+            }
+            if (payload.isHostOnline) {
+                this.isHostOnline = true;
+            }
+        },
+
         get formattedDuration() {
             const total = this.durationSeconds;
             const h = String(Math.floor(total / 3600)).padStart(2, '0');
@@ -716,6 +640,11 @@ function liveStudioController(config) {
                 const res = await fetch(url, {
                     headers: { 'Accept': 'application/json' }
                 });
+                if (res.status === 404) {
+                    // Efir o'chirilgan (host tugatgan) — "Efir tugadi" ekranini ko'rsat
+                    this.showStreamEnded();
+                    return;
+                }
                 if (!res.ok) return;
                 const data = await res.json();
                 if (data.signals && data.signals.length > 0) {
@@ -729,6 +658,21 @@ function liveStudioController(config) {
             } catch (err) {
                 // Ignore transient network errors
             }
+        },
+
+        // Efir tugadi: polling/WebRTC to'xtatiladi, "Efir tugadi" overlay ko'rsatiladi
+        showStreamEnded() {
+            if (this.streamEnded) return;
+            this.streamEnded = true;
+            console.log('[LIVE] Efir tugadi — overlay ko\'rsatilmoqda');
+            // Barcha polling/heartbeat/WebRTC ni to'xtatish
+            if (this.pollInterval) clearInterval(this.pollInterval);
+            if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
+            if (this.broadcastChannel) { try { this.broadcastChannel.close(); } catch (e) {} }
+            if (this.peerConnection) { try { this.peerConnection.close(); } catch (e) {} }
+            Object.values(this.peers).forEach(pc => { try { pc.close(); } catch (e) {} });
+            if (this.localStream) { try { this.localStream.getTracks().forEach(t => t.stop()); } catch (e) {} }
+            if (this.remoteStream) { try { this.remoteStream.getTracks().forEach(t => t.stop()); } catch (e) {} }
         },
 
         async sendSignal(type, receiverId, payload) {
@@ -982,15 +926,9 @@ function liveStudioController(config) {
                     }
                 }
             } else if (msg.type === 'stream-status') {
-                if (typeof msg.payload.isVideoOn === 'boolean') {
-                    this.isVideoOn = msg.payload.isVideoOn;
-                }
-                if (typeof msg.payload.isMicOn === 'boolean') {
-                    this.isMicOn = msg.payload.isMicOn;
-                }
-                if (msg.payload.isHostOnline) {
-                    this.isHostOnline = true;
-                }
+                // Faqat hostdan kelgan status qabul qilinadi — viewer o'zi hech qachon
+                // stream-status yubormaydi (aks holda host tugmalari o'z-o'zidan o'chib qoladi).
+                this.handleViewerStreamStatus(msg.payload || {});
             }
         },
 
@@ -998,23 +936,28 @@ function liveStudioController(config) {
             if (!offer || !offer.sdp) return;
 
             // ── GUARD: healthy ulanishni buzmaslik + bir xil hostdan duplicate offerni tashlash ──
+            // Eslatma: bir xil hostdan KELGAN yangi offer (host kamera/qurilma qayta ulaganda
+            // renegotiation) — qabul qilinadi: eski peer yopilib, yangisi bilan davom etamiz.
             if (this.peerConnection) {
                 const state = this.peerConnection.connectionState;
                 const sigState = this.peerConnection.signalingState;
                 const sameHost = !senderId || senderId === this.offerHostPeerId;
-                if (state === 'connecting' || state === 'connected' || this.hasRemoteStream) {
+                if (state === 'connecting') {
                     // Ulanish alla ishlayapti — boshqa hostning (ko-host) offersini e'tiborsiz qoldiramiz
                     if (!sameHost) {
-                        console.log('[VIEWER] Ignoring offer from secondary host — already connected to primary');
+                        console.log('[VIEWER] Ignoring offer from secondary host — already connecting to primary');
                         return;
                     }
-                    if (this.hasRemoteStream) return;
                     console.log('[VIEWER] Ignoring duplicate offer — connecting:', state);
                     return;
                 }
                 if (sigState === 'have-remote-offer' && sameHost) {
                     console.log('[VIEWER] Ignoring duplicate offer from same host');
                     return;
+                }
+                // Renegotiation yoki terminal holat: eski peer'ni yopib yangisini quramiz
+                if (state === 'connected' || this.hasRemoteStream) {
+                    console.log('[VIEWER] Renegotiation offer from host — re-establishing connection');
                 }
                 try { this.peerConnection.close(); } catch (e) {}
             }
@@ -1417,24 +1360,112 @@ function liveStudioController(config) {
             }
         },
 
-        toggleMic() {
+        // Track'ni barcha ulangan tomoshabinlarga yetkazish.
+        // Peer'da bu turdagi sender bo'lsa — replaceTrack (uzilishsiz).
+        // Bo'lmasa (masalan, audio-only offer) — yangi track renegotiation talab qiladi,
+        // shuning uchun peer'ni video bilan qayta yaratamiz (yangi offer ketadi).
+        attachTrackToPeers(kind, track) {
+            Object.entries(this.peers).forEach(([viewerId, pc]) => {
+                if (!pc || !pc.getSenders) return;
+                const sender = pc.getSenders().find(s => s.track && s.track.kind === kind);
+                if (sender) {
+                    sender.replaceTrack(track).catch(() => {});
+                } else {
+                    try { pc.close(); } catch (e) {}
+                    delete this.peers[viewerId];
+                    this.createPeerForViewer(viewerId);
+                }
+            });
+        },
+
+        async toggleMic() {
             this.isMicOn = !this.isMicOn;
-            const stream = this.isScreenSharing ? this.screenStream : this.localStream;
-            if (stream) {
-                stream.getAudioTracks().forEach(t => t.enabled = this.isMicOn);
+
+            const sharing = this.isScreenSharing && this.screenStream;
+            const stream = sharing ? this.screenStream : this.localStream;
+            const audioTracks = stream ? stream.getAudioTracks() : [];
+
+            if (audioTracks.length > 0) {
+                // Track mavjud — faqat yoqish/o'chirish
+                audioTracks.forEach(t => t.enabled = this.isMicOn);
+            } else if (this.isMicOn && !sharing) {
+                // Audio track UMUMAN YO'Q (start paytida mikrofon olinmagan bo'lsa)
+                // — endi mikrofonni foydalanuvchidan so'rab olamiz
+                try {
+                    const audioStream = await navigator.mediaDevices.getUserMedia({
+                        audio: this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true
+                    });
+                    const newTrack = audioStream.getAudioTracks()[0];
+                    if (newTrack) {
+                        newTrack.enabled = true;
+                        if (!this.localStream) this.localStream = new MediaStream();
+                        const old = this.localStream.getAudioTracks()[0];
+                        if (old) { this.localStream.removeTrack(old); try { old.stop(); } catch (e) {} }
+                        this.localStream.addTrack(newTrack);
+                        this.attachTrackToPeers('audio', newTrack);
+                        this.setupAudioAnalyser(this.localStream);
+                        this.scanMediaDevices();
+                    }
+                } catch (err) {
+                    console.warn('Mikrofonni yoqib bo\'lmadi:', err);
+                    this.isMicOn = false;
+                }
             }
+
             this.sendSignal('stream-status', 'all', {
                 isVideoOn: this.isVideoOn,
                 isMicOn: this.isMicOn
             });
         },
 
-        toggleVideo() {
+        async toggleVideo() {
             this.isVideoOn = !this.isVideoOn;
-            const stream = this.isScreenSharing ? this.screenStream : this.localStream;
-            if (stream) {
-                stream.getVideoTracks().forEach(t => t.enabled = this.isVideoOn);
+
+            const sharing = this.isScreenSharing && this.screenStream;
+            const stream = sharing ? this.screenStream : this.localStream;
+            const videoTracks = stream ? stream.getVideoTracks() : [];
+
+            if (videoTracks.length > 0) {
+                // Track mavjud — faqat yoqish/o'chirish
+                videoTracks.forEach(t => t.enabled = this.isVideoOn);
+            } else if (this.isVideoOn && !sharing) {
+                // Video track UMUMAN YO'Q (start paytida kamera band/ruhsatsiz bo'lgan,
+                // yoki audio-only fallback ishlagan) — ENDI KAMERANI SO'RAMIZ
+                try {
+                    const videoStream = await navigator.mediaDevices.getUserMedia({
+                        video: this.selectedVideoDevice
+                            ? { deviceId: { exact: this.selectedVideoDevice } }
+                            : { width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                    const newTrack = videoStream.getVideoTracks()[0];
+                    if (newTrack) {
+                        newTrack.enabled = true;
+                        if (!this.localStream) this.localStream = new MediaStream();
+                        const old = this.localStream.getVideoTracks()[0];
+                        if (old) { this.localStream.removeTrack(old); try { old.stop(); } catch (e) {} }
+                        this.localStream.addTrack(newTrack);
+
+                        // Host preview: o'z kamerasini ko'rsatish
+                        if (!this.isScreenSharing) {
+                            const videoEl = document.getElementById('liveVideoPlayer');
+                            if (videoEl) {
+                                videoEl.muted = true; // echo oldini olish
+                                videoEl.srcObject = this.localStream;
+                                videoEl.play().catch(() => {});
+                            }
+                        }
+
+                        // Tomoshabinlarga yangi video track yetkazish
+                        this.attachTrackToPeers('video', newTrack);
+                        this.scanMediaDevices();
+                    }
+                } catch (err) {
+                    console.warn('Kamerani yoqib bo\'lmadi:', err);
+                    // Kamera olinmadi — tugma holatini qaytarish (aldovchi "yoqilgan" bo'lmasin)
+                    this.isVideoOn = false;
+                }
             }
+
             this.sendSignal('stream-status', 'all', {
                 isVideoOn: this.isVideoOn,
                 isMicOn: this.isMicOn

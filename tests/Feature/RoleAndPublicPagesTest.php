@@ -12,6 +12,8 @@ use Tests\TestCase;
 
 class RoleAndPublicPagesTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,8 +26,12 @@ class RoleAndPublicPagesTest extends TestCase
     /** @test */
     public function public_pages_are_accessible_without_auth()
     {
-        $this->get('/')->assertStatus(200);
-        $this->get('/about')->assertStatus(200);
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $res->assertSee('faol kitobxon safimizda');
+        $res->assertSee('Platformadagi kitoblar');
+
+        $this->get('/about')->assertStatus(200)->assertSee('Platformadagi kitoblar');
         $this->get('/contact')->assertStatus(200);
         $this->get('/faq')->assertStatus(200);
         $this->get('/books')->assertStatus(200);
@@ -53,7 +59,18 @@ class RoleAndPublicPagesTest extends TestCase
     /** @test */
     public function student_cannot_access_teacher_panel()
     {
-        $student = User::where('email', 'test_student@kitobxon.uz')->first();
+        // Har bir test o'z userini yaratadi (RefreshDatabase tranzaksiyalari testlarni izolyatsiya qiladi)
+        $student = User::firstOrCreate(
+            ['email' => 'test_student2@kitobxon.uz'],
+            [
+                'name' => 'Test Student 2',
+                'username' => 'test_student2',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $student->syncRoles(['student']);
+        UserProfile::firstOrCreate(['user_id' => $student->id], ['reading_place' => 'home']);
 
         $response = $this->actingAs($student)->get('/teacher');
         $response->assertStatus(403);
@@ -100,7 +117,17 @@ class RoleAndPublicPagesTest extends TestCase
     /** @test */
     public function admin_is_redirected_from_general_dashboard_to_admin_panel()
     {
-        $admin = User::where('email', 'test_admin@kitobxon.uz')->first();
+        $admin = User::firstOrCreate(
+            ['email' => 'test_admin2@kitobxon.uz'],
+            [
+                'name' => 'Test Admin 2',
+                'username' => 'test_admin2',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $admin->syncRoles(['admin']);
+        UserProfile::firstOrCreate(['user_id' => $admin->id], ['reading_place' => 'home']);
 
         $response = $this->actingAs($admin)->get('/dashboard');
         $response->assertRedirect(route('admin.dashboard'));
@@ -109,7 +136,17 @@ class RoleAndPublicPagesTest extends TestCase
     /** @test */
     public function teacher_is_redirected_from_general_dashboard_to_teacher_panel()
     {
-        $teacher = User::where('email', 'test_teacher@kitobxon.uz')->first();
+        $teacher = User::firstOrCreate(
+            ['email' => 'test_teacher2@kitobxon.uz'],
+            [
+                'name' => 'Test Teacher 2',
+                'username' => 'test_teacher2',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $teacher->syncRoles(['teacher']);
+        UserProfile::firstOrCreate(['user_id' => $teacher->id], ['reading_place' => 'other']);
 
         $response = $this->actingAs($teacher)->get('/dashboard');
         $response->assertRedirect(route('teacher.dashboard'));

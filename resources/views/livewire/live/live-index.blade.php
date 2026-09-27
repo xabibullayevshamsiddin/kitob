@@ -8,14 +8,24 @@
         </div>
 
         @auth
-            <button wire:click="openStudioModal"
-                class="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-rose-600/30 active:scale-95 transition-all group shrink-0">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-                </span>
-                <span>🎙️ Jonli Efir Boshlash</span>
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+                <button wire:click="openStudioModal"
+                    class="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-rose-600/30 active:scale-95 transition-all group">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                    </span>
+                    <span>🎙️ Jonli Efir Boshlash</span>
+                </button>
+
+                @if (auth()->user()->isAdminOrTeacher())
+                    <button wire:click="endAllLiveStreams" wire:confirm="HAMMA jonli efirlar birdan tugatiladi va saytdan o'chiriladi. Davom etasizmi?"
+                        class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-white/5 hover:bg-rose-500/15 border border-slate-700 hover:border-rose-500/40 text-slate-400 hover:text-rose-300 font-bold text-xs uppercase tracking-wider transition-all"
+                        title="Barcha faol efirlarni birdan tugatish">
+                        ⏹️ Hammasini tugatish
+                    </button>
+                @endif
+            </div>
         @else
             <a href="{{ route('login') }}" class="text-xs font-bold text-rose-500 hover:underline flex items-center gap-1">
                 Efir boshlash uchun kiring →
@@ -207,15 +217,28 @@
                     @endif
                 </div>
 
-                <div class="pt-2">
+                <div class="pt-2 flex flex-wrap items-center gap-3">
                     <a href="{{ route('live.show', $event) }}"
                        class="inline-flex items-center gap-2 px-6 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-rose-600/30 transition-all hover:scale-105 active:scale-95">
                         <span>🔴 Efir zaliga kirish</span>
                         <span>→</span>
                     </a>
+
+                    @if (auth()->check() && auth()->user()->isAdminOrTeacher())
+                        <button wire:click="endEvent({{ $event->id }})" wire:confirm="'{{ $event->title }}' efirini tugatasizmi? Efir va undagi savollar saytdan o'chiriladi."
+                            class="inline-flex items-center gap-2 px-4 py-3.5 bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 font-semibold text-xs rounded-xl transition-all">
+                            ⏹️ Efirni tugatish
+                        </button>
+                    @endif
                 </div>
             </div>
         @endforeach
+
+        @if ($upcoming->hasPages())
+            <div class="pt-2">
+                {{ $upcoming->links('vendor.pagination.taste-livewire') }}
+            </div>
+        @endif
 
         <!-- Question submission box -->
         <div class="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft space-y-4">

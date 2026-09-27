@@ -143,7 +143,26 @@
 
                         {{-- Actions --}}
                         <td class="px-5 py-3.5">
-                            <div class="flex items-center justify-end gap-2">
+                            <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                                {{-- Quick Add Media Badges --}}
+                                <a href="{{ route('admin.audios.create', ['book_id' => $book->id]) }}"
+                                   class="px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 text-[10px] font-bold transition-all"
+                                   title="Ushbu kitobga audio qo'shish">
+                                    +🎵 Audio
+                                </a>
+
+                                <a href="{{ route('admin.videos.create', ['book_id' => $book->id]) }}"
+                                   class="px-2 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 text-[10px] font-bold transition-all"
+                                   title="Ushbu kitobga video dars qo'shish">
+                                    +🎥 Video
+                                </a>
+
+                                <a href="{{ route('admin.quizzes.create', ['book_id' => $book->id]) }}"
+                                   class="px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-[10px] font-bold transition-all"
+                                   title="Ushbu kitobga test topshirig'i qo'shish">
+                                    +📝 Test
+                                </a>
+
                                 {{-- PDF yuklab olish --}}
                                 @if($book->chapters()->where('is_published', true)->exists())
                                     <a href="{{ route('books.pdf', $book) }}"
@@ -225,31 +244,8 @@
 
     {{-- Pagination --}}
     @if($books->hasPages())
-        <div class="px-5 py-4 border-t border-slate-800 flex items-center justify-between">
-            <p class="text-xs text-slate-500">
-                {{ $books->firstItem() }}–{{ $books->lastItem() }} / {{ $books->total() }} ta kitob
-            </p>
-            <div class="flex items-center gap-1">
-                @if($books->onFirstPage())
-                    <span class="px-3 py-1.5 text-xs text-slate-600 bg-slate-800 rounded-lg cursor-not-allowed border border-slate-700">← Oldingi</span>
-                @else
-                    <a href="{{ $books->previousPageUrl() }}" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">← Oldingi</a>
-                @endif
-
-                @foreach($books->getUrlRange(max(1, $books->currentPage()-2), min($books->lastPage(), $books->currentPage()+2)) as $page => $url)
-                    @if($page == $books->currentPage())
-                        <span class="w-8 h-8 flex items-center justify-center text-xs font-semibold text-white bg-indigo-600 rounded-lg">{{ $page }}</span>
-                    @else
-                        <a href="{{ $url }}" class="w-8 h-8 flex items-center justify-center text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">{{ $page }}</a>
-                    @endif
-                @endforeach
-
-                @if($books->hasMorePages())
-                    <a href="{{ $books->nextPageUrl() }}" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">Keyingi →</a>
-                @else
-                    <span class="px-3 py-1.5 text-xs text-slate-600 bg-slate-800 rounded-lg cursor-not-allowed border border-slate-700">Keyingi →</span>
-                @endif
-            </div>
+        <div class="p-4 sm:p-5 border-t border-slate-800">
+            {{ $books->links() }}
         </div>
     @endif
 </div>

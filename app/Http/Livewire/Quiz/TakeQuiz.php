@@ -37,9 +37,16 @@ class TakeQuiz extends Component
 
     public function mount(Book $book)
     {
-        $quiz = $book->quizzes()->active()->with(['questions.options'])->first();
+        $this->book = $book;
 
-        abort_unless($quiz, 404, 'Bu kitob uchun hozircha test mavjud emas.');
+        $quiz = $book->quizzes()->active()->with(['questions.options'])->first()
+             ?? $book->quizzes()->with(['questions.options'])->first();
+
+        if (!$quiz || $quiz->questions->isEmpty()) {
+            $this->questions = [];
+            $this->maxScore = 0;
+            return;
+        }
 
         $this->maxScore = (int) $quiz->questions->sum('points');
 
@@ -132,6 +139,16 @@ class TakeQuiz extends Component
 
         $this->pointsAwarded = $pointsToAward;
         $this->alreadyHadFullPoints = $alreadyPassed;
+
+        // Test yakunlandi — bildirishnoma
+        \App\Services\NotifyUser::send(
+            $user,
+            'quiz',
+            $percent >= 80 ? 'Test zori otdi! 🎯' : ($percent >= 50 ? 'Test muvaffaqiyatli yakunlandi' : 'Test yakunlandi'),
+            '«' . $this->book->title . '» testi: ' . $this->score . '/' . $this->maxScore . ' ball (' . $percent . '%)',
+            '📝',
+            '/books/' . $this->book->slug
+        );
     }
 
     /** Points actually added in this attempt (shown in result screen) */

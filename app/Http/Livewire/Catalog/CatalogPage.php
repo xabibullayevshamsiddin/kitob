@@ -4,9 +4,14 @@ namespace App\Http\Livewire\Catalog;
 
 use App\Models\Book;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class CatalogPage extends Component
 {
+    use WithPagination;
+
+    protected $paginationTheme = 'tailwind';
+
     public string $genre = '';
 
     public string $search = '';
@@ -26,6 +31,7 @@ class CatalogPage extends Component
     public function render()
     {
         $books = Book::query()
+            ->where('is_active', true)
             ->when($this->genre !== '', fn ($q) => $q->where('genre', $this->genre))
             ->when($this->search !== '', function ($q) {
                 $s = '%' . $this->search . '%';
@@ -35,9 +41,10 @@ class CatalogPage extends Component
             })
             ->orderBy('week_number', 'desc')
             ->withCount('chapters')
-            ->get();
+            ->paginate(12);
 
         $genres = Book::query()
+            ->where('is_active', true)
             ->select('genre')
             ->distinct()
             ->pluck('genre')

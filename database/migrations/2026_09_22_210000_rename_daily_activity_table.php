@@ -13,15 +13,29 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Idempotent: agar eski jadval yo'q bo'lsa (masalan, yangi baza), o'tkazib yuboradi.
         if (Schema::hasTable('daily_activity') && !Schema::hasTable('daily_activities')) {
-            Schema::rename('daily_activity', 'daily_activities');
+            try {
+                Schema::rename('daily_activity', 'daily_activities');
+            } catch (\Throwable $e) {
+                // Jadval ketma-ketlikda boshqa migratsiya tomonidan allaqachon ko'chirilgan bo'lishi mumkin — xato bermaymiz.
+                if (!Schema::hasTable('daily_activities')) {
+                    throw $e;
+                }
+            }
         }
     }
 
     public function down(): void
     {
         if (Schema::hasTable('daily_activities') && !Schema::hasTable('daily_activity')) {
-            Schema::rename('daily_activities', 'daily_activity');
+            try {
+                Schema::rename('daily_activities', 'daily_activity');
+            } catch (\Throwable $e) {
+                if (!Schema::hasTable('daily_activity')) {
+                    throw $e;
+                }
+            }
         }
     }
 };

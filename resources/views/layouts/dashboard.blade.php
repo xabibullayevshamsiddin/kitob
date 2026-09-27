@@ -55,6 +55,17 @@
     @stack('styles')
 
     <style>
+        /* Number input spinner tugmalari — dark dizaynga mos (oq tugmachalarni yo'qotish) */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         [x-cloak] { display: none !important; }
 
         /* Anti-slop micro texture overlay */

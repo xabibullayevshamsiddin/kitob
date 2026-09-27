@@ -10,6 +10,8 @@ use Tests\TestCase;
 
 class AuthAndOnboardingTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function login_screen_can_be_rendered()
     {
@@ -43,7 +45,7 @@ class AuthAndOnboardingTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect('/');
     }
 
     /** @test */

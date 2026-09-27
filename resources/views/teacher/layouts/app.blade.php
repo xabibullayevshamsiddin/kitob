@@ -28,6 +28,17 @@
     </script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
+        /* Number input spinner tugmalari — dark dizaynga mos (oq tugmachalarni yo'qotish) */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         [x-cloak] { display: none !important; }
         .sidebar-link { @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-200; }
         .sidebar-link.active { @apply bg-indigo-600/30 text-indigo-300 border border-indigo-500/30; }

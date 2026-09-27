@@ -22,8 +22,11 @@
         <env name="APP_URL" value="http://localhost"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <!-- MUHIM: testlar izolyatsiyalangan sqlite'da ishlaydi.
+             Avval bu yerda MySQL (real 'kitob' DB) ishlatilgani uchun RefreshDatabase
+             real ma'lumotlarni migrate:fresh bilan o'chirib tashlagan. -->
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

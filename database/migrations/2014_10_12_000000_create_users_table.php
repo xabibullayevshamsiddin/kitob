@@ -16,7 +16,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('avatar')->nullable();
-            $table->enum('role', ['reader', 'moderator', 'admin'])->default('reader');
+            // ENUM'ni to'liq rol ro'yxati bilan yaratamiz (2026_09_24 migratsiya sqlite'da ishlamagani uchun)
+            $table->enum('role', ['reader', 'moderator', 'admin', 'teacher', 'student', 'author'])->default('reader');
             $table->unsignedBigInteger('total_points')->default(0);
             $table->unsignedBigInteger('coin_balance')->default(0);
             $table->text('bio')->nullable();

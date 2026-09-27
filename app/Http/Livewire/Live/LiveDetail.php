@@ -29,6 +29,19 @@ class LiveDetail extends Component
         }
     }
 
+    /**
+     * Efirni boshqarish huquqi (tugatish/qayta boshlash/sozlamalar).
+     * Host yoki admin/teacher (moderatsiya uchun) — lekin WebRTC broadcaster faqat host.
+     */
+    public function getCanManageProperty(): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+
+        return $this->isHost || Auth::user()->isAdminOrTeacher();
+    }
+
     public function getIsHostProperty(): bool
     {
         if (!Auth::check()) {
@@ -37,14 +50,19 @@ class LiveDetail extends Component
 
         $user = Auth::user();
 
-        // Agar foydalanuvchi efir egasi bo'lsa yoki admin/teacher bo'lsa
+        // Host: faqat efir egasi (yoki host tayinlanmagan bo'lsa teacher).
+        // Admin atayin broadcaster bo'lishi kerak bo'lsa — efirni o'zi yaratishi kerak
+        // ("Jonli Efir Boshlash" tugmasi orqali). Oddiy admin kirganda tomoshabin bo'ladi,
+        // aks holda ikkala admin 'host' peer ID bilan to'qnashib, signalling buziladi.
         return $this->event->host_user_id === $user->id
-            || $user->hasRole('admin')
             || ($user->hasRole('teacher') && $this->event->host_user_id === null);
     }
 
     public function updatePermissionMode(string $mode): void
     {
+        // FAQAT HOST (efir egasi) sozlamalarni o'zgartirishi mumkin.
+        // Admin/teacher boshqa odam efirini boshqara olmaydi — aks holda "boshqalar uchun"
+        // sozlama ikkita turli xosda ikki xil qiymatga aylanadi.
         if (!$this->isHost) {
             session()->flash('error', 'Faqat efir muallifi sozlamalarni o\'zgartirishi mumkin.');
             return;
@@ -62,13 +80,14 @@ class LiveDetail extends Component
 
     public function endLiveStream()
     {
-        if (!$this->isHost) {
+        if (!$this->canManage) {
             session()->flash('error', 'Faqat efir muallifi efirni yakunlashi mumkin.');
             return null;
         }
 
         // Foydalanuvchi talabi: o'tib ketgan / yakunlangan efirlar saytda saqlanib qolmasin
         $this->event->questions()->delete();
+        \App\Models\LiveSignal::where('live_event_id', $this->event->id)->delete();
         $this->event->delete();
 
         session()->flash('success', 'Jonli efir muvaffaqiyatli yakunlandi va saytdan o\'chirildi.');
@@ -198,6 +217,8 @@ class LiveDetail extends Component
             'selectedQuestions' => $selectedQuestions,
             'myQuestions'       => $myQuestions,
             'isHost'            => $this->isHost,
+            'canManage'         => $this->canManage,
+            'canEditSettings'   => $this->isHost,
         ])->layout('layouts.app', ['title' => $this->event->title]);
     }
 }

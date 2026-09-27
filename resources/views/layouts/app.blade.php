@@ -58,13 +58,26 @@
     <!-- Alpine.js + Plugins (Collapse must load before Alpine starts) -->
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Vite Bundled Scripts (Pusher, Echo, Axios) -->
+    @vite(['resources/js/app.js'])
 
     @if(class_exists('Livewire\Livewire'))
         @livewireStyles
     @endif
     @stack('styles')
 
-    <style>
+    <style>        /* Number input spinner tugmalari — dark dizaynga mos (oq tugmachalarni yo'qotish) */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+
         [x-cloak] { display: none !important; }
 
         /* Anti-slop micro texture overlay */
@@ -80,6 +93,18 @@
         }
         .page-enter { animation: contentRise 0.3s ease-out; }
 
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(16px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slideUp 0.35s ease-out forwards; }
+
+        @keyframes scaleIn {
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
         /* Ambient floating orbs */
         @keyframes orbDrift {
             0%, 100% { transform: translate(0, 0) scale(1); }
@@ -93,6 +118,26 @@
         ::-webkit-scrollbar-track { background: #06080d; }
         ::-webkit-scrollbar-thumb { background: #1a2236; border-radius: 8px; border: 2px solid #06080d; }
         ::-webkit-scrollbar-thumb:hover { background: #25304c; }
+
+        /* Brauzer avtofill (autofill) inputlarni oq bo'ya qo'ymasligi uchun */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active,
+        textarea:-webkit-autofill,
+        textarea:-webkit-autofill:hover,
+        textarea:-webkit-autofill:focus,
+        select:-webkit-autofill,
+        select:-webkit-autofill:hover,
+        select:-webkit-autofill:focus {
+            -webkit-text-fill-color: #e2e8f0 !important;
+            -webkit-box-shadow: 0 0 0 1000px #1e293b inset !important;
+            caret-color: #e2e8f0 !important;
+            transition: background-color 9999s ease-in-out 0s !important;
+        }
+        input[type="checkbox"], input[type="radio"] {
+            -webkit-box-shadow: none !important;
+        }
     </style>
 </head>
 <body class="bg-ink-950 text-slate-200 font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
@@ -126,7 +171,7 @@
 
     <!-- ── Page Content ── -->
     <main class="relative pt-10 pb-20 px-4 sm:px-6 noise-bg min-h-[calc(100vh-72px)]">
-        <div class="max-w-7xl mx-auto page-enter">
+        <div class="max-w-7xl mx-auto">
             {{ $slot ?? '' }}
             @yield('content')
         </div>

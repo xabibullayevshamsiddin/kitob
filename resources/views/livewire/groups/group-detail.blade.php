@@ -12,6 +12,18 @@
                 <p class="text-xs text-slate-400">{{ $members->count() }} ta a'zo {{ $group->book ? '• 📖 ' . $group->book->title : '' }}</p>
             </div>
         </div>
+
+        @if($canDelete)
+            <div>
+                <button wire:click="openDeleteModal"
+                    class="px-4 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/25 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Guruhni o'chirish</span>
+                </button>
+            </div>
+        @endif
     </div>
 
     @if ($group->description)
@@ -63,7 +75,7 @@
             <div class="p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-soft">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4">A'zolar ({{ $members->count() }})</h3>
                 <div class="space-y-3">
-                    @forelse ($members as $member)
+                    @foreach ($members as $member)
                         <a href="{{ route('profile.show', $member->user->username) }}" class="flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl p-2 transition-colors" wire:key="mem-{{ $member->id }}">
                             <div class="flex items-center gap-2 min-w-0">
                                 <img src="{{ $member->user->avatar_url }}" class="w-8 h-8 rounded-lg object-cover" alt="{{ $member->user->name }}">
@@ -74,9 +86,44 @@
                             </div>
                             <span class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 shrink-0">{{ number_format($member->user->total_points) }}</span>
                         </a>
-                    @endforelse
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Delete Group Confirmation Modal (Taste-Skill) -->
+    @if ($showDeleteModal)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" wire:click="$set('showDeleteModal', false)"></div>
+            <div class="relative w-full max-w-md p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-white/10 shadow-2xl space-y-5 text-center">
+
+                <!-- Danger Icon Badge -->
+                <div class="mx-auto w-14 h-14 rounded-2xl bg-rose-500/10 dark:bg-rose-500/15 border border-rose-500/20 text-rose-500 dark:text-rose-400 flex items-center justify-center text-2xl shadow-lg shadow-rose-500/10">
+                    🗑️
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                        «{{ $group->name }}» guruhini o'chirmoqchimisiz?
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        Ushbu amalni ortga qaytarib bo'lmaydi. Guruhdagi barcha xabarlar va a'zolik ma'lumotlari butunlay o'chiriladi.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" wire:click="$set('showDeleteModal', false)"
+                        class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors">
+                        Bekor qilish
+                    </button>
+                    <button type="button" wire:click="confirmDeleteGroup" wire:loading.attr="disabled"
+                        class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-rose-600/25 transition-all flex items-center justify-center gap-1.5">
+                        <span wire:loading.remove wire:target="confirmDeleteGroup">Ha, o'chirilsin</span>
+                        <span wire:loading wire:target="confirmDeleteGroup">O'chirilmoqda...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

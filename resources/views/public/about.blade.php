@@ -146,30 +146,30 @@
                 
                 <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
                     <p class="text-4xl sm:text-5xl font-black text-amber-400 font-mono tracking-tight">
-                        <span class="counter-element" data-target="52">0</span>+
+                        <span class="counter-element" data-target="{{ $booksCount ?? 0 }}">{{ $booksCount ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Yillik sara asarlar</p>
+                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Platformadagi kitoblar</p>
                 </div>
 
                 <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
                     <p class="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight">
-                        <span class="counter-element" data-target="1200">0</span>+
+                        <span class="counter-element" data-target="{{ $usersCount ?? 0 }}">{{ $usersCount ?? 0 }}</span>
                     </p>
                     <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Faol kitobxonlar</p>
                 </div>
 
                 <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
-                    <p class="text-4xl sm:text-5xl font-black text-amber-400 font-mono tracking-tight">
-                        <span class="counter-element" data-target="3">0</span> xil
+                    <p class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono tracking-tight">
+                        <span class="counter-element" data-target="{{ $maxStreak ?? 0 }}">{{ $maxStreak ?? 0 }}</span> kun
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Matn, Audio, Video</p>
+                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Streak rekordi</p>
                 </div>
 
                 <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
-                    <p class="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight">
-                        <span class="counter-element" data-target="98">0</span>%
+                    <p class="text-4xl sm:text-5xl font-black text-indigo-400 font-mono tracking-tight">
+                        <span class="counter-element" data-target="{{ $totalMinutes ?? 0 }}">{{ $totalMinutes ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Odat shakllanishi</p>
+                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Jami mutolaa (daqiqa)</p>
                 </div>
 
             </div>
@@ -401,6 +401,10 @@
             // 6. Dynamic Rolling Number Counters
             document.querySelectorAll('.counter-element').forEach(el => {
                 const target = parseInt(el.getAttribute('data-target') || 0, 10);
+                if (target === 0) {
+                    el.textContent = '0';
+                    return;
+                }
                 ScrollTrigger.create({
                     trigger: el,
                     start: "top 90%",
@@ -409,10 +413,13 @@
                         const obj = { count: 0 };
                         gsap.to(obj, {
                             count: target,
-                            duration: 1.8,
+                            duration: 1.5,
                             ease: "power2.out",
                             onUpdate: () => {
                                 el.textContent = Math.floor(obj.count).toLocaleString('en-US');
+                            },
+                            onComplete: () => {
+                                el.textContent = target.toLocaleString('en-US');
                             }
                         });
                     }
@@ -430,6 +437,39 @@
                 });
             });
         });
+    
+        // ── Fail-safe: GSAP yuklanmasa yoki xato bo'lsa kontent ko'rinadi ──
+        const __kitobxonSeen = new WeakMap();
+        function __kitobxonVisibilityFailsafe() {
+            document.querySelectorAll('.hero-anim-item, .bento-header, .bento-card, .step-card, .cta-box, .legal-content, .about-stat-card, .value-card, .team-card, .contact-form-col, .contact-info-card, .faq-card, .book-card, .error-anim-item').forEach(el => {
+                const r = el.getBoundingClientRect();
+                if (r.height === 0) return;
+                const s = getComputedStyle(el);
+                if (parseFloat(s.opacity) >= 0.05) { __kitobxonSeen.delete(el); return; }
+
+                // GSAP umuman yuklanmagan bo'lsa — darhol ochamiz
+                if (typeof gsap === 'undefined') {
+                    el.style.opacity = '1'; el.style.filter = 'none'; el.style.transform = 'none';
+                    return;
+                }
+
+                const reached = r.top < window.innerHeight + 100; // ekranda yoki undan yuqorida
+                const first = __kitobxonSeen.get(el);
+                // 4+ soniya opacity:0 da qotgan bo'lsa — animatsiya ishlamagan: ochamiz
+                if (reached || (first && Date.now() - first > 4000)) {
+                    el.style.opacity = '1'; el.style.filter = 'none'; el.style.transform = 'none';
+                    __kitobxonSeen.delete(el);
+                } else if (!first) {
+                    __kitobxonSeen.set(el, Date.now());
+                }
+            });
+        }
+        // Darhol tekshiruv
+        __kitobxonVisibilityFailsafe();
+        // Scroll paytida darhol sinxron tekshiruv (taymer throttling ta'sir qilmaydi)
+        window.addEventListener('scroll', __kitobxonVisibilityFailsafe, { passive: true });
+        // Zaxira interval (PJAX navigatsiyadan keyin ham ishlashi uchun)
+        setInterval(__kitobxonVisibilityFailsafe, 2000);
     </script>
 
 </body>

@@ -39,6 +39,30 @@
     @if(class_exists('Livewire\Livewire'))
         @livewireStyles
     @endif
+
+    {{-- Brauzer avtofill (autofill) inputlarni oq bo'ya qo'ymasligi uchun --}}
+    <style>
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active,
+        textarea:-webkit-autofill,
+        textarea:-webkit-autofill:hover,
+        textarea:-webkit-autofill:focus,
+        select:-webkit-autofill,
+        select:-webkit-autofill:hover,
+        select:-webkit-autofill:focus {
+            -webkit-text-fill-color: #e2e8f0 !important;
+            -webkit-box-shadow: 0 0 0 1000px #1e293b inset !important;
+            caret-color: #e2e8f0 !important;
+            transition: background-color 9999s ease-in-out 0s !important;
+            border-color: #475569 !important;
+        }
+        /* Sepia/oy rejimlarida ham oq bo'yalmasligi uchun umumiy himoya */
+        input[data-litepicker], input[type="checkbox"], input[type="radio"] {
+            -webkit-box-shadow: none !important;
+        }
+    </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-center relative overflow-x-hidden font-sans selection:bg-indigo-500 selection:text-white">
 
