@@ -36,7 +36,10 @@ class BookVideo extends Model
 
     public function book(): BelongsTo
     {
-        return $this->belongsTo(Book::class);
+        return $this->belongsTo(Book::class)->withDefault([
+            'title' => 'Mustaqil video',
+            'slug'  => '',
+        ]);
     }
 
     // -------------------------------------------------------------------------
@@ -74,7 +77,11 @@ class BookVideo extends Model
             return $path;
         }
 
-        return Storage::url($path);
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
+        return asset('storage/' . ltrim($path, '/'));
     }
 
     /**
@@ -90,7 +97,11 @@ class BookVideo extends Model
             return $this->thumbnail;
         }
 
-        return Storage::url($this->thumbnail);
+        if (str_starts_with($this->thumbnail, 'storage/')) {
+            return asset($this->thumbnail);
+        }
+
+        return asset('storage/' . ltrim($this->thumbnail, '/'));
     }
 
     /**

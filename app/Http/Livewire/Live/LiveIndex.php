@@ -17,6 +17,54 @@ class LiveIndex extends Component
     public string $question = '';
     public ?int $questionEventId = null;
 
+    // Filters & Search
+    public string $search = '';
+    public string $statusFilter = 'all'; // 'all', 'live', 'scheduled'
+    public string $bookFilter = '';
+    public string $permissionFilter = 'all'; // 'all', 'both', 'chat_only', 'voice_only', 'view_only'
+
+    protected $queryString = [
+        'search'           => ['except' => ''],
+        'statusFilter'     => ['except' => 'all'],
+        'bookFilter'       => ['except' => ''],
+        'permissionFilter' => ['except' => 'all'],
+    ];
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedBookFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPermissionFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function setStatusFilter(string $status): void
+    {
+        $this->statusFilter = $status;
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->statusFilter = 'all';
+        $this->bookFilter = '';
+        $this->permissionFilter = 'all';
+        $this->resetPage();
+    }
+
     // Stream Studio Modal
     public bool $showStudioModal = false;
     public string $newTitle = '';
@@ -202,12 +250,46 @@ class LiveIndex extends Component
                 $e->delete();
             });
 
-        $upcoming = LiveEvent::with(['book', 'hostUser'])
-            ->whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE])
+        // Badge hisoblagichlari
+        $totalActiveCount = LiveEvent::whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE])->count();
+        $liveCount = LiveEvent::where('status', LiveEvent::STATUS_LIVE)->count();
+        $scheduledCount = LiveEvent::where('status', LiveEvent::STATUS_SCHEDULED)->count();
+
+        $query = LiveEvent::with(['book', 'hostUser'])
+            ->whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE]);
+
+        // Status filter
+        if ($this->statusFilter === 'live') {
+            $query->where('status', LiveEvent::STATUS_LIVE);
+        } elseif ($this->statusFilter === 'scheduled') {
+            $query->where('status', LiveEvent::STATUS_SCHEDULED);
+        }
+
+        // Book filter
+        if (!empty($this->bookFilter)) {
+            $query->where('book_id', (int) $this->bookFilter);
+        }
+
+        // Permission filter
+        if ($this->permissionFilter !== 'all') {
+            $query->where('permission_mode', $this->permissionFilter);
+        }
+
+        // Search query
+        if (!empty($this->search)) {
+            $s = '%' . trim($this->search) . '%';
+            $query->where(function ($q) use ($s) {
+                $q->where('title', 'like', $s)
+                  ->orWhere('description', 'like', $s)
+                  ->orWhereHas('hostUser', fn ($u) => $u->where('name', 'like', $s))
+                  ->orWhereHas('book', fn ($b) => $b->where('title', 'like', $s));
+            });
+        }
+
+        $upcoming = $query
             ->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
-            // ENG YANGI efir birinchi (tepada) ko'rinadi — foydalanuvchi talabi
             ->orderByDesc('created_at')
-            ->paginate(4);
+            ->paginate(6);
 
         $myQuestions = LiveQuestion::where('user_id', Auth::id())
             ->latest()
@@ -217,9 +299,13 @@ class LiveIndex extends Component
         $books = \App\Models\Book::where('is_active', true)->orderBy('title')->get();
 
         return view('livewire.live.live-index', [
-            'upcoming'    => $upcoming,
-            'myQuestions' => $myQuestions,
-            'books'       => $books,
+            'upcoming'          => $upcoming,
+            'myQuestions'       => $myQuestions,
+            'books'             => $books,
+            'totalActiveCount'  => $totalActiveCount,
+            'liveCount'         => $liveCount,
+            'scheduledCount'    => $scheduledCount,
+            'hasActiveFilters'  => ($this->search !== '' || $this->statusFilter !== 'all' || $this->bookFilter !== '' || $this->permissionFilter !== 'all'),
         ])->layout('layouts.app', ['title' => 'Jonli efirlar']);
     }
 }

@@ -30,13 +30,12 @@ class AudioController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'book_id'    => 'required|exists:books,id',
+            'book_id'    => 'nullable|exists:books,id',
             'title'      => 'required|string|max:255',
             'duration'   => 'nullable|numeric|min:0.1',
             'audio_file' => 'nullable|file|mimes:mp3,wav,ogg,m4a,aac,wma|max:102400',
             'audio_url'  => 'nullable|string|max:500',
         ], [
-            'book_id.required'    => 'Kitobni tanlash majburiy.',
             'title.required'      => 'Audio dars yoki bob sarlavhasini kiriting.',
             'audio_file.max'      => 'Audio fayl hajmi 100 MB dan oshmasligi kerak.',
             'audio_file.mimes'    => 'Faqat MP3, WAV, M4A, OGG formatidagi audio fayllarni yuklash mumkin.',

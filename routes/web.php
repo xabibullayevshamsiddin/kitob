@@ -91,10 +91,9 @@ Route::get('/terms', function () {
     return view('public.terms');
 })->name('terms');
 
-// Public kitoblar katalogi (faqat ko'rish, o'qish uchun login kerak)
-Route::get('/books', function () {
-    $books = \App\Models\Book::where('is_active', true)->latest()->paginate(12);
-    return view('public.books', compact('books'));
+// Public kitoblar katalogi -> Interaktiv katalog sahifasiga yo'naltirish
+Route::get('/books', function (\Illuminate\Http\Request $request) {
+    return redirect()->route('books.catalog', $request->all());
 })->name('books.public');
 
 // Kitoblar katalogi (login shart emas — hamma ko'ra oladi)
@@ -148,7 +147,17 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
         ->middleware('staff.redirect')
         ->name('dashboard');
 
-    // Books & Reading (O'quvchilar uchun — login kerak)
+    // AI Chatbot (faqat student — login kerak)
+    Route::get('/ai-chat', AiChat::class)->name('ai-chat');
+});
+
+/*
+|--------------------------------------------------------------------------
+| SHARED AUTH ROUTES — barcha login bo'lgan foydalanuvchilar (student, teacher, admin)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    // Kitoblar va Mutolaa (Barcha login bo'lgan foydalanuvchilar uchun)
     Route::get('/books/{slug}', function ($slug) {
         $book = \App\Models\Book::where('slug', $slug)->firstOrFail();
         return view('pages.book-detail', compact('book'));
@@ -157,9 +166,6 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
     // Kitobni BRAUZERDA onlayn o'qish (PDF embed)
     Route::get('/books/{book}/read-pdf', [\App\Http\Controllers\BookPdfController::class, 'read'])
         ->name('books.pdf.read');
-
-    // Kitobni PDF sifatida yuklab olish
-    // (endi SHARED AUTH guruhida — barcha rollar uchun)
 
     Route::get('/books/{book}/read/{chapter}', function ($book, $chapter) {
         $book    = \App\Models\Book::findOrFail($book);
@@ -180,28 +186,32 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
         return redirect()->route('books.show', $book->slug);
     })->name('reader');
 
+    // Audio darslar va tahlillar
     Route::get('/books/{book}/audio', function ($bookId) {
         $book = \App\Models\Book::with('audios')->findOrFail($bookId);
         return view('pages.audio', compact('book'));
     })->name('audio.show');
 
-    Route::get('/books/{book}/videos', function ($bookId) {
-        $book = \App\Models\Book::with('videos')->findOrFail($bookId);
-        return view('pages.videos', compact('book'));
+    // Barcha video darslar yoki tanlangan kitob videolari
+    Route::get('/videos/{bookId?}', function ($bookId = null) {
+        if ($bookId) {
+            $book = \App\Models\Book::with('videos')->find($bookId);
+            if ($book) {
+                return view('pages.videos', compact('book'));
+            }
+        }
+        $book = null;
+        $videos = \App\Models\BookVideo::with('book')->latest()->get();
+        return view('pages.videos', compact('book', 'videos'));
     })->name('videos.index');
 
+    Route::get('/books/{book}/videos', function ($bookId) {
+        return redirect()->route('videos.index', $bookId);
+    });
+
+    // Test topshirig'i
     Route::get('/books/{book}/quiz', TakeQuiz::class)->name('quiz.show');
 
-    // AI Chatbot (faqat student — login kerak)
-    Route::get('/ai-chat', AiChat::class)->name('ai-chat');
-});
-
-/*
-|--------------------------------------------------------------------------
-| SHARED AUTH ROUTES — barcha login bo'lgan foydalanuvchilar (student, teacher, admin)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth'])->group(function () {
     // Profil, Sozlamalar, Bildirishnomalar — barcha rollar uchun
     Route::get('/profile/{username}', ProfilePage::class)->name('profile.show');
     Route::get('/settings', SettingsPage::class)->name('settings');
@@ -219,11 +229,12 @@ Route::middleware(['auth'])->group(function () {
         return view('pages.book-flipbook', compact('book'));
     })->name('books.flipbook');
 
-    // Mutolaa sessiyasi va progressini real-time hisoblash
+    // Mutolaa va video sessiyasi va progressini real-time hisoblash
     Route::post('/api/reading/heartbeat', function (\Illuminate\Http\Request $request) {
         $request->validate([
-            'book_id'    => 'required|exists:books,id',
+            'book_id'    => 'nullable|exists:books,id',
             'chapter_id' => 'nullable|exists:book_chapters,id',
+            'page_type'  => 'nullable|string|in:book,flipbook,chapter,audio,quiz,video',
             'minutes'    => 'required|numeric|min:0.1|max:60',
         ]);
 
@@ -232,20 +243,25 @@ Route::middleware(['auth'])->group(function () {
         $today = now('Asia/Tashkent')->toDateString();
 
         // Oxirgi 30 daqiqa ichidagi sessiyani davom ettirish yoki yangi yaratish
-        $session = \App\Models\ReadingSession::where('user_id', $user->id)
-            ->where('book_id', $request->book_id)
+        $sessionQuery = \App\Models\ReadingSession::where('user_id', $user->id)
             ->where('session_date', $today)
-            ->where('created_at', '>=', now()->subMinutes(30))
-            ->latest()
-            ->first();
+            ->where('created_at', '>=', now()->subMinutes(30));
+
+        if ($request->book_id) {
+            $sessionQuery->where('book_id', $request->book_id);
+        } else {
+            $sessionQuery->whereNull('book_id');
+        }
+
+        $session = $sessionQuery->latest()->first();
 
         if ($session) {
             $session->increment('minutes_read', $minutes);
         } else {
             \App\Models\ReadingSession::create([
                 'user_id'      => $user->id,
-                'book_id'      => $request->book_id,
-                'chapter_id'   => $request->chapter_id,
+                'book_id'      => $request->book_id ?: null,
+                'chapter_id'   => $request->chapter_id ?: null,
                 'minutes_read' => $minutes,
                 'session_date' => $today,
             ]);
@@ -255,37 +271,58 @@ Route::middleware(['auth'])->group(function () {
             ['user_id' => $user->id, 'activity_date' => $today],
             ['minutes_read' => 0, 'logged_in' => true, 'points_earned' => 0]
         );
+
+        $prevMinutes = (int) $activity->minutes_read;
+        $newMinutes = $prevMinutes + $minutes;
         $activity->increment('minutes_read', $minutes);
 
         $streakService = app(\App\Services\Gamification\StreakService::class);
         $streak = $streakService->recordActivity($user);
 
-        $pointsPer10Min = (int) config('app.reading_points_per_10min', 10);
-        $pointsToAward = max(1, (int) round(($minutes / 10) * $pointsPer10Min));
+        // Har 1 daqiqa uchun: 10 ta ball va 1 ta tanga beriladi!
+        $pointsToAward = $minutes * 10; // Har 1 daqiqaga 10 ball
+        $coinsToAward  = $minutes * 1;  // Har 1 daqiqaga 1 tanga
+
+        $pageTypeLabels = [
+            'video'    => 'video dars tomoshasi',
+            'audio'    => 'audio dars tinglashi',
+            'quiz'     => 'test topshirig\'i',
+            'flipbook' => 'interaktiv mutolaa',
+            'chapter'  => 'bob mutolaasi',
+            'book'     => 'kitob mutolaasi',
+        ];
+        $typeLabel = $pageTypeLabels[$request->page_type] ?? 'mutolaa va o\'rganish';
 
         $pointsService = app(\App\Services\Gamification\PointsService::class);
+
         $pointsService->awardPoints(
             $user,
             $pointsToAward,
             'reading',
-            "{$minutes} daqiqa kitob mutolaasi uchun rag'bat",
+            "{$minutes} daqiqa faol {$typeLabel} uchun {$pointsToAward} ball",
             $request->book_id,
-            \App\Models\Book::class
-        );
-        $pointsService->awardCoins(
-            $user,
-            max(1, (int) round($pointsToAward / 2)),
-            'reading',
-            "{$minutes} daqiqa kitob mutolaasi tangasi"
+            $request->book_id ? \App\Models\Book::class : null
         );
 
+        $pointsService->awardCoins(
+            $user,
+            $coinsToAward,
+            'reading',
+            "{$minutes} daqiqa faol {$typeLabel} uchun {$coinsToAward} tanga 🪙"
+        );
+
+        $freshUser = $user->fresh();
+
         return response()->json([
-            'success'             => true,
-            'minutes_added'       => $minutes,
-            'total_minutes_today' => $activity->minutes_read,
-            'total_minutes_all'   => (int) $user->fresh()->total_reading_minutes,
-            'total_points'        => (int) $user->fresh()->total_points,
-            'streak'              => (int) $streak->current_streak,
+            'success'              => true,
+            'minutes_added'        => $minutes,
+            'points_added'         => $pointsToAward,
+            'coins_added'          => $coinsToAward,
+            'total_minutes_today'  => $newMinutes,
+            'total_minutes_all'    => (int) $freshUser->total_reading_minutes,
+            'total_points'         => (int) $freshUser->total_points,
+            'coin_balance'         => (int) $freshUser->coin_balance,
+            'streak'               => (int) $streak->current_streak,
         ]);
     })->name('reading.heartbeat');
 
@@ -589,6 +626,8 @@ Route::prefix('admin')
     Route::get('/videos', [\App\Http\Controllers\Admin\VideoController::class, 'index'])->name('videos.index');
     Route::get('/videos/create', [\App\Http\Controllers\Admin\VideoController::class, 'create'])->name('videos.create');
     Route::post('/videos', [\App\Http\Controllers\Admin\VideoController::class, 'store'])->name('videos.store');
+    Route::get('/videos/{video}/edit', [\App\Http\Controllers\Admin\VideoController::class, 'edit'])->name('videos.edit');
+    Route::put('/videos/{video}', [\App\Http\Controllers\Admin\VideoController::class, 'update'])->name('videos.update');
     Route::delete('/videos/{video}', [\App\Http\Controllers\Admin\VideoController::class, 'destroy'])->name('videos.destroy');
 
     // ── Kitob Test Topshiriqlari (Quizzes) ──

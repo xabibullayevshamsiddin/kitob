@@ -3,8 +3,9 @@
  * Features:
  * - Dynamic viewport calculation (fits comfortably large and close to reader)
  * - Sharp high-DPI PDF.js canvas rendering
- * - High-quality authentic page-turn sound using D:\OSPanel\domains\localhost\Kitob\public\sounds\oxidvideos-page-flip-1-178322.mp3
+ * - High-quality authentic page-turn sound using oxidvideos-page-flip-1-178322.mp3
  * - Audio pool for rapid responsive page flipping
+ * - Interactive Page Selector & Direct Jumper (Input + Dropdown)
  * - Zoom in/out/reset (+/-) with double-click zoom toggle
  * - Page scrubber slider & jump to page
  * - Touch swipe & keyboard arrow navigation
@@ -118,13 +119,16 @@
     window.addEventListener('resize', debounce(() => {
       const wasMobile = isMobile;
       isMobile = window.innerWidth < 900;
+      if (wasMobile !== isMobile && totalPages > 0) {
+        populatePageSelect(totalPages);
+      }
       renderSpread(currentSpread);
     }, 180));
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       if (!rootEl || !rootEl.isConnected) return;
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
         fbGoNext();
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
@@ -200,6 +204,7 @@
         pdfDoc = doc;
         totalPages = doc.numPages;
         currentSpread = 1;
+        populatePageSelect(totalPages);
         if (sliderEl) {
           sliderEl.min = 1;
           sliderEl.max = totalPages;
@@ -221,6 +226,47 @@
           `;
         }
       });
+  }
+
+  /**
+   * Populate dropdown page selector <select id="fb-page-select">
+   */
+  function populatePageSelect(total) {
+    const selects = document.querySelectorAll('#fb-page-select');
+    selects.forEach(selectEl => {
+      selectEl.innerHTML = '';
+
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = 'Sahifaga o\'tish ▾';
+      defaultOpt.className = 'bg-slate-900 text-slate-400';
+      selectEl.appendChild(defaultOpt);
+
+      if (isMobile) {
+        for (let i = 1; i <= total; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = `${i}-sahifa`;
+          opt.className = 'bg-slate-900 text-white';
+          selectEl.appendChild(opt);
+        }
+      } else {
+        const opt1 = document.createElement('option');
+        opt1.value = 1;
+        opt1.textContent = '1-sahifa (Muqova)';
+        opt1.className = 'bg-slate-900 text-white';
+        selectEl.appendChild(opt1);
+
+        for (let i = 2; i <= total; i += 2) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          const endPage = Math.min(i + 1, total);
+          opt.textContent = `${i}-${endPage} sahifalar`;
+          opt.className = 'bg-slate-900 text-white';
+          selectEl.appendChild(opt);
+        }
+      }
+    });
   }
 
   /**
@@ -316,7 +362,7 @@
       const pageNum = Math.max(1, Math.min(spreadStart, totalPages));
       currentSpread = pageNum;
       await renderPageToCanvas(pageNum, canvasRight, ctxRight);
-      updateIndicator(`${currentSpread} / ${totalPages}`);
+      updateIndicator(`${currentSpread} / ${totalPages}`, currentSpread);
       if (sliderEl) sliderEl.value = currentSpread;
       return;
     }
@@ -339,25 +385,62 @@
     ]);
 
     if (currentSpread === 1) {
-      updateIndicator(`1 (Muqova) / ${totalPages}`);
+      updateIndicator(`1 (Muqova) / ${totalPages}`, 1);
       if (sliderEl) sliderEl.value = 1;
     } else {
       const rightStr = rightNum <= totalPages ? `-${rightNum}` : '';
-      updateIndicator(`${leftNum}${rightStr} / ${totalPages}`);
+      updateIndicator(`${leftNum}${rightStr} / ${totalPages}`, leftNum);
       if (sliderEl) sliderEl.value = leftNum;
     }
   }
 
-  function updateIndicator(text) {
+  /**
+   * Update Indicator and Sync all Inputs & Select dropdowns
+   */
+  function updateIndicator(text, pageNum) {
     if (pageIndicator) {
       pageIndicator.textContent = `Sahifa: ${text}`;
     }
+
+    const currentVal = pageNum || currentSpread;
+
+    const pageInputs = document.querySelectorAll('#fb-page-input');
+    pageInputs.forEach(input => {
+      input.value = currentVal;
+      input.max = totalPages;
+    });
+
+    const totalEls = document.querySelectorAll('#fb-total-pages');
+    totalEls.forEach(el => {
+      el.textContent = totalPages;
+    });
+
+    const selects = document.querySelectorAll('#fb-page-select');
+    selects.forEach(selectEl => {
+      let targetVal = currentVal;
+      if (!isMobile && targetVal > 1 && targetVal % 2 !== 0) {
+        targetVal = targetVal - 1;
+      }
+      selectEl.value = targetVal;
+    });
   }
 
   function updateZoomLabel() {
     if (zoomLevelEl) {
       zoomLevelEl.textContent = `${Math.round(zoomScale * 100)}%`;
     }
+  }
+
+  /**
+   * Jump to page from input
+   */
+  function fbJumpToPageInput() {
+    const input = document.getElementById('fb-page-input');
+    if (!input || !pdfDoc) return;
+    let val = parseInt(input.value, 10);
+    if (isNaN(val)) return;
+    val = Math.max(1, Math.min(val, totalPages));
+    goToPage(val);
   }
 
   /**
@@ -384,7 +467,7 @@
         flipContainer.classList.remove('is-active');
         flipLeaf.className = 'fb-flip-leaf';
         currentSpread = nextNum;
-        updateIndicator(`${currentSpread} / ${totalPages}`);
+        updateIndicator(`${currentSpread} / ${totalPages}`, currentSpread);
         if (sliderEl) sliderEl.value = currentSpread;
         isFlipping = false;
       }, 480);
@@ -437,7 +520,7 @@
         flipContainer.classList.remove('is-active');
         flipLeaf.className = 'fb-flip-leaf';
         currentSpread = prevNum;
-        updateIndicator(`${currentSpread} / ${totalPages}`);
+        updateIndicator(`${currentSpread} / ${totalPages}`, currentSpread);
         if (sliderEl) sliderEl.value = currentSpread;
         isFlipping = false;
       }, 480);
@@ -550,6 +633,7 @@
   window.fbGoNext = fbGoNext;
   window.fbGoPrev = fbGoPrev;
   window.fbGoToPage = goToPage;
+  window.fbJumpToPageInput = fbJumpToPageInput;
   window.fbZoomIn = fbZoomIn;
   window.fbZoomOut = fbZoomOut;
   window.fbZoomReset = fbZoomReset;

@@ -33,7 +33,7 @@ class QuizController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'book_id'            => 'required|exists:books,id',
+            'book_id'            => 'nullable|exists:books,id',
             'title'              => 'required|string|max:255',
             'description'        => 'nullable|string|max:1000',
             'difficulty'         => 'required|in:easy,medium,hard',
@@ -45,7 +45,6 @@ class QuizController extends Controller
             'questions.*.options.*' => 'required|string',
             'questions.*.correct'   => 'required',
         ], [
-            'book_id.required'   => 'Kitobni tanlang.',
             'title.required'     => 'Test topshirig\'i nomini kiriting.',
             'questions.required' => 'Kamida 1 ta savol kiritilishi shart.',
             'questions.min'      => 'Kamida 1 ta savol kiritilishi shart.',

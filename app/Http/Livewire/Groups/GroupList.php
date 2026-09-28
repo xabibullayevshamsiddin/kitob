@@ -16,6 +16,70 @@ class GroupList extends Component
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
+
+    // Filtrlash va qidiruv
+    public string $search = '';
+    public string $privacyFilter = 'all'; // 'all', 'public', 'private'
+    public string $membershipFilter = 'all'; // 'all', 'my_groups', 'joined'
+    public string $sortBy = 'latest'; // 'latest', 'popular', 'name'
+
+    protected $queryString = [
+        'search'           => ['except' => ''],
+        'privacyFilter'    => ['except' => 'all'],
+        'membershipFilter' => ['except' => 'all'],
+        'sortBy'           => ['except' => 'latest'],
+    ];
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPrivacyFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedMembershipFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSortBy(): void
+    {
+        $this->resetPage();
+    }
+
+    public function setPrivacyFilter(string $privacy): void
+    {
+        $this->privacyFilter = $privacy;
+        $this->membershipFilter = 'all';
+        $this->resetPage();
+    }
+
+    public function setMembershipFilter(string $membership): void
+    {
+        $this->membershipFilter = $membership;
+        $this->privacyFilter = 'all';
+        $this->resetPage();
+    }
+
+    public function setAllFilters(): void
+    {
+        $this->privacyFilter = 'all';
+        $this->membershipFilter = 'all';
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->privacyFilter = 'all';
+        $this->membershipFilter = 'all';
+        $this->sortBy = 'latest';
+        $this->resetPage();
+    }
+
     // Guruh ochish
     public string $name = '';
     public string $description = '';
@@ -55,17 +119,34 @@ class GroupList extends Component
      * Teacher (o'qituvchi): 2 ta
      * Admin: 3 ta
      */
-    public function getGroupLimit(User $user): int
+    /**
+     * Foydalanuvchi roliga qarab guruhlarga a'zo bo'lish limiti:
+     * - Oddiy foydalanuvchilar: max 2 ta
+     * - Teacher (o'qituvchi): max 5 ta
+     * - Admin: cheksiz (null)
+     */
+    public function getMembershipLimit(User $user): ?int
     {
         if ($user->hasRole('admin') || $user->role === 'admin') {
-            return 3;
+            return null; // Cheksiz
         }
 
         if ($user->hasRole('teacher') || $user->role === 'teacher') {
-            return 2;
+            return 5;
         }
 
-        return 1;
+        return 2;
+    }
+
+    /**
+     * Foydalanuvchi roliga qarab guruh ochish (yaratish) limiti:
+     * - Oddiy foydalanuvchilar: 2 ta
+     * - Teacher (o'qituvchi): 5 ta
+     * - Admin: cheksiz (null)
+     */
+    public function getGroupLimit(User $user): ?int
+    {
+        return $this->getMembershipLimit($user);
     }
 
     public function getTargetGroupProperty(): ?Group
@@ -88,13 +169,18 @@ class GroupList extends Component
         $user = Auth::user();
         $limit = $this->getGroupLimit($user);
         $currentCount = Group::where('created_by', $user->id)->count();
+        $membershipLimit = $this->getMembershipLimit($user);
+        $currentMembershipCount = GroupMember::where('user_id', $user->id)->count();
 
-        if ($currentCount >= $limit) {
-            $roleLabel = ($user->hasRole('admin') || $user->role === 'admin')
-                ? 'Admin'
-                : (($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi');
-
+        if ($limit !== null && $currentCount >= $limit) {
+            $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi';
             session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruh yarata olasiz. Hozirda sizda {$currentCount} ta guruh mavjud. Yangi guruh ochish uchun avvalgisini o'chirishingiz lozim.");
+            return;
+        }
+
+        if ($membershipLimit !== null && $currentMembershipCount >= $membershipLimit) {
+            $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi';
+            session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$membershipLimit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruh ochish uchun avval boshqa guruhlardan birini tark eting.");
             return;
         }
 
@@ -112,13 +198,18 @@ class GroupList extends Component
         $user = Auth::user();
         $limit = $this->getGroupLimit($user);
         $currentCount = Group::where('created_by', $user->id)->count();
+        $membershipLimit = $this->getMembershipLimit($user);
+        $currentMembershipCount = GroupMember::where('user_id', $user->id)->count();
 
-        if ($currentCount >= $limit) {
-            $roleLabel = ($user->hasRole('admin') || $user->role === 'admin')
-                ? 'Admin'
-                : (($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi');
-
+        if ($limit !== null && $currentCount >= $limit) {
+            $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi';
             $this->addError('name', "Guruh ochish limiti to'lgan ({$currentCount}/{$limit}). Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruh ocha olasiz.");
+            return;
+        }
+
+        if ($membershipLimit !== null && $currentMembershipCount >= $membershipLimit) {
+            $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi';
+            $this->addError('name', "Guruhga a'zolik limiti to'lgan ({$currentMembershipCount}/{$membershipLimit}). Siz {$roleLabel} sifatida ko'pi bilan {$membershipLimit} ta guruhga a'zo bo'la olasiz.");
             return;
         }
 
@@ -157,6 +248,24 @@ class GroupList extends Component
             return;
         }
 
+        $user = Auth::user();
+
+        // Agar allaqachon a'zo bo'lsa, guruhga yo'naltirish
+        if (GroupMember::where('group_id', $groupId)->where('user_id', $user->id)->exists()) {
+            redirect()->route('groups.show', $groupId);
+            return;
+        }
+
+        // A'zolik limiti tekshiruvi: oddiy foydalanuvchi max 2, teacher 5, admin cheksiz
+        $limit = $this->getMembershipLimit($user);
+        $currentMembershipCount = GroupMember::where('user_id', $user->id)->count();
+
+        if ($limit !== null && $currentMembershipCount >= $limit) {
+            $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Oddiy foydalanuvchi';
+            session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruhga qo'shilish uchun avval a'zo bo'lgan guruhlaringizdan birini tark eting.");
+            return;
+        }
+
         $group = Group::findOrFail($groupId);
 
         if (!$group->is_private) {
@@ -176,6 +285,21 @@ class GroupList extends Component
             return redirect()->route('login');
         }
 
+        $user = Auth::user();
+
+        if (GroupMember::where('group_id', $this->targetGroupId)->where('user_id', $user->id)->exists()) {
+            return redirect()->route('groups.show', $this->targetGroupId);
+        }
+
+        $limit = $this->getMembershipLimit($user);
+        $currentMembershipCount = GroupMember::where('user_id', $user->id)->count();
+
+        if ($limit !== null && $currentMembershipCount >= $limit) {
+            $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Oddiy foydalanuvchi';
+            $this->addError('joinPassword', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruhga qo'shilish uchun avval boshqasidan chiqing.");
+            return;
+        }
+
         $this->validate([
             'joinPassword' => 'required|string',
         ]);
@@ -193,7 +317,7 @@ class GroupList extends Component
         }
 
         GroupMember::firstOrCreate(
-            ['group_id' => $group->id, 'user_id' => Auth::id()],
+            ['group_id' => $group->id, 'user_id' => $user->id],
             ['role' => 'member', 'joined_at' => now()]
         );
 
@@ -209,6 +333,21 @@ class GroupList extends Component
             return redirect()->route('login');
         }
 
+        $user = Auth::user();
+
+        if (GroupMember::where('group_id', $groupId)->where('user_id', $user->id)->exists()) {
+            return redirect()->route('groups.show', $groupId);
+        }
+
+        $limit = $this->getMembershipLimit($user);
+        $currentMembershipCount = GroupMember::where('user_id', $user->id)->count();
+
+        if ($limit !== null && $currentMembershipCount >= $limit) {
+            $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Oddiy foydalanuvchi';
+            session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruhga a'zo bo'lish uchun avval a'zo bo'lgan guruhlaringizdan birini tark eting.");
+            return;
+        }
+
         $group = Group::findOrFail($groupId);
 
         if ($group->is_private) {
@@ -222,7 +361,7 @@ class GroupList extends Component
         }
 
         GroupMember::firstOrCreate(
-            ['group_id' => $group->id, 'user_id' => Auth::id()],
+            ['group_id' => $group->id, 'user_id' => $user->id],
             ['role' => 'member', 'joined_at' => now()]
         );
 
@@ -298,14 +437,57 @@ class GroupList extends Component
         $currentUser = Auth::user();
 
         $myGroupCount = $userId ? Group::where('created_by', $userId)->count() : 0;
-        $myGroupLimit = $currentUser ? $this->getGroupLimit($currentUser) : 1;
+        $myGroupLimit = $currentUser ? $this->getGroupLimit($currentUser) : 2;
+        $myMembershipLimit = $currentUser ? $this->getMembershipLimit($currentUser) : 2;
         $isAdmin = $currentUser ? ($currentUser->hasRole('admin') || $currentUser->role === 'admin') : false;
 
-        $groups = Group::query()
+        // Hisoblagichlar
+        $totalGroupsCount = Group::count();
+        $publicGroupsCount = Group::where('is_private', false)->count();
+        $privateGroupsCount = Group::where('is_private', true)->count();
+        $myJoinedCount = $userId ? GroupMember::where('user_id', $userId)->count() : 0;
+
+        $query = Group::query()
             ->withCount('members')
-            ->with(['creator:id,name', 'book:id,title,slug'])
-            ->latest()
-            ->paginate(9);
+            ->with(['creator:id,name', 'book:id,title,slug']);
+
+        // Maxfiylik filtri
+        if ($this->privacyFilter === 'public') {
+            $query->where('is_private', false);
+        } elseif ($this->privacyFilter === 'private') {
+            $query->where('is_private', true);
+        }
+
+        // A'zolik filtri
+        if ($userId) {
+            if ($this->membershipFilter === 'my_groups') {
+                $query->where('created_by', $userId);
+            } elseif ($this->membershipFilter === 'joined') {
+                $query->whereHas('members', fn ($m) => $m->where('user_id', $userId));
+            }
+        }
+
+        // Qidiruv
+        if (!empty($this->search)) {
+            $s = '%' . trim($this->search) . '%';
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', $s)
+                  ->orWhere('description', 'like', $s)
+                  ->orWhereHas('creator', fn ($u) => $u->where('name', 'like', $s))
+                  ->orWhereHas('book', fn ($b) => $b->where('title', 'like', $s));
+            });
+        }
+
+        // Saralash
+        if ($this->sortBy === 'popular') {
+            $query->orderByDesc('members_count')->latest();
+        } elseif ($this->sortBy === 'name') {
+            $query->orderBy('name');
+        } else {
+            $query->latest();
+        }
+
+        $groups = $query->paginate(9);
 
         $groups->getCollection()->transform(function ($g) use ($userId, $isAdmin) {
             $g->is_member   = $userId ? $g->members()->where('user_id', $userId)->exists() : false;
@@ -315,14 +497,20 @@ class GroupList extends Component
         });
 
         return view('livewire.groups.group-list', [
-            'groups'          => $groups,
-            'myGroupCount'    => $myGroupCount,
-            'myGroupLimit'    => $myGroupLimit,
-            'isAdmin'         => $isAdmin,
-            'showCreateModal' => $this->showCreateModal,
-            'showJoinModal'   => $this->showJoinModal,
-            'showDeleteModal' => $this->showDeleteModal,
-            'isPrivate'       => $this->isPrivate,
+            'groups'              => $groups,
+            'myGroupCount'        => $myGroupCount,
+            'myGroupLimit'        => $myGroupLimit,
+            'myMembershipLimit'   => $myMembershipLimit,
+            'isAdmin'             => $isAdmin,
+            'showCreateModal'     => $this->showCreateModal,
+            'showJoinModal'       => $this->showJoinModal,
+            'showDeleteModal'     => $this->showDeleteModal,
+            'isPrivate'           => $this->isPrivate,
+            'totalGroupsCount'    => $totalGroupsCount,
+            'publicGroupsCount'   => $publicGroupsCount,
+            'privateGroupsCount'  => $privateGroupsCount,
+            'myJoinedCount'       => $myJoinedCount,
+            'hasActiveFilters'    => ($this->search !== '' || $this->privacyFilter !== 'all' || $this->membershipFilter !== 'all' || $this->sortBy !== 'latest'),
         ])->layout('layouts.app', ['title' => 'Kitobxon Guruhlari']);
     }
 }

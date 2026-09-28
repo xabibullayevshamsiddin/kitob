@@ -21,15 +21,16 @@
 
             {{-- 1. Bog'langan kitob --}}
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Qaysi kitobga bog'lansin? *</label>
-                <select name="book_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    <option value="">Kitobni tanlang...</option>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Qaysi kitobga bog'lansin? (Ixtiyoriy)</label>
+                <select name="book_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">-- Alohida audio (hech qaysi kitobga bog'lanmagan / Mustaqil) --</option>
                     @foreach($books as $b)
                         <option value="{{ $b->id }}" {{ (old('book_id', $selectedBookId) == $b->id) ? 'selected' : '' }}>
                             {{ $b->week_number ? "{$b->week_number}-Hafta: " : '' }}{{ $b->title }} ({{ $b->author }})
                         </option>
                     @endforeach
                 </select>
+                <p class="text-[11px] text-slate-500 mt-1">Agar kitob tanlamasangiz, audio mustaqil dars sifatida saqlanadi.</p>
                 @error('book_id') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 

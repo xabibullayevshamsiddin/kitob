@@ -142,6 +142,29 @@
                             <span>📄 Standart PDF</span>
                         </button>
                     </div>
+
+                    <!-- Interactive Page Selector / Jumper -->
+                    <div x-show="readerMode === '3d'" class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-inner group">
+                        <span class="text-xs text-slate-400 font-medium">Sahifa:</span>
+                        <input type="number" 
+                               id="fb-page-input" 
+                               min="1" 
+                               value="1" 
+                               title="Sahifa raqamini yozing va Enter bosing"
+                               class="w-14 px-1.5 py-0.5 text-center font-mono text-xs font-bold text-amber-500 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 hover:border-amber-400/50 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 rounded-lg outline-none transition-all"
+                               onkeydown="if(event.key === 'Enter') { this.blur(); fbJumpToPageInput(); }"
+                               onchange="fbJumpToPageInput()"
+                               onfocus="this.select()">
+                        <span class="text-xs text-slate-400 font-mono">/</span>
+                        <span id="fb-total-pages" class="text-xs text-slate-600 dark:text-slate-300 font-mono font-semibold">...</span>
+
+                        <select id="fb-page-select" 
+                                onchange="if(this.value) { fbGoToPage(parseInt(this.value)); }"
+                                title="Ro'yxatdan sahifani tanlash"
+                                class="ml-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 rounded-lg text-xs py-0.5 px-1.5 outline-none cursor-pointer font-sans">
+                            <option value="">Tanlash ▾</option>
+                        </select>
+                    </div>
                 @endif
             </div>
 
@@ -373,13 +396,6 @@
             {{ $book->description }}
         </div>
     </div>
-
-    <!-- Reading Tracker & 5-minute AFK Inactivity Modal -->
-    @include('components.reading-tracker', [
-        'bookId' => $book->id,
-        'chapterId' => null,
-        'pageType' => 'detail'
-    ])
 
 </div>
 @endsection

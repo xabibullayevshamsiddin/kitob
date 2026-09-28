@@ -30,12 +30,12 @@ class IsStudent
                 ->with('warning', 'Bu sahifa faqat o\'quvchilar uchun. Siz o\'qituvchi paneliga yo\'naltirildinggiz.');
         }
 
-        // Student — ruxsat
-        if ($user->hasRole('student')) {
+        // Student yoki Reader — ruxsat
+        if ($user->hasRole('student') || $user->hasRole('reader') || in_array($user->role, ['student', 'reader', 'user']) || (!$user->hasRole('teacher') && !$user->hasRole('admin'))) {
             return $next($request);
         }
 
-        // Rol aniqlanmagan foydalanuvchi
-        abort(403, 'Sizda bu sahifaga kirish huquqi yo\'q.');
+        // Boshqa holatda ham ruxsat (oddiy o'quvchi)
+        return $next($request);
     }
 }

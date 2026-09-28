@@ -73,16 +73,25 @@ class LeaderboardPage extends Component
                 $q->where('created_at', '>=', $startDate);
             }], 'points');
 
-            $usersQuery->withSum(['readingSessions as period_minutes' => function ($q) use ($startDate) {
+            $usersQuery->withSum(['dailyActivities as period_minutes' => function ($q) use ($startDate) {
+                $q->where('activity_date', '>=', $startDate->toDateString());
+            }], 'minutes_read');
+
+            $usersQuery->withSum(['readingSessions as session_minutes' => function ($q) use ($startDate) {
                 $q->where('session_date', '>=', $startDate->toDateString());
             }], 'minutes_read');
         } else {
-            $usersQuery->withSum('readingSessions as period_minutes', 'minutes_read');
+            $usersQuery->withSum('dailyActivities as period_minutes', 'minutes_read');
+            $usersQuery->withSum('readingSessions as session_minutes', 'minutes_read');
         }
 
         $allUsers = $usersQuery->get()->map(function (User $user) use ($startDate) {
             $points = $startDate ? (int) ($user->period_points ?? 0) : (int) $user->total_points;
-            $minutes = (int) ($user->period_minutes ?? $user->total_reading_minutes ?? 0);
+            $minutes = max(
+                (int) ($user->period_minutes ?? 0),
+                (int) ($user->session_minutes ?? 0),
+                $startDate ? 0 : (int) ($user->total_reading_minutes ?? 0)
+            );
             $streak = (int) ($user->streak?->current_streak ?? 0);
 
             // Fallback for period points if user has overall total_points but no specific transactions

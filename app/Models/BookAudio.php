@@ -35,7 +35,10 @@ class BookAudio extends Model
 
     public function book(): BelongsTo
     {
-        return $this->belongsTo(Book::class);
+        return $this->belongsTo(Book::class)->withDefault([
+            'title' => 'Mustaqil audio',
+            'slug'  => '',
+        ]);
     }
 
     public function chapter(): BelongsTo
@@ -61,14 +64,10 @@ class BookAudio extends Model
             return $this->file_path;
         }
 
-        try {
-            return Storage::disk('s3')->temporaryUrl(
-                $this->file_path,
-                now()->addMinutes(60)
-            );
-        } catch (\RuntimeException) {
-            // Local disk – return standard storage URL
-            return Storage::url($this->file_path);
+        if (str_starts_with($this->file_path, 'storage/')) {
+            return asset($this->file_path);
         }
+
+        return asset('storage/' . ltrim($this->file_path, '/'));
     }
 }

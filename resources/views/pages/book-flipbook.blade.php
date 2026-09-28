@@ -27,11 +27,28 @@
 
         <!-- Controls: Page Indicator & Actions -->
         <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <!-- Page Indicator Badge -->
-            <div class="px-3.5 py-1.5 rounded-xl bg-ink-900 border border-white/10 shadow-inner">
-                <span id="fb-page-indicator" class="font-mono text-xs text-amber-400 font-bold">
-                    Yuklanmoqda...
-                </span>
+            <!-- Interactive Page Selector / Jumper -->
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-ink-900 border border-white/10 shadow-inner group">
+                <span class="text-xs text-slate-400 font-medium">Sahifa:</span>
+                <input type="number" 
+                       id="fb-page-input" 
+                       min="1" 
+                       value="1" 
+                       title="Sahifa raqamini yozing va Enter bosing"
+                       class="w-14 sm:w-16 px-1.5 py-0.5 text-center font-mono text-xs font-bold text-amber-400 bg-white/5 border border-white/15 hover:border-amber-400/50 focus:border-amber-400 focus:bg-amber-400/10 focus:ring-1 focus:ring-amber-400 rounded-lg outline-none transition-all"
+                       onkeydown="if(event.key === 'Enter') { this.blur(); fbJumpToPageInput(); }"
+                       onchange="fbJumpToPageInput()"
+                       onfocus="this.select()">
+                <span class="text-xs text-slate-400 font-mono">/</span>
+                <span id="fb-total-pages" class="text-xs text-slate-300 font-mono font-semibold">...</span>
+
+                <!-- Quick Dropdown Page Selector -->
+                <select id="fb-page-select" 
+                        onchange="if(this.value) { fbGoToPage(parseInt(this.value)); }"
+                        title="Ro'yxatdan sahifani tanlash"
+                        class="ml-1 bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 hover:text-white rounded-lg text-xs py-0.5 px-1.5 outline-none cursor-pointer font-sans">
+                    <option value="" class="bg-slate-900 text-slate-400">Tanlash ▾</option>
+                </select>
             </div>
 
             <!-- Zoom Controls with Percentage -->

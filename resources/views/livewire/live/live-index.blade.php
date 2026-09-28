@@ -172,12 +172,107 @@
         </div>
     @endif
 
+    <!-- ── EFIRLAR FILTERLARI VA QIDIRUV ── -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-soft space-y-4">
+        <!-- 1-qator: Holat bo'yicha filter tugmalari (Tabs) & Qidiruv -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <!-- Status Tabs -->
+            <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl overflow-x-auto">
+                <button type="button" wire:click="setStatusFilter('all')"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ $statusFilter === 'all' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200' }}">
+                    <span>Barchasi</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ $statusFilter === 'all' ? 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white' : 'bg-slate-200/60 dark:bg-slate-700 text-slate-500' }}">
+                        {{ $totalActiveCount }}
+                    </span>
+                </button>
+                <button type="button" wire:click="setStatusFilter('live')"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ $statusFilter === 'live' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30' : 'text-slate-500 hover:text-rose-500 dark:hover:text-rose-400' }}">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 {{ $statusFilter === 'live' ? 'bg-white' : '' }} animate-ping"></span>
+                    <span>Jonli efirda</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ $statusFilter === 'live' ? 'bg-rose-700 text-white' : 'bg-rose-500/10 text-rose-500' }}">
+                        {{ $liveCount }}
+                    </span>
+                </button>
+                <button type="button" wire:click="setStatusFilter('scheduled')"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ $statusFilter === 'scheduled' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400' }}">
+                    <span>📅 Kutilayotgan</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ $statusFilter === 'scheduled' ? 'bg-indigo-700 text-white' : 'bg-indigo-500/10 text-indigo-400' }}">
+                        {{ $scheduledCount }}
+                    </span>
+                </button>
+            </div>
+
+            <!-- Qidiruv qatori -->
+            <div class="relative flex-1 md:max-w-xs">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" wire:model.debounce.300ms="search" placeholder="Efir nomi, mavzu yoki ustoz..."
+                    class="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-rose-500 focus:outline-none transition-all">
+                @if($search)
+                    <button type="button" wire:click="$set('search', '')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        ✕
+                    </button>
+                @endif
+            </div>
+        </div>
+
+        <!-- 2-qator: Qo'shimcha filtrlar (Kitob bo'yicha & Ruxsat rejimi) -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Kitob filtri -->
+                <div class="flex items-center gap-1.5">
+                    <span class="text-slate-400 font-medium">📖 Kitob:</span>
+                    <select wire:model="bookFilter"
+                        class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                        <option value="">Barcha kitoblar</option>
+                        @foreach($books as $b)
+                            <option value="{{ $b->id }}">{{ $b->title }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Ruxsat rejimi filtri -->
+                <div class="flex items-center gap-1.5">
+                    <span class="text-slate-400 font-medium">⚙️ Ruxsat:</span>
+                    <select wire:model="permissionFilter"
+                        class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                        <option value="all">Barcha ruxsatlar</option>
+                        <option value="both">✨ Chat & Ovoz</option>
+                        <option value="chat_only">💬 Faqat Chat</option>
+                        <option value="voice_only">🎙️ Faqat Ovoz</option>
+                        <option value="view_only">🔒 Faqat Ma'ruza</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Clear filters button -->
+            @if($hasActiveFilters)
+                <button type="button" wire:click="resetFilters"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-semibold transition-all">
+                    <span>Filtrlarni tozalash</span>
+                    <span>✕</span>
+                </button>
+            @endif
+        </div>
+    </div>
+
     <!-- ── EFIRLAR RO'YXATI ── -->
     @if ($upcoming->isEmpty())
         <div class="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft text-center space-y-4">
-            <span class="text-5xl block animate-bounce">📺</span>
-            <h2 class="text-base font-bold text-slate-900 dark:text-white">Hozircha faol efir yo'q</h2>
-            <p class="text-xs text-slate-400 max-w-sm mx-auto">Ustozlar yangi jonli efir boshlaganida ushbu sahifada paydo bo'ladi. Siz ham "Jonli Efir Boshlash" tugmasi orqali dars o'tkazishingiz mumkin.</p>
+            @if($hasActiveFilters)
+                <span class="text-4xl block">🔍</span>
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">Tanlangan filtrlar bo'yicha efir topilmadi</h2>
+                <p class="text-xs text-slate-400 max-w-sm mx-auto">Qidiruv so'zini o'zgartirib ko'ring yoki filtrlarni tozalang.</p>
+                <button type="button" wire:click="resetFilters"
+                    class="mt-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition-all">
+                    Barcha efirlarni ko'rsatish
+                </button>
+            @else
+                <span class="text-5xl block animate-bounce">📺</span>
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">Hozircha faol efir yo'q</h2>
+                <p class="text-xs text-slate-400 max-w-sm mx-auto">Ustozlar yangi jonli efir boshlaganida ushbu sahifada paydo bo'ladi. Siz ham "Jonli Efir Boshlash" tugmasi orqali dars o'tkazishingiz mumkin.</p>
+            @endif
         </div>
     @else
         @foreach ($upcoming as $event)

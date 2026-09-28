@@ -46,6 +46,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'coin_balance'      => 'integer',
     ];
 
+    protected $appends = [
+        'avatar_url',
+        'total_reading_minutes',
+        'current_streak',
+    ];
+
     // -------------------------------------------------------------------------
     // Relationships
     // -------------------------------------------------------------------------
@@ -192,11 +198,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Returns total reading minutes across all sessions.
+     * Returns total reading minutes across all daily activities and reading sessions.
      */
     public function getTotalReadingMinutesAttribute(): int
     {
-        return (int) $this->readingSessions()->sum('minutes_read');
+        return max(
+            (int) $this->dailyActivities()->sum('minutes_read'),
+            (int) $this->readingSessions()->sum('minutes_read')
+        );
     }
 
     /**

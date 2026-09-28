@@ -6,9 +6,9 @@
             <div class="flex flex-wrap items-center gap-3">
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-manrope">Kitobxon Guruhlari</h1>
                 @auth
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $myGroupCount >= $myGroupLimit ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20' }}">
-                        <span>📊 Guruhlaringiz:</span>
-                        <strong class="font-bold">{{ $myGroupCount }} / {{ $myGroupLimit }}</strong>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ ($myMembershipLimit !== null && $myJoinedCount >= $myMembershipLimit) ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20' }}">
+                        <span>👥 A'zolik:</span>
+                        <strong class="font-bold">{{ $myJoinedCount }} / {{ $myMembershipLimit === null ? '∞ (cheksiz)' : $myMembershipLimit . ' ta guruh' }}</strong>
                     </span>
                 @endauth
             </div>
@@ -31,6 +31,87 @@
             <span>⚠️</span> {{ session('error') }}
         </div>
     @endif
+
+    <!-- ── GURUHLAR FILTERLARI VA QIDIRUV ── -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-soft space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <!-- Privacy & Membership Tabs -->
+            <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl overflow-x-auto">
+                <button type="button" wire:click="setAllFilters"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ ($privacyFilter === 'all' && $membershipFilter === 'all') ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200' }}">
+                    <span>Barchasi</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ ($privacyFilter === 'all' && $membershipFilter === 'all') ? 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white' : 'bg-slate-200/60 dark:bg-slate-700 text-slate-500' }}">
+                        {{ $totalGroupsCount }}
+                    </span>
+                </button>
+                <button type="button" wire:click="setPrivacyFilter('public')"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ $privacyFilter === 'public' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30' : 'text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400' }}">
+                    <span>🌐 Ommaviy</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ $privacyFilter === 'public' ? 'bg-emerald-700 text-white' : 'bg-emerald-500/10 text-emerald-500' }}">
+                        {{ $publicGroupsCount }}
+                    </span>
+                </button>
+                <button type="button" wire:click="setPrivacyFilter('private')"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ $privacyFilter === 'private' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30' : 'text-slate-500 hover:text-rose-500 dark:hover:text-rose-400' }}">
+                    <span>🔒 Yopiq</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ $privacyFilter === 'private' ? 'bg-rose-700 text-white' : 'bg-rose-500/10 text-rose-500' }}">
+                        {{ $privateGroupsCount }}
+                    </span>
+                </button>
+                @auth
+                    <button type="button" wire:click="setMembershipFilter('joined')"
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ $membershipFilter === 'joined' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400' }}">
+                        <span>👥 A'zo bo'lganlarim</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ $membershipFilter === 'joined' ? 'bg-indigo-700 text-white' : 'bg-indigo-500/10 text-indigo-400' }}">
+                            {{ $myJoinedCount }}
+                        </span>
+                    </button>
+                    <button type="button" wire:click="setMembershipFilter('my_groups')"
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap {{ $membershipFilter === 'my_groups' ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30' : 'text-slate-500 hover:text-amber-500 dark:hover:text-amber-400' }}">
+                        <span>👑 Men yaratgan</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] {{ $membershipFilter === 'my_groups' ? 'bg-amber-700 text-white' : 'bg-amber-500/10 text-amber-500' }}">
+                            {{ $myGroupCount }}
+                        </span>
+                    </button>
+                @endauth
+            </div>
+
+            <!-- Qidiruv qatori -->
+            <div class="relative flex-1 md:max-w-xs">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" wire:model.debounce.300ms="search" placeholder="Guruh nomi yoki tavsifi..."
+                    class="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
+                @if($search)
+                    <button type="button" wire:click="$set('search', '')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        ✕
+                    </button>
+                @endif
+            </div>
+        </div>
+
+        <!-- 2-qator: Saralash va filtrlarni tozalash -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-400 font-medium">⚡ Saralash:</span>
+                <select wire:model="sortBy"
+                    class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="latest">Eng yangi guruhlar</option>
+                    <option value="popular">A'zolar soni bo'yicha (eng ko'p)</option>
+                    <option value="name">Alifbo bo'yicha (A-Z)</option>
+                </select>
+            </div>
+
+            @if($hasActiveFilters)
+                <button type="button" wire:click="resetFilters"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 text-xs font-semibold transition-all">
+                    <span>Filtrlarni tozalash</span>
+                    <span>✕</span>
+                </button>
+            @endif
+        </div>
+    </div>
 
     <!-- Groups Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -124,12 +205,21 @@
             </div>
         @empty
             <div class="col-span-full text-center py-16 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-8 space-y-3">
-                <span class="text-4xl block">🚀</span>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Hozircha guruhlar mavjud emas</h3>
-                <p class="text-xs text-slate-400 max-w-sm mx-auto">Birinchi bo'lib do'stlaringiz uchun umumiy yoki yopiq kitobxonlar guruhini oching!</p>
-                <button wire:click="openCreateModal" class="px-5 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
-                    + Birinchi guruhni yaratish
-                </button>
+                @if($hasActiveFilters)
+                    <span class="text-4xl block">🔍</span>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Tanlangan filtrlar bo'yicha guruh topilmadi</h3>
+                    <p class="text-xs text-slate-400 max-w-sm mx-auto">Qidiruv so'zini yoki tanlangan parametrlarni o'zgartirib ko'ring.</p>
+                    <button type="button" wire:click="resetFilters" class="px-5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl shadow transition-all">
+                        Barcha guruhlarni ko'rsatish
+                    </button>
+                @else
+                    <span class="text-4xl block">🚀</span>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Hozircha guruhlar mavjud emas</h3>
+                    <p class="text-xs text-slate-400 max-w-sm mx-auto">Birinchi bo'lib do'stlaringiz uchun umumiy yoki yopiq kitobxonlar guruhini oching!</p>
+                    <button wire:click="openCreateModal" class="px-5 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
+                        + Birinchi guruhni yaratish
+                    </button>
+                @endif
             </div>
         @endforelse
     </div>
