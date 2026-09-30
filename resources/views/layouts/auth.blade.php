@@ -11,30 +11,35 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 
-    @if(file_exists(public_path('build/manifest.json')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: {
-                                50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
-                                400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
-                                800: '#3730a3', 900: '#1e1b4b', 950: '#0f0e2e'
-                            },
-                            accent: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' },
-                            surface: { DEFAULT: '#ffffff', dark: '#0f172a', 'dark-card': '#1e293b' }
-                        }
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Manrope', 'ui-sans-serif', 'system-ui'],
+                        mono: ['JetBrains Mono', 'ui-monospace'],
+                    },
+                    colors: {
+                        ink: {
+                            950: '#06080d', 900: '#0a0e17', 800: '#111726',
+                        },
+                        primary: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#1e1b4b', 950: '#0f0e2e'
+                        },
+                        accent: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' },
+                        surface: { DEFAULT: '#ffffff', dark: '#0f172a', 'dark-card': '#1e293b' }
                     }
                 }
             }
-        </script>
-        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    @endif
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
 
     @if(class_exists('Livewire\Livewire'))
         @livewireStyles
