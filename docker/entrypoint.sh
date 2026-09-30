@@ -23,15 +23,22 @@ if [ ! -L /var/www/html/public/storage ]; then
     php artisan storage:link || true
 fi
 
+# Always clear cached config so fresh env vars are used from Render
+echo "==> Clearing old config/route/view caches..."
+php artisan config:clear || true
+php artisan cache:clear || true
+php artisan view:clear || true
+php artisan route:clear || true
+
 # Run database migrations if RUN_MIGRATIONS is set to true
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "==> Running database migrations..."
     php artisan migrate --force || echo "Migration encountered an issue, proceeding with startup..."
 fi
 
-# Optimize Laravel caching if in production
+# Re-cache after migrations if in production
 if [ "$APP_ENV" = "production" ] || [ "$APP_ENV" = "prod" ]; then
-    echo "==> Optimizing configurations, routes, and views..."
+    echo "==> Caching config, routes, views..."
     php artisan config:cache || true
     php artisan route:cache || true
     php artisan view:cache || true
