@@ -42,6 +42,7 @@
 
     {{-- Brauzer avtofill (autofill) inputlarni oq bo'ya qo'ymasligi uchun --}}
     <style>
+        [x-cloak] { display: none !important; }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,
