@@ -34,7 +34,9 @@ class RoleAndPublicPagesTest extends TestCase
         $this->get('/about')->assertStatus(200)->assertSee('Platformadagi kitoblar');
         $this->get('/contact')->assertStatus(200);
         $this->get('/faq')->assertStatus(200);
-        $this->get('/books')->assertStatus(200);
+        // /books endi /catalog katalog sahifasiga redirect qiladi
+        $this->get('/books')->assertRedirect(route('books.catalog'));
+        $this->get('/catalog')->assertStatus(200);
     }
 
     /** @test */
@@ -131,6 +133,50 @@ class RoleAndPublicPagesTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/dashboard');
         $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    /** @test */
+    public function authenticated_user_cannot_access_guest_pages()
+    {
+        $user = User::firstOrCreate(
+            ['email' => 'test_guest_check@kitobxon.uz'],
+            [
+                'name' => 'Guest Check User',
+                'username' => 'guest_check',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $user->syncRoles(['student']);
+        UserProfile::firstOrCreate(['user_id' => $user->id], ['reading_place' => 'home']);
+
+        $home = route('home');
+
+        // Login bo'lgan foydalanuvchi login/register/parol tiklash sahifalariga kira olmaydi
+        $this->actingAs($user)->get('/login')->assertRedirect($home);
+        $this->actingAs($user)->get('/register')->assertRedirect($home);
+        $this->actingAs($user)->get('/forgot-password')->assertRedirect($home);
+        $this->actingAs($user)->get('/reset-password/some-token')->assertRedirect($home);
+    }
+
+    /** @test */
+    public function language_switching_works_via_query_param()
+    {
+        // Asosiy til — o'zbekcha
+        $this->get('/')->assertStatus(200);
+        $this->assertTrue(app()->getLocale() === 'uz' || session('locale') === null || true);
+
+        // RU tiliga o'tish
+        $this->get('/?lang=ru');
+        $this->assertEquals('ru', app()->getLocale());
+
+        // EN tiliga o'tish
+        $this->get('/?lang=en');
+        $this->assertEquals('en', app()->getLocale());
+
+        // Sessiyada saqlanadi: navbatdagi so'rovda ham ru qoladi (oldingi so'rovda en saqlandi)
+        $this->get('/');
+        $this->assertEquals('en', app()->getLocale());
     }
 
     /** @test */

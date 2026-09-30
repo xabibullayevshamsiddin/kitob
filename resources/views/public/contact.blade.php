@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Kitobxon bilan bog'laning. Savollar, takliflar va hamkorlik uchun aloqa formasi.">
-    <title>Aloqa — Kitobxon</title>
+    <meta name="description" content="{{ __('site.contact.meta') }}">
+    <title>{{ __('site.contact.title') }} — Kitobxon</title>
 
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -117,13 +117,13 @@
         <div class="max-w-7xl mx-auto px-6">
             
             <div class="contact-header max-w-2xl mb-12 space-y-3">
-                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">✦ BIZ BILAN BOG'LANING</span>
+                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">{{ __('site.contact.badge') }}</span>
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
-                    Savol yoki taklifingiz bormi? <br>
-                    <span class="text-amber-400 italic font-serif">Biz doim aloqadamiz.</span>
+                    {{ __('site.contact.hero_1') }} <br>
+                    <span class="text-amber-400 italic font-serif">{{ __('site.contact.hero_b') }}</span>
                 </h1>
                 <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
-                    Mutolaa jarayoni, kitoblar tanlovi, guruhlar yoki hamkorlik masalalarida xabar qoldiring. Mutaxassislarimiz 24 soat ichida javob berishadi.
+                    {{ __('site.contact.hero_sub') }}
                 </p>
             </div>
 
@@ -145,7 +145,7 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">Ismingiz *</label>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_name') }}</label>
                                 <input type="text" name="name" value="{{ old('name') }}" required 
                                        placeholder="Ali Valiyev"
                                        class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
@@ -153,7 +153,7 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">Elektron pochta *</label>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_email') }}</label>
                                 <input type="email" name="email" value="{{ old('email') }}" required 
                                        placeholder="ali@misol.uz"
                                        class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
@@ -162,24 +162,24 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">Mavzu *</label>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_subject') }}</label>
                             <input type="text" name="subject" value="{{ old('subject') }}" required 
-                                   placeholder="Qaysi mavzuda murojaat qilmoqchisiz?"
+                                   placeholder="{{ __('site.contact.form_subject_ph') }}"
                                    class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
                             @error('subject') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">Xabaringiz *</label>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_message') }}</label>
                             <textarea name="message" rows="5" required 
-                                      placeholder="Fikringiz, taklifingiz yoki savolingizni batafsil bayon eting..."
+                                      placeholder="{{ __('site.contact.form_message_ph') }}"
                                       class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors resize-none">{{ old('message') }}</textarea>
                             @error('message') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         <button type="submit" 
                                 class="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-lg shadow-amber-500/25 hover:shadow-glow-amber flex items-center justify-center gap-2 group">
-                            <span>Xabarni yuborish</span>
+                            <span>{{ __('site.contact.form_send') }}</span>
                             <svg class="w-4 h-4 group-hover:translate-x-1.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
                     </form>
@@ -193,8 +193,8 @@
                             💬
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-white">Telegram orqali tezkor aloqa</h3>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">Savollaringizga bot va qo'llab-quvvatlash guruhi orqali bir necha daqiqa ichida javob oling.</p>
+                            <h3 class="text-base font-bold text-white">{{ __('site.contact.tg_title') }}</h3>
+                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ __('site.contact.tg_sub') }}</p>
                             <a href="https://t.me/" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-amber-400 font-semibold mt-3 hover:text-amber-300 transition-colors">
                                 <span>@kitobxon_support</span>
                                 <span>→</span>
@@ -207,8 +207,8 @@
                             ✉️
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-white">Elektron pochta</h3>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">Rasmiy takliflar, media murojaatlari va hamkorlik loyihalari uchun.</p>
+                            <h3 class="text-base font-bold text-white">{{ __('site.contact.email_title') }}</h3>
+                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ __('site.contact.email_sub') }}</p>
                             <p class="text-xs font-mono text-slate-200 mt-2 font-semibold">info@kitobxon.uz</p>
                         </div>
                     </div>
@@ -218,16 +218,16 @@
                             📍
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-white">Bosh ofis</h3>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">O'zbekiston, Toshkent shahri, IT Park hududi.</p>
-                            <p class="text-[11px] text-slate-500 mt-2 font-mono">Dush — Juma: 09:00 — 18:00</p>
+                            <h3 class="text-base font-bold text-white">{{ __('site.contact.office_title') }}</h3>
+                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ __('site.contact.office_sub') }}</p>
+                            <p class="text-[11px] text-slate-500 mt-2 font-mono">{{ __('site.contact.office_hours') }}</p>
                         </div>
                     </div>
 
                     <!-- Instant Community Help Callout -->
                     <div class="contact-info-card p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-ink-900 to-indigo-950/40 border border-amber-400/20 text-xs text-slate-300 flex items-center gap-4">
                         <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
-                        <p>Qo'llab-quvvatlash xizmati haftaning har kuni 24 soat faol ishlamoqda.</p>
+                        <p>{{ __('site.contact.support_note') }}</p>
                     </div>
 
                 </div>
@@ -243,13 +243,13 @@
             <div class="flex items-center gap-3">
                 <span class="font-bold text-white text-sm">Kitobxon</span>
                 <span>•</span>
-                <span>© {{ date('Y') }} Barcha huquqlar himoyalangan</span>
+                <span>© {{ date('Y') }} {{ __('site.common.all_rights') }}</span>
             </div>
             <div class="flex items-center gap-6">
-                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">Bosh sahifa</a>
-                <a href="{{ route('books.public') }}" class="hover:text-slate-300 transition-colors">Kitoblar</a>
-                <a href="{{ route('about') }}" class="hover:text-slate-300 transition-colors">Biz haqimizda</a>
-                <a href="{{ route('faq') }}" class="hover:text-slate-300 transition-colors">FAQ</a>
+                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">{{ __('site.common.back_home') }}</a>
+                <a href="{{ route('books.public') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.books') }}</a>
+                <a href="{{ route('about') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.about') }}</a>
+                <a href="{{ route('faq') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.faq') }}</a>
             </div>
         </div>
     </footer>

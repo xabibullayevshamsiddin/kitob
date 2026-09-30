@@ -41,6 +41,7 @@ RUN apk add --no-cache \
     supervisor \
     curl \
     bash \
+    ca-certificates \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \

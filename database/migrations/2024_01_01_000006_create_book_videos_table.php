@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('book_videos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')
+                  ->nullable()
                   ->constrained('books')
                   ->onDelete('cascade');
             $table->enum('type', ['overview', 'chapter']);

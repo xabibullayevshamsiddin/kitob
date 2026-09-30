@@ -90,13 +90,17 @@
             </a>
         </div>
 
+        <div class="flex justify-end mb-3">
+            <x-lang-switcher />
+        </div>
+
         <div class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 py-8 px-6 sm:px-10 shadow-2xl rounded-3xl relative">
             {{ $slot ?? '' }}
             @yield('content')
         </div>
 
         <div class="mt-8 text-center text-xs text-slate-500">
-            &copy; {{ date('Y') }} Kitobxon. Barcha huquqlar himoyalangan.
+            &copy; {{ date('Y') }} Kitobxon. {{ __('site.footer.rights') }}.
         </div>
     </div>
 

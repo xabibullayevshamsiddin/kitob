@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,13 +121,13 @@
                 </div>
                 <div class="flex flex-col">
                     <span class="font-bold text-white text-base tracking-tight group-hover:text-amber-400 transition-colors">Kitobxon</span>
-                    <span class="font-mono text-[10px] text-slate-400 uppercase tracking-widest">Platforma</span>
+                    <span class="font-mono text-[10px] text-slate-400 uppercase tracking-widest">{{ __('site.common.platform') }}</span>
                 </div>
             </a>
 
             <a href="{{ route('home') }}" 
                class="px-4 py-2 rounded-xl bg-ink-900/80 hover:bg-ink-800 border border-white/10 text-xs font-mono text-amber-400 transition-all active:scale-95 flex items-center gap-2">
-                <span>← Bosh sahifaga qaytish</span>
+                <span>← {{ __('site.errors.back_home') }}</span>
             </a>
         </div>
     </header>
@@ -175,15 +175,15 @@
     <!-- ── Error Switcher Bar (Tezkor o'tish paneli) ── -->
     <div class="w-full border-t border-white/[0.08] bg-ink-900/60 backdrop-blur-md py-4 px-6 z-20">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
-            <span class="text-slate-400">✦ XATOLIKLAR DIZAYNINI SINOVDAN O'TKAZISH:</span>
+            <span class="text-slate-400">✦ {{ __('site.errors.preview_label') }}</span>
             
             <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ url('/errors/404') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*404') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">404 (Topilmadi)</a>
-                <a href="{{ url('/errors/403') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*403') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">403 (Ruxsatsiz)</a>
-                <a href="{{ url('/errors/500') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*500') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">500 (Server)</a>
-                <a href="{{ url('/errors/419') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*419') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">419 (Sessiya)</a>
-                <a href="{{ url('/errors/429') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*429') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">429 (Cheklov)</a>
-                <a href="{{ url('/errors/503') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*503') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">503 (Ta'mirlash)</a>
+                <a href="{{ url('/errors/404') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*404') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">404 ({{ __('site.errors.not_found') }})</a>
+                <a href="{{ url('/errors/403') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*403') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">403 ({{ __('site.errors.forbidden') }})</a>
+                <a href="{{ url('/errors/500') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*500') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">500 ({{ __('site.errors.server') }})</a>
+                <a href="{{ url('/errors/419') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*419') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">419 ({{ __('site.errors.session') }})</a>
+                <a href="{{ url('/errors/429') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*429') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">429 ({{ __('site.errors.limit') }})</a>
+                <a href="{{ url('/errors/503') }}" class="px-2.5 py-1 rounded-lg {{ request()->is('*503') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950/80 text-slate-300 hover:text-white border border-white/10' }}">503 ({{ __('site.errors.maintenance') }})</a>
             </div>
         </div>
     </div>

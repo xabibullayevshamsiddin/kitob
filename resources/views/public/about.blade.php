@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Kitobxon haqida — Bizning missiya, qadriyatlar va jamoa.">
-    <title>Biz haqimizda — Kitobxon</title>
+    <meta name="description" content="{{ __('site.about.meta') }}">
+    <title>{{ __('site.about.title') }} — Kitobxon</title>
 
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -116,24 +116,24 @@
     <section class="py-20 md:py-28 noise-bg">
         <div class="max-w-5xl mx-auto px-6 text-center space-y-6">
             <div class="about-hero-item inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/10 border border-amber-400/25 text-amber-400 font-mono text-xs tracking-wider shadow-sm">
-                <span>✦ BIZNING MISSIYAMIZ</span>
+                <span>{{ __('site.about.badge') }}</span>
             </div>
             
             <h1 class="about-hero-item text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.08]">
-                Har bir inson uchun <br class="hidden sm:block">
-                <span class="text-amber-400 italic font-serif">intellektual o'sish</span> madaniyatini yaratish.
+                {{ __('site.about.hero_1') }}<br class="hidden sm:block">
+                <span class="text-amber-400 italic font-serif">{{ __('site.about.hero_b') }}</span>{{ __('site.about.hero_2') }}
             </h1>
             
             <p class="about-hero-item text-base sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
-                Kitobxon — shunchaki kitob o'qish ilovasi emas, balki qisqa vaqt ichida chuqur bilim olish, kunlik odat shakllantirish va fikrdoshlar bilan uchrashish maskani.
+                {{ __('site.about.hero_sub') }}
             </p>
 
             <div class="about-hero-item pt-4 flex flex-wrap justify-center gap-4">
                 <a href="{{ route('register') }}" class="px-7 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-lg shadow-amber-500/25">
-                    Hamjamiyatga qo'shilish →
+                    {{ __('site.about.join_cta') }}
                 </a>
                 <a href="{{ route('books.public') }}" class="px-6 py-3.5 rounded-xl bg-ink-800/80 hover:bg-ink-700 text-slate-200 font-semibold text-xs border border-white/10 transition-all duration-200 active:scale-95">
-                    Kitoblar ro'yxati
+                    {{ __('site.about.books_list') }}
                 </a>
             </div>
         </div>
@@ -148,28 +148,28 @@
                     <p class="text-4xl sm:text-5xl font-black text-amber-400 font-mono tracking-tight">
                         <span class="counter-element" data-target="{{ $booksCount ?? 0 }}">{{ $booksCount ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Platformadagi kitoblar</p>
+                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_books') }}</p>
                 </div>
 
                 <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
                     <p class="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight">
                         <span class="counter-element" data-target="{{ $usersCount ?? 0 }}">{{ $usersCount ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Faol kitobxonlar</p>
+                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_readers') }}</p>
                 </div>
 
                 <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
                     <p class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono tracking-tight">
-                        <span class="counter-element" data-target="{{ $maxStreak ?? 0 }}">{{ $maxStreak ?? 0 }}</span> kun
+                        <span class="counter-element" data-target="{{ $maxStreak ?? 0 }}">{{ $maxStreak ?? 0 }}</span> {{ __('site.common.days') }}
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Streak rekordi</p>
+                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_streak') }}</p>
                 </div>
 
                 <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
                     <p class="text-4xl sm:text-5xl font-black text-indigo-400 font-mono tracking-tight">
                         <span class="counter-element" data-target="{{ $totalMinutes ?? 0 }}">{{ $totalMinutes ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">Jami mutolaa (daqiqa)</p>
+                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_minutes') }}</p>
                 </div>
 
             </div>
@@ -180,9 +180,9 @@
     <section class="py-24 md:py-32">
         <div class="max-w-7xl mx-auto px-6 space-y-12">
             <div class="values-header space-y-2">
-                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">✦ ASOSIY USTUNLAR</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Bizning Qadriyatlarimiz</h2>
-                <p class="text-sm text-slate-400">Har bir qadamimiz va qarorimiz ortida turgan tamoyillar</p>
+                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">{{ __('site.about.values_badge') }}</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{{ __('site.about.values_title') }}</h2>
+                <p class="text-sm text-slate-400">{{ __('site.about.values_sub') }}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -191,33 +191,33 @@
                     <div class="w-14 h-14 rounded-2xl bg-amber-400/10 border border-amber-400/25 text-amber-400 flex items-center justify-center text-3xl">
                         💎
                     </div>
-                    <h3 class="text-2xl font-bold text-white tracking-tight">Faqat sara asarlar</h3>
+                    <h3 class="text-2xl font-bold text-white tracking-tight">{{ __('site.about.value1_title') }}</h3>
                     <p class="text-sm text-slate-300 leading-relaxed">
-                        Vaqtingizni behuda sarflamaymiz. Faqat jahon miqyosida o'z isbotini topgan, real amaliy natija va dunyoqarashni kengaytiruvchi asarlar saralab olinadi.
+                        {{ __('site.about.value1_sub') }}
                     </p>
-                    <div class="pt-2 text-xs font-mono text-amber-400">✦ Natijadorlik me'yori</div>
+                    <div class="pt-2 text-xs font-mono text-amber-400">{{ __('site.about.value1_tag') }}</div>
                 </div>
 
                 <div class="value-card spotlight-card rounded-3xl p-8 sm:p-10 space-y-5">
                     <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 flex items-center justify-center text-3xl">
                         ⚡️
                     </div>
-                    <h3 class="text-2xl font-bold text-white tracking-tight">Doimiylik va Streak</h3>
+                    <h3 class="text-2xl font-bold text-white tracking-tight">{{ __('site.about.value2_title') }}</h3>
                     <p class="text-sm text-slate-300 leading-relaxed">
-                        Haftasiga bir marta 100 bet o'qib charchagandan ko'ra, har kuni 15 daqiqa mutolaa qilish miyada yangi mustahkam neyron aloqalarini barpo etadi.
+                        {{ __('site.about.value2_sub') }}
                     </p>
-                    <div class="pt-2 text-xs font-mono text-indigo-400">✦ 1% har kungi o'sish</div>
+                    <div class="pt-2 text-xs font-mono text-indigo-400">{{ __('site.about.value2_tag') }}</div>
                 </div>
 
                 <div class="value-card spotlight-card rounded-3xl p-8 sm:p-10 space-y-5">
                     <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-400 flex items-center justify-center text-3xl">
                         🤝
                     </div>
-                    <h3 class="text-2xl font-bold text-white tracking-tight">Kuchli hamjamiyat</h3>
+                    <h3 class="text-2xl font-bold text-white tracking-tight">{{ __('site.about.value3_title') }}</h3>
                     <p class="text-sm text-slate-300 leading-relaxed">
-                        Yolg'iz o'qishdan ko'ra birgalikda o'rganish 5 barobar samaraliroq. Har hafta ustozlar va minglab fikrdoshlar bilan jonli fikr almashing.
+                        {{ __('site.about.value3_sub') }}
                     </p>
-                    <div class="pt-2 text-xs font-mono text-rose-400">✦ Birgalikda yuksalish</div>
+                    <div class="pt-2 text-xs font-mono text-rose-400">{{ __('site.about.value3_tag') }}</div>
                 </div>
 
             </div>
@@ -228,9 +228,9 @@
     <section class="py-24 border-t border-white/[0.07] bg-ink-900/40">
         <div class="max-w-7xl mx-auto px-6 space-y-12">
             <div class="team-header space-y-2">
-                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">✦ EKSPERTLAR VA USTOZLAR</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Platforma Jamoasi</h2>
-                <p class="text-sm text-slate-400">Har haftalik tahlil, audio va darslarni tayyorlaydigan mutaxassislar</p>
+                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">{{ __('site.about.team_badge') }}</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{{ __('site.about.team_title') }}</h2>
+                <p class="text-sm text-slate-400">{{ __('site.about.team_sub') }}</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -241,8 +241,8 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-white text-base">Xabibullayev Shamsiddin</h4>
-                        <p class="text-xs text-amber-400 font-mono mt-0.5">Bosh Arxitektor & Muallif</p>
-                        <p class="text-xs text-slate-400 mt-1">Platforma asoschisi va rahbar dasturchi</p>
+                        <p class="text-xs text-amber-400 font-mono mt-0.5">{{ __('site.about.t1_role') }}</p>
+                        <p class="text-xs text-slate-400 mt-1">{{ __('site.about.t1_desc') }}</p>
                     </div>
                 </div>
 
@@ -252,8 +252,8 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-white text-base">Dilshod Karimov</h4>
-                        <p class="text-xs text-indigo-300 font-mono mt-0.5">Adabiy Muharrir</p>
-                        <p class="text-xs text-slate-400 mt-1">Kitoblar tahlilchisi va tarjimon</p>
+                        <p class="text-xs text-indigo-300 font-mono mt-0.5">{{ __('site.about.t2_role') }}</p>
+                        <p class="text-xs text-slate-400 mt-1">{{ __('site.about.t2_desc') }}</p>
                     </div>
                 </div>
 
@@ -263,8 +263,8 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-white text-base">Nodira Rahimova</h4>
-                        <p class="text-xs text-emerald-300 font-mono mt-0.5">Audio & Diktant koordinatori</p>
-                        <p class="text-xs text-slate-400 mt-1">Professional audio kitoblar ijrochisi</p>
+                        <p class="text-xs text-emerald-300 font-mono mt-0.5">{{ __('site.about.t3_role') }}</p>
+                        <p class="text-xs text-slate-400 mt-1">{{ __('site.about.t3_desc') }}</p>
                     </div>
                 </div>
 
@@ -278,13 +278,13 @@
             <div class="flex items-center gap-3">
                 <span class="font-bold text-white text-sm">Kitobxon</span>
                 <span>•</span>
-                <span>© {{ date('Y') }} Barcha huquqlar himoyalangan</span>
+                <span>© {{ date('Y') }} {{ __('site.common.all_rights') }}</span>
             </div>
             <div class="flex items-center gap-6">
-                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">Bosh sahifa</a>
-                <a href="{{ route('books.public') }}" class="hover:text-slate-300 transition-colors">Kitoblar</a>
-                <a href="{{ route('faq') }}" class="hover:text-slate-300 transition-colors">FAQ</a>
-                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">Aloqa</a>
+                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">{{ __('site.common.back_home') }}</a>
+                <a href="{{ route('books.public') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.books') }}</a>
+                <a href="{{ route('faq') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.faq') }}</a>
+                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.contact') }}</a>
             </div>
         </div>
     </footer>

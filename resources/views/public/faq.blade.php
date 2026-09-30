@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Kitobxon FAQ — Ko'p so'raladigan savollarga aniq, to'liq va amaliy javoblar.">
-    <title>Savol-Javoblar (FAQ) — Kitobxon</title>
+    <meta name="description" content="{{ __('site.faq.sub') }}">
+    <title>{{ __('site.faq.badge') }} — Kitobxon</title>
 
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -119,13 +119,13 @@
             <!-- Sarlavha qismi -->
             <div class="faq-header text-center space-y-4 mb-10">
                 <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/25 text-amber-400 font-mono text-xs tracking-wider">
-                    ✦ KO'P SO'RALADIGAN SAVOLLAR
+                    {{ __('site.faq.badge') }}
                 </span>
                 <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                    Savollaringizga <span class="text-amber-400 italic font-serif">haqqoniy va aniq</span> javoblar.
+                    {{ __('site.faq.title_1') }}<span class="text-amber-400 italic font-serif">{{ __('site.faq.title_2') }}</span>{{ __('site.faq.title_3') }}
                 </h1>
                 <p class="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-                    Kitobxon platformasi bo'yicha eng muhim masalalar: mutolaa, streak, ballar, guruhlar limiti va paroli, jonli efirlar hamda AI maslahatchi haqida to'liq qo'llanma.
+                    {{ __('site.faq.sub') }}
                 </p>
             </div>
 
@@ -137,7 +137,7 @@
                     </span>
                     <input type="text"
                            x-model="searchQuery"
-                           placeholder="Savol yoki kalit so'zni qidiring (masalan: guruh, parol, streak, ball, chat)..."
+                           placeholder="{{ __('site.faq.search_ph') }}"
                            class="w-full pl-11 pr-10 py-3 bg-ink-900/80 border border-white/10 rounded-2xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20 backdrop-blur-xl transition-all shadow-card-depth">
                     <button x-show="searchQuery.length > 0" 
                             @click="searchQuery = ''"
@@ -153,27 +153,27 @@
                 <button @click="activeCat = 'all'"
                         :class="activeCat === 'all' ? 'bg-amber-400 text-ink-950 font-bold shadow-md shadow-amber-400/20' : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10'"
                         class="px-4 py-2 rounded-xl transition-all">
-                    🌟 Barchasi
+                    {{ __('site.faq.cat_all') }}
                 </button>
                 <button @click="activeCat = 'books'"
                         :class="activeCat === 'books' ? 'bg-amber-400 text-ink-950 font-bold shadow-md shadow-amber-400/20' : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10'"
                         class="px-4 py-2 rounded-xl transition-all">
-                    📖 Mutolaa & Kitoblar
+                    {{ __('site.faq.cat_books') }}
                 </button>
                 <button @click="activeCat = 'points'"
                         :class="activeCat === 'points' ? 'bg-amber-400 text-ink-950 font-bold shadow-md shadow-amber-400/20' : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10'"
                         class="px-4 py-2 rounded-xl transition-all">
-                    🏆 Ballar & Reyting
+                    {{ __('site.faq.cat_points') }}
                 </button>
                 <button @click="activeCat = 'groups'"
                         :class="activeCat === 'groups' ? 'bg-amber-400 text-ink-950 font-bold shadow-md shadow-amber-400/20' : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10'"
                         class="px-4 py-2 rounded-xl transition-all">
-                    👥 Guruhlar & Chat
+                    {{ __('site.faq.cat_groups') }}
                 </button>
                 <button @click="activeCat = 'ai'"
                         :class="activeCat === 'ai' ? 'bg-amber-400 text-ink-950 font-bold shadow-md shadow-amber-400/20' : 'bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10'"
                         class="px-4 py-2 rounded-xl transition-all">
-                    🤖 AI & Jonli Efir
+                    {{ __('site.faq.cat_ai') }}
                 </button>
             </div>
 
@@ -464,13 +464,13 @@
                  x-cloak
                  class="text-center py-12 p-8 rounded-3xl bg-ink-900/60 border border-white/5 space-y-3">
                 <span class="text-3xl block">🔍</span>
-                <h4 class="text-base font-bold text-white">Mos keluvchi savol topilmadi</h4>
+                <h4 class="text-base font-bold text-white">{{ __('site.faq.no_results_t') }}</h4>
                 <p class="text-xs text-slate-400 max-w-sm mx-auto">
-                    Qidiruv so'zini o'zgartirib ko'ring yoki to'g'ridan-to'g'ri aloqa orqali savolingizni yo'llang.
+                    {{ __('site.faq.no_results_s') }}
                 </p>
                 <button @click="searchQuery = ''; activeCat = 'all'"
                         class="px-4 py-2 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 text-xs font-bold rounded-xl transition-colors">
-                    Filtrni tozalash
+                    {{ __('site.faq.clear_filter') }}
                 </button>
             </div>
 
@@ -479,13 +479,13 @@
                 <div class="w-12 h-12 rounded-2xl bg-amber-400/10 border border-amber-400/20 text-amber-400 flex items-center justify-center text-2xl mx-auto">
                     💡
                 </div>
-                <h3 class="text-xl sm:text-2xl font-bold text-white">Savolingizga javob topmadingizmi?</h3>
+                <h3 class="text-xl sm:text-2xl font-bold text-white">{{ __('site.faq.cta_title') }}</h3>
                 <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-                    Bizning qo'llab-quvvatlash jamoamiz va mutaxassislarimiz har qanday taklif va savollaringizga mamnuniyat bilan javob berishadi.
+                    {{ __('site.faq.cta_sub') }}
                 </p>
                 <div class="pt-2">
                     <a href="{{ route('contact') }}" class="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md shadow-amber-500/25 hover:shadow-glow-amber">
-                        <span>Biz bilan bog'lanish</span>
+                        <span>{{ __('site.faq.cta_btn') }}</span>
                         <span>→</span>
                     </a>
                 </div>
@@ -500,13 +500,13 @@
             <div class="flex items-center gap-3">
                 <span class="font-bold text-white text-sm">Kitobxon</span>
                 <span>•</span>
-                <span>© {{ date('Y') }} Barcha huquqlar himoyalangan</span>
+                <span>© {{ date('Y') }} {{ __('site.common.all_rights') }}</span>
             </div>
             <div class="flex items-center gap-6">
-                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">Bosh sahifa</a>
-                <a href="{{ route('books.public') }}" class="hover:text-slate-300 transition-colors">Kitoblar</a>
-                <a href="{{ route('about') }}" class="hover:text-slate-300 transition-colors">Biz haqimizda</a>
-                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">Aloqa</a>
+                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">{{ __('site.common.back_home') }}</a>
+                <a href="{{ route('books.public') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.books') }}</a>
+                <a href="{{ route('about') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.about') }}</a>
+                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.contact') }}</a>
             </div>
         </div>
     </footer>

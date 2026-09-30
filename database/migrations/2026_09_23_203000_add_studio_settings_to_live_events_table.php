@@ -21,10 +21,9 @@ return new class extends Migration
             // - 'voice_only': Faqat gapira olsin (audio mikrofon)
             // - 'view_only': Ikkalasi ham mumkin emas (faqat tomosha qilish / ma'ruza)
             $table->string('permission_mode', 30)
-                  ->default('both')
-                  ->after('status');
+                  ->default('both');
 
-            $table->boolean('is_recording')->default(false)->after('permission_mode');
+            $table->boolean('is_recording')->default(false);
         });
     }
 

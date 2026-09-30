@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Kitobxon — Barcha sara kitoblar ro'yxati. Matn, audio va video sharhlar.">
-    <title>Kitoblar Katalogi — Kitobxon</title>
+    <meta name="description" content="{{ __('site.books.meta') }}">
+    <title>{{ __('site.books.title') }} — Kitobxon</title>
 
     <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -136,13 +136,13 @@
             
             <div class="books-header max-w-2xl space-y-3">
                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/10 border border-amber-400/25 text-amber-400 font-mono text-xs tracking-wider">
-                    ✦ HAFTALIK MUTOLAA REJASI
+                    {{ __('site.books.badge') }}
                 </span>
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
-                    Sara kitoblar <span class="text-amber-400 italic font-serif">katalogi</span>.
+                    {{ __('site.books.title_1') }}<span class="text-amber-400 italic font-serif">{{ __('site.books.title_b') }}</span>{{ __('site.books.title_2') }}
                 </h1>
                 <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
-                    Har bir asar ekspertlarimiz tomonidan chuqur tahlil qilingan hamda matn, audio va video shaklida boyitilgan.
+                    {{ __('site.books.sub') }}
                 </p>
             </div>
 
@@ -163,7 +163,7 @@
                                     {{-- Badges on cover image --}}
                                     <div class="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
                                         <span class="text-[10px] font-mono text-amber-400 font-bold bg-ink-950/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 shadow">
-                                            {{ $book->week_number }}-hafta
+                                            {{ $book->week_number }}{{ __('site.home.week_badge') }}
                                         </span>
                                         <span class="text-[10px] font-semibold text-white bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md">
                                             {{ $book->genre }}
@@ -180,7 +180,7 @@
                                     <div class="w-full h-full bg-gradient-to-br from-indigo-950 via-ink-900 to-slate-900 flex flex-col justify-between p-4">
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs font-mono text-amber-400 font-bold bg-ink-950/70 px-2.5 py-1 rounded-md border border-white/10">
-                                                {{ $book->week_number }}-hafta
+                                                {{ $book->week_number }}{{ __('site.home.week_badge') }}
                                             </span>
                                             <div class="flex items-center gap-1">
                                                 <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
@@ -197,7 +197,7 @@
                                         </div>
 
                                         <div class="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
-                                            <span>📖 Matn</span> • <span>🎧 Audio</span> • <span>🎥 Video</span>
+                                            <span>📖 {{ __('site.books.text') }}</span> • <span>🎧 {{ __('site.books.audio') }}</span> • <span>🎥 {{ __('site.books.video') }}</span>
                                         </div>
                                     </div>
                                 @endif
@@ -215,16 +215,16 @@
                         </div>
 
                         <div class="pt-4 border-t border-white/5 mt-4 flex items-center justify-between">
-                            <span class="text-[11px] text-slate-500 font-mono">Sara mutolaa</span>
+                            <span class="text-[11px] text-slate-500 font-mono">{{ __('site.home.genre_fallback') }}</span>
                             @auth
                                 <a href="{{ route('books.show', $book->slug) }}" 
                                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md shadow-amber-500/20">
-                                    O'qish →
+                                    {{ __('site.books.read_cta') }} →
                                 </a>
                             @else
                                 <a href="{{ route('login') }}" 
                                    class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-all active:scale-95">
-                                    Kirish
+                                    {{ __('site.nav.login') }}
                                 </a>
                             @endauth
                         </div>
@@ -232,7 +232,7 @@
                 @empty
                     <div class="col-span-full p-12 rounded-3xl bg-ink-900 border border-white/10 text-center space-y-3">
                         <span class="text-4xl">📚</span>
-                        <p class="text-slate-400 text-sm">Hozirda kitoblar ro'yxati yangilanmoqda.</p>
+                        <p class="text-slate-400 text-sm">{{ __('site.books.empty') }}</p>
                     </div>
                 @endforelse
 
@@ -253,13 +253,13 @@
             <div class="flex items-center gap-3">
                 <span class="font-bold text-white text-sm">Kitobxon</span>
                 <span>•</span>
-                <span>© {{ date('Y') }} Barcha huquqlar himoyalangan</span>
+                <span>© {{ date('Y') }} {{ __('site.common.all_rights') }}</span>
             </div>
             <div class="flex items-center gap-6">
-                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">Bosh sahifa</a>
-                <a href="{{ route('about') }}" class="hover:text-slate-300 transition-colors">Biz haqimizda</a>
-                <a href="{{ route('faq') }}" class="hover:text-slate-300 transition-colors">FAQ</a>
-                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">Aloqa</a>
+                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">{{ __('site.common.back_home') }}</a>
+                <a href="{{ route('about') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.about') }}</a>
+                <a href="{{ route('faq') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.faq') }}</a>
+                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.contact') }}</a>
             </div>
         </div>
     </footer>

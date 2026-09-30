@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('book_audios', function (Blueprint $table) {
             $table->id();
             $table->foreignId('book_id')
+                  ->nullable()
                   ->constrained('books')
                   ->onDelete('cascade');
             $table->foreignId('chapter_id')

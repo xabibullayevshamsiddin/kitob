@@ -42,7 +42,8 @@ class ReadingAndStreakTest extends TestCase
     public function catalog_page_is_accessible()
     {
         $user = $this->getStudentUser();
-        $response = $this->actingAs($user)->get('/books');
+        // /books /catalog sahifasiga redirect qiladi
+        $response = $this->actingAs($user)->get('/catalog');
         $response->assertStatus(200);
     }
 

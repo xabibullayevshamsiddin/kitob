@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uz" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foydalanish Shartlari — Kitobxon</title>
+    <title>{{ __('site.nav.terms') }} — Kitobxon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -40,15 +40,15 @@
 
     <main class="legal-content py-16 max-w-4xl mx-auto px-6 space-y-8">
         <div>
-            <span class="text-xs font-mono text-amber-400 uppercase tracking-widest">✦ HUQUQIY HUJJAT</span>
-            <h1 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 tracking-tight">Foydalanish Shartlari</h1>
-            <p class="text-xs text-slate-400 mt-1 font-mono">Oxirgi yangilanish: 2026-yil</p>
+            <span class="text-xs font-mono text-amber-400 uppercase tracking-widest">✦ {{ __('site.terms.badge') }}</span>
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 tracking-tight">{{ __('site.terms.title') }}</h1>
+            <p class="text-xs text-slate-400 mt-1 font-mono">{{ __('site.common.last_update') }}</p>
         </div>
 
         <div class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-white/10 text-sm text-slate-300 space-y-6 leading-relaxed">
-            <p>1. <strong>Umumiy qoidalar:</strong> Kitobxon platformasida ro'yxatdan o'tish orqali siz haftalik mutolaa qoidalariga va hamjamiyat etikasiga to'liq rioya qilishga rozilik bildirasiz.</p>
-            <p>2. <strong>Mualliflik huquqi:</strong> Platformadagi barcha matnlar, audio yozuvlar va video tahlillar mualliflik huquqi bilan qat'iy himoyalangan. Ularni ruxsatsiz tijoriy maqsadda nusxalash taqiqlanadi.</p>
-            <p>3. <strong>Hamjamiyat va chat etikasi:</strong> Global chat va guruhlarda boshqa kitobxonlarga nisbatan hurmatsizlik, haqorat yoki reklama tarqatish taqiqlanadi va hisob cheklanishiga sabab bo'ladi.</p>
+            <p>1. <strong>{{ __('site.terms.p1_t') }}:</strong> {{ __('site.terms.p1') }}</p>
+            <p>2. <strong>{{ __('site.terms.p2_t') }}:</strong> {{ __('site.terms.p2') }}</p>
+            <p>3. <strong>{{ __('site.terms.p3_t') }}:</strong> {{ __('site.terms.p3') }}</p>
         </div>
     </main>
     </div>
