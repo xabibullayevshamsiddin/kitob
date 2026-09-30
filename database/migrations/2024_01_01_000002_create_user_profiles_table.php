@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('reading_goal', [
                 'knowledge', 'personal_dev', 'exam_prep', 'language', 'career', 'spiritual', 'other'
             ])->nullable();
-            $table->json('privacy_settings')->default('{}');
+            $table->json('privacy_settings')->nullable();
             $table->timestamps();
 
             $table->index('user_id');
