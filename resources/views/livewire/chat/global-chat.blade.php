@@ -3,6 +3,7 @@
      x-data="{
          deleteModalOpen: false,
          targetMessageId: null,
+         count: 0,
          confirmDelete(id) {
              this.targetMessageId = id;
              this.deleteModalOpen = true;
@@ -92,7 +93,7 @@
     </div>
 
     <!-- Message Input Bar -->
-    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900" x-data="{ count: 0 }">
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         @auth
             <form wire:submit.prevent="sendMessage" @submit="count = 0" class="flex items-center gap-3">
                 <div class="relative flex-1">
