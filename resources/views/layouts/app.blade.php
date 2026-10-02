@@ -80,6 +80,31 @@
 
         [x-cloak] { display: none !important; }
 
+        /* Native Select Custom Dark Styling (Taste-Skill) */
+        select {
+            background-color: #0c101b !important;
+            color: #f1f5f9 !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+            background-position: right 0.65rem center !important;
+            background-repeat: no-repeat !important;
+            background-size: 1.25em 1.25em !important;
+            padding-right: 2.25rem !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+        }
+        select:focus {
+            border-color: rgba(245, 158, 11, 0.5) !important;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+            outline: none !important;
+        }
+        select option {
+            background-color: #0a0e17 !important;
+            color: #f1f5f9 !important;
+            padding: 10px 14px !important;
+        }
+
         /* Anti-slop micro texture overlay */
         .noise-bg {
             background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
