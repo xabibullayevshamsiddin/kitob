@@ -43,13 +43,13 @@
                 💬
             </div>
             <div>
-                <h2 class="text-sm font-bold text-slate-900 dark:text-white">Umumiy Jamiyat Chati</h2>
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('site.chat.title') }}</h2>
                 <span class="text-[11px] text-emerald-500 font-semibold flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Jonli muloqot
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> {{ __('site.chat.live') }}
                 </span>
             </div>
         </div>
-        <span class="hidden sm:block text-xs text-slate-400">{{ $messages->count() }} ta xabar</span>
+        <span class="hidden sm:block text-xs text-slate-400">{{ __('site.chat.msg_count', ['count' => $messages->count()]) }}</span>
     </div>
 
     <!-- Messages Container -->
@@ -61,19 +61,19 @@
                 $canDelete = $isMe || $isAdmin;
             @endphp
             <div class="flex items-start gap-2.5 group {{ $isMe ? 'flex-row-reverse' : '' }} animate-slide-up" wire:key="msg-{{ $msg->id }}">
-                <img src="{{ $msg->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff' }}" class="w-8 h-8 rounded-xl object-cover shrink-0 ring-1 ring-slate-200 dark:ring-slate-700 mt-0.5" alt="{{ $msg->user?->name ?? 'Foydalanuvchi' }}">
+                <img src="{{ $msg->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff' }}" class="w-8 h-8 rounded-xl object-cover shrink-0 ring-1 ring-slate-200 dark:ring-slate-700 mt-0.5" alt="{{ $msg->user?->name ?? __('site.chat.user') }}">
                 <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md">
                     <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }}">
-                        <span class="text-xs font-bold text-slate-900 dark:text-white">{{ $isMe ? 'Siz' : ($msg->user?->name ?? 'Foydalanuvchi') }}</span>
+                        <span class="text-xs font-bold text-slate-900 dark:text-white">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
                         @if(($msg->user?->role ?? '') === 'admin' || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('admin')))
-                            <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-500 font-bold text-[9px] rounded uppercase">Admin</span>
+                            <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-500 font-bold text-[9px] rounded uppercase">{{ __('site.leaderboard.role_admin') }}</span>
                         @endif
                         <span class="text-[10px] text-slate-400">{{ $msg->created_at->timezone('Asia/Tashkent')->format('H:i') }}</span>
 
                         @if($canDelete)
                             <button type="button"
                                 @click="confirmDelete({{ $msg->id }})"
-                                title="{{ $isMe ? 'Xabaringizni o\'chirish' : 'Admin: Xabarni o\'chirish' }}"
+                                title="{{ $isMe ? __('site.chat.delete_own') : __('site.chat.delete_admin') }}"
                                 class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -86,7 +86,7 @@
             </div>
         @empty
             <div class="text-center py-12 text-slate-400 text-sm">
-                Hali xabarlar yo'q — birinchi bo'lib yozing! 💬
+                {{ __('site.chat.empty') }}
             </div>
         @endforelse
     </div>
@@ -99,7 +99,7 @@
                     <input type="text" 
                         wire:model.defer="message" 
                         x-on:input="count = $event.target.value.length"
-                        placeholder="Fikringizni yoki savolingizni yozing..." 
+                        placeholder="{{ __('site.chat.placeholder') }}" 
                         maxlength="250"
                         class="w-full pl-4 pr-16 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500">
                     <div class="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-mono select-none"
@@ -113,12 +113,9 @@
                 </div>
                 <button type="submit" 
                     x-on:click="count = 0"
-                    wire:loading.attr="disabled" 
-                    wire:target="sendMessage" 
-                    class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-indigo-600/25 transition-all flex items-center gap-1.5 shrink-0">
-                    <span wire:loading.remove wire:target="sendMessage">Yuborish</span>
-                    <span wire:loading wire:target="sendMessage">Yuborilmoqda...</span>
-                    <svg wire:loading.remove wire:target="sendMessage" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-indigo-600/25 transition-all flex items-center gap-1.5 shrink-0">
+                    <span>{{ __('site.chat.send') }}</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </button>
             </form>
             @error('message') <p class="text-rose-500 text-xs mt-2">{{ $message }}</p> @enderror
@@ -126,14 +123,14 @@
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
                 <div class="flex items-center gap-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                     <span class="text-lg">🔒</span>
-                    <span>Chatda xabar yozish uchun avval tizimga kiring</span>
+                    <span>{{ __('site.chat.need_login') }}</span>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                     <a href="{{ route('login') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all">
-                        Kirish
+                        {{ __('site.auth.login_btn') }}
                     </a>
                     <a href="{{ route('register') }}" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition-all">
-                        Ro'yxatdan o'tish
+                        {{ __('site.nav.register') }}
                     </a>
                 </div>
             </div>
@@ -173,9 +170,9 @@
             </div>
 
             <!-- Title & Description -->
-            <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">Xabarni o'chirish</h3>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight">{{ __('site.chat.delete_title') }}</h3>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed mt-2 mb-6">
-                Haqiqatan ham ushbu xabarni butunlay o'chirmoqchimisiz? Ushbu amalni ortga qaytarib bo'lmaydi.
+                {{ __('site.chat.delete_desc') }}
             </p>
 
             <!-- Action Buttons -->
@@ -183,12 +180,12 @@
                 <button type="button"
                     @click="deleteModalOpen = false"
                     class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-                    Bekor qilish
+                    {{ __('site.chat.cancel') }}
                 </button>
                 <button type="button"
                     @click="executeDelete()"
                     class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 active:scale-95 text-white text-xs sm:text-sm font-bold shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center gap-1.5">
-                    <span>O'chirish</span>
+                    <span>{{ __('site.chat.delete') }}</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
