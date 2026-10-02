@@ -134,96 +134,21 @@
         </div>
     </div>
 
-    <!-- Books Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {{-- Books Grid --}}
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-8">
         @forelse ($books as $book)
-            <div class="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden flex flex-col justify-between" wire:key="book-{{ $book->id }}">
-                <div>
-                    <!-- Cover Container -->
-                    <div class="relative h-64 bg-slate-900 overflow-hidden">
-                        <img src="{{ $book->cover_url }}" alt="{{ $book->title }}"
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                             onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($book->title) }}&size=512&background=1e1b4b&color=fff&bold=true'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80"></div>
-                        
-                        <!-- Week Badge -->
-                        <span class="absolute top-3 left-3 px-2.5 py-1 bg-amber-500 text-slate-950 text-[10px] font-black rounded-lg uppercase tracking-wider shadow">
-                            {{ $book->week_number }}{{ __('site.home.week_badge') }}
-                        </span>
-
-                        <!-- Genre Badge -->
-                        <span class="absolute bottom-3 left-3 px-2.5 py-1 bg-white/20 backdrop-blur-md text-white text-[10px] font-semibold rounded-lg">
-                            {{ $book->genre }}
-                        </span>
-
-                        <!-- Format Micro-Badges -->
-                        <div class="absolute top-3 right-3 flex flex-col gap-1 items-end">
-                            @if($book->pdf_path)
-                                <span class="px-2 py-0.5 rounded-md bg-amber-500/90 text-slate-950 text-[9px] font-black shadow-sm" title="Varaqlab o'qish (PDF) mavjud">
-                                    📖 PDF
-                                </span>
-                            @endif
-                            @if($book->audios_count > 0)
-                                <span class="px-2 py-0.5 rounded-md bg-emerald-500/90 text-white text-[9px] font-bold shadow-sm" title="Audio mavjud">
-                                    🎧 Audio
-                                </span>
-                            @endif
-                            @if($book->videos_count > 0)
-                                <span class="px-2 py-0.5 rounded-md bg-rose-500/90 text-white text-[9px] font-bold shadow-sm" title="Video dars mavjud">
-                                    🎥 Video
-                                </span>
-                            @endif
-                            @if($book->quizzes_count > 0)
-                                <span class="px-2 py-0.5 rounded-md bg-indigo-500/90 text-white text-[9px] font-bold shadow-sm" title="Test mavjud">
-                                    🧠 Test
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Details -->
-                    <div class="p-5 space-y-2">
-                        <h3 class="text-base font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors">
-                            {{ $book->title }}
-                        </h3>
-                        <p class="text-xs text-slate-400 font-medium">{{ __('site.catalog.author') }}: <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $book->author }}</span></p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                            {{ $book->description }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Footer Action -->
-                <div class="p-5 pt-0 border-t border-slate-100 dark:border-slate-800/60 mt-3 flex items-center justify-between">
-                    <span class="text-[11px] text-slate-400">{{ $book->chapters_count }} {{ __('site.catalog.chapters') }}</span>
-                    
-                    <div class="flex items-center gap-1.5">
-                        @if($book->pdf_path)
-                            <a href="{{ route('books.flipbook', $book->id) }}"
-                               class="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-slate-950 font-bold text-xs rounded-xl transition-all"
-                               title="Varaqlab o'qish">
-                                📖
-                            </a>
-                        @endif
-                        <a href="{{ route('books.show', $book->slug) }}"
-                           class="px-4 py-2 bg-indigo-50 hover:bg-indigo-600 dark:bg-indigo-950/60 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white dark:hover:text-white font-bold text-xs rounded-xl transition-all">
-                            {{ __('site.catalog.details') }} →
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <x-ui.book-card :book="$book" :wireKey="$book->id" />
         @empty
-            <div class="col-span-full text-center py-16 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-8 space-y-3">
+            <div class="col-span-full py-20 text-center">
                 @if ($hasActiveFilters)
-                    <span class="text-4xl block">🔍</span>
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('site.catalog.no_results_t') }}</h3>
-                    <p class="text-xs text-slate-400 max-w-sm mx-auto">{{ __('site.catalog.no_results_s') }}</p>
-                    <button type="button" wire:click="resetFilters" class="px-5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl shadow transition-all">
-                        {{ __('site.catalog.show_all') }}
+                    <p class="text-sm" style="color:#8B9BAD; font-family:'DM Mono',monospace;">Natija topilmadi</p>
+                    <button type="button" wire:click="resetFilters" 
+                        class="mt-4 px-6 py-2 text-xs font-semibold" 
+                        style="background:#C1392B; color:#F0EDE6; border-radius:4px; font-family:'DM Sans',sans-serif;">
+                        Filtrlarni tozalash
                     </button>
                 @else
-                    <span class="text-4xl block">📚</span>
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('site.catalog.empty') }}</h3>
+                    <p class="text-sm" style="color:#8B9BAD; font-family:'DM Mono',monospace;">Kitoblar mavjud emas</p>
                 @endif
             </div>
         @endforelse
