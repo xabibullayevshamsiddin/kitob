@@ -14,10 +14,22 @@
                 <h1 class="text-2xl sm:text-3xl font-black font-manrope">Xush kelibsiz, {{ auth()->user()->name }}! 👋</h1>
                 <p class="text-indigo-100/90 text-xs sm:text-sm mt-1">O'qituvchi panelingiz tayyor. Bugun ham samarali ishlang!</p>
             </div>
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
                 <a href="{{ route('teacher.books.create') }}"
-                   class="px-4 py-2.5 bg-white hover:bg-slate-100 text-indigo-700 font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
+                   class="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-white hover:bg-slate-100 text-indigo-700 font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
                     + Kitob qo'shish
+                </a>
+                <a href="{{ route('teacher.quizzes.create') }}"
+                   class="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95">
+                    📝 + Test yaratish
+                </a>
+                <a href="{{ route('live.index', ['start' => 1]) }}"
+                   class="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md shadow-rose-600/30 transition-all active:scale-95 flex items-center gap-1.5">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span>🔴 Jonli efir</span>
                 </a>
             </div>
         </div>

@@ -158,6 +158,19 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'email' => 'Email address',
+        'password' => 'Password',
+        'name' => 'Full name',
+        'username' => 'Username',
+        'title' => 'Title',
+        'description' => 'Description',
+        'message' => 'Message',
+        'subject' => 'Subject',
+        'question' => 'Question',
+        'avatar' => 'Avatar image',
+        'book_id' => 'Book',
+        'phone' => 'Phone number',
+    ],
 
 ];

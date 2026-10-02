@@ -15,13 +15,29 @@ class GroupMessage extends Model
         'group_id',
         'user_id',
         'message',
+        'audio_path',
+        'audio_duration',
         'reply_to_id',
         'is_deleted',
     ];
 
     protected $casts = [
-        'is_deleted' => 'boolean',
+        'is_deleted'     => 'boolean',
+        'audio_duration' => 'integer',
     ];
+
+    public function getAudioUrlAttribute(): ?string
+    {
+        if (!$this->audio_path) {
+            return null;
+        }
+        return asset('storage/' . $this->audio_path);
+    }
+
+    public function getIsVoiceAttribute(): bool
+    {
+        return !empty($this->audio_path) || str_starts_with($this->message ?? '', '[VOICE:');
+    }
 
     // -------------------------------------------------------------------------
     // Relationships

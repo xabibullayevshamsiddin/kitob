@@ -30,6 +30,15 @@ class LiveIndex extends Component
         'permissionFilter' => ['except' => 'all'],
     ];
 
+    public function mount(): void
+    {
+        if (request()->query('start') || request()->query('action') === 'create') {
+            if (Auth::check() && Auth::user()->isAdminOrTeacher()) {
+                $this->openStudioModal();
+            }
+        }
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage();

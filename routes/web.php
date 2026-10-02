@@ -104,6 +104,7 @@ Route::get('/leaderboard', LeaderboardPage::class)->name('leaderboard');
 
 // Umumiy Chat (hamma ko'ra oladi, yozish uchun login kerak bo'ladi Livewire tomonida)
 Route::get('/chat', GlobalChat::class)->name('chat');
+Route::post('/chat/voice', [\App\Http\Controllers\ChatVoiceController::class, 'upload'])->middleware('auth')->name('chat.voice.upload');
 
 // Guruhlar (hamma ko'ra oladi)
 Route::get('/groups', GroupList::class)->name('groups.index');
@@ -403,11 +404,12 @@ Route::prefix('teacher')
         return redirect()->route('teacher.books.index')->with('success', "Kitob qo'shildi!" . ($pdfPath ? ' PDF fayl yuklandi. 📕' : ''));
     })->name('books.store');
 
-    // Quiz boshqarish
-    Route::get('/quizzes', function () {
-        $books = \App\Models\Book::with('quizzes')->get();
-        return view('teacher.quizzes.index', compact('books'));
-    })->name('quizzes.index');
+    // Quiz boshqarish (Kitobga test qo'shish va boshqarish)
+    Route::get('/quizzes', [\App\Http\Controllers\Teacher\QuizController::class, 'index'])->name('quizzes.index');
+    Route::get('/quizzes/create', [\App\Http\Controllers\Teacher\QuizController::class, 'create'])->name('quizzes.create');
+    Route::post('/quizzes', [\App\Http\Controllers\Teacher\QuizController::class, 'store'])->name('quizzes.store');
+    Route::get('/quizzes/{quiz}', [\App\Http\Controllers\Teacher\QuizController::class, 'show'])->name('quizzes.show');
+    Route::delete('/quizzes/{quiz}', [\App\Http\Controllers\Teacher\QuizController::class, 'destroy'])->name('quizzes.destroy');
 
     // O'quvchilar statistikasi
     Route::get('/students', function () {

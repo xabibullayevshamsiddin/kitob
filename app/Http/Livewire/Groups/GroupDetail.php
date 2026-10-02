@@ -88,6 +88,28 @@ class GroupDetail extends Component
         $this->dispatchBrowserEvent('chat-scroll-bottom');
     }
 
+    public function sendVoiceMessage(string $path, int $duration = 0): void
+    {
+        if (!Auth::check()) {
+            return;
+        }
+
+        $cleanPath = trim($path);
+        if (empty($cleanPath)) {
+            return;
+        }
+
+        GroupMessage::create([
+            'group_id'       => $this->group->id,
+            'user_id'        => Auth::id(),
+            'message'        => '🎤 Ovozli xabar',
+            'audio_path'     => $cleanPath,
+            'audio_duration' => max(1, $duration),
+        ]);
+
+        $this->dispatchBrowserEvent('chat-scroll-bottom');
+    }
+
     public function deleteMessage(int $messageId): void
     {
         if (!Auth::check()) {

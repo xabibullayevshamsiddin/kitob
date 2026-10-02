@@ -264,6 +264,7 @@
                             <li>{{ __('site.faq.q4a_r2') }}</li>
                             <li>{{ __('site.faq.q4a_r3') }}</li>
                         </ul>
+                        <p><strong class="text-white">{{ __('site.faq.q4a_coins') }}</strong></p>
                     </div>
                 </div>
 
@@ -350,9 +351,9 @@
                     <div x-show="openItem === 8" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
                         <p>{{ __('site.faq.q8a_p1') }}</p>
                         <ul class="list-disc list-inside space-y-1 text-slate-400 pl-1">
-                            <li><strong class="text-white">{{ __('site.faq.q8a_r1') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">1</span> {{ __('site.faq.q8a_group') }}</li>
-                            <li><strong class="text-white">{{ __('site.faq.q8a_r2') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">2</span> {{ __('site.faq.q8a_group') }}</li>
-                            <li><strong class="text-white">{{ __('site.faq.q8a_r3') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">3</span> {{ __('site.faq.q8a_group') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q8a_r1') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">2</span> {{ __('site.faq.q8a_group') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q8a_r2') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">5</span> {{ __('site.faq.q8a_group') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q8a_r3') }}</strong> <span class="text-amber-400 font-bold">{{ __('site.faq.q8a_unlimited') }}</span></li>
                         </ul>
                         <p class="pt-1">{{ __('site.faq.q8a_p2') }}</p>
                     </div>

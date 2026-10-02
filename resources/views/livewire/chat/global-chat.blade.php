@@ -82,7 +82,77 @@
                             </button>
                         @endif
                     </div>
-                    <div class="px-4 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm break-words [word-break:break-word] {{ $isMe ? 'bg-indigo-600 text-white rounded-tr-none text-left shadow-indigo-600/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none' }}">{{ $msg->message }}</div>
+                    @if($msg->audio_path)
+                        <div class="p-3 rounded-2xl shadow-sm {{ $isMe ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-600/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/60 dark:border-slate-700/60' }}"
+                             x-data="{
+                                 playing: false,
+                                 progress: 0,
+                                 duration: {{ $msg->audio_duration ?: 0 }},
+                                 currentTime: 0,
+                                 audio: null,
+                                 init() {
+                                     this.audio = new Audio('{{ $msg->audio_url }}');
+                                     this.audio.addEventListener('loadedmetadata', () => {
+                                         if (!this.duration) this.duration = Math.round(this.audio.duration);
+                                     });
+                                     this.audio.addEventListener('timeupdate', () => {
+                                         this.currentTime = Math.round(this.audio.currentTime);
+                                         if (this.duration) {
+                                             this.progress = (this.audio.currentTime / this.duration) * 100;
+                                         }
+                                     });
+                                     this.audio.addEventListener('ended', () => {
+                                         this.playing = false;
+                                         this.progress = 0;
+                                         this.currentTime = 0;
+                                     });
+                                 },
+                                 toggle() {
+                                     if (!this.audio) return;
+                                     if (this.playing) {
+                                         this.audio.pause();
+                                         this.playing = false;
+                                     } else {
+                                         document.querySelectorAll('audio').forEach(a => a.pause());
+                                         this.audio.play();
+                                         this.playing = true;
+                                     }
+                                 },
+                                 formatTime(sec) {
+                                     const m = Math.floor(sec / 60);
+                                     const s = Math.floor(sec % 60);
+                                     return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+                                 }
+                             }">
+                            <div class="flex items-center gap-3 min-w-[210px] sm:min-w-[260px]">
+                                <button type="button" @click="toggle()"
+                                        class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 {{ $isMe ? 'bg-white text-indigo-600 hover:bg-slate-100' : 'bg-indigo-600 text-white hover:bg-indigo-500' }} shadow-md">
+                                    <template x-if="!playing">
+                                        <svg class="w-4 h-4 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </template>
+                                    <template x-if="playing">
+                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                    </template>
+                                </button>
+                                <div class="flex-1 space-y-1">
+                                    <div class="flex items-center gap-0.5 h-6 cursor-pointer"
+                                         @click="if(audio && duration) { const r = $el.getBoundingClientRect(); const p = Math.max(0, Math.min(1, ($event.clientX - r.left) / r.width)); audio.currentTime = p * duration; }">
+                                        <template x-for="(h, i) in [35, 65, 45, 90, 75, 40, 85, 100, 70, 50, 85, 95, 60, 45, 75, 55, 80, 40]" :key="i">
+                                            <span class="flex-1 rounded-full transition-all"
+                                                  :style="'height: ' + h + '%;'"
+                                                  :class="(i / 18 * 100) <= progress ? '{{ $isMe ? 'bg-white' : 'bg-indigo-600' }}' : '{{ $isMe ? 'bg-white/40' : 'bg-slate-300 dark:bg-slate-600' }}'"></span>
+                                        </template>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[10px] font-mono {{ $isMe ? 'text-indigo-100' : 'text-slate-400' }}">
+                                        <span x-text="playing ? formatTime(currentTime) : 'Ovozli xabar'">Ovozli xabar</span>
+                                        <span x-text="formatTime(duration)">{{ sprintf('%02d:%02d', floor(($msg->audio_duration ?? 0)/60), ($msg->audio_duration ?? 0)%60) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="px-4 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm break-words [word-break:break-word] {{ $isMe ? 'bg-indigo-600 text-white rounded-tr-none text-left shadow-indigo-600/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none' }}">{{ $msg->message }}</div>
+                    @endif
                 </div>
             </div>
         @empty
@@ -92,10 +162,148 @@
         @endforelse
     </div>
 
-    <!-- Message Input Bar -->
-    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <!-- Message Input Bar with Voice Note Recording -->
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+         x-data="{
+             isRecording: false,
+             isUploading: false,
+             recordDuration: 0,
+             mediaRecorder: null,
+             mediaStream: null,
+             audioChunks: [],
+             timerInterval: null,
+             discard: false,
+             startRecord() {
+                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                     alert('Brauzeringiz audio yozishni qo\'llab-quvvatlamaydi.');
+                     return;
+                 }
+                 navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                     this.mediaStream = stream;
+                     this.audioChunks = [];
+                     this.discard = false;
+                     let options = {};
+                     if (MediaRecorder.isTypeSupported('audio/webm')) {
+                         options = { mimeType: 'audio/webm' };
+                     } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                         options = { mimeType: 'audio/mp4' };
+                     }
+                     this.mediaRecorder = new MediaRecorder(stream, options);
+                     this.mediaRecorder.ondataavailable = e => {
+                         if (e.data.size > 0) this.audioChunks.push(e.data);
+                     };
+                     this.mediaRecorder.onstop = () => {
+                         if (this.discard) {
+                             this.cleanupStream();
+                             return;
+                         }
+                         const mime = this.mediaRecorder.mimeType || 'audio/webm';
+                         const audioBlob = new Blob(this.audioChunks, { type: mime });
+                         this.uploadAndSend(audioBlob, this.recordDuration);
+                         this.cleanupStream();
+                     };
+                     this.mediaRecorder.start(200);
+                     this.isRecording = true;
+                     this.recordDuration = 0;
+                     this.timerInterval = setInterval(() => { this.recordDuration++; }, 1000);
+                 }).catch(err => {
+                     alert('Mikrofondan foydalanishga ruxsat berilmadi: ' + err.message);
+                 });
+             },
+             cancelRecord() {
+                 this.discard = true;
+                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                     this.mediaRecorder.stop();
+                 }
+                 this.isRecording = false;
+                 clearInterval(this.timerInterval);
+             },
+             sendRecord() {
+                 this.discard = false;
+                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                     this.mediaRecorder.stop();
+                 }
+                 this.isRecording = false;
+                 clearInterval(this.timerInterval);
+             },
+             cleanupStream() {
+                 if (this.mediaStream) {
+                     this.mediaStream.getTracks().forEach(t => t.stop());
+                     this.mediaStream = null;
+                 }
+                 clearInterval(this.timerInterval);
+             },
+             uploadAndSend(blob, dur) {
+                 this.isUploading = true;
+                 const formData = new FormData();
+                 formData.append('audio', blob, 'voice_' + Date.now() + '.webm');
+                 formData.append('duration', dur);
+                 formData.append('_token', '{{ csrf_token() }}');
+
+                 fetch('{{ route('chat.voice.upload') }}', {
+                     method: 'POST',
+                     body: formData
+                 })
+                 .then(res => res.json())
+                 .then(data => {
+                     this.isUploading = false;
+                     if (data.success && data.path) {
+                         $wire.sendVoiceMessage(data.path, data.duration || dur);
+                     } else {
+                         alert('Ovozli xabarni yuklashda xatolik yuz berdi.');
+                     }
+                 })
+                 .catch(err => {
+                     this.isUploading = false;
+                     alert('Yuklashda tarmoq xatoligi yuz berdi.');
+                 });
+             },
+             formatDur(s) {
+                 const m = Math.floor(s / 60);
+                 const sec = Math.floor(s % 60);
+                 return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+             }
+         }">
         @auth
-            <form wire:submit.prevent="sendMessage" @submit="count = 0" class="flex items-center gap-3">
+            {{-- RECORDING ACTIVE BAR --}}
+            <div x-show="isRecording" x-cloak class="flex items-center justify-between gap-3 p-2 bg-rose-500/10 border border-rose-500/25 rounded-2xl animate-fade-in">
+                <div class="flex items-center gap-3 pl-3">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-600"></span>
+                    </span>
+                    <span class="text-xs font-bold text-rose-600 dark:text-rose-400 font-mono tracking-wider" x-text="'Yozilmoqda: ' + formatDur(recordDuration)"></span>
+                    <div class="flex items-center gap-1 h-4">
+                        <span class="w-1 h-3 bg-rose-500 rounded-full animate-bounce"></span>
+                        <span class="w-1 h-4 bg-rose-500 rounded-full animate-bounce [animation-delay:0.15s]"></span>
+                        <span class="w-1 h-2 bg-rose-500 rounded-full animate-bounce [animation-delay:0.3s]"></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="cancelRecord()"
+                            class="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-300 transition-colors">
+                        ✕ Bekor qilish
+                    </button>
+                    <button type="button" @click="sendRecord()"
+                            class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-500 text-white text-xs font-bold shadow-md shadow-rose-600/30 active:scale-95 transition-all flex items-center gap-1.5">
+                        <span>Yuborish</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- UPLOADING SPINNER --}}
+            <div x-show="isUploading" x-cloak class="flex items-center justify-center gap-2 py-3 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span>Ovozli xabar yuklanmoqda...</span>
+            </div>
+
+            {{-- STANDARD FORM BAR --}}
+            <form x-show="!isRecording && !isUploading" wire:submit.prevent="sendMessage" @submit="count = 0" class="flex items-center gap-2 sm:gap-3">
                 <div class="relative flex-1">
                     <input type="text" 
                         wire:model.defer="message" 
@@ -112,6 +320,16 @@
                         <span x-text="count">0</span>/250
                     </div>
                 </div>
+
+                <!-- Voice Recording Mic Button -->
+                <button type="button" @click="startRecord()"
+                    class="p-3 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/40 text-slate-600 hover:text-rose-600 dark:text-slate-300 dark:hover:text-rose-400 rounded-2xl transition-all border border-slate-200/60 dark:border-slate-700/60 active:scale-95 shrink-0"
+                    title="Ovozli xabar yozish">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                    </svg>
+                </button>
+
                 <button type="submit" 
                     x-on:click="count = 0"
                     class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-indigo-600/25 transition-all flex items-center gap-1.5 shrink-0">

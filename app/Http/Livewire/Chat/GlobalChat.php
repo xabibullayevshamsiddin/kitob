@@ -68,6 +68,36 @@ class GlobalChat extends Component
         $this->dispatchBrowserEvent('chat-scroll-bottom');
     }
 
+    public function sendVoiceMessage(string $path, int $duration = 0): void
+    {
+        if (!Auth::check()) {
+            return;
+        }
+
+        $cleanPath = trim($path);
+        if (empty($cleanPath)) {
+            return;
+        }
+
+        $chatMessage = GlobalChatMessage::create([
+            'user_id'        => Auth::id(),
+            'message'        => '🎤 Ovozli xabar',
+            'audio_path'     => $cleanPath,
+            'audio_duration' => max(1, $duration),
+            'is_deleted'     => false,
+        ]);
+
+        $chatMessage->load('user');
+
+        try {
+            broadcast(new NewGlobalChatMessage($chatMessage))->toOthers();
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        $this->dispatchBrowserEvent('chat-scroll-bottom');
+    }
+
     public function deleteMessage(int $messageId): void
     {
         if (!Auth::check()) {

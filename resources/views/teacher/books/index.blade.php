@@ -25,15 +25,18 @@
                         <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Kitob</th>
                         <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Muallif</th>
                         <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Janr</th>
+                        <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Testlar</th>
                         <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Holat</th>
+                        <th class="px-6 py-3.5 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Amallar</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                     @forelse($books as $book)
+                        @php $quizCount = $book->quizzes()->count(); @endphp
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                             <td class="px-6 py-4 text-sm text-slate-400">{{ $loop->iteration }}</td>
                             <td class="px-6 py-4">
-                                <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ $book->title }}</p>
+                                <a href="{{ route('books.show', $book->slug) }}" target="_blank" class="text-sm font-semibold text-slate-800 dark:text-white hover:text-indigo-600 transition-colors">{{ $book->title }}</a>
                                 <p class="text-xs text-slate-400">{{ $book->week_number }}-hafta</p>
                             </td>
                             <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">{{ $book->author }}</td>
@@ -43,14 +46,32 @@
                             <td class="px-6 py-4">
                                 <span @class([
                                     'px-2.5 py-1 rounded-lg text-xs font-bold',
+                                    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' => $quizCount > 0,
+                                    'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' => $quizCount === 0,
+                                ])>
+                                    {{ $quizCount }} ta test
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span @class([
+                                    'px-2.5 py-1 rounded-lg text-xs font-bold',
                                     'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' => $book->is_active,
                                     'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' => !$book->is_active,
                                 ])>{{ $book->is_active ? '✓ Aktiv' : '— Noaktiv' }}</span>
                             </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}"
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95"
+                                       title="Ushbu kitobga yangi test tuzish">
+                                        <span>📝 + Test qo'shish</span>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 text-sm">Hali kitoblar yo'q</td>
+                            <td colspan="7" class="px-6 py-12 text-center text-slate-400 text-sm">Hali kitoblar yo'q</td>
                         </tr>
                     @endforelse
                 </tbody>
