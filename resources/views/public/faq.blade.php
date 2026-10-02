@@ -181,13 +181,13 @@
             <div class="space-y-4">
                 
                 <!-- 1. Mutolaa va Kitoblar -->
-                <div x-show="matches('Kitobxon platformasi qanday ishlaydi va undan qanday foydalaniladi?', 'books', 'har hafta dushanba mutolaa audio matn test yakshanba')" 
+                <div x-show="matches(@js(__('site.faq.q1')), 'books', @js(__('site.faq.q1a_catalog_d') . ' ' . __('site.faq.q1a_chapters_d') . ' ' . __('site.faq.q1a_quiz_d')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 1 }">
                     <button @click="toggle(1)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">📖</span>
-                            Kitobxon platformasi qanday ishlaydi va undan qanday foydalaniladi?
+                            {{ __('site.faq.q1') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 1 }">
@@ -195,23 +195,23 @@
                         </div>
                     </button>
                     <div x-show="openItem === 1" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Kitobxon — bu muntazam kitob o'qish odatini shakllantirishga mo'ljallangan intellektual ekotizimdir.</p>
+                        <p>{{ __('site.faq.q1a_intro') }}</p>
                         <ul class="list-disc list-inside space-y-1 text-slate-400 pl-1">
-                            <li><strong class="text-white">Kitoblar katalogi:</strong> Badiiy, shaxsiy rivojlanish, biznes va ilmiy asarlarni matn yoki audio formatda mutolaa qilasiz.</li>
-                            <li><strong class="text-white">Boblar ketma-ketligi:</strong> Asarlar bobma-bob beriladi, o'qish progressi avtomatik saqlanib boradi.</li>
-                            <li><strong class="text-white">Bilimlarni tekshirish:</strong> Har bir kitob yakunida interaktiv testlar orqali o'rganganlaringizni mustahkamlab, ball to'playsiz.</li>
+                            <li><strong class="text-white">{{ __('site.faq.q1a_catalog') }}</strong> {{ __('site.faq.q1a_catalog_d') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q1a_chapters') }}</strong> {{ __('site.faq.q1a_chapters_d') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q1a_quiz') }}</strong> {{ __('site.faq.q1a_quiz_d') }}</li>
                         </ul>
                     </div>
                 </div>
 
                 <!-- 2. Bepul foydalanish -->
-                <div x-show="matches('Platformadan foydalanish bepulmi yoki obuna talab qilinadimi?', 'books', 'bepul obuna tolov kitob oqish')" 
+                <div x-show="matches(@js(__('site.faq.q2')), 'books', @js(__('site.faq.q2a')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 2 }">
                     <button @click="toggle(2)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">💳</span>
-                            Platformadan foydalanish bepulmi yoki obuna talab qilinadimi?
+                            {{ __('site.faq.q2') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 2 }">
@@ -219,18 +219,18 @@
                         </div>
                     </button>
                     <div x-show="openItem === 2" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
-                        Ha, asosiy kitoblarni matn va audio formatda mutolaa qilish, umumiy chatda muloqot qilish, reytingda qatnashish va testlarni yechish barcha ro'yxatdan o'tgan kitobxonlar uchun mutlaqo bepul. Ro'yxatdan o'tmasdan turib esa kitoblar katalogi va platforma tavsifini ko'rishingiz mumkin.
+                        {{ __('site.faq.q2a') }}
                     </div>
                 </div>
 
                 <!-- 3. Audio kitoblar -->
-                <div x-show="matches('Audio kitoblarni fonda (ekran o\'chiq holatda) eshitsa bo\'ladimi?', 'books', 'audio pleyer fon tinglash eshitish')" 
+                <div x-show="matches(@js(__('site.faq.q3')), 'books', @js(__('site.faq.q3a')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 3 }">
                     <button @click="toggle(3)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">🎧</span>
-                            Audio kitoblarni fonda (ekran o'chiq holatda) eshitsa bo'ladimi?
+                            {{ __('site.faq.q3') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 3 }">
@@ -238,18 +238,18 @@
                         </div>
                     </button>
                     <div x-show="openItem === 3" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
-                        Ha. Platformaning o'rnatilgan audio pleyeri mobil brauzerlar va kompyuterlarda fon rejimini qo'llab-quvvatlaydi. Boshqa ilovaga o'tsangiz yoki brauzerni minimallashtirsangiz ham audio ijro etilishda davom etadi.
+                        {{ __('site.faq.q3a') }}
                     </div>
                 </div>
 
                 <!-- 4. Ballar va Tangalar -->
-                <div x-show="matches('Ballar (Points) va Tangalar (Coins) nima uchun beriladi va qayerda ishlatiladi?', 'points', 'ball tanga coin points mukofot reyting test mutolaa')" 
+                <div x-show="matches(@js(__('site.faq.q4')), 'points', @js(__('site.faq.q4a_points') . ' ' . __('site.faq.q4a_how')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 4 }">
                     <button @click="toggle(4)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">🪙</span>
-                            Ballar (Points) va Tangalar (Coins) nima uchun beriladi va qayerda ishlatiladi?
+                            {{ __('site.faq.q4') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 4 }">
@@ -257,24 +257,24 @@
                         </div>
                     </button>
                     <div x-show="openItem === 4" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p><strong class="text-white">Ballar (Total Points):</strong> Sizning platformadagi umumiy obro'yingiz va ilmiy darajangiz ko'rsatkichi. Ular orqali umumiy, oylik va haftalik Reyting (Leaderboard) peshqadamlari aniqlanadi.</p>
-                        <p><strong class="text-white">Qanday to'planadi:</strong></p>
+                        <p><strong class="text-white">{{ __('site.faq.q4a_points') }}</strong></p>
+                        <p><strong class="text-white">{{ __('site.faq.q4a_how') }}</strong></p>
                         <ul class="list-disc list-inside space-y-1 text-slate-400 pl-1">
-                            <li>Har 10 daqiqa kitob o'qish yoki audio eshitish uchun: <span class="text-amber-400 font-semibold">+10 ball</span></li>
-                            <li>Boblar bo'yicha test savollarini to'g'ri yechish orqali test ballari</li>
-                            <li>Har kungi uzluksiz streak zanjirini davom ettirish bonuslari</li>
+                            <li>{{ __('site.faq.q4a_r1') }} <span class="text-amber-400 font-semibold">+10 ball</span></li>
+                            <li>{{ __('site.faq.q4a_r2') }}</li>
+                            <li>{{ __('site.faq.q4a_r3') }}</li>
                         </ul>
                     </div>
                 </div>
 
                 <!-- 5. Streak nima -->
-                <div x-show="matches('Streak (kunlik olov) nima va u qachon o\'chib ketadi?', 'points', 'streak olov kunlik zanjir vaqt soat 23:59')" 
+                <div x-show="matches(@js(__('site.faq.q5')), 'points', @js(__('site.faq.q5a_p1') . ' ' . __('site.faq.q5a_p2')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 5 }">
                     <button @click="toggle(5)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">🔥</span>
-                            Streak (kunlik olov) nima va u qachon o'chib ketadi?
+                            {{ __('site.faq.q5') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 5 }">
@@ -282,19 +282,19 @@
                         </div>
                     </button>
                     <div x-show="openItem === 5" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Streak — bu sizning har kuni uzluksiz kitob mutolaa qilayotganingizni ko'rsatuvchi zanjir timsoli.</p>
-                        <p>Har kuni kamida 10 daqiqa mutolaa qilsangiz, olov yonadi va ko'rsatkich +1 kunga oshadi. Agar Toshkent vaqti bilan sutka yakunigacha (23:59) kitob o'qilmasa, streak zanjiri uziladi va olov nolga tushadi.</p>
+                        <p>{{ __('site.faq.q5a_p1') }}</p>
+                        <p>{{ __('site.faq.q5a_p2') }}</p>
                     </div>
                 </div>
 
                 <!-- 6. Reyting (Leaderboard) -->
-                <div x-show="matches('Reyting (Leaderboard) qanday ishlaydi va o\'rinlar qanday yangilanadi?', 'points', 'reyting leaderboard orin peshqadam snapshot kunlik haftalik oylik')" 
+                <div x-show="matches(@js(__('site.faq.q6')), 'points', @js(__('site.faq.q6a_p1') . ' ' . __('site.faq.q6a_p2')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 6 }">
                     <button @click="toggle(6)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">📊</span>
-                            Reyting (Leaderboard) qanday ishlaydi va o'rinlar qanday yangilanadi?
+                            {{ __('site.faq.q6') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 6 }">
@@ -302,25 +302,25 @@
                         </div>
                     </button>
                     <div x-show="openItem === 6" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Reyting sahifasida foydalanuvchilar to'plagan ballari bo'yicha ketma-ket saralanadi. Tizim 4 xil davr bo'yicha taqsimlangan:</p>
+                        <p>{{ __('site.faq.q6a_p1') }}</p>
                         <ul class="list-disc list-inside space-y-1 text-slate-400 pl-1">
-                            <li><strong class="text-white">Bugun:</strong> Faqat bugungi kun davomida to'plangan faol ballar;</li>
-                            <li><strong class="text-white">Ushbu hafta:</strong> Haftalik yetakchilar;</li>
-                            <li><strong class="text-white">Ushbu oy:</strong> Oylik jadval;</li>
-                            <li><strong class="text-white">Barcha vaqtlar:</strong> Platformadagi jami to'plangan eng yuqori ballar egalari.</li>
+                            <li><strong class="text-white">{{ __('site.faq.q6a_d1') }}</strong> {{ __('site.faq.q6a_d1_d') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q6a_d2') }}</strong> {{ __('site.faq.q6a_d2_d') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q6a_d3') }}</strong> {{ __('site.faq.q6a_d3_d') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q6a_d4') }}</strong> {{ __('site.faq.q6a_d4_d') }}</li>
                         </ul>
-                        <p class="pt-1">Top-3 o'rindagi kitobxonlar maxsus oltin, kumush va bronza toj nishonlari bilan taqdirlanadi.</p>
+                        <p class="pt-1">{{ __('site.faq.q6a_p2') }}</p>
                     </div>
                 </div>
 
                 <!-- 7. Guruhlar va Yopiq guruhlar -->
-                <div x-show="matches('Guruhlar nima va yopiq (parolli) guruhga qanday qo\'shilish mumkin?', 'groups', 'guruh yopiq parol maxfiy shaxsiy klub join kod')" 
+                <div x-show="matches(@js(__('site.faq.q7')), 'groups', @js(__('site.faq.q7a_open_d') . ' ' . __('site.faq.q7a_closed_d')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 7 }">
                     <button @click="toggle(7)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">🔒</span>
-                            Guruhlar nima va yopiq (parolli) guruhga qanday qo'shilish mumkin?
+                            {{ __('site.faq.q7') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 7 }">
@@ -328,19 +328,19 @@
                         </div>
                     </button>
                     <div x-show="openItem === 7" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p><strong class="text-white">Ochiq guruhlar:</strong> Barcha foydalanuvchilar to'g'ridan-to'g'ri "Qo'shilish" tugmasi orqali a'zo bo'la oladilar.</p>
-                        <p><strong class="text-white">Yopiq guruhlar:</strong> Faqat guruh yaratuvchisi o'rnatgan maxfiy parolni kiritish orqali a'zo bo'linadi. Agar siz guruhga qo'shilmoqchi bo'lsangiz, «🔒 Parol bilan kirish» tugmasini bosib, uning adminidan olingan parolni kiritishingiz kifoya.</p>
+                        <p><strong class="text-white">{{ __('site.faq.q7a_open') }}</strong> {{ __('site.faq.q7a_open_d') }}</p>
+                        <p><strong class="text-white">{{ __('site.faq.q7a_closed') }}</strong> {{ __('site.faq.q7a_closed_d') }}</p>
                     </div>
                 </div>
 
                 <!-- 8. Guruh ochish limitlari -->
-                <div x-show="matches('Bir foydalanuvchi nechta guruh ocha oladi (guruh limitlari)?', 'groups', 'limit guruh yaratish oddiy teacher admin nechta kvota')" 
+                <div x-show="matches(@js(__('site.faq.q8')), 'groups', @js(__('site.faq.q8a_p1') . ' ' . __('site.faq.q8a_p2')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 8 }">
                     <button @click="toggle(8)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">⚖️</span>
-                            Bir foydalanuvchi nechta guruh ocha oladi (guruh ochish limitlari)?
+                            {{ __('site.faq.q8') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 8 }">
@@ -348,24 +348,24 @@
                         </div>
                     </button>
                     <div x-show="openItem === 8" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Platformada sifatni va tartibni ta'minlash maqsadida guruh ochish bo'yicha aniq chegaralar mavjud:</p>
+                        <p>{{ __('site.faq.q8a_p1') }}</p>
                         <ul class="list-disc list-inside space-y-1 text-slate-400 pl-1">
-                            <li><strong class="text-white">Oddiy foydalanuvchi (Kitobxon):</strong> ko'pi bilan <span class="text-amber-400 font-bold">1 ta</span> guruh</li>
-                            <li><strong class="text-white">Ustoz (Teacher):</strong> ko'pi bilan <span class="text-amber-400 font-bold">2 ta</span> guruh</li>
-                            <li><strong class="text-white">Administrator:</strong> ko'pi bilan <span class="text-amber-400 font-bold">3 ta</span> guruh</li>
+                            <li><strong class="text-white">{{ __('site.faq.q8a_r1') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">1</span> {{ __('site.faq.q8a_group') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q8a_r2') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">2</span> {{ __('site.faq.q8a_group') }}</li>
+                            <li><strong class="text-white">{{ __('site.faq.q8a_r3') }}</strong> {{ __('site.faq.q8a_max') }} <span class="text-amber-400 font-bold">3</span> {{ __('site.faq.q8a_group') }}</li>
                         </ul>
-                        <p class="pt-1">Joriy guruhlaringiz soni sahifa sarlavhasida (masalan, «📊 Guruhlaringiz: 1 / 1») ko'rinib turadi. Limitga yetganingizda yangi guruh ochish uchun avvalgisini o'chirishingiz kerak bo'ladi.</p>
+                        <p class="pt-1">{{ __('site.faq.q8a_p2') }}</p>
                     </div>
                 </div>
 
                 <!-- 9. Guruhni o'chirish huquqi -->
-                <div x-show="matches('Guruhni kimlar o\'chira oladi va bu qanday amalga oshiriladi?', 'groups', 'ochirish delete guruh yaratuvchi admin huquq')" 
+                <div x-show="matches(@js(__('site.faq.q9')), 'groups', @js(__('site.faq.q9a_p1') . ' ' . __('site.faq.q9a_p2')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 9 }">
                     <button @click="toggle(9)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">🗑️</span>
-                            Guruhni kimlar o'chira oladi va bu qanday amalga oshiriladi?
+                            {{ __('site.faq.q9') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 9 }">
@@ -373,19 +373,19 @@
                         </div>
                     </button>
                     <div x-show="openItem === 9" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Guruhni faqat <strong class="text-white">uni yaratgan foydalanuvchi</strong> yoki <strong class="text-white">tizim administratori</strong> o'chira oladi. Oddiy a'zolarda bu tugma ko'rinmaydi va ular faqat guruhni tark etishlari mumkin.</p>
-                        <p>O'chirish tugmasi bosilganda tasdiqlash oynasi chiqadi va tasdiqlangach, guruhning barcha xabarlari va a'zolik ma'lumotlari butunlay xavfsiz tarzda tozalanadi.</p>
+                        <p>{{ __('site.faq.q9a_p1') }}</p>
+                        <p>{{ __('site.faq.q9a_p2') }}</p>
                     </div>
                 </div>
 
                 <!-- 10. Umumiy Chat qoidalari -->
-                <div x-show="matches('Umumiy Chatda kimlar yozishi va xabarlarni kimlar o\'chira oladi?', 'groups', 'global chat umumiy xabar ochirish admin limit belgilar')" 
+                <div x-show="matches(@js(__('site.faq.q10')), 'groups', @js(__('site.faq.q10a_p1') . ' ' . __('site.faq.q10a_delete_d')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 10 }">
                     <button @click="toggle(10)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">💬</span>
-                            Umumiy Chatda kimlar yozishi va xabarlarni kimlar o'chira oladi?
+                            {{ __('site.faq.q10') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 10 }">
@@ -393,19 +393,19 @@
                         </div>
                     </button>
                     <div x-show="openItem === 10" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Ro'yxatdan o'tgan har bir kitobxon umumiy chatda muloqot qilishi mumkin. Chatda o'zingiz yozgan xabarlar o'ng tomonda, boshqalarniki esa chap tomonda tartibli ko'rinadi.</p>
-                        <p><strong class="text-white">Xabarni o'chirish:</strong> Har bir foydalanuvchi o'z xabarining yonidagi o'chirish belgisini bosib, uni o'chira oladi. Tizim administratori esa umumiy tartibni saqlash maqsadida istalgan foydalanuvchining noo'rin xabarini o'chirish vakolatiga ega.</p>
+                        <p>{{ __('site.faq.q10a_p1') }}</p>
+                        <p><strong class="text-white">{{ __('site.faq.q10a_delete') }}</strong> {{ __('site.faq.q10a_delete_d') }}</p>
                     </div>
                 </div>
 
                 <!-- 11. AI Kitob Maslahatchisi -->
-                <div x-show="matches('AI Kitob Maslahatchisi qanday vazifani bajaradi?', 'ai', 'ai maslahatchi suniy intellekt xulosa savol tahlil')" 
+                <div x-show="matches(@js(__('site.faq.q11')), 'ai', @js(__('site.faq.q11a_p1') . ' ' . __('site.faq.q11a_p2')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 11 }">
                     <button @click="toggle(11)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">🤖</span>
-                            AI Kitob Maslahatchisi qanday vazifani bajaradi?
+                            {{ __('site.faq.q11') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 11 }">
@@ -413,19 +413,19 @@
                         </div>
                     </button>
                     <div x-show="openItem === 11" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Sun'iy intellekt haftalik kitobning barcha boblari va g'oyalari bo'yicha maxsus o'qitilgan. Siz asar mutolaasi davomida tushunmagan jumlalaringizni so'rashingiz, boblarning asosiy xulosalarini olishingiz yoki qahramonlar xatti-harakatlarini tahlil qildirishingiz mumkin.</p>
-                        <p>AI bir necha soniya ichida o'zbek tilida savodli va aniq javob qaytaradi.</p>
+                        <p>{{ __('site.faq.q11a_p1') }}</p>
+                        <p>{{ __('site.faq.q11a_p2') }}</p>
                     </div>
                 </div>
 
                 <!-- 12. Jonli Efirlar -->
-                <div x-show="matches('Jonli Efirlarga qanday qo\'shilish mumkin va unda qanday qatnashiladi?', 'ai', 'jonli efir stream live ustoz efir zal mikrofon ovoz')" 
+                <div x-show="matches(@js(__('site.faq.q12')), 'ai', @js(__('site.faq.q12a_p1') . ' ' . __('site.faq.q12a_p2')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 12 }">
                     <button @click="toggle(12)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">🔴</span>
-                            Jonli Efirlarga qanday qo'shilish mumkin va unda qanday qatnashiladi?
+                            {{ __('site.faq.q12') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 12 }">
@@ -433,19 +433,19 @@
                         </div>
                     </button>
                     <div x-show="openItem === 12" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4 space-y-2">
-                        <p>Hafta yakunida «Jonli Efirlar» sahifasida qizil «🔴 Jonli» belgisi yonadi. Xonaga kirish tugmasini bosib to'g'ridan-to'g'ri ustoz ma'ruzasiga ulanishingiz mumkin.</p>
-                        <p>Efir moderatori (ustoz) efir xususiyatiga qarab tomoshabinlar uchun huquqlarni belgilaydi (faqat chatda yozish, ovozli savol berish yoki tinglash rejimi). O'tkazib yuborilgan efirlarni esa keyinroq yozuvini qayta ko'rishingiz mumkin.</p>
+                        <p>{{ __('site.faq.q12a_p1') }}</p>
+                        <p>{{ __('site.faq.q12a_p2') }}</p>
                     </div>
                 </div>
 
                 <!-- 13. Parol va Profil Sozlamalari -->
-                <div x-show="matches('Parolni yoki profil ma\'lumotlarini qanday o\'zgartirish mumkin?', 'books', 'parol profil sozlamalar username email avatar rasm')" 
+                <div x-show="matches(@js(__('site.faq.q13')), 'books', @js(__('site.faq.q13a')))" 
                      class="faq-card faq-item" :class="{ 'active': openItem === 13 }">
                     <button @click="toggle(13)" 
                             class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
                         <span class="text-sm sm:text-base font-bold text-white flex items-center gap-2.5">
                             <span class="text-amber-400">⚙️</span>
-                            Parolni yoki profil ma'lumotlarini qanday o'zgartirish mumkin?
+                            {{ __('site.faq.q13') }}
                         </span>
                         <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-amber-400 font-bold text-xs shrink-0 transition-transform duration-300"
                              :class="{ 'rotate-180 bg-amber-400/20 text-amber-300': openItem === 13 }">
@@ -453,7 +453,7 @@
                         </div>
                     </button>
                     <div x-show="openItem === 13" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
-                        Tizimga kirganingizdan so'ng, yuqori o'ng burchakdagi profilingiz ustiga bosib, «Sozlamalar» sahifasiga o'tasiz. U yerda ismingiz, username, profilingiz bio qismi, xavfsizlik parolingiz hamda avatar rasmingizni yangilashingiz mumkin.
+                        {{ __('site.faq.q13a') }}
                     </div>
                 </div>
 

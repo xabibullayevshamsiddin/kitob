@@ -435,8 +435,8 @@ Route::prefix('admin')
     Route::get('/', function () {
         $stats = [
             'total_users'    => \App\Models\User::count(),
-            'total_students' => \App\Models\User::role('student')->count(),
-            'total_teachers' => \App\Models\User::role('teacher')->count(),
+            'total_students' => \App\Models\User::where('role', 'student')->count(),
+            'total_teachers' => \App\Models\User::where('role', 'teacher')->count(),
             'total_books'    => \App\Models\Book::count(),
             'active_books'   => \App\Models\Book::where('is_active', true)->count(),
         ];
@@ -446,7 +446,17 @@ Route::prefix('admin')
 
     // Foydalanuvchilar
     Route::get('/users', function () {
-        $users = \App\Models\User::with('roles')->latest()->paginate(20);
+        $query = \App\Models\User::with('roles')->latest();
+        if ($search = request('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        if ($role = request('role')) {
+            $query->where('role', $role);
+        }
+        $users = $query->paginate(20)->withQueryString();
         return view('admin.users.index', compact('users'));
     })->name('users.index');
 
@@ -481,8 +491,8 @@ Route::prefix('admin')
     Route::get('/stats', function () {
         $stats = [
             'total_users'    => \App\Models\User::count(),
-            'total_students' => \App\Models\User::role('student')->count(),
-            'total_teachers' => \App\Models\User::role('teacher')->count(),
+            'total_students' => \App\Models\User::where('role', 'student')->count(),
+            'total_teachers' => \App\Models\User::where('role', 'teacher')->count(),
             'total_books'    => \App\Models\Book::count(),
             'active_books'   => \App\Models\Book::where('is_active', true)->count(),
         ];
