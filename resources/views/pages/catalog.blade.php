@@ -29,12 +29,47 @@
         $books = \App\Models\Book::orderBy('week_number', 'desc')->get();
     @endphp
 
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         @forelse ($books as $book)
-            <x-ui.book-card :book="$book" />
+            <div class="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden flex flex-col justify-between">
+                <div>
+                    <!-- Cover Container -->
+                    <div class="relative h-64 bg-slate-900 overflow-hidden">
+                        <img src="{{ $book->cover_url }}" alt="{{ $book->title }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80"></div>
+                        <span class="absolute top-3 left-3 px-2.5 py-1 bg-amber-500 text-slate-950 text-[10px] font-black rounded-lg uppercase tracking-wider shadow">
+                            {{ $book->week_number }}-Hafta
+                        </span>
+                        <span class="absolute bottom-3 left-3 px-2.5 py-1 bg-white/20 backdrop-blur-md text-white text-[10px] font-semibold rounded-lg">
+                            {{ $book->genre }}
+                        </span>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="p-5 space-y-2">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {{ $book->title }}
+                        </h3>
+                        <p class="text-xs text-slate-400 font-medium">Muallif: <span class="text-slate-600 dark:text-slate-300 font-semibold">{{ $book->author }}</span></p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            {{ $book->description }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Footer Action -->
+                <div class="p-5 pt-0 border-t border-slate-100 dark:border-slate-800/60 mt-3 flex items-center justify-between">
+                    <span class="text-[11px] text-slate-400">{{ $book->chapters()->count() }} ta bob</span>
+                    <a href="{{ route('books.show', $book->slug) }}" 
+                       class="px-4 py-2 bg-indigo-50 hover:bg-indigo-600 dark:bg-indigo-950/60 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white dark:hover:text-white font-bold text-xs rounded-xl transition-all">
+                        Batafsil →
+                    </a>
+                </div>
+            </div>
         @empty
-            <div class="col-span-full py-20 text-center">
-                <p class="text-sm" style="color:#8B9BAD; font-family:'DM Mono',monospace;">Kitoblar mavjud emas</p>
+            <div class="col-span-4 text-center py-12 text-slate-400">
+                Hozircha kitoblar mavjud emas.
             </div>
         @endforelse
     </div>
