@@ -215,6 +215,23 @@
                     @endif
                 </a>
 
+                <!-- Shikoyatlar (Reports) -->
+                @php $pendingReportsCount = \App\Models\Report::pending()->count(); @endphp
+                <a href="{{ route('admin.reports.index') }}"
+                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
+                          {{ request()->routeIs('admin.reports.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+                                 {{ request()->routeIs('admin.reports.*') ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
+                        🚩
+                    </span>
+                    <span>Shikoyatlar</span>
+                    @if($pendingReportsCount > 0)
+                        <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
+                            {{ $pendingReportsCount }}
+                        </span>
+                    @endif
+                </a>
+
                 <!-- Kitoblar -->
                 <a href="{{ route('admin.books.index') }}"
                    class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group

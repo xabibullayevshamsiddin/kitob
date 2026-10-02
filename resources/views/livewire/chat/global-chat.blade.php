@@ -81,6 +81,25 @@
                                 </svg>
                             </button>
                         @endif
+
+                        @if(!$isMe)
+                            <a href="{{ route('contact', [
+                                'report'            => 1,
+                                'reported_user_id'  => $msg->user_id,
+                                'reported_name'     => $msg->user?->name ?? 'Foydalanuvchi',
+                                'reported_username' => $msg->user?->username ?? 'user',
+                                'source'            => 'Umumiy chat',
+                                'message_id'        => $msg->id,
+                                'message_text'      => Str::limit($msg->message, 300),
+                                'url'               => url()->current(),
+                                'time'              => $msg->created_at->timezone('Asia/Tashkent')->format('d.m.Y H:i'),
+                            ]) }}"
+                               title="Ushbu xabar yoki haqorat bo'yicha ma'muriyatga shikoyat qilish"
+                               class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-amber-500 rounded text-[11px] flex items-center gap-0.5">
+                                <span class="text-xs">🚩</span>
+                                <span class="text-[10px] font-semibold hidden sm:inline">Shikoyat</span>
+                            </a>
+                        @endif
                     </div>
                     @if($msg->audio_path)
                         <div class="p-3 rounded-2xl shadow-sm {{ $isMe ? 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-600/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/60 dark:border-slate-700/60' }}"

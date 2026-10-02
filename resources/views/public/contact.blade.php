@@ -140,13 +140,46 @@
                         </div>
                     @endif
 
+                    @php
+                        $isReport = request('report') == 1;
+                        $defaultSubject = $isReport ? "🚩 Qoidabuzarlik / Haqorat bo'yicha shikoyat (#" . request('reported_user_id') . ")" : old('subject');
+                        
+                        $defaultMessage = old('message');
+                        if ($isReport && empty($defaultMessage)) {
+                            $defaultMessage = "[QOIDABUZARLIK BO'YICHA SHIKOYAT / REPORT]\n"
+                                . "👤 Qoidabuzar foydalanuvchi: " . request('reported_name', 'Noma\'lum') . " (@" . request('reported_username', '') . ", ID: #" . request('reported_user_id', '') . ")\n"
+                                . "📍 Bo'lim: " . request('source', 'Chat') . "\n"
+                                . "🔗 Sahifa havolasi: " . request('url', '') . "\n"
+                                . "⏰ Xabar yozilgan vaqt: " . request('time', '') . "\n"
+                                . "💬 Qoidabuzar yozgan xabar matni:\n\"" . request('message_text', '') . "\"\n\n"
+                                . "⚠️ Shikoyat sababi: Chatda haqoratli/nojo'ya so'zlar ishlatildi. Iltimos, ushbu foydalanuvchiga nisbatan chora ko'rishingizni (ban berishingizni) so'rayman!";
+                        }
+                    @endphp
+
+                    @if($isReport)
+                        <div class="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 space-y-1.5 animate-fade-in">
+                            <div class="flex items-center gap-2 font-bold text-sm text-amber-400">
+                                <span>🚩</span>
+                                <span>Qoidabuzarlik bo'yicha tezkor shikoyat tayyorlandi!</span>
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Qoidabuzar foydalanuvchi ma'lumotlari va u yozgan nojo'ya xabar shaklga avtomatik to'ldirildi. Ma'lumotlarni ko'rib chiqing va ma'muriyatga jo'natish uchun pastdagi tugmani bosing.
+                            </p>
+                        </div>
+                    @endif
+
                     <form action="{{ route('contact.send') }}" method="POST" class="space-y-6">
                         @csrf
+
+                        <input type="hidden" name="is_report" value="{{ $isReport ? '1' : '0' }}">
+                        <input type="hidden" name="reported_user_id" value="{{ request('reported_user_id') }}">
+                        <input type="hidden" name="source" value="{{ request('source') }}">
+                        <input type="hidden" name="link" value="{{ request('url') }}">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_name') }}</label>
-                                <input type="text" name="name" value="{{ old('name') }}" required 
+                                <input type="text" name="name" value="{{ old('name', auth()->user()?->name) }}" required 
                                        placeholder="Ali Valiyev"
                                        class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
                                 @error('name') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
@@ -154,7 +187,7 @@
 
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_email') }}</label>
-                                <input type="email" name="email" value="{{ old('email') }}" required 
+                                <input type="email" name="email" value="{{ old('email', auth()->user()?->email) }}" required 
                                        placeholder="ali@misol.uz"
                                        class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
                                 @error('email') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
@@ -163,7 +196,7 @@
 
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_subject') }}</label>
-                            <input type="text" name="subject" value="{{ old('subject') }}" required 
+                            <input type="text" name="subject" value="{{ old('subject', $defaultSubject) }}" required 
                                    placeholder="{{ __('site.contact.form_subject_ph') }}"
                                    class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
                             @error('subject') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
@@ -171,9 +204,9 @@
 
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_message') }}</label>
-                            <textarea name="message" rows="5" required 
+                            <textarea name="message" rows="8" required 
                                       placeholder="{{ __('site.contact.form_message_ph') }}"
-                                      class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors resize-none">{{ old('message') }}</textarea>
+                                      class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors resize-none font-sans leading-relaxed">{{ $defaultMessage }}</textarea>
                             @error('message') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
 

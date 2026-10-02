@@ -45,6 +45,11 @@ class GlobalChat extends Component
             return redirect()->route('login');
         }
 
+        if (Auth::user()->isBanned()) {
+            $this->addError('message', 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik'));
+            return;
+        }
+
         $this->validate();
 
         $chatMessage = GlobalChatMessage::create([
@@ -58,8 +63,6 @@ class GlobalChat extends Component
         try {
             broadcast(new NewGlobalChatMessage($chatMessage))->toOthers();
         } catch (\Throwable $e) {
-            // Agar Pusher kalitlari hali to'ldirilmagan bo'lsa yoki ulanishda xatolik bo'lsa
-            // xabar DB ga yozilgan holda qoladi, Livewire odatdagidek ishlayveradi
             report($e);
         }
 
@@ -71,6 +74,11 @@ class GlobalChat extends Component
     public function sendVoiceMessage(string $path, int $duration = 0): void
     {
         if (!Auth::check()) {
+            return;
+        }
+
+        if (Auth::user()->isBanned()) {
+            $this->addError('message', 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik'));
             return;
         }
 

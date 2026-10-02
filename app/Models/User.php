@@ -33,6 +33,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'total_points',
         'coin_balance',
         'bio',
+        'is_banned',
+        'banned_until',
+        'ban_reason',
+        'banned_at',
     ];
 
     protected $hidden = [
@@ -44,6 +48,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'total_points'      => 'integer',
         'coin_balance'      => 'integer',
+        'is_banned'         => 'boolean',
+        'banned_until'      => 'datetime',
+        'banned_at'         => 'datetime',
     ];
 
     protected $appends = [
@@ -338,5 +345,95 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasCompletedOnboarding(): bool
     {
         return $this->profile?->reading_place !== null;
+    }
+
+    // -------------------------------------------------------------------------
+    // Ban System
+    // -------------------------------------------------------------------------
+
+    public function isBanned(): bool
+    {
+        if (!$this->is_banned) {
+            return false;
+        }
+
+        // If time-limited ban and duration has passed, auto-unban
+        if ($this->banned_until && $this->banned_until->isPast()) {
+            $this->update([
+                'is_banned'    => false,
+                'banned_until' => null,
+                'ban_reason'   => null,
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    public function ban(string $duration, ?string $reason = null): void
+    {
+        $until = match ($duration) {
+            '1_hour'  => now()->addHour(),
+            '1_day'   => now()->addDay(),
+            '1_week'  => now()->addWeek(),
+            '1_month' => now()->addMonth(),
+            default   => null, // permanent
+        };
+
+        $this->update([
+            'is_banned'    => true,
+            'banned_until' => $until,
+            'ban_reason'   => $reason ? trim($reason) : 'Qoidabuzarlik / Nojo\'ya so\'zlar ishlatilganligi sababli',
+            'banned_at'    => now(),
+        ]);
+    }
+
+    public function unban(): void
+    {
+        $this->update([
+            'is_banned'    => false,
+            'banned_until' => null,
+            'ban_reason'   => null,
+        ]);
+    }
+
+    public function getBanRemainingAttribute(): string
+    {
+        if (!$this->is_banned) {
+            return '';
+        }
+
+        if (!$this->banned_until) {
+            return 'Doimiy (butun umrga)';
+        }
+
+        if ($this->banned_until->isPast()) {
+            return 'Muddati tugagan';
+        }
+
+        $now = now();
+        $diffHours = (int) $now->diffInHours($this->banned_until, false);
+        $diffDays  = (int) $now->diffInDays($this->banned_until, false);
+
+        if ($diffDays > 0) {
+            return $diffDays . ' kun qoldi';
+        }
+
+        if ($diffHours > 0) {
+            return $diffHours . ' soat qoldi';
+        }
+
+        $diffMinutes = max(1, (int) $now->diffInMinutes($this->banned_until, false));
+        return $diffMinutes . ' daqiqa qoldi';
+    }
+
+    public function reportsReceived()
+    {
+        return $this->hasMany(Report::class, 'reported_user_id');
+    }
+
+    public function reportsSent()
+    {
+        return $this->hasMany(Report::class, 'reporter_id');
     }
 }

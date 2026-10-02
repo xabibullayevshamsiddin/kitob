@@ -76,6 +76,84 @@
                 </div>
             </div>
 
+            {{-- Ban Management Card --}}
+            <div class="mt-4 bg-slate-900 border {{ $user->isBanned() ? 'border-amber-500/40 bg-amber-950/10' : 'border-slate-800' }} rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-xs font-semibold {{ $user->isBanned() ? 'text-amber-400' : 'text-slate-400' }} uppercase tracking-wider flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                        Bloklash holati
+                    </p>
+                    @if($user->isBanned())
+                        <span class="px-2 py-0.5 text-[11px] font-bold rounded-md bg-red-500/20 text-red-400 border border-red-500/30">
+                            Bloklangan
+                        </span>
+                    @else
+                        <span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Faol
+                        </span>
+                    @endif
+                </div>
+
+                @if($user->isBanned())
+                    <div class="space-y-2 text-xs mb-4">
+                        <div class="bg-slate-800/80 rounded-xl p-3 border border-slate-700/50">
+                            <p class="text-slate-400 text-[11px]">Qolgan muddat:</p>
+                            <p class="text-amber-300 font-bold mt-0.5 text-sm">{{ $user->ban_remaining }}</p>
+                            @if($user->ban_reason)
+                                <p class="text-slate-400 text-[11px] mt-2">Sabab:</p>
+                                <p class="text-slate-200 italic mt-0.5">"{{ $user->ban_reason }}"</p>
+                            @endif
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('admin.users.unban', $user) }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 rounded-xl text-xs font-semibold transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                            </svg>
+                            Banni bekor qilish
+                        </button>
+                    </form>
+                @elseif($user->hasRole('admin'))
+                    <p class="text-xs text-slate-500 py-1">Admin foydalanuvchilarni bloklash taqiqlangan.</p>
+                @else
+                    <div x-data="{ open: false }">
+                        <button type="button" @click="open = !open"
+                                class="w-full flex items-center justify-center gap-2 py-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 rounded-xl text-xs font-semibold transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span x-text="open ? 'Bekor qilish' : 'Foydalanuvchini bloklash (Ban)'"></span>
+                        </button>
+
+                        <div x-show="open" x-cloak class="mt-3 space-y-3 pt-3 border-t border-slate-800">
+                            <form method="POST" action="{{ route('admin.users.ban', $user) }}" class="space-y-3">
+                                @csrf
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Muddat</label>
+                                    <select name="duration" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                                        <option value="1_hour">1 soat</option>
+                                        <option value="1_day" selected>1 kun</option>
+                                        <option value="1_week">1 hafta</option>
+                                        <option value="1_month">1 oy</option>
+                                        <option value="permanent">Doimiy (butun umrga)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">Sabab</label>
+                                    <textarea name="reason" rows="2" placeholder="Masalan: qoidabuzarlik yoki haqorat..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"></textarea>
+                                </div>
+                                <button type="submit" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-amber-900/40">
+                                    Bloklashni tasdiqlash
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
             {{-- Danger zone --}}
             <div class="mt-4 bg-slate-900 border border-red-500/20 rounded-2xl p-4">
                 <p class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-3">Xavfli zona</p>

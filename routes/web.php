@@ -71,9 +71,23 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
     $req->validate([
         'name'    => 'required|string|max:100',
         'email'   => 'required|email',
-        'message' => 'required|string|max:2000',
+        'message' => 'required|string|max:4000',
     ]);
-    // TODO: mail yoki DB ga yozish
+
+    if ($req->input('is_report') == '1' || $req->filled('reported_user_id')) {
+        \App\Models\Report::create([
+            'reporter_id'      => auth()->id(),
+            'reported_user_id' => $req->input('reported_user_id') ?: null,
+            'source'           => $req->input('source', 'Umumiy chat'),
+            'message_content'  => $req->input('message'),
+            'link'             => $req->input('link'),
+            'reason'           => $req->input('subject', 'Haqorat / Nojo\'ya xatti-harakat'),
+            'status'           => 'pending',
+        ]);
+
+        return redirect()->route('contact')->with('success', '🚩 Qoidabuzarlik bo\'yicha shikoyatingiz ma\'muriyatga yetkazildi! Moderatorlar tez orada tekshirib, tegishli chora (ban) ko\'rishadi.');
+    }
+
     return back()->with('success', 'Xabaringiz qabul qilindi! Tez orada javob beramiz.');
 })->name('contact.send');
 
@@ -441,9 +455,65 @@ Route::prefix('admin')
             'total_teachers' => \App\Models\User::where('role', 'teacher')->count(),
             'total_books'    => \App\Models\Book::count(),
             'active_books'   => \App\Models\Book::where('is_active', true)->count(),
+            // Real dinamika (bu oy vs o'tgan oy)
+            'new_users_this_month' => \App\Models\User::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
+            'new_users_prev_month' => \App\Models\User::whereMonth('created_at', now()->subMonth()->month)->whereYear('created_at', now()->subMonth()->year)->count(),
+            'total_reading_minutes' => (int) (\App\Models\DailyActivity::sum('minutes_read')),
+            'total_quizzes'   => \App\Models\Quiz::count(),
+            'total_groups'    => \App\Models\Group::count(),
+            'total_points'    => (int) \App\Models\User::sum('total_points'),
+            'online_today'    => \App\Models\DailyActivity::whereDate('activity_date', today())->count(),
         ];
+
+        // Foizli o'sish (0 ga bo'linishdan himoya)
+        $stats['user_growth_pct'] = $stats['new_users_prev_month'] > 0
+            ? round((($stats['new_users_this_month'] - $stats['new_users_prev_month']) / $stats['new_users_prev_month']) * 100)
+            : ($stats['new_users_this_month'] > 0 ? 100 : 0);
+
         $recentUsers = \App\Models\User::with('roles')->latest()->take(5)->get();
-        return view('admin.dashboard', compact('stats', 'recentUsers'));
+
+        // ── GRAFIK MA'LUMOTLARI ──
+        // 1. 30 kunlik ro'yxatdan o'tish trendi
+        $signupsRaw = \App\Models\User::selectRaw('DATE(created_at) as day, COUNT(*) as cnt')
+            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
+            ->groupBy('day')->pluck('cnt', 'day');
+        $signupLabels = [];
+        $signupData = [];
+        $cumulative = max(0, \App\Models\User::where('created_at', '<', now()->subDays(29)->startOfDay())->count());
+        foreach (range(29, 0) as $i) {
+            $day = now()->subDays($i);
+            $key = $day->toDateString();
+            $signupLabels[] = $day->format('d.m');
+            $cumulative += (int) ($signupsRaw[$key] ?? 0);
+            $signupData[] = $cumulative;
+        }
+
+        // 2. 14 kunlik o'qilgan daqiqalar (DailyActivity)
+        $minutesRaw = \App\Models\DailyActivity::selectRaw('DATE(activity_date) as day, SUM(minutes_read) as m')
+            ->where('activity_date', '>=', today()->subDays(13))
+            ->groupBy('day')->pluck('m', 'day');
+        $minutesLabels = [];
+        $minutesData = [];
+        foreach (range(13, 0) as $i) {
+            $day = today()->subDays($i);
+            $minutesLabels[] = $day->format('d.m');
+            $minutesData[] = (int) ($minutesRaw[$day->toDateString()] ?? 0);
+        }
+
+        // 3. Kontent formatlari taqsimoti (kitob + media)
+        $formatData = [
+            \App\Models\BookChapter::count(),
+            \App\Models\BookAudio::count(),
+            \App\Models\BookVideo::count(),
+            \App\Models\Quiz::count(),
+        ];
+
+        return view('admin.dashboard', compact(
+            'stats', 'recentUsers',
+            'signupLabels', 'signupData',
+            'minutesLabels', 'minutesData',
+            'formatData'
+        ));
     })->name('dashboard');
 
     // Foydalanuvchilar
@@ -477,6 +547,44 @@ Route::prefix('admin')
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'Foydalanuvchi o\'chirildi!');
     })->name('users.destroy');
+
+    // Foydalanuvchini ban qilish
+    Route::post('/users/{user}/ban', function (\Illuminate\Http\Request $req, \App\Models\User $user) {
+        $req->validate([
+            'duration' => 'required|in:1_hour,1_day,1_week,1_month,permanent',
+            'reason'   => 'nullable|string|max:500',
+        ]);
+
+        if ($user->hasRole('admin') || $user->role === 'admin') {
+            return back()->with('error', 'Administratorni bloklab bo\'lmaydi!');
+        }
+
+        $user->ban($req->duration, $req->reason);
+
+        return back()->with('success', "'{$user->name}' muvaffaqiyatli bloklandi (" . $user->ban_remaining . ")! 🚫");
+    })->name('users.ban');
+
+    // Foydalanuvchini bandan chiqarish
+    Route::post('/users/{user}/unban', function (\App\Models\User $user) {
+        $user->unban();
+        return back()->with('success', "'{$user->name}' blokdan chiqarildi! ✅");
+    })->name('users.unban');
+
+    // Shikoyatlar (Reports) boshqaruvi
+    Route::get('/reports', function () {
+        $reports = \App\Models\Report::with(['reporter', 'reportedUser'])->latest()->paginate(20);
+        return view('admin.reports.index', compact('reports'));
+    })->name('reports.index');
+
+    Route::post('/reports/{report}/resolve', function (\App\Models\Report $report) {
+        $report->update(['status' => 'resolved']);
+        return back()->with('success', 'Shikoyat ko\'rib chiqildi deb belgilandi. ✅');
+    })->name('reports.resolve');
+
+    Route::delete('/reports/{report}', function (\App\Models\Report $report) {
+        $report->delete();
+        return back()->with('success', 'Shikoyat o\'chirildi.');
+    })->name('reports.destroy');
 
     // Kitoblar
     Route::get('/books', function () {

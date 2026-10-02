@@ -314,56 +314,98 @@
     </div>
 </div>
 
-{{-- Chart Placeholder --}}
-<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
-        <div>
-            <h2 class="text-sm font-semibold text-white">O'sish grafigi</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Foydalanuvchilar va kitoblar dinamikasi</p>
+{{-- GRAFIKLAR — real ma'lumotlar bilan (Chart.js) --}}
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+
+    {{-- 1. Foydalanuvchilar o'sishi (30 kun, kumulyativ chiziq) --}}
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+            <div>
+                <h2 class="text-sm font-semibold text-white">📈 Foydalanuvchilar o'sishi</h2>
+                <p class="text-xs text-slate-500 mt-0.5">So'nggi 30 kun, jami hisobda</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="text-xs font-medium {{ $stats['user_growth_pct'] >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10' }} px-2 py-1 rounded-lg">
+                    {{ $stats['user_growth_pct'] >= 0 ? '+' : '' }}{{ $stats['user_growth_pct'] }}% oyiga
+                </span>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-lg hover:bg-indigo-500/20 transition-colors">7 kun</button>
-            <button class="text-xs text-slate-500 hover:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">30 kun</button>
-            <button class="text-xs text-slate-500 hover:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">1 yil</button>
+        <div class="p-5">
+            <div class="h-64"><canvas id="chart-signups"></canvas></div>
         </div>
     </div>
 
-    <div class="relative h-56 flex items-center justify-center overflow-hidden">
-        <!-- Fake chart grid lines -->
-        <div class="absolute inset-0 p-5">
-            <div class="h-full relative">
-                @foreach(range(1,4) as $i)
-                    <div class="absolute left-0 right-0 border-t border-slate-800/80" style="bottom: {{ ($i * 25) }}%"></div>
-                @endforeach
-                <!-- Fake bars -->
-                <div class="absolute inset-x-5 bottom-0 flex items-end gap-2 h-full">
-                    @foreach([35, 55, 42, 78, 62, 88, 71] as $height)
-                        <div class="flex-1 relative rounded-t-lg overflow-hidden" style="height: {{ $height }}%;">
-                            <div class="absolute inset-0 bg-gradient-to-t from-indigo-600/70 to-violet-600/30 rounded-t-lg"></div>
-                        </div>
-                    @endforeach
-                </div>
+    {{-- 2. O'qilgan daqiqalar (14 kun, ustunli) --}}
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+            <div>
+                <h2 class="text-sm font-semibold text-white">📖 O'qilgan daqiqalar</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Kunlik faol mutolaa, so'nggi 14 kun</p>
             </div>
+            <span class="text-xs font-medium text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-lg">
+                Jami: {{ number_format($stats['total_reading_minutes']) }} daqiqa
+            </span>
         </div>
-
-        <!-- Coming soon overlay -->
-        <div class="relative z-10 text-center">
-            <div class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl backdrop-blur-sm shadow-xl">
-                <span class="text-xl">📊</span>
-                <div class="text-left">
-                    <p class="text-sm font-semibold text-white">Grafik tez orada</p>
-                    <p class="text-xs text-slate-400">Chart.js integratsiyasi amalga oshirilmoqda</p>
-                </div>
-                <span class="ml-2 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">Beta</span>
-            </div>
+        <div class="p-5">
+            <div class="h-64"><canvas id="chart-minutes"></canvas></div>
         </div>
     </div>
 </div>
 
+{{-- Pastki qator: format taqsimoti + qisqacha ko'rsatkichlar --}}
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+
+    {{-- 3. Kontent formatlari (donut) --}}
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-800">
+            <h2 class="text-sm font-semibold text-white">🗂 Kontent taqsimoti</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Formatlar bo'yicha materiallar</p>
+        </div>
+        <div class="p-5">
+            <div class="h-56"><canvas id="chart-formats"></canvas></div>
+        </div>
+    </div>
+
+    {{-- 4. Qisqacha ko'rsatkichlar --}}
+    <div class="xl:col-span-2 grid grid-cols-2 gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">Bugun kirgan foydalanuvchilar</p>
+            <p class="text-3xl font-bold text-white">{{ number_format($stats['online_today']) }}</p>
+            <p class="text-xs text-slate-500 mt-1">Bugungi faollik (DailyActivity)</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">Jami to'plangan ballar</p>
+            <p class="text-3xl font-bold text-amber-400">{{ number_format($stats['total_points']) }}</p>
+            <p class="text-xs text-slate-500 mt-1">Barcha foydalanuvchilar bo'yicha</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">Guruhlar</p>
+            <p class="text-3xl font-bold text-emerald-400">{{ number_format($stats['total_groups']) }}</p>
+            <p class="text-xs text-slate-500 mt-1">Faol kitobxon jamoalari</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">Testlar</p>
+            <p class="text-3xl font-bold text-purple-400">{{ number_format($stats['total_quizzes']) }}</p>
+            <p class="text-xs text-slate-500 mt-1">Yaratilgan quiz'lar soni</p>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+// ── Grafik ma'lumotlari (route'dan uzatildi) ──
+const signupLabels = @json($signupLabels);
+const signupData   = @json($signupData);
+const minutesLabels = @json($minutesLabels);
+const minutesData   = @json($minutesData);
+const formatData    = @json($formatData);
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(148, 163, 184, 0.08)';
+Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
+
 function counterCard(target) {
     return {
         displayValue: '0',
@@ -388,5 +430,124 @@ function counterCard(target) {
         }
     }
 }
+
+// ── Grafiklarni ishga tushirish ──
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Foydalanuvchilar o'sishi (kumulyativ chiziq, gradient bilan)
+    const signupsCtx = document.getElementById('chart-signups');
+    if (signupsCtx) {
+        const grad = signupsCtx.getContext('2d').createLinearGradient(0, 0, 0, 260);
+        grad.addColorStop(0, 'rgba(99, 102, 241, 0.35)');
+        grad.addColorStop(1, 'rgba(99, 102, 241, 0)');
+        new Chart(signupsCtx, {
+            type: 'line',
+            data: {
+                labels: signupLabels,
+                datasets: [{
+                    label: 'Jami foydalanuvchilar',
+                    data: signupData,
+                    borderColor: '#818cf8',
+                    backgroundColor: grad,
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 2.5,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#818cf8',
+                    pointHoverBorderColor: '#fff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 10,
+                        callbacks: { label: (c) => ' ' + c.parsed.y.toLocaleString('uz-UZ') + ' foydalanuvchi' }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+                    y: { beginAtZero: true, ticks: { maxTicksLimit: 6, callback: (v) => v >= 1000 ? (v/1000) + 'k' : v } }
+                }
+            }
+        });
+    }
+
+    // 2. O'qilgan daqiqalar (kunlik ustunli)
+    const minutesCtx = document.getElementById('chart-minutes');
+    if (minutesCtx) {
+        new Chart(minutesCtx, {
+            type: 'bar',
+            data: {
+                labels: minutesLabels,
+                datasets: [{
+                    label: 'Daqiqalar',
+                    data: minutesData,
+                    backgroundColor: 'rgba(139, 92, 246, 0.55)',
+                    hoverBackgroundColor: 'rgba(139, 92, 246, 0.85)',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    maxBarThickness: 28,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 10,
+                        callbacks: { label: (c) => ' ' + c.parsed.y.toLocaleString('uz-UZ') + ' daqiqa' }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+                    y: { beginAtZero: true, ticks: { maxTicksLimit: 6 } }
+                }
+            }
+        });
+    }
+
+    // 3. Kontent formatlari (donut)
+    const formatsCtx = document.getElementById('chart-formats');
+    if (formatsCtx) {
+        new Chart(formatsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Boblar', 'Audiolaringlar', 'Videolar', 'Testlar'],
+                datasets: [{
+                    data: formatData,
+                    backgroundColor: [
+                        'rgba(99, 102, 241, 0.75)',
+                        'rgba(16, 185, 129, 0.75)',
+                        'rgba(245, 158, 11, 0.75)',
+                        'rgba(236, 72, 153, 0.75)',
+                    ],
+                    borderColor: '#0f172a',
+                    borderWidth: 3,
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, boxWidth: 8 } },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 10,
+                        callbacks: { label: (c) => ' ' + c.label + ': ' + c.parsed.toLocaleString('uz-UZ') }
+                    }
+                }
+            }
+        });
+    }
+});
 </script>
 @endpush

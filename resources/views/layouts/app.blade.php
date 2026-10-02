@@ -174,8 +174,36 @@
     <!-- ── Universal Header ── -->
     <x-nav.main-header />
 
-    <!-- ── Flash Messages ── -->
+    <!-- ── Flash Messages & Ban Alert ── -->
     <div class="max-w-7xl mx-auto px-6">
+        @if (auth()->check() && auth()->user()->isBanned())
+            <div class="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-red-950/40 border border-red-500/40 text-red-200 rounded-2xl shadow-lg shadow-red-950/30">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center flex-shrink-0 text-xl font-bold">
+                        ⚠️
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-red-300">Sizning profilingiz cheklangan (Bloklangan)</h4>
+                        <p class="text-xs text-red-200/80 mt-0.5">
+                            Qoidabuzarlik tufayli chat va jamoaviy bo'limlarda xabar yuborish huquqingiz cheklangan.
+                        </p>
+                        <div class="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                            <span class="px-2.5 py-0.5 rounded-md bg-red-900/60 border border-red-700/50 font-mono text-red-200 font-semibold">
+                                Qolgan muddat: {{ auth()->user()->ban_remaining }}
+                            </span>
+                            @if(auth()->user()->ban_reason)
+                                <span class="text-red-300/90 italic">
+                                    Sabab: "{{ auth()->user()->ban_reason }}"
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('contact') }}" class="px-3.5 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs font-semibold text-red-200 transition-colors flex-shrink-0 self-end sm:self-center">
+                    Bog'lanish
+                </a>
+            </div>
+        @endif
         @if (session()->has('success'))
             <div class="mt-6 flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 rounded-2xl">
                 <div class="flex items-center gap-3">

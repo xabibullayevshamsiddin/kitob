@@ -71,7 +71,19 @@
 </div>
 
 {{-- Table --}}
-<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm"
+     x-data="{
+         banModalOpen: false,
+         targetUserId: null,
+         targetUserName: '',
+         banActionUrl: '',
+         openBan(userId, userName) {
+             this.targetUserId = userId;
+             this.targetUserName = userName;
+             this.banActionUrl = '{{ url('/admin/users') }}/' + userId + '/ban';
+             this.banModalOpen = true;
+         }
+     }">
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead>
@@ -80,6 +92,7 @@
                     <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Foydalanuvchi</th>
                     <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Email</th>
                     <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Rol</th>
+                    <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Holat</th>
                     <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Ball</th>
                     <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Qo'shilgan</th>
                     <th class="px-5 py-3.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Amallar</th>
@@ -97,6 +110,7 @@
                         $rc = $roleConfig[$role] ?? ['label' => $role, 'class' => 'bg-slate-500/15 text-slate-400 border-slate-500/20'];
                         $avatarColors = ['from-indigo-500 to-violet-600', 'from-rose-500 to-pink-600', 'from-amber-500 to-orange-600', 'from-teal-500 to-cyan-600', 'from-emerald-500 to-green-600'];
                         $colorIndex = crc32($user->name) % count($avatarColors);
+                        $isBanned = $user->isBanned();
                     @endphp
                     <tr class="hover:bg-slate-800/30 transition-colors group">
                         <td class="px-5 py-4 text-sm text-slate-600 font-mono">
@@ -122,6 +136,19 @@
                             </span>
                         </td>
                         <td class="px-5 py-4">
+                            @if($isBanned)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                                      title="{{ $user->ban_reason ? 'Sabab: ' . $user->ban_reason : '' }}">
+                                    <span>🚫 Bloklangan</span>
+                                    <span class="text-[10px] font-mono opacity-80">({{ $user->ban_remaining }})</span>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                    🟢 Faol
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-4">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-amber-400">⭐</span>
                                 <span class="text-sm font-medium text-slate-300">{{ $user->points ?? 0 }}</span>
@@ -132,7 +159,25 @@
                             <p class="text-xs text-slate-600">{{ $user->created_at->diffForHumans() }}</p>
                         </td>
                         <td class="px-5 py-4">
-                            <div class="flex items-center justify-end gap-2">
+                            <div class="flex items-center justify-end gap-2 flex-wrap">
+                                {{-- Ban / Unban --}}
+                                @if(!$user->hasRole('admin') && $user->role !== 'admin')
+                                    @if($isBanned)
+                                        <form method="POST" action="{{ route('admin.users.unban', $user) }}" class="inline">
+                                            @csrf
+                                            <button type="submit" class="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-xs font-semibold transition-all">
+                                                ✅ Banni yechish
+                                            </button>
+                                        </form>
+                                    @else
+                                        <button type="button"
+                                                @click="openBan({{ $user->id }}, '{{ addslashes($user->name) }}')"
+                                                class="flex items-center gap-1 px-2.5 py-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 rounded-lg text-xs font-semibold transition-all">
+                                            🚫 Ban
+                                        </button>
+                                    @endif
+                                @endif
+
                                 {{-- Edit --}}
                                 <a href="{{ route('admin.users.edit', $user) }}"
                                    class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/40 rounded-lg text-xs font-medium transition-all">
@@ -189,6 +234,97 @@
             {{ $users->links() }}
         </div>
     @endif
+
+    {{-- Interactive Ban Modal --}}
+    <div x-show="banModalOpen" x-cloak
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+         @keydown.escape.window="banModalOpen = false">
+        <div class="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl text-left space-y-5"
+             @click.away="banModalOpen = false">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center text-xl shrink-0">
+                        🚫
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Foydalanuvchini bloklash (Ban)</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Qoidabuzar: <span class="text-amber-400 font-bold" x-text="targetUserName"></span>
+                        </p>
+                    </div>
+                </div>
+                <button type="button" @click="banModalOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg">✕</button>
+            </div>
+
+            <form :action="banActionUrl" method="POST" class="space-y-5">
+                @csrf
+
+                {{-- Muddat tanlash --}}
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Bloklash muddatini tanlang:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/60 cursor-pointer">
+                            <input type="radio" name="duration" value="1_hour" class="text-rose-600 focus:ring-rose-500">
+                            <div>
+                                <p class="text-xs font-bold text-white">1 soat</p>
+                                <p class="text-[10px] text-slate-500">Vaqtincha ogohlantirish</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/60 cursor-pointer">
+                            <input type="radio" name="duration" value="1_day" checked class="text-rose-600 focus:ring-rose-500">
+                            <div>
+                                <p class="text-xs font-bold text-white">1 kun</p>
+                                <p class="text-[10px] text-slate-500">24 soatga cheklash</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/60 cursor-pointer">
+                            <input type="radio" name="duration" value="1_week" class="text-rose-600 focus:ring-rose-500">
+                            <div>
+                                <p class="text-xs font-bold text-white">1 hafta</p>
+                                <p class="text-[10px] text-slate-500">7 kunlik cheklov</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-950/60 cursor-pointer">
+                            <input type="radio" name="duration" value="1_month" class="text-rose-600 focus:ring-rose-500">
+                            <div>
+                                <p class="text-xs font-bold text-white">1 oy</p>
+                                <p class="text-[10px] text-slate-500">30 kunlik cheklov</p>
+                            </div>
+                        </label>
+
+                        <label class="sm:col-span-2 flex items-center gap-3 p-3 rounded-xl border border-rose-500/30 hover:border-rose-500 bg-rose-500/10 cursor-pointer">
+                            <input type="radio" name="duration" value="permanent" class="text-rose-600 focus:ring-rose-500">
+                            <div>
+                                <p class="text-xs font-black text-rose-400">Butun umrga (Doimiy ban)</p>
+                                <p class="text-[10px] text-slate-400">Foydalanuvchi butunlay bloklanadi</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- Sabab --}}
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300">Ban berish sababi (ixtiyoriy):</label>
+                    <input type="text" name="reason" placeholder="Masalan: Chatda haqoratli so'zlar / qoidabuzarlik"
+                           class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" @click="banModalOpen = false"
+                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors">
+                        Bekor qilish
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-rose-600/30 transition-all active:scale-95">
+                        🚫 Bloklashni tasdiqlash
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 @endsection

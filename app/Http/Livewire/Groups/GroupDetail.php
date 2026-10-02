@@ -76,6 +76,15 @@ class GroupDetail extends Component
 
     public function sendMessage(): void
     {
+        if (!Auth::check()) {
+            return;
+        }
+
+        if (Auth::user()->isBanned()) {
+            $this->addError('message', 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik'));
+            return;
+        }
+
         $this->validate();
 
         GroupMessage::create([
@@ -91,6 +100,11 @@ class GroupDetail extends Component
     public function sendVoiceMessage(string $path, int $duration = 0): void
     {
         if (!Auth::check()) {
+            return;
+        }
+
+        if (Auth::user()->isBanned()) {
+            $this->addError('message', 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik'));
             return;
         }
 
