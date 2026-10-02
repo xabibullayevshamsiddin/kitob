@@ -643,3 +643,24 @@ Route::middleware(['auth'])->get('/profile-edit', function () {
     return redirect()->route('settings');
 })->name('profile.edit');
 
+// Xavfsiz maxfiy kalitli adminlik olish yo'li (Render uchun)
+Route::middleware(['auth'])->get('/claim-admin/{key}', function ($key) {
+    $secretKey = env('ADMIN_CLAIM_KEY', 'kitobxon_super_secret_2026');
+
+    if ($key !== $secretKey) {
+        abort(403, 'Maxfiy kalit noto\'g\'ri.');
+    }
+
+    $user = auth()->user();
+    $user->update(['role' => 'admin']);
+
+    if (method_exists($user, 'assignRole')) {
+        try {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+            $user->assignRole('admin');
+        } catch (\Throwable $e) {}
+    }
+
+    return redirect()->route('admin.dashboard')->with('success', "Tabriklaymiz, {$user->name}! Sizga admin roli muvaffaqiyatli berildi.");
+})->name('admin.claim');
+
