@@ -161,7 +161,7 @@
                         <td class="px-5 py-4">
                             <div class="flex items-center justify-end gap-2 flex-wrap">
                                 {{-- Ban / Unban --}}
-                                @if(!$user->hasRole('admin') && $user->role !== 'admin')
+                                @if($user->id !== auth()->id())
                                     @if($isBanned)
                                         <form method="POST" action="{{ route('admin.users.unban', $user) }}" class="inline">
                                             @csrf
@@ -176,6 +176,10 @@
                                             🚫 Ban
                                         </button>
                                     @endif
+                                @else
+                                    <span class="text-[11px] font-mono text-slate-500 italic px-2 py-1 bg-slate-800/40 rounded-lg border border-slate-700/30">
+                                        (Siz)
+                                    </span>
                                 @endif
 
                                 {{-- Edit --}}

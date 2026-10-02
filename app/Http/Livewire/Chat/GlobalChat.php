@@ -129,6 +129,53 @@ class GlobalChat extends Component
         $message->update(['is_deleted' => true]);
     }
 
+    public function banUser(int $userId, string $duration = '1_day', ?string $reason = null): void
+    {
+        if (!Auth::check()) {
+            return;
+        }
+
+        $admin = Auth::user();
+        $isAdmin = (method_exists($admin, 'hasRole') && $admin->hasRole('admin')) || ($admin->role === 'admin');
+        if (!$isAdmin) {
+            return;
+        }
+
+        if ($userId === $admin->id) {
+            return;
+        }
+
+        $targetUser = \App\Models\User::find($userId);
+        if (!$targetUser) {
+            return;
+        }
+
+        $validDurations = ['1_hour', '1_day', '1_week', '1_month', 'permanent'];
+        if (!in_array($duration, $validDurations)) {
+            $duration = '1_day';
+        }
+
+        $targetUser->ban($duration, $reason ?: 'Chatda nojo\'ya harakat / qoidabuzarlik');
+    }
+
+    public function unbanUser(int $userId): void
+    {
+        if (!Auth::check()) {
+            return;
+        }
+
+        $admin = Auth::user();
+        $isAdmin = (method_exists($admin, 'hasRole') && $admin->hasRole('admin')) || ($admin->role === 'admin');
+        if (!$isAdmin) {
+            return;
+        }
+
+        $targetUser = \App\Models\User::find($userId);
+        if ($targetUser) {
+            $targetUser->unban();
+        }
+    }
+
     public function render()
     {
         $messages = GlobalChatMessage::query()

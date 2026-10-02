@@ -224,7 +224,7 @@
                                  {{ request()->routeIs('admin.reports.*') ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
                         🚩
                     </span>
-                    <span>Shikoyatlar</span>
+                    <span>Aloqa & Shikoyatlar</span>
                     @if($pendingReportsCount > 0)
                         <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
                             {{ $pendingReportsCount }}

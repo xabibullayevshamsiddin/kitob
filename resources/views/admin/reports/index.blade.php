@@ -148,7 +148,7 @@
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end gap-2 flex-wrap">
                                 {{-- 1-Click Ban Button --}}
-                                @if($offender && !$offender->hasRole('admin'))
+                                @if($offender && $offender->id !== auth()->id())
                                     @if(!$offender->isBanned())
                                         <button type="button"
                                                 @click="openBan({{ $offender->id }}, '{{ addslashes($offender->name) }}')"

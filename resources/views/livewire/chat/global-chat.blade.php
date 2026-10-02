@@ -3,6 +3,11 @@
      x-data="{
          deleteModalOpen: false,
          targetMessageId: null,
+         banModalOpen: false,
+         banUserId: null,
+         banUserName: '',
+         banDuration: '1_day',
+         banReason: '',
          count: 0,
          confirmDelete(id) {
              this.targetMessageId = id;
@@ -13,6 +18,20 @@
                  $wire.deleteMessage(this.targetMessageId);
                  this.deleteModalOpen = false;
                  this.targetMessageId = null;
+             }
+         },
+         openBan(id, name) {
+             this.banUserId = id;
+             this.banUserName = name;
+             this.banDuration = '1_day';
+             this.banReason = '';
+             this.banModalOpen = true;
+         },
+         executeBan() {
+             if (this.banUserId) {
+                 $wire.banUser(this.banUserId, this.banDuration, this.banReason);
+                 this.banModalOpen = false;
+                 this.banUserId = null;
              }
          }
      }"
@@ -80,6 +99,26 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </button>
+                        @endif
+
+                        {{-- Admin Ban Button --}}
+                        @if($isAdmin && !$isMe && $msg->user)
+                            @if($msg->user->isBanned())
+                                <button type="button"
+                                    wire:click="unbanUser({{ $msg->user_id }})"
+                                    title="Foydalanuvchi bloklangan ({{ $msg->user->ban_remaining }}). Banni yechish uchun bosing."
+                                    class="p-0.5 text-rose-400 hover:text-emerald-400 rounded text-[10px] flex items-center gap-1 font-mono font-bold bg-rose-500/10 px-1.5 py-0.5 border border-rose-500/20 transition-all">
+                                    <span>🚫 Bloklangan</span>
+                                    <span class="text-emerald-400 hover:underline">Yechish</span>
+                                </button>
+                            @else
+                                <button type="button"
+                                    @click="openBan({{ $msg->user_id }}, '{{ addslashes($msg->user->name) }}')"
+                                    title="Foydalanuvchini bloklash (Ban berish)"
+                                    class="p-0.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 rounded text-[10px] flex items-center gap-0.5 font-bold transition-all px-1.5 py-0.5 bg-rose-500/10 border border-rose-500/20">
+                                    <span>🚫 Ban</span>
+                                </button>
+                            @endif
                         @endif
 
                         @if(!$isMe)
@@ -427,6 +466,103 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ban Modal (Chat ichida admin uchun tezkor ban berish oynasi) -->
+    <div x-show="banModalOpen"
+         x-cloak
+         @keydown.escape.window="banModalOpen = false"
+         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div @click.away="banModalOpen = false"
+             class="bg-white dark:bg-[#0e1422] border border-slate-200/80 dark:border-white/[0.08] rounded-3xl shadow-2xl p-6 sm:p-7 max-w-md w-full relative overflow-hidden text-left"
+             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+
+            <!-- Amber/Red glow -->
+            <div class="absolute -top-10 -left-10 w-28 h-28 bg-rose-500/15 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/20 text-rose-500 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                    🚫
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Foydalanuvchini bloklash (Ban)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        <strong class="text-slate-900 dark:text-slate-200" x-text="banUserName"></strong> uchun muddat tanlang
+                    </p>
+                </div>
+            </div>
+
+            <!-- Duration Selection -->
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wider">
+                    Ban muddati:
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer text-xs transition-colors"
+                           :class="banDuration === '1_hour' ? 'border-amber-500/60 bg-amber-500/10 text-amber-300 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'">
+                        <input type="radio" name="banDuration" value="1_hour" x-model="banDuration" class="accent-amber-500">
+                        <span>1 soat</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer text-xs transition-colors"
+                           :class="banDuration === '1_day' ? 'border-amber-500/60 bg-amber-500/10 text-amber-300 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'">
+                        <input type="radio" name="banDuration" value="1_day" x-model="banDuration" class="accent-amber-500">
+                        <span>1 kun</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer text-xs transition-colors"
+                           :class="banDuration === '1_week' ? 'border-amber-500/60 bg-amber-500/10 text-amber-300 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'">
+                        <input type="radio" name="banDuration" value="1_week" x-model="banDuration" class="accent-amber-500">
+                        <span>1 hafta</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer text-xs transition-colors"
+                           :class="banDuration === '1_month' ? 'border-amber-500/60 bg-amber-500/10 text-amber-300 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'">
+                        <input type="radio" name="banDuration" value="1_month" x-model="banDuration" class="accent-amber-500">
+                        <span>1 oy</span>
+                    </label>
+                    <label class="col-span-2 flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer text-xs transition-colors"
+                           :class="banDuration === 'permanent' ? 'border-rose-500/60 bg-rose-500/10 text-rose-300 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'">
+                        <input type="radio" name="banDuration" value="permanent" x-model="banDuration" class="accent-rose-500">
+                        <span>Doimiy / Butun umrga</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="mb-5">
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wider">
+                    Ban sababi (ixtiyoriy):
+                </label>
+                <textarea x-model="banReason"
+                          rows="2"
+                          placeholder="Masalan: Chatda haqoratli so'z ishlatgani uchun..."
+                          class="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-500 placeholder-slate-400"></textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3">
+                <button type="button"
+                    @click="banModalOpen = false"
+                    class="py-2.5 px-4 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors">
+                    Bekor qilish
+                </button>
+                <button type="button"
+                    @click="executeBan()"
+                    class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 active:scale-95 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-all flex items-center gap-1.5">
+                    <span>🚫 Bloklash</span>
                 </button>
             </div>
         </div>

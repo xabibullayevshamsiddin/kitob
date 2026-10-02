@@ -116,8 +116,8 @@
                             Banni bekor qilish
                         </button>
                     </form>
-                @elseif($user->hasRole('admin'))
-                    <p class="text-xs text-slate-500 py-1">Admin foydalanuvchilarni bloklash taqiqlangan.</p>
+                @elseif($user->id === auth()->id())
+                    <p class="text-xs text-slate-500 py-1">O'zingizni bloklay olmaysiz.</p>
                 @else
                     <div x-data="{ open: false }">
                         <button type="button" @click="open = !open"

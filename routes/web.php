@@ -555,8 +555,8 @@ Route::prefix('admin')
             'reason'   => 'nullable|string|max:500',
         ]);
 
-        if ($user->hasRole('admin') || $user->role === 'admin') {
-            return back()->with('error', 'Administratorni bloklab bo\'lmaydi!');
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'O\'zingizni bloklab bo\'lmaydi!');
         }
 
         $user->ban($req->duration, $req->reason);
