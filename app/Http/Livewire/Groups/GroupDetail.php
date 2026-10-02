@@ -88,6 +88,31 @@ class GroupDetail extends Component
         $this->dispatchBrowserEvent('chat-scroll-bottom');
     }
 
+    public function deleteMessage(int $messageId): void
+    {
+        if (!Auth::check()) {
+            return;
+        }
+
+        $message = GroupMessage::where('group_id', $this->group->id)->find($messageId);
+        if (!$message) {
+            return;
+        }
+
+        $user = Auth::user();
+        $isAdmin = (method_exists($user, 'hasRole') && $user->hasRole('admin')) 
+            || ($user->role === 'admin')
+            || ($this->group->created_by === $user->id);
+
+        // Foydalanuvchi o'z xabarini, guruh egasi yoki admin istalgan xabarni o'chira oladi
+        if ($message->user_id !== $user->id && !$isAdmin) {
+            return;
+        }
+
+        $message->update(['is_deleted' => true]);
+        $this->dispatchBrowserEvent('chat-scroll-bottom');
+    }
+
     public function render()
     {
         $messages = GroupMessage::where('group_id', $this->group->id)
