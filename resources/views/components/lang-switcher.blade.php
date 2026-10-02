@@ -2,9 +2,9 @@
 @php
     $currentLocale = app()->getLocale();
     $languages = [
-        'uz' => ['code' => 'UZ', 'name' => "O\u02BBzbekcha", 'flag' => 'uz'],
-        'ru' => ['code' => 'RU', 'name' => 'Русский',         'flag' => 'ru'],
-        'en' => ['code' => 'EN', 'name' => 'English',         'flag' => 'gb'],
+        'uz' => ['code' => 'UZ', 'name' => "O'zbekcha", 'flag' => 'uz'],
+        'ru' => ['code' => 'RU', 'name' => 'Русский',   'flag' => 'ru'],
+        'en' => ['code' => 'EN', 'name' => 'English',   'flag' => 'gb'],
     ];
     $current = $languages[$currentLocale] ?? $languages['uz'];
 @endphp

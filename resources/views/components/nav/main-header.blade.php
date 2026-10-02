@@ -40,7 +40,7 @@
                      x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
                      class="absolute top-full left-0 mt-2.5 w-52 p-1.5 bg-[#0a0e17]/95 dark:bg-[#0a0e17]/95 backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.05)] z-50">
                     <div class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-400 border-b border-white/[0.06] mb-1">
-                        Bo'limlar
+                        {{ __('site.nav.sections') }}
                     </div>
                     <div class="space-y-0.5">
                         <a href="{{ route('about') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/[0.07] rounded-xl transition-all">
