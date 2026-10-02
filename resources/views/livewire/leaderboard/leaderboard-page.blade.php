@@ -2,10 +2,10 @@
     <!-- Header Section -->
     <div class="text-center max-w-xl mx-auto space-y-2">
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-400 uppercase tracking-widest">
-            <span>🏆</span> Kitobxonlar Liderboardi
+            <span>🏆</span> {{ __('site.leaderboard.badge') }}
         </span>
-        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Peshqadamlar Jadvali</h1>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Har bir o'qilgan daqiqa, topshirilgan test va kundalik odat sizni cho'qqiga yetaklaydi!</p>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{{ __('site.leaderboard.title') }}</h1>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{{ __('site.leaderboard.subtitle') }}</p>
     </div>
 
     <!-- Current User Stats Card -->
@@ -16,9 +16,9 @@
                     <img src="{{ auth()->user()->avatar_url }}" class="w-14 h-14 rounded-2xl object-cover ring-2 ring-indigo-500/50 shadow-md" alt="{{ auth()->user()->name }}">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Sizning natijangiz</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">{{ __('site.leaderboard.your_result') }}</span>
                             @if($myRank)
-                                <span class="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-[11px] font-black text-indigo-300">#{{ $myRank }} o'rin</span>
+                                <span class="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-[11px] font-black text-indigo-300">#{{ $myRank }} {{ __('site.leaderboard.place') }}</span>
                             @endif
                         </div>
                         <h3 class="text-base font-bold text-white">{{ auth()->user()->name }}</h3>
@@ -28,29 +28,29 @@
 
                 <div class="flex items-center gap-4 sm:gap-6 text-center sm:text-right">
                     <div>
-                        <span class="text-[11px] text-slate-400 block">Jami ballar</span>
+                        <span class="text-[11px] text-slate-400 block">{{ __('site.leaderboard.total_points') }}</span>
                         <span class="text-lg font-black text-amber-400">⭐️ {{ number_format($myUser->display_points ?? auth()->user()->total_points) }}</span>
                     </div>
                     <div>
-                        <span class="text-[11px] text-slate-400 block">Mutolaa</span>
-                        <span class="text-lg font-black text-slate-200">📖 {{ number_format($myUser->display_minutes ?? 0) }} daq</span>
+                        <span class="text-[11px] text-slate-400 block">{{ __('site.leaderboard.reading') }}</span>
+                        <span class="text-lg font-black text-slate-200">📖 {{ number_format($myUser->display_minutes ?? 0) }} {{ __('site.leaderboard.min_short') }}</span>
                     </div>
                     <div>
-                        <span class="text-[11px] text-slate-400 block">Streak</span>
-                        <span class="text-lg font-black text-amber-500">🔥 {{ $myUser->display_streak ?? auth()->user()->current_streak }} kun</span>
+                        <span class="text-[11px] text-slate-400 block">{{ __('site.leaderboard.streak') }}</span>
+                        <span class="text-lg font-black text-amber-500">🔥 {{ $myUser->display_streak ?? auth()->user()->current_streak }} {{ __('site.leaderboard.days') }}</span>
                     </div>
                 </div>
             </div>
 
             @if($myRank && $myRank > 1 && $pointsToNext)
                 <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
-                    <span>Keyingi o'ringa (#{{ $myRank - 1 }}) ko'tarilish uchun:</span>
-                    <span class="font-bold text-indigo-400">+{{ number_format($pointsToNext) }} ball kerak</span>
+                    <span>{{ __('site.leaderboard.to_next', ['rank' => $myRank - 1]) }}</span>
+                    <span class="font-bold text-indigo-400">{{ __('site.leaderboard.points_needed', ['points' => number_format($pointsToNext)]) }}</span>
                 </div>
             @elseif($myRank === 1)
                 <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-amber-400 font-bold">
-                    <span>👑 Tabriklaymiz! Siz reytingda mutlaq birinchi o'rindasiz!</span>
-                    <span>1-o'rin</span>
+                    <span>👑 {{ __('site.leaderboard.congrats') }}</span>
+                    <span>{{ __('site.leaderboard.first_place') }}</span>
                 </div>
             @endif
         </div>
@@ -59,12 +59,12 @@
             <div class="flex items-center gap-3">
                 <span class="text-2xl">🏆</span>
                 <div>
-                    <h4 class="text-sm font-bold text-white">Siz ham reytingda qatnashing!</h4>
-                    <p class="text-xs text-slate-400">Kitob mutolaa qiling, test topshiring va peshqadamlar safiga qo'shiling.</p>
+                    <h4 class="text-sm font-bold text-white">{{ __('site.leaderboard.join_cta_title') }}</h4>
+                    <p class="text-xs text-slate-400">{{ __('site.leaderboard.join_cta_sub') }}</p>
                 </div>
             </div>
             <a href="{{ route('login') }}" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition-all shrink-0">
-                Kirish / Boshlash
+                {{ __('site.leaderboard.login_start') }}
             </a>
         </div>
     @endauth
@@ -75,44 +75,44 @@
         <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl overflow-x-auto shrink-0">
             <button type="button" wire:click="setPeriod('all_time')"
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ $period === 'all_time' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white' }}">
-                Barcha vaqt
+                {{ __('site.leaderboard.period_all') }}
             </button>
             <button type="button" wire:click="setPeriod('monthly')"
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ $period === 'monthly' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white' }}">
-                Shu oy
+                {{ __('site.leaderboard.period_monthly') }}
             </button>
             <button type="button" wire:click="setPeriod('weekly')"
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ $period === 'weekly' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white' }}">
-                Shu hafta
+                {{ __('site.leaderboard.period_weekly') }}
             </button>
             <button type="button" wire:click="setPeriod('today')"
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ $period === 'today' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white' }}">
-                Bugun
+                {{ __('site.leaderboard.period_today') }}
             </button>
         </div>
 
         <!-- Sort Criteria -->
         <div class="flex items-center gap-2 overflow-x-auto">
-            <span class="text-xs text-slate-400 hidden lg:inline">Saralash:</span>
+            <span class="text-xs text-slate-400 hidden lg:inline">{{ __('site.leaderboard.sort_by') }}</span>
             <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl shrink-0">
                 <button type="button" wire:click="setSortBy('points')"
                     class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ $sortBy === 'points' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white' }}">
-                    ⭐️ Ballar
+                    ⭐️ {{ __('site.leaderboard.sort_points') }}
                 </button>
                 <button type="button" wire:click="setSortBy('reading_time')"
                     class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ $sortBy === 'reading_time' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white' }}">
-                    📖 Mutolaa
+                    📖 {{ __('site.leaderboard.sort_reading') }}
                 </button>
                 <button type="button" wire:click="setSortBy('streak')"
                     class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ $sortBy === 'streak' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white' }}">
-                    🔥 Streak
+                    🔥 {{ __('site.leaderboard.sort_streak') }}
                 </button>
             </div>
         </div>
 
         <!-- Search Bar -->
         <div class="relative min-w-[200px]">
-            <input type="text" wire:model.debounce.300ms="search" placeholder="Ism yoki username..."
+            <input type="text" wire:model.debounce.300ms="search" placeholder="{{ __('site.leaderboard.search_placeholder') }}"
                 class="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500">
             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -137,15 +137,15 @@
                     <div class="pt-1">
                         @if($sortBy === 'reading_time')
                             <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 block">
-                                📖 {{ number_format($top3[1]->display_minutes) }} daq
+                                📖 {{ number_format($top3[1]->display_minutes) }} {{ __('site.leaderboard.min_short') }}
                             </span>
                         @elseif($sortBy === 'streak')
                             <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-amber-500 block">
-                                🔥 {{ $top3[1]->display_streak }} kun
+                                🔥 {{ $top3[1]->display_streak }} {{ __('site.leaderboard.days') }}
                             </span>
                         @else
                             <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 block">
-                                ⭐️ {{ number_format($top3[1]->display_points) }} ball
+                                ⭐️ {{ number_format($top3[1]->display_points) }} {{ __('site.leaderboard.points_short') }}
                             </span>
                         @endif
                     </div>
@@ -153,7 +153,7 @@
             @else
                 <div class="p-4 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 text-center opacity-40">
                     <span class="text-2xl block">🥈</span>
-                    <p class="text-xs text-slate-400 mt-2">Bo'sh</p>
+                    <p class="text-xs text-slate-400 mt-2">{{ __('site.leaderboard.empty_podium') }}</p>
                 </div>
             @endif
 
@@ -172,15 +172,15 @@
                     <div class="pt-1">
                         @if($sortBy === 'reading_time')
                             <span class="px-3 py-1.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black block shadow-md">
-                                📖 {{ number_format($top3[0]->display_minutes) }} daq
+                                📖 {{ number_format($top3[0]->display_minutes) }} {{ __('site.leaderboard.min_short') }}
                             </span>
                         @elseif($sortBy === 'streak')
                             <span class="px-3 py-1.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black block shadow-md">
-                                🔥 {{ $top3[0]->display_streak }} kun
+                                🔥 {{ $top3[0]->display_streak }} {{ __('site.leaderboard.days') }}
                             </span>
                         @else
                             <span class="px-3 py-1.5 bg-amber-500 text-slate-950 rounded-xl text-xs font-black block shadow-md">
-                                ⭐️ {{ number_format($top3[0]->display_points) }} ball
+                                ⭐️ {{ number_format($top3[0]->display_points) }} {{ __('site.leaderboard.points_short') }}
                             </span>
                         @endif
                     </div>
@@ -201,15 +201,15 @@
                     <div class="pt-1">
                         @if($sortBy === 'reading_time')
                             <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 block">
-                                📖 {{ number_format($top3[2]->display_minutes) }} daq
+                                📖 {{ number_format($top3[2]->display_minutes) }} {{ __('site.leaderboard.min_short') }}
                             </span>
                         @elseif($sortBy === 'streak')
                             <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-amber-500 block">
-                                🔥 {{ $top3[2]->display_streak }} kun
+                                🔥 {{ $top3[2]->display_streak }} {{ __('site.leaderboard.days') }}
                             </span>
                         @else
                             <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 block">
-                                ⭐️ {{ number_format($top3[2]->display_points) }} ball
+                                ⭐️ {{ number_format($top3[2]->display_points) }} {{ __('site.leaderboard.points_short') }}
                             </span>
                         @endif
                     </div>
@@ -217,7 +217,7 @@
             @else
                 <div class="p-4 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 text-center opacity-40">
                     <span class="text-2xl block">🥉</span>
-                    <p class="text-xs text-slate-400 mt-2">Bo'sh</p>
+                    <p class="text-xs text-slate-400 mt-2">{{ __('site.leaderboard.empty_podium') }}</p>
                 </div>
             @endif
         </div>
@@ -227,16 +227,16 @@
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-soft overflow-hidden">
         <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Barcha ishtirokchilar</h3>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ __('site.leaderboard.all_participants') }}</h3>
                 <span class="text-xs text-slate-400">
-                    @if($period === 'today') Bugungi faollik
-                    @elseif($period === 'weekly') Shu haftadagi ballar
-                    @elseif($period === 'monthly') Shu oydagi natijalar
-                    @else Barcha vaqt bo'yicha umumiy reyting
+                    @if($period === 'today') {{ __('site.leaderboard.sub_today') }}
+                    @elseif($period === 'weekly') {{ __('site.leaderboard.sub_weekly') }}
+                    @elseif($period === 'monthly') {{ __('site.leaderboard.sub_monthly') }}
+                    @else {{ __('site.leaderboard.sub_all') }}
                     @endif
                 </span>
             </div>
-            <span class="text-xs text-slate-400">{{ $allUsers->total() }} ta kitobxon</span>
+            <span class="text-xs text-slate-400">{{ __('site.leaderboard.readers_count', ['count' => $allUsers->total()]) }}</span>
         </div>
 
         <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -263,12 +263,12 @@
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate block group-hover:text-amber-400 transition-colors">{{ $u->name }}</span>
                                     @if($u->hasRole('admin') || $u->role === 'admin')
-                                        <span class="px-1.5 py-0.2 bg-amber-500/10 text-amber-500 font-bold text-[9px] rounded uppercase shrink-0">Admin</span>
+                                        <span class="px-1.5 py-0.2 bg-amber-500/10 text-amber-500 font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.role_admin') }}</span>
                                     @elseif($u->hasRole('teacher') || $u->role === 'teacher')
-                                        <span class="px-1.5 py-0.2 bg-indigo-500/10 text-indigo-400 font-bold text-[9px] rounded uppercase shrink-0">Ustoz</span>
+                                        <span class="px-1.5 py-0.2 bg-indigo-500/10 text-indigo-400 font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.role_teacher') }}</span>
                                     @endif
                                     @if($isCurrent)
-                                        <span class="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 font-bold text-[9px] rounded uppercase shrink-0">Siz</span>
+                                        <span class="px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.you') }}</span>
                                     @endif
                                 </div>
                                 <span class="text-[11px] text-slate-400 truncate block">{{ '@' . $u->username }}</span>
@@ -281,13 +281,13 @@
                         <!-- Reading Minutes -->
                         <div class="hidden sm:block text-right">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300 block">📖 {{ number_format($u->display_minutes) }}</span>
-                            <span class="text-[10px] text-slate-400 block">daqiqa</span>
+                            <span class="text-[10px] text-slate-400 block">{{ __('site.leaderboard.minutes') }}</span>
                         </div>
 
                         <!-- Streak -->
                         @if($u->display_streak > 0)
                             <div class="hidden md:flex items-center gap-1 text-xs font-bold text-amber-500 shrink-0" title="Ketma-ketlik">
-                                <span>🔥</span> {{ $u->display_streak }} kun
+                                <span>🔥</span> {{ $u->display_streak }} {{ __('site.leaderboard.days') }}
                             </div>
                         @endif
 
@@ -296,13 +296,13 @@
                             <span class="text-xs sm:text-sm font-black text-indigo-600 dark:text-indigo-400 block">
                                 {{ number_format($u->display_points) }}
                             </span>
-                            <span class="text-[10px] text-slate-400 block">ball</span>
+                            <span class="text-[10px] text-slate-400 block">{{ __('site.leaderboard.points_short') }}</span>
                         </div>
                     </div>
                 </div>
             @empty
                 <div class="text-center py-12 text-slate-400 text-sm">
-                    Foydalanuvchilar topilmadi 🔍
+                    {{ __('site.leaderboard.no_users') }}
                 </div>
             @endforelse
         </div>

@@ -325,7 +325,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdminOrTeacher(): bool
     {
-        return $this->hasAnyRole(['admin', 'teacher']);
+        return $this->hasRole(['admin', 'teacher']) || in_array($this->role ?? null, ['admin', 'teacher'], true);
     }
 
     // -------------------------------------------------------------------------

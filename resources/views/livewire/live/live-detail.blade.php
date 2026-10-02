@@ -10,6 +10,17 @@
         signalPollUrl: @js(route('live.signal.poll', $event)),
         csrfToken: @js(csrf_token()),
         liveIndexUrl: @js(route('live.index')),
+        micOn: @js(__('site.live.mic_on')),
+        micOff: @js(__('site.live.mic_off')),
+        camOn: @js(__('site.live.cam_on')),
+        camOff: @js(__('site.live.cam_off')),
+        stopShare: @js(__('site.live.stop_share')),
+        shareScreen: @js(__('site.live.share_screen')),
+        stopRec: @js(__('site.live.stop_rec')),
+        startRec: @js(__('site.live.start_rec')),
+        micCamOff: @js(__('site.live.mic_cam_off')),
+        micStreaming: @js(__('site.live.mic_streaming')),
+        waitingHost: @js(__('site.live.waiting_host')),
     })" 
     x-init="initStudio()">
 
@@ -25,7 +36,7 @@
                     @if($event->is_live)
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider animate-pulse">
                             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                            <span>Efirda</span>
+                            <span>{{ __('site.live.filter_live') }}</span>
                         </span>
                     @else
                         <span class="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-bold uppercase">
@@ -35,7 +46,7 @@
                 </div>
                 <p class="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
                     @if($event->hostUser)
-                        <span>Ustoz: <strong class="text-slate-700 dark:text-slate-200">{{ $event->hostUser->name }}</strong></span>
+                        <span>{{ __('site.live.host') }} <strong class="text-slate-700 dark:text-slate-200">{{ $event->hostUser->name }}</strong></span>
                     @endif
                     @if($event->book)
                         <span>• 📖 {{ $event->book->title }}</span>
@@ -50,26 +61,26 @@
             <!-- Permission indicator badge -->
             <div class="px-3.5 py-2 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center gap-2">
                 @if($event->permission_mode === 'chat_only')
-                    <span>💬 Faqat Chat</span>
+                    <span>{{ __('site.live.perm_filter_chat') }}</span>
                 @elseif($event->permission_mode === 'voice_only')
-                    <span>🎙️ Faqat Ovoz</span>
+                    <span>{{ __('site.live.perm_filter_voice') }}</span>
                 @elseif($event->permission_mode === 'view_only')
-                    <span>🔒 Faqat Ma'ruza (Tinglash)</span>
+                    <span>{{ __('site.live.perm_filter_view') }}</span>
                 @else
-                    <span>✨ Chat & Ovoz Ochiq</span>
+                    <span>{{ __('site.live.perm_filter_both') }}</span>
                 @endif
             </div>
 
             @if($isHost || $canManage)
                 @if($event->status === 'live')
-                    <button wire:click="endLiveStream" wire:confirm="Rostdan ham efirni yakunlamoqchimisiz?"
+                    <button wire:click="endLiveStream" wire:confirm="{{ __('site.live.end_confirm', ['title' => '']) }}"
                         class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
-                        ⏹️ Efirni Yakunlash
+                        {{ __('site.live.end') }}
                     </button>
                 @else
                     <button wire:click="restartLiveStream"
                         class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
-                        ▶ Efirni Qayta Boshlash
+                        ▶ {{ __('site.live.restart') }}
                     </button>
                 @endif
             @endif
@@ -112,12 +123,12 @@
                     class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
                     <div class="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-4xl backdrop-blur-md">📺</div>
                     <div>
-                        <h3 class="text-lg sm:text-xl font-black text-white">Efir tugadi</h3>
-                        <p class="text-xs text-slate-400 mt-2 max-w-sm">Ustoz efirni yakunladi. Rahmat! Boshqa jonli efillarni kuzatib boring.</p>
+                        <h3 class="text-lg sm:text-xl font-black text-white">{{ __('site.live.ended_title') }}</h3>
+                        <p class="text-xs text-slate-400 mt-2 max-w-sm">{{ __('site.live.ended_sub') }}</p>
                     </div>
                     <a :href="liveIndexUrl"
                         class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg transition-all active:scale-95 flex items-center gap-2">
-                        📺 Boshqa jonli efillarni ko'rish →
+                        📺 {{ __('site.live.watch_others') }} →
                     </a>
                 </div>
 
@@ -134,7 +145,7 @@
                     <div>
                         <h3 class="text-base sm:text-lg font-bold text-white">{{ $event->hostUser?->name ?? 'Ustoz' }}</h3>
                         <p class="text-xs text-slate-400 font-mono">
-                            <span x-text="hasRemoteStream ? (isMicOn ? '🎙️ Ovoz uzatilmoqda (Kamera o\'chiq)' : '🔇 Mikrofon va kamera o\'chiq') : (isHost ? (isMicOn ? '🎙️ Ovoz uzatilmoqda (Kamera o\'chiq)' : '🔇 Mikrofon va kamera o\'chiq') : '📡 Ustoz efiri kutilmoqda (Video/Audio tayyorlanmoqda)')"></span>
+                            <span x-text="!hasRemoteStream && !isHost ? '📡 ' + waitingHost : (isMicOn ? '🎙️ ' + micStreaming : '🔇 ' + micCamOff)"></span>
                         </p>
                     </div>
                 </div>
@@ -142,13 +153,13 @@
                 <!-- Viewer Connecting / Status Pill (Non-blocking) -->
                 <div x-show="!isHost && !hasRemoteStream" class="absolute top-4 left-32 z-20 flex items-center gap-2 bg-indigo-950/90 border border-indigo-500/40 text-indigo-200 text-xs px-3.5 py-1 rounded-full backdrop-blur-md animate-pulse shadow-lg">
                     <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
-                    <span>📡 Efirga ulanmoqda...</span>
+                    <span>📡 {{ __('site.live.connecting') }}</span>
                 </div>
 
                 <!-- Reconnect Button if stream takes more than 2 attempts -->
                 <div x-show="!isHost && !hasRemoteStream && connectionAttempts >= 2" class="absolute bottom-12 left-1/2 -translate-x-1/2 z-20">
                     <button @click="reconnect()" class="px-4 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/20 text-white font-bold text-xs flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95">
-                        <span>🔄 Qayta ulanish</span>
+                        <span>🔄 {{ __('site.live.reconnect') }}</span>
                     </button>
                 </div>
 
@@ -156,7 +167,7 @@
                 <div x-show="!isHost && needsUnmute" class="absolute inset-0 z-40 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
                     <button @click="unmuteAudio()" class="px-6 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-2xl flex items-center gap-2.5 transform hover:scale-105 active:scale-95 transition-all">
                         <span class="text-lg">🔊</span>
-                        <span>Ovozni yoqish (Tinglash uchun bosing)</span>
+                        <span>{{ __('site.live.unmute_prompt') }}</span>
                     </button>
                 </div>
 
@@ -197,12 +208,12 @@
                             <button @click="unmuteAudio()"
                                 x-show="needsUnmute || isViewerMuted"
                                 class="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/20 text-white text-xs font-bold transition-all shadow-lg active:scale-95 animate-pulse">
-                                <span>🔊 Ovozni Yoqish</span>
+                                <span>🔊 {{ __('site.live.unmute_short') }}</span>
                             </button>
                             <button @click="toggleViewerMute()"
                                 x-show="!needsUnmute && !isViewerMuted"
                                 class="flex items-center gap-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 text-white text-xs font-medium transition-colors">
-                                <span>🔊 Ovoz Yoqilgan</span>
+                                <span>🔊 {{ __('site.live.muted_on') }}</span>
                             </button>
                         </div>
                     </template>
@@ -219,14 +230,14 @@
                 <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-slate-900 dark:text-white">🎛️ Ustoz Studiya Boshqaruvi</span>
+                            <span class="text-sm font-bold text-slate-900 dark:text-white">🎛️ {{ __('site.live.studio_title') }}</span>
                             <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 font-bold">Broadcaster</span>
                         </div>
 
                         <!-- Hardware Settings Toggle button -->
                         <button @click="showDeviceSettings = !showDeviceSettings"
                             class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors">
-                            <span>⚙️ Qurilmalar sozlamasi</span>
+                            <span>⚙️ {{ __('site.live.device_settings') }}</span>
                             <span x-text="showDeviceSettings ? '▲' : '▼'"></span>
                         </button>
                     </div>
@@ -237,28 +248,28 @@
                         <button @click="toggleMic()"
                             class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                             :class="isMicOn ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-rose-500/10 border border-rose-500/30 text-rose-500 hover:bg-rose-500/20'">
-                            <span x-text="isMicOn ? '🎙️ Mikrafon Yoqilgan' : '🔇 Mikrafon O\'chiq'"></span>
+                            <span x-text="isMicOn ? '🎙️ ' + micOn : '🔇 ' + micOff"></span>
                         </button>
 
                         <!-- Camera toggle -->
                         <button @click="toggleVideo()"
                             class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                             :class="isVideoOn ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'">
-                            <span x-text="isVideoOn ? '📹 Kamera Yoqilgan' : '📷 Kamera O\'chiq'"></span>
+                            <span x-text="isVideoOn ? '📹 ' + camOn : '📷 ' + camOff"></span>
                         </button>
 
                         <!-- Screen share -->
                         <button @click="toggleScreenShare()"
                             class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                             :class="isScreenSharing ? 'bg-amber-500 text-ink-950 font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'">
-                            <span x-text="isScreenSharing ? '🖥️ Ekranni To\'xtatish' : '🖥️ Ekran Ulashish'"></span>
+                            <span x-text="isScreenSharing ? stopShare : shareScreen"></span>
                         </button>
 
                         <!-- Video Recording (Zapis) -->
                         <button @click="toggleRecording()"
                             class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                             :class="isRecording ? 'bg-rose-600 text-white animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'">
-                            <span x-text="isRecording ? '⏹️ Yozuvni To\'xtatish & Saqlash' : '🔴 Video Yozib Olish (Zapis)'"></span>
+                            <span x-text="isRecording ? stopRec : startRec"></span>
                         </button>
                     </div>
 
@@ -267,9 +278,9 @@
                         class="px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2.5">
                         <span class="text-base shrink-0">💡</span>
                         <div>
-                            <p class="font-bold mb-0.5">Tizim ovozini ulash uchun:</p>
-                            <p>Brauzer dialog'ida <strong>"Share system audio"</strong> yoki <strong>"Share tab audio"</strong> tickini <strong>albatta belgilang</strong>. Belgilamasangiz, tomoshabinlar faqat video ko'radi, ovoz eshitmaydi.</p>
-                            <p class="mt-1 text-amber-600/70 dark:text-amber-400/70">⚠️ Firefox va Safari'da tizim audiosi ulashish qo'llab-quvvatlanmaydi. Chrome yoki Edge ishlatish tavsiya etiladi.</p>
+                            <p class="font-bold mb-0.5">{{ __('site.live.share_audio_title') }}</p>
+                            <p>{!! __('site.live.share_audio_sub') !!}</p>
+                            <p class="mt-1 text-amber-600/70 dark:text-amber-400/70">⚠️ {{ __('site.live.share_audio_warn') }}</p>
                         </div>
                     </div>
 
@@ -280,7 +291,7 @@
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                                     <span>🎤</span>
-                                    <span>Mikrafon Tanlash (Kompyuterdagi)</span>
+                                    <span>{{ __('site.live.mic_select') }}</span>
                                 </label>
                                 <select id="audioSourceSelect" @change="changeAudioSource($event.target.value)"
                                     class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
@@ -288,14 +299,14 @@
                                         <option :value="device.deviceId" x-text="device.label || `Mikrafon ${$index + 1}`" :selected="device.deviceId === selectedAudioDevice"></option>
                                     </template>
                                 </select>
-                                <p class="text-[11px] text-slate-400 mt-1">Kompyuteringizga ulangan barcha tashqi va ichki mikrofonlar ro'yxati</p>
+                                <p class="text-[11px] text-slate-400 mt-1">{{ __('site.live.mic_select_hint') }}</p>
                             </div>
 
                             <!-- Camera Selector (enumerateDevices) -->
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                                     <span>📹</span>
-                                    <span>Kamera Tanlash</span>
+                                    <span>{{ __('site.live.cam_select') }}</span>
                                 </label>
                                 <select id="videoSourceSelect" @change="changeVideoSource($event.target.value)"
                                     class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
@@ -303,14 +314,14 @@
                                         <option :value="device.deviceId" x-text="device.label || `Kamera ${$index + 1}`" :selected="device.deviceId === selectedVideoDevice"></option>
                                     </template>
                                 </select>
-                                <p class="text-[11px] text-slate-400 mt-1">Vebkamera yoki tashqi ulangan kamera qurilmasi</p>
+                                <p class="text-[11px] text-slate-400 mt-1">{{ __('site.live.cam_select_hint') }}</p>
                             </div>
                         </div>
 
                         <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700 text-xs">
-                            <span class="text-slate-400">Qurilmalar ko'rinmayotgan bo'lsa, brauzer ruxsatini tekshiring</span>
+                            <span class="text-slate-400">{{ __('site.live.devices_hint') }}</span>
                             <button @click="scanMediaDevices()" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
-                                🔄 Qurilmalarni qayta skanerlash
+                                🔄 {{ __('site.live.rescan_devices') }}
                             </button>
                         </div>
                     </div>
@@ -319,36 +330,36 @@
                     @if($canEditSettings)
                     <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                            ⚙️ Tashrif buyuruvchilar huquqi (Hozirgi sozlama):
+                            ⚙️ {{ __('site.live.audience_perms') }}
                         </label>
 
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <!-- Both -->
                             <button wire:click="updatePermissionMode('both')"
                                 class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'both' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
-                                <span class="block">✨ Ikkalasi ham</span>
-                                <span class="text-[10px] opacity-75 font-normal block">Chat va Ovoz</span>
+                                <span class="block">{{ __('site.live.perm_both') }}</span>
+                                <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_both_sub') }}</span>
                             </button>
 
                             <!-- Chat only -->
                             <button wire:click="updatePermissionMode('chat_only')"
                                 class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'chat_only' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
-                                <span class="block">💬 Faqat Chat</span>
-                                <span class="text-[10px] opacity-75 font-normal block">Yozish mumkin</span>
+                                <span class="block">{{ __('site.live.perm_chat') }}</span>
+                                <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_chat_sub') }}</span>
                             </button>
 
                             <!-- Voice only -->
                             <button wire:click="updatePermissionMode('voice_only')"
                                 class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'voice_only' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
-                                <span class="block">🎙️ Faqat Ovoz</span>
-                                <span class="text-[10px] opacity-75 font-normal block">Mikrofon orqali</span>
+                                <span class="block">{{ __('site.live.perm_voice') }}</span>
+                                <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_voice_sub') }}</span>
                             </button>
 
                             <!-- View only -->
                             <button wire:click="updatePermissionMode('view_only')"
                                 class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'view_only' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
-                                <span class="block">🔒 Faqat Ma'ruza</span>
-                                <span class="text-[10px] opacity-75 font-normal block">Ikkalasi yopiq</span>
+                                <span class="block">{{ __('site.live.perm_view') }}</span>
+                                <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_view_sub') }}</span>
                             </button>
                         </div>
                     </div>
@@ -359,7 +370,7 @@
             <!-- Event Details Note -->
             @if($event->description)
                 <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Efir haqida</h3>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ __('site.live.about') }}</h3>
                     <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{{ $event->description }}</p>
                 </div>
             @endif
@@ -408,6 +419,19 @@ function liveStudioController(config) {
         isHost: isHost,
         eventId: eventId,
         permissionMode: config.permissionMode || 'both',
+
+        // Tarjima qilingan matnlar (blade'dan uzatiladi)
+        micOn: config.micOn,
+        micOff: config.micOff,
+        camOn: config.camOn,
+        camOff: config.camOff,
+        stopShare: config.stopShare,
+        shareScreen: config.shareScreen,
+        stopRec: config.stopRec,
+        startRec: config.startRec,
+        micCamOff: config.micCamOff,
+        micStreaming: config.micStreaming,
+        waitingHost: config.waitingHost,
 
         // Media states
         isMicOn: true,

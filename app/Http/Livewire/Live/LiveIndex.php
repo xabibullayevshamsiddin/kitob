@@ -83,6 +83,11 @@ class LiveIndex extends Component
             return;
         }
 
+        if (!Auth::user()->isAdminOrTeacher()) {
+            session()->flash('error', 'Faqat o\'qituvchilar va adminlar jonli efir boshlashi mumkin.');
+            return;
+        }
+
         $this->newTitle = '';
         $this->newDescription = '';
         $this->newBookId = null;
@@ -99,6 +104,11 @@ class LiveIndex extends Component
     {
         if (!Auth::check()) {
             return redirect()->route('login');
+        }
+
+        if (!Auth::user()->isAdminOrTeacher()) {
+            session()->flash('error', 'Faqat o\'qituvchilar va adminlar jonli efir boshlashi mumkin.');
+            return;
         }
 
         $this->validate([

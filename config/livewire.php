@@ -40,7 +40,7 @@ return [
     |
     */
 
-    'asset_url' => env('LIVEWIRE_ASSET_URL', '/Kitob/public'),
+    'asset_url' => env('LIVEWIRE_ASSET_URL', rtrim(env('APP_URL', ''), '/')),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,7 +51,7 @@ return [
     |
     */
 
-    'app_url' => null,
+    'app_url' => rtrim(env('APP_URL', ''), '/'),
 
     /*
     |--------------------------------------------------------------------------
