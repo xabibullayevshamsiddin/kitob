@@ -57,6 +57,12 @@ class TakeQuiz extends Component
     /** Collected per-question feedback */
     public array $feedback = [];
 
+    /** Timestamp when the current attempt started (server-side, for countdown) */
+    public ?int $startedAt = null;
+
+    /** True when the attempt was auto-finished because time ran out */
+    public bool $timedOut = false;
+
     /** All quiz data for rendering */
     public array $questions = [];
 
@@ -140,16 +146,51 @@ class TakeQuiz extends Component
         $this->alreadyHadFullPoints = false;
         $this->feedback = [];
         $this->questions = [];
+        $this->startedAt = time();
+        $this->timedOut = false;
     }
 
-    public function nextQuestion(): void
+    /**
+     * Qolgan vaqt (soniyalarda). Cheklov bo'lmasa null.
+     */
+    public function getTimerRemainingProperty(): ?int
     {
-        if ($this->finished) {
+        if (!$this->timeLimitMinutes || !$this->startedAt) {
+            return null;
+        }
+
+        return max(0, (int) $this->startedAt + ((int) $this->timeLimitMinutes * 60) - time());
+    }
+
+    /**
+     * Vaqt tugaganda Alpine tomonidan chaqiriladi:
+     * javoblangan savollar baholanadi, javoblanmaganlarga 0 ball,
+     * test natija sahifasi ochilib, foydalanuvchi testdan chiqariladi.
+     */
+    public function timeUp(): void
+    {
+        if ($this->finished || empty($this->questions)) {
             return;
         }
 
-        $question = $this->questions[$this->currentQuestion] ?? null;
-        abort_if(!$question, 404);
+        // Joriy savolda tanlab, tasdiqlanmagan javob ham baholanadi
+        if ($this->selectedOption !== null && !isset($this->feedback[$this->currentQuestion])) {
+            $question = $this->questions[$this->currentQuestion] ?? null;
+            if ($question) {
+                $this->gradeQuestion($this->currentQuestion, $this->selectedOption);
+            }
+        }
+
+        $this->timedOut = true;
+        $this->finishQuiz();
+    }
+
+    /**
+     * Bitta savolni baholash va feedback yozish.
+     */
+    protected function gradeQuestion(int $index, $selectedId): array
+    {
+        $question = $this->questions[$index];
 
         $correctOption = DB::table('quiz_options')
             ->where('question_id', $question['id'])
@@ -158,8 +199,8 @@ class TakeQuiz extends Component
 
         $correctOptionId = $correctOption ? $correctOption->id : null;
 
-        $isCorrect = $this->selectedOption !== null
-            && (int) $this->selectedOption === (int) $correctOptionId;
+        $isCorrect = $selectedId !== null
+            && (int) $selectedId === (int) $correctOptionId;
 
         if ($isCorrect) {
             $this->correctCount++;
@@ -167,21 +208,68 @@ class TakeQuiz extends Component
 
         $selectedOptionText = null;
         foreach ($question['options'] as $opt) {
-            if ((int) $opt['id'] === (int) $this->selectedOption) {
+            if ((int) $opt['id'] === (int) $selectedId) {
                 $selectedOptionText = $opt['text'];
                 break;
             }
         }
 
-        $this->feedback[$this->currentQuestion] = [
+        $this->feedback[$index] = [
             'question_text' => $question['text'],
             'correct'       => $isCorrect,
-            'selected_id'   => $this->selectedOption,
+            'selected_id'   => $selectedId,
             'selected_text' => $selectedOptionText,
             'correct_text'  => $correctOption ? $correctOption->option_text : null,
             'explanation'   => $question['explanation'],
         ];
 
+        return $this->feedback[$index];
+    }
+
+    /**
+     * Javoblanmagan savollarni natijaga qo'shish (0 ball, tahlilda ko'rinadi).
+     */
+    protected function fillUnansweredFeedback(): void
+    {
+        foreach ($this->questions as $index => $question) {
+            if (isset($this->feedback[$index])) {
+                continue;
+            }
+
+            $correctOption = DB::table('quiz_options')
+                ->where('question_id', $question['id'])
+                ->where('is_correct', true)
+                ->first();
+
+            $this->feedback[$index] = [
+                'question_text' => $question['text'],
+                'correct'       => false,
+                'selected_id'   => null,
+                'selected_text' => null,
+                'correct_text'  => $correctOption ? $correctOption->option_text : null,
+                'explanation'   => $question['explanation'],
+            ];
+        }
+
+        ksort($this->feedback);
+    }
+
+    public function nextQuestion(): void
+    {
+        if ($this->finished) {
+            return;
+        }
+
+        // Vaqt tugagan bo'lsa — javobni emas, avtomatik yakunlashni bajar
+        if ($this->timerRemaining !== null && $this->timerRemaining <= 0) {
+            $this->timeUp();
+            return;
+        }
+
+        $question = $this->questions[$this->currentQuestion] ?? null;
+        abort_if(!$question, 404);
+
+        $this->gradeQuestion($this->currentQuestion, $this->selectedOption);
         $this->selectedOption = null;
 
         if ($this->currentQuestion < count($this->questions) - 1) {
@@ -194,6 +282,9 @@ class TakeQuiz extends Component
     protected function finishQuiz(): void
     {
         $this->finished = true;
+
+        // Vaqt tugaganda javoblanmagan savollar ham tahlilda ko'rinsin (0 ball)
+        $this->fillUnansweredFeedback();
 
         $user = Auth::user();
         $quiz = Quiz::find($this->quizId);
@@ -296,6 +387,8 @@ class TakeQuiz extends Component
             'pointsAwarded'        => $this->pointsAwarded,
             'alreadyHadFullPoints' => $this->alreadyHadFullPoints,
             'feedback'             => $this->feedback,
+            'timerRemainingSeconds' => $this->timerRemaining,
+            'timedOut'             => $this->timedOut,
         ])->layout('layouts.app', ['title' => 'Test – ' . $this->book->title]);
     }
 }

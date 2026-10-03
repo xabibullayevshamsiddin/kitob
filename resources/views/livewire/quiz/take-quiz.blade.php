@@ -100,8 +100,32 @@
                             Savol {{ $currentQuestion + 1 }} / {{ count($questions) }}
                         </span>
                         @if($timeLimitMinutes)
-                            <span class="text-slate-400 font-mono text-[11px]">
-                                ⏱ {{ $timeLimitMinutes }} daqiqa
+                            <span class="font-mono text-[11px] font-bold"
+                                  x-data="{
+                                      remaining: {{ (int) ($timerRemainingSeconds ?? 0) }},
+                                      display: '',
+                                      done: false,
+                                      start() {
+                                          this.tick();
+                                          this._timer = setInterval(() => this.tick(), 1000);
+                                      },
+                                      tick() {
+                                          if (this.remaining <= 0) {
+                                              clearInterval(this._timer);
+                                              this.display = '0:00';
+                                              if (!this.done) {
+                                                  this.done = true;
+                                                  $wire.timeUp();
+                                              }
+                                              return;
+                                          }
+                                          this.display = Math.floor(this.remaining / 60) + ':' + String(this.remaining % 60).padStart(2, '0');
+                                          this.remaining--;
+                                      }
+                                  }"
+                                  x-init="start()"
+                                  :class="remaining <= 60 ? 'text-rose-400 animate-pulse' : 'text-slate-400'">
+                                ⏱ <span x-text="display">…</span>
                             </span>
                         @endif
                     </div>
@@ -188,6 +212,12 @@
                     <h2 class="text-2xl sm:text-3xl font-black text-white">
                         {{ $percent >= 80 ? 'Ajoyib natija! Barakalla!' : ($percent >= 50 ? 'Yaxshi natija!' : 'Yana harakat qiling!') }}
                     </h2>
+                    @if($timedOut)
+                        <p class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold">
+                            <span>⏱</span>
+                            <span>Vaqt tugadi — test avtomatik yakunlandi. Javoblanmagan savollarga 0 ball berildi.</span>
+                        </p>
+                    @endif
                     <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
                         Siz «{{ $book->title }}» kitobi bo'yicha <strong>{{ count($questions) }} ta savoldan {{ $correctCount }} tasiga</strong> to'g'ri javob berdingiz.
                     </p>

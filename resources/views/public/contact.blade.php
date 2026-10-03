@@ -6,43 +6,8 @@
     <meta name="description" content="{{ __('site.contact.meta') }}">
     <title>{{ __('site.contact.title') }} — Kitobxon</title>
 
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui'],
-                        mono: ['JetBrains Mono', 'ui-monospace'],
-                    },
-                    colors: {
-                        ink: {
-                            950: '#07090e',
-                            900: '#0b0f17',
-                            800: '#111726',
-                            700: '#1a2236',
-                        },
-                        amber: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        },
-                    },
-                    boxShadow: {
-                        'card-depth': '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-                        'glow-amber': '0 0 35px -5px rgba(245, 158, 11, 0.3)',
-                    },
-                }
-            }
-        }
-    </script>
+    @include('partials.design-system')
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- GSAP & ScrollTrigger for Pro-level Physics Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -159,12 +124,12 @@
                     @endphp
 
                     @if($isReport)
-                        <div class="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 space-y-1.5 animate-fade-in">
-                            <div class="flex items-center gap-2 font-bold text-sm text-amber-400">
-                                <span>🚩</span>
+                        <div class="p-4 rounded-panel bg-amber-500/10 border border-amber-500/30 text-amber-300 space-y-1.5 animate-fade-in">
+                            <div class="flex items-center gap-2 font-bold text-xs font-mono text-amber-400">
+                                <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
                                 <span>Qoidabuzarlik bo'yicha tezkor shikoyat tayyorlandi!</span>
                             </div>
-                            <p class="text-xs text-slate-300 leading-relaxed">
+                            <p class="text-xs text-mist font-sans leading-relaxed">
                                 Qoidabuzar foydalanuvchi ma'lumotlari va u yozgan nojo'ya xabar shaklga avtomatik to'ldirildi. Ma'lumotlarni ko'rib chiqing va ma'muriyatga jo'natish uchun pastdagi tugmani bosing.
                             </p>
                         </div>
@@ -223,39 +188,39 @@
                 <!-- Info Cards (Col 5) -->
                 <div class="lg:col-span-5 space-y-6">
                     
-                    <div class="contact-info-card spotlight-card rounded-3xl p-6 sm:p-7 flex items-start gap-5">
-                        <div class="w-14 h-14 rounded-2xl bg-amber-400/10 border border-amber-400/25 text-amber-400 flex items-center justify-center text-2xl shrink-0">
-                            💬
+                    <div class="contact-info-card spotlight-card rounded-panel p-5 sm:p-6 flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-btn bg-amber-400/10 border border-amber-400/25 text-amber-400 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-white">{{ __('site.contact.tg_title') }}</h3>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ __('site.contact.tg_sub') }}</p>
-                            <a href="https://t.me/" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-amber-400 font-semibold mt-3 hover:text-amber-300 transition-colors">
+                            <h3 class="text-sm font-bold font-serif text-paper">{{ __('site.contact.tg_title') }}</h3>
+                            <p class="text-xs text-mist mt-1 leading-relaxed font-sans">{{ __('site.contact.tg_sub') }}</p>
+                            <a href="https://t.me/" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-amber-400 font-mono mt-2.5 hover:text-amber-300 transition-colors">
                                 <span>@kitobxon_support</span>
                                 <span>→</span>
                             </a>
                         </div>
                     </div>
 
-                    <div class="contact-info-card spotlight-card rounded-3xl p-6 sm:p-7 flex items-start gap-5">
-                        <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 flex items-center justify-center text-2xl shrink-0">
-                            ✉️
+                    <div class="contact-info-card spotlight-card rounded-panel p-5 sm:p-6 flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-btn bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-white">{{ __('site.contact.email_title') }}</h3>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ __('site.contact.email_sub') }}</p>
-                            <p class="text-xs font-mono text-slate-200 mt-2 font-semibold">info@kitobxon.uz</p>
+                            <h3 class="text-sm font-bold font-serif text-paper">{{ __('site.contact.email_title') }}</h3>
+                            <p class="text-xs text-mist mt-1 leading-relaxed font-sans">{{ __('site.contact.email_sub') }}</p>
+                            <p class="text-xs font-mono text-paper mt-2 font-medium">info@kitobxon.uz</p>
                         </div>
                     </div>
 
-                    <div class="contact-info-card spotlight-card rounded-3xl p-6 sm:p-7 flex items-start gap-5">
-                        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center text-2xl shrink-0">
-                            📍
+                    <div class="contact-info-card spotlight-card rounded-panel p-5 sm:p-6 flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-btn bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-white">{{ __('site.contact.office_title') }}</h3>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ __('site.contact.office_sub') }}</p>
-                            <p class="text-[11px] text-slate-500 mt-2 font-mono">{{ __('site.contact.office_hours') }}</p>
+                            <h3 class="text-sm font-bold font-serif text-paper">{{ __('site.contact.office_title') }}</h3>
+                            <p class="text-xs text-mist mt-1 leading-relaxed font-sans">{{ __('site.contact.office_sub') }}</p>
+                            <p class="text-[11px] text-mist mt-2 font-mono">{{ __('site.contact.office_hours') }}</p>
                         </div>
                     </div>
 

@@ -6,167 +6,175 @@
 @section('content')
 
 {{-- Page header --}}
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
     <div>
-        <h1 class="text-xl font-bold text-white">Kitoblar boshqaruvi</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Platformadagi barcha kitoblarni boshqaring</p>
+        <h1 class="text-xl font-bold font-serif text-paper">Kitoblar boshqaruvi</h1>
+        <p class="text-xs text-mist font-mono mt-0.5">Platformadagi barcha kitoblarni boshqaring</p>
     </div>
-    <div class="flex items-center gap-3">
-        <span class="text-xs text-slate-500 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg">
-            Jami: <span class="text-indigo-400 font-semibold">{{ $books->total() }}</span> ta
+    <div class="flex items-center gap-2.5">
+        <span class="text-xs text-mist bg-ink-950 border border-ink-border px-3 py-1.5 rounded-badge font-mono">
+            Jami: <span class="text-amber-400 font-bold">{{ $books->total() }}</span> ta
         </span>
         <a href="{{ route('admin.books.create') ?? '#' }}"
-           class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-indigo-900/30">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           class="ks-btn-primary py-1.5 px-3.5 text-xs font-mono inline-flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            Yangi kitob
+            <span>Yangi kitob</span>
         </a>
     </div>
 </div>
 
 {{-- Stats row --}}
-<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 font-mono text-xs">
     @php
         $totalBooks = $books->total();
         $activeBooks = $books->getCollection()->where('is_active', true)->count();
     @endphp
-    <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center text-lg">📚</div>
+    <div class="bg-ink-900 border border-ink-border rounded-panel px-3.5 py-2.5 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-amber-400">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
         <div>
-            <p class="text-xs text-slate-500">Jami</p>
-            <p class="text-lg font-bold text-white">{{ $books->total() }}</p>
+            <p class="text-[10px] text-mist uppercase">Jami</p>
+            <p class="text-base font-bold text-paper">{{ $books->total() }}</p>
         </div>
     </div>
-    <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center text-lg">✅</div>
+    <div class="bg-ink-900 border border-ink-border rounded-panel px-3.5 py-2.5 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-emerald-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        </div>
         <div>
-            <p class="text-xs text-slate-500">Faol</p>
-            <p class="text-lg font-bold text-emerald-400">{{ $books->getCollection()->where('is_active', true)->count() }}</p>
+            <p class="text-[10px] text-mist uppercase">Faol</p>
+            <p class="text-base font-bold text-emerald-400">{{ $books->getCollection()->where('is_active', true)->count() }}</p>
         </div>
     </div>
-    <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center text-lg">⏸️</div>
+    <div class="bg-ink-900 border border-ink-border rounded-panel px-3.5 py-2.5 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-rose-300">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+        </div>
         <div>
-            <p class="text-xs text-slate-500">Nofaol</p>
-            <p class="text-lg font-bold text-red-400">{{ $books->getCollection()->where('is_active', false)->count() }}</p>
+            <p class="text-[10px] text-mist uppercase">Nofaol</p>
+            <p class="text-base font-bold text-rose-300">{{ $books->getCollection()->where('is_active', false)->count() }}</p>
         </div>
     </div>
-    <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center text-lg">📅</div>
+    <div class="bg-ink-900 border border-ink-border rounded-panel px-3.5 py-2.5 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-amber-500">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
         <div>
-            <p class="text-xs text-slate-500">Bu hafta</p>
-            <p class="text-lg font-bold text-amber-400">{{ $books->getCollection()->where('created_at', '>=', now()->startOfWeek())->count() }}</p>
+            <p class="text-[10px] text-mist uppercase">Bu hafta</p>
+            <p class="text-base font-bold text-amber-400">{{ $books->getCollection()->where('created_at', '>=', now()->startOfWeek())->count() }}</p>
         </div>
     </div>
 </div>
 
 {{-- Table --}}
-<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+<div class="bg-ink-900 border border-ink-border rounded-panel overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full text-left">
             <thead>
-                <tr class="bg-slate-800/50 border-b border-slate-800">
-                    <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-16">Muqova</th>
-                    <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sarlavha</th>
-                    <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Muallif</th>
-                    <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Janr</th>
-                    <th class="px-5 py-3.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Hafta</th>
-                    <th class="px-5 py-3.5 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Holat</th>
-                    <th class="px-5 py-3.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Amallar</th>
+                <tr class="bg-ink-950/60 border-b border-ink-border text-[11px] font-mono uppercase text-mist">
+                    <th class="py-2.5 px-3.5 w-14">Muqova</th>
+                    <th class="py-2.5 px-3.5">Sarlavha</th>
+                    <th class="py-2.5 px-3.5">Muallif</th>
+                    <th class="py-2.5 px-3.5">Janr</th>
+                    <th class="py-2.5 px-3.5">Hafta</th>
+                    <th class="py-2.5 px-3.5 text-center">Holat</th>
+                    <th class="py-2.5 px-3.5 text-right">Amallar</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-800/60">
+            <tbody class="divide-y divide-ink-border/50 text-xs">
                 @forelse($books as $book)
-                    <tr class="hover:bg-slate-800/30 transition-colors group" id="book-row-{{ $book->id }}">
+                    <tr class="hover:bg-ink-800/40 transition-colors group" id="book-row-{{ $book->id }}">
                         {{-- Cover --}}
-                        <td class="px-5 py-3.5">
+                        <td class="py-2.5 px-3.5">
                             @if($book->cover_image)
                                 <img src="{{ asset('storage/' . $book->cover_image) }}"
                                      alt="{{ $book->title }}"
-                                     class="w-10 h-14 object-cover rounded-lg shadow-md group-hover:shadow-indigo-900/30 transition-shadow">
+                                     class="w-8 h-12 object-cover rounded-badge border border-ink-border">
                             @else
-                                <div class="w-10 h-14 rounded-lg bg-gradient-to-b from-indigo-800 to-slate-800 flex items-center justify-center text-xl border border-slate-700">
-                                    📖
+                                <div class="w-8 h-12 rounded-badge bg-ink-950 flex items-center justify-center text-xs font-mono text-mist border border-ink-border">
+                                    KB
                                 </div>
                             @endif
                         </td>
 
                         {{-- Title --}}
-                        <td class="px-5 py-3.5">
-                            <p class="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors line-clamp-1">{{ $book->title }}</p>
-                            <p class="text-xs text-slate-600 mt-0.5">{{ $book->created_at->format('d.m.Y') }}</p>
+                        <td class="py-2.5 px-3.5">
+                            <p class="text-xs font-bold font-serif text-paper group-hover:text-amber-400 transition-colors line-clamp-1">{{ $book->title }}</p>
+                            <p class="text-[10px] text-mist font-mono mt-0.5">{{ $book->created_at->format('d.m.Y') }}</p>
                         </td>
 
                         {{-- Author --}}
-                        <td class="px-5 py-3.5">
-                            <p class="text-sm text-slate-400">{{ $book->author }}</p>
+                        <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist">
+                            {{ $book->author }}
                         </td>
 
                         {{-- Genre --}}
-                        <td class="px-5 py-3.5">
+                        <td class="py-2.5 px-3.5">
                             @if($book->genre)
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-badge text-[10px] font-mono bg-ink-950 text-mist border border-ink-border">
                                     {{ $book->genre->name ?? $book->genre }}
                                 </span>
                             @else
-                                <span class="text-slate-600 text-xs">—</span>
+                                <span class="text-mist text-xs">—</span>
                             @endif
                         </td>
 
                         {{-- Week --}}
-                        <td class="px-5 py-3.5">
+                        <td class="py-2.5 px-3.5">
                             @if($book->week_number)
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                    📅 {{ $book->week_number }}-hafta
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    {{ $book->week_number }}-hafta
                                 </span>
                             @else
-                                <span class="text-slate-600 text-xs">—</span>
+                                <span class="text-mist text-xs">—</span>
                             @endif
                         </td>
 
                         {{-- Active toggle --}}
-                        <td class="px-5 py-3.5 text-center">
+                        <td class="py-2.5 px-3.5 text-center">
                             <form method="POST" action="{{ route('admin.books.toggle', $book) }}" id="toggle-form-{{ $book->id }}">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit"
-                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 {{ $book->is_active ? 'bg-indigo-600' : 'bg-slate-700' }}"
+                                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-150 {{ $book->is_active ? 'bg-amber-500' : 'bg-ink-950 border border-ink-border' }}"
                                         title="{{ $book->is_active ? 'Nofaol qilish' : 'Faollashtirish' }}">
-                                    <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 {{ $book->is_active ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-paper shadow transition-transform duration-150 {{ $book->is_active ? 'translate-x-4.5 bg-ink-950' : 'translate-x-0.5' }}"></span>
                                 </button>
                             </form>
-                            <p class="text-[10px] mt-1 {{ $book->is_active ? 'text-indigo-400' : 'text-slate-600' }}">
+                            <p class="text-[9px] mt-0.5 font-mono {{ $book->is_active ? 'text-amber-400' : 'text-mist' }}">
                                 {{ $book->is_active ? 'Faol' : 'Nofaol' }}
                             </p>
                         </td>
 
                         {{-- Actions --}}
-                        <td class="px-5 py-3.5">
+                        <td class="py-2.5 px-3.5 text-right">
                             <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                 {{-- Quick Add Media Badges --}}
                                 <a href="{{ route('admin.audios.create', ['book_id' => $book->id]) }}"
-                                   class="px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 text-[10px] font-bold transition-all"
+                                   class="px-2 py-0.5 rounded-badge bg-ink-950 border border-ink-border text-amber-400 hover:border-amber-400/40 text-[10px] font-mono font-bold transition-colors"
                                    title="Ushbu kitobga audio qo'shish">
-                                    +🎵 Audio
+                                    +AUDIO
                                 </a>
 
                                 <a href="{{ route('admin.videos.create', ['book_id' => $book->id]) }}"
-                                   class="px-2 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 text-[10px] font-bold transition-all"
+                                   class="px-2 py-0.5 rounded-badge bg-ink-950 border border-ink-border text-amber-400 hover:border-amber-400/40 text-[10px] font-mono font-bold transition-colors"
                                    title="Ushbu kitobga video dars qo'shish">
-                                    +🎥 Video
+                                    +VIDEO
                                 </a>
 
                                 <a href="{{ route('admin.quizzes.create', ['book_id' => $book->id]) }}"
-                                   class="px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-[10px] font-bold transition-all"
+                                   class="px-2 py-0.5 rounded-badge bg-ink-950 border border-emerald-500/30 text-emerald-400 hover:border-emerald-500/50 text-[10px] font-mono font-bold transition-colors"
                                    title="Ushbu kitobga test topshirig'i qo'shish">
-                                    +📝 Test
+                                    +TEST
                                 </a>
 
                                 {{-- PDF yuklab olish --}}
                                 @if($book->chapters()->where('is_published', true)->exists())
                                     <a href="{{ route('books.pdf', $book) }}"
-                                       class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all"
+                                       class="p-1 rounded-badge bg-ink-950 border border-rose-500/30 text-rose-300 hover:border-rose-500/50 transition-colors"
                                        title="PDF yuklab olish">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -176,7 +184,7 @@
 
                                 {{-- View --}}
                                 <a href="{{ route('books.show', $book) }}" target="_blank"
-                                   class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-600 transition-all"
+                                   class="p-1 rounded-badge bg-ink-950 border border-ink-border text-mist hover:text-paper hover:border-ink-border transition-colors"
                                    title="Ko'rish">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -186,7 +194,7 @@
 
                                 {{-- Edit --}}
                                 <a href="{{ route('admin.books.edit', $book) }}"
-                                   class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 transition-all"
+                                   class="p-1 rounded-badge bg-ink-950 border border-ink-border text-amber-400 hover:border-amber-400/50 transition-colors"
                                    title="Tahrirlash">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -194,27 +202,24 @@
                                 </a>
 
                                 {{-- Delete --}}
-                                <div x-data="{ confirm: false }" class="relative">
+                                <div x-data="{ confirm: false }" class="relative inline-block">
                                     <button x-show="!confirm" @click="confirm = true"
-                                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
+                                            class="p-1 rounded-badge bg-ink-950 border border-rose-500/30 text-rose-300 hover:border-rose-500/50 transition-colors"
                                             title="O'chirish">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                     </button>
                                     <div x-show="confirm"
-                                         x-transition:enter="transition ease-out duration-150"
-                                         x-transition:enter-start="opacity-0 scale-95"
-                                         x-transition:enter-end="opacity-100 scale-100"
-                                         class="absolute right-0 top-full mt-1 z-20 bg-slate-800 border border-red-500/30 rounded-xl p-3 shadow-2xl w-48"
+                                         class="absolute right-0 top-full mt-1 z-20 bg-ink-950 border border-rose-500/40 rounded-panel p-2.5 shadow-2xl w-44"
                                          style="display:none;">
-                                        <p class="text-xs text-slate-300 font-medium mb-2 text-center">Kitobni o'chirishni tasdiqlang</p>
+                                        <p class="text-[11px] text-mist font-mono mb-2 text-center">O'chirishni tasdiqlang</p>
                                         <form method="POST" action="{{ route('admin.books.destroy', $book) }}">
                                             @csrf
                                             @method('DELETE')
-                                            <div class="flex gap-2">
-                                                <button type="submit" class="flex-1 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition-colors">Ha</button>
-                                                <button type="button" @click="confirm = false" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-xs transition-colors">Yo'q</button>
+                                            <div class="flex gap-1.5">
+                                                <button type="submit" class="flex-1 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-btn text-[10px] font-mono">Ha</button>
+                                                <button type="button" @click="confirm = false" class="flex-1 py-1 bg-ink-800 text-mist rounded-btn text-[10px] font-mono">Yo'q</button>
                                             </div>
                                         </form>
                                     </div>
@@ -224,17 +229,8 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-16 text-center">
-                            <div class="text-5xl mb-4">📚</div>
-                            <p class="text-slate-400 font-medium mb-1">Kitoblar topilmadi</p>
-                            <p class="text-slate-600 text-sm mb-4">Hali birorta kitob qo'shilmagan</p>
-                            <a href="{{ route('admin.books.create') ?? '#' }}"
-                               class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
-                                Birinchi kitobni qo'shing
-                            </a>
+                        <td colspan="7" class="py-12 text-center text-mist font-mono text-xs">
+                            Kitoblar mavjud emas
                         </td>
                     </tr>
                 @endforelse
@@ -244,8 +240,8 @@
 
     {{-- Pagination --}}
     @if($books->hasPages())
-        <div class="p-4 sm:p-5 border-t border-slate-800">
-            {{ $books->links() }}
+        <div class="p-3.5 border-t border-ink-border">
+            {{ $books->links('vendor.pagination.taste-livewire') }}
         </div>
     @endif
 </div>

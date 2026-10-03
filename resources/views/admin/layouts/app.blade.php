@@ -6,131 +6,56 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') — Kitobxon Admin</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        slate: {
-                            750: '#1e293b',
-                            850: '#0f172a',
-                        }
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.4s ease-out forwards',
-                        'slide-in-left': 'slideInLeft 0.3s ease-out forwards',
-                        'slide-up': 'slideUp 0.4s ease-out forwards',
-                        'pulse-slow': 'pulse 3s infinite',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideInLeft: {
-                            '0%': { transform: 'translateX(-20px)', opacity: '0' },
-                            '100%': { transform: 'translateX(0)', opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        },
-                    }
-                }
-            }
-        }
-    </script>
+    @include('partials.design-system')
 
     <!-- Alpine.js CDN -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
-        * { font-family: 'Inter', sans-serif; }
-
         /* Sidebar scrollbar */
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #1F293D; border-radius: 99px; border: 0; }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #2A3650; }
 
-        /* Number input spinner tugmalari — dark dizaynga mos (oq tugmachalarni yo'qotish) */
-        input[type="number"] {
-            -moz-appearance: textfield;
-            appearance: textfield;
+        /* Nav — editorial: amber 2px chap chiziq + ink-800 fon (gradient yo'q) */
+        .nav-item {
+            position: relative;
+            border-left: 2px solid transparent;
+            transition: background-color 200ms cubic-bezier(0.16,1,0.3,1), color 200ms cubic-bezier(0.16,1,0.3,1), border-color 200ms cubic-bezier(0.16,1,0.3,1);
         }
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"]:hover {
-            -moz-appearance: textfield;
-        }
-
-        /* Glassmorphism */
-        .glass {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-
-        /* Active nav glow */
-        .nav-active {
-            background: linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.15) 100%);
-            border-left: 3px solid #6366f1;
-            box-shadow: inset 0 0 20px rgba(99,102,241,0.08);
-        }
-
-        /* Nav hover */
-        .nav-item:hover {
-            background: rgba(99,102,241,0.1);
-            border-left: 3px solid rgba(99,102,241,0.4);
-        }
-
-        /* Scrollbar main */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
-
-        /* Sidebar transition */
-        .sidebar-enter { transform: translateX(-100%); }
-        .sidebar-leave { transform: translateX(-100%); }
+        .nav-item:hover { background: #0D111A; border-left-color: #2A3650; }
+        .nav-active,
+        .nav-active:hover { background: #131926; border-left-color: #F59E0B; color: #F0EDE6; }
+        .nav-active .nav-icon { color: #FBBF24; }
 
         /* Tooltip */
+        [data-tooltip] { position: relative; }
         [data-tooltip]:hover::after {
             content: attr(data-tooltip);
             position: absolute;
-            left: calc(100% + 10px);
-            top: 50%;
-            transform: translateY(-50%);
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
+            left: 50%;
+            bottom: calc(100% + 6px);
+            transform: translateX(-50%);
+            background: #131926;
+            color: #F0EDE6;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: "DM Mono", ui-monospace, monospace;
             white-space: nowrap;
             z-index: 50;
-            border: 1px solid #334155;
+            border: 1px solid #1F293D;
+            pointer-events: none;
         }
 
+        /* Skeleton loader */
         @keyframes shimmer {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
         .shimmer {
-            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background: linear-gradient(90deg, #0D111A 25%, #131926 50%, #0D111A 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
@@ -138,7 +63,7 @@
 
     @stack('styles')
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased" x-data="adminLayout()">
+<body class="bg-ink-950 text-paper antialiased" x-data="adminLayout()">
 
     <!-- Mobile overlay -->
     <div
@@ -150,309 +75,178 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         @click="sidebarOpen = false"
-        class="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+        class="fixed inset-0 z-30 bg-ink-950/80 lg:hidden"
         style="display:none;"
     ></div>
 
+    @php
+        $pendingReportsCount = \App\Models\Report::pending()->count();
+        $navIcon = function (string $name) {
+            $paths = [
+                'dashboard' => '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+                'users'     => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+                'flag'      => '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
+                'book'      => '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+                'audio'     => '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+                'video'     => '<path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>',
+                'quiz'      => '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+                'stats'     => '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+                'settings'  => '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+            ];
+            return '<svg class="nav-icon w-4 h-4 flex-shrink-0 text-mist transition-colors duration-base" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' . ($paths[$name] ?? '') . '</svg>';
+        };
+        $navGroups = [
+            'Asosiy' => [
+                ['route' => 'admin.dashboard',   'match' => 'admin.dashboard', 'label' => 'Bosh panel',          'icon' => 'dashboard'],
+                ['route' => 'admin.users.index', 'match' => 'admin.users.*',   'label' => 'Foydalanuvchilar',    'icon' => 'users'],
+                ['route' => 'admin.reports.index','match' => 'admin.reports.*','label' => 'Aloqa & Shikoyatlar', 'icon' => 'flag', 'badge' => $pendingReportsCount],
+                ['route' => 'admin.books.index', 'match' => 'admin.books.*',   'label' => 'Kitoblar',            'icon' => 'book'],
+            ],
+            'Kontent' => [
+                ['route' => 'admin.audios.index',  'match' => 'admin.audios.*',  'label' => 'Audiolar',          'icon' => 'audio'],
+                ['route' => 'admin.videos.index',  'match' => 'admin.videos.*',  'label' => 'Videolar',          'icon' => 'video'],
+                ['route' => 'admin.quizzes.index', 'match' => 'admin.quizzes.*', 'label' => 'Test topshiriqlari','icon' => 'quiz'],
+            ],
+            'Tahlil' => [
+                ['route' => 'admin.stats', 'match' => 'admin.stats', 'label' => 'Statistika', 'icon' => 'stats'],
+            ],
+            'Tizim' => [
+                ['route' => 'admin.settings', 'match' => 'admin.settings', 'label' => 'Sozlamalar', 'icon' => 'settings'],
+            ],
+        ];
+    @endphp
+
     <div class="flex h-screen overflow-hidden">
 
-        <!-- ═══════════════════════════════════════════
-             SIDEBAR
-        ═══════════════════════════════════════════ -->
+        <!-- ═══════════════ SIDEBAR ═══════════════ -->
         <aside
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-            class="fixed inset-y-0 left-0 z-40 flex flex-col w-64 bg-slate-900 border-r border-slate-800 transition-transform duration-300 ease-in-out lg:relative lg:z-auto sidebar-scroll overflow-y-auto"
+            class="fixed inset-y-0 left-0 z-40 flex flex-col w-60 bg-ink-950 border-r border-ink-border transition-transform duration-modal ease-out lg:relative lg:z-auto sidebar-scroll overflow-y-auto"
         >
             <!-- Logo -->
-            <div class="flex items-center justify-between px-5 py-5 border-b border-slate-800 flex-shrink-0">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 group">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-shadow">
-                        <span class="text-lg">📖</span>
-                    </div>
-                    <div>
-                        <p class="text-sm font-bold text-white leading-tight">Kitobxon</p>
-                        <p class="text-[10px] text-slate-400 leading-tight">Admin Panel</p>
-                    </div>
+            <div class="flex items-center justify-between h-14 px-4 border-b border-ink-border flex-shrink-0">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 group">
+                    <span class="w-8 h-8 rounded-btn bg-vermilion flex items-center justify-center text-paper">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                    </span>
+                    <span class="leading-tight">
+                        <span class="block font-display text-[15px] font-semibold text-paper">Kitobxon</span>
+                        <span class="block font-mono text-[10px] uppercase tracking-[0.14em] text-mist">Admin</span>
+                    </span>
                 </a>
-                <span class="text-[9px] font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-1.5 py-0.5 rounded-full">v1.0</span>
+                <span class="font-mono text-[10px] text-mist border border-ink-border px-1.5 py-0.5 rounded-badge">v1.0</span>
             </div>
 
             <!-- Nav -->
-            <nav class="flex-1 px-3 py-4 space-y-1">
-
-                <!-- Section label -->
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold px-3 pb-2">Asosiy</p>
-
-                <!-- Bosh panel -->
-                <a href="{{ route('admin.dashboard') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.dashboard') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                        </svg>
-                    </span>
-                    <span>Bosh panel</span>
-                    @if(request()->routeIs('admin.dashboard'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
-
-                <!-- Foydalanuvchilar -->
-                <a href="{{ route('admin.users.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.users.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.users.*') ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                    </span>
-                    <span>Foydalanuvchilar</span>
-                    @if(request()->routeIs('admin.users.*'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
-
-                <!-- Shikoyatlar (Reports) -->
-                @php $pendingReportsCount = \App\Models\Report::pending()->count(); @endphp
-                <a href="{{ route('admin.reports.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.reports.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.reports.*') ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        🚩
-                    </span>
-                    <span>Aloqa & Shikoyatlar</span>
-                    @if($pendingReportsCount > 0)
-                        <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
-                            {{ $pendingReportsCount }}
-                        </span>
-                    @endif
-                </a>
-
-                <!-- Kitoblar -->
-                <a href="{{ route('admin.books.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.books.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.books.*') ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
-                    </span>
-                    <span>Kitoblar</span>
-                    @if(request()->routeIs('admin.books.*'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
-
-                {{-- ── KONTENT BOSHQARUVI ── --}}
-                <div class="pt-3">
-                    <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold px-3 pb-2">Kontent</p>
-                </div>
-
-                <!-- Audiolar -->
-                <a href="{{ route('admin.audios.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.audios.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.audios.*') ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        🎵
-                    </span>
-                    <span>Audiolar</span>
-                    @if(request()->routeIs('admin.audios.*'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
-
-                <!-- Videolar -->
-                <a href="{{ route('admin.videos.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.videos.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.videos.*') ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        🎥
-                    </span>
-                    <span>Videolar</span>
-                    @if(request()->routeIs('admin.videos.*'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
-
-                <!-- Test topshiriqlari -->
-                <a href="{{ route('admin.quizzes.index') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.quizzes.*') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.quizzes.*') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        📝
-                    </span>
-                    <span>Test topshiriqlari</span>
-                    @if(request()->routeIs('admin.quizzes.*'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
-
-                <div class="pt-3">
-                    <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold px-3 pb-2">Tahlil</p>
-                </div>
-
-                <!-- Statistika -->
-                <a href="{{ route('admin.stats') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.stats') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.stats') ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </span>
-                    <span>Statistika</span>
-                    @if(request()->routeIs('admin.stats'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
-
-                <div class="pt-3">
-                    <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold px-3 pb-2">Tizim</p>
-                </div>
-
-                <!-- Sozlamalar -->
-                <a href="{{ route('admin.settings') }}"
-                   class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group
-                          {{ request()->routeIs('admin.settings') ? 'nav-active text-indigo-300' : 'text-slate-400 hover:text-slate-100' }}">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                                 {{ request()->routeIs('admin.settings') ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' }} transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                    </span>
-                    <span>Sozlamalar</span>
-                    @if(request()->routeIs('admin.settings'))
-                        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse-slow"></span>
-                    @endif
-                </a>
+            <nav class="flex-1 py-3">
+                @foreach($navGroups as $groupLabel => $items)
+                    <p class="ks-eyebrow px-4 {{ $loop->first ? 'pt-1' : 'pt-4' }} pb-1.5 text-[10px]">{{ $groupLabel }}</p>
+                    @foreach($items as $item)
+                        @php $active = request()->routeIs($item['match']); @endphp
+                        <a href="{{ route($item['route']) }}"
+                           class="nav-item flex items-center gap-2.5 h-9 px-4 text-[13px] font-medium {{ $active ? 'nav-active' : 'text-mist hover:text-paper' }}">
+                            {!! $navIcon($item['icon']) !!}
+                            <span class="truncate">{{ $item['label'] }}</span>
+                            @if(!empty($item['badge']))
+                                <span class="ml-auto min-w-[20px] text-center px-1.5 py-0.5 rounded-badge font-mono text-[10px] font-bold bg-rose-500 text-paper">
+                                    {{ $item['badge'] }}
+                                </span>
+                            @endif
+                        </a>
+                    @endforeach
+                @endforeach
             </nav>
 
             <!-- Sidebar footer -->
-            <div class="flex-shrink-0 px-4 py-4 border-t border-slate-800">
-                <a href="{{ route('home') }}" class="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors group">
-                    <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                    </svg>
+            <div class="flex-shrink-0 px-4 py-3 border-t border-ink-border">
+                <a href="{{ route('home') }}" class="flex items-center gap-2 text-xs text-mist hover:text-paper transition-colors duration-base">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                     Saytga qaytish
                 </a>
             </div>
         </aside>
 
-        <!-- ═══════════════════════════════════════════
-             MAIN CONTENT AREA
-        ═══════════════════════════════════════════ -->
+        <!-- ═══════════════ MAIN CONTENT AREA ═══════════════ -->
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
             <!-- TOP BAR -->
-            <header class="flex-shrink-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-4 lg:px-6 z-20">
+            <header class="flex-shrink-0 h-14 bg-ink-950 border-b border-ink-border flex items-center justify-between px-4 lg:px-5 z-20">
 
                 <!-- Left: Mobile toggle + Breadcrumb -->
-                <div class="flex items-center gap-4">
-                    <!-- Hamburger -->
-                    <button @click="sidebarOpen = !sidebarOpen"
-                            class="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
-                        <svg x-show="!sidebarOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                        <svg x-show="sidebarOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
+                <div class="flex items-center gap-3 min-w-0">
+                    <button @click="sidebarOpen = !sidebarOpen" aria-label="Menyu"
+                            class="lg:hidden w-9 h-9 flex items-center justify-center rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base">
+                        <svg x-show="!sidebarOpen" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                        <svg x-show="sidebarOpen" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
 
                     <!-- Breadcrumb -->
-                    <nav class="hidden sm:flex items-center gap-1.5 text-sm">
-                        <a href="{{ route('admin.dashboard') }}" class="text-slate-500 hover:text-slate-300 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                            </svg>
-                        </a>
+                    <nav class="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider min-w-0">
+                        <a href="{{ route('admin.dashboard') }}" class="text-mist hover:text-paper transition-colors duration-base">Admin</a>
+                        <span class="text-ink-600">/</span>
                         @if(View::hasSection('breadcrumb'))
-                            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                            <span class="text-slate-300 font-medium">@yield('breadcrumb')</span>
+                            <span class="text-paper truncate">@yield('breadcrumb')</span>
                         @else
-                            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                            <span class="text-slate-300 font-medium">@yield('title', 'Bosh panel')</span>
+                            <span class="text-paper truncate">@yield('title', 'Bosh panel')</span>
                         @endif
                     </nav>
                 </div>
 
                 <!-- Right: notifications + user -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
 
                     <!-- Notification bell -->
-                    <button class="relative w-9 h-9 flex items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-slate-900"></span>
-                    </button>
+                    <a href="{{ route('admin.reports.index') }}" aria-label="Shikoyatlar"
+                       class="relative w-9 h-9 flex items-center justify-center rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                        @if($pendingReportsCount > 0)
+                            <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                        @endif
+                    </a>
 
                     <!-- User dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false"
-                                class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700 hover:border-slate-600">
-                            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-xs font-bold text-white">
+                                class="flex items-center gap-2 h-9 pl-1 pr-2 rounded-btn border border-ink-border hover:bg-ink-800 transition-colors duration-base">
+                            <span class="w-7 h-7 rounded-badge bg-ink-800 border border-ink-border flex items-center justify-center font-mono text-xs font-semibold text-amber-400">
                                 {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
-                            </div>
-                            <div class="hidden sm:block text-left">
-                                <p class="text-xs font-semibold text-slate-200 leading-tight">{{ auth()->user()->name ?? 'Admin' }}</p>
-                                <p class="text-[10px] text-slate-500 leading-tight">Administrator</p>
-                            </div>
-                            <svg class="w-4 h-4 text-slate-500 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
+                            </span>
+                            <span class="hidden sm:block text-left leading-tight">
+                                <span class="block text-xs font-medium text-paper">{{ auth()->user()->name ?? 'Admin' }}</span>
+                                <span class="block font-mono text-[10px] text-mist">Administrator</span>
+                            </span>
+                            <svg class="w-3.5 h-3.5 text-mist transition-transform duration-base" :class="open ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                         </button>
 
                         <!-- Dropdown menu -->
                         <div x-show="open"
                              x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
-                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
                              x-transition:leave="transition ease-in duration-100"
-                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
-                             class="absolute right-0 mt-2 w-52 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 z-50 overflow-hidden"
+                             x-transition:leave-start="opacity-100"
+                             x-transition:leave-end="opacity-0"
+                             class="absolute right-0 mt-1.5 w-52 bg-ink-800 border border-ink-border rounded-card shadow-popover z-50 overflow-hidden"
                              style="display:none;">
-                            <div class="px-4 py-3 border-b border-slate-700">
-                                <p class="text-xs font-semibold text-slate-200">{{ auth()->user()->name ?? 'Admin' }}</p>
-                                <p class="text-[11px] text-slate-500 mt-0.5">{{ auth()->user()->email ?? 'admin@kitobxon.uz' }}</p>
+                            <div class="px-3.5 py-2.5 border-b border-ink-border">
+                                <p class="text-xs font-medium text-paper truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
+                                <p class="font-mono text-[11px] text-mist mt-0.5 truncate">{{ auth()->user()->email ?? 'admin@kitobxon.uz' }}</p>
                             </div>
-                            <div class="py-1.5">
-                                <a href="{{ route('settings') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                    </svg>
+                            <div class="py-1">
+                                <a href="{{ route('settings') }}" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/90 hover:bg-ink-700 transition-colors duration-base">
+                                    <svg class="w-4 h-4 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                     Profil
                                 </a>
-                                <a href="{{ route('admin.settings') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
+                                <a href="{{ route('admin.settings') }}" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/90 hover:bg-ink-700 transition-colors duration-base">
+                                    {!! $navIcon('settings') !!}
                                     Sozlamalar
                                 </a>
                             </div>
-                            <div class="py-1.5 border-t border-slate-700">
+                            <div class="py-1 border-t border-ink-border">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                        </svg>
+                                    <button type="submit" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-rose-300 hover:bg-rose-500/10 transition-colors duration-base">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                                         Chiqish
                                     </button>
                                 </form>
@@ -466,16 +260,16 @@
             <x-toast-container />
 
             <!-- PAGE CONTENT -->
-            <main class="flex-1 overflow-y-auto bg-slate-950">
-                <div class="p-4 lg:p-6 animate-fade-in">
+            <main class="flex-1 overflow-y-auto bg-ink-950">
+                <div class="p-4 lg:p-5 animate-fade-in">
                     @yield('content')
                 </div>
             </main>
 
             <!-- FOOTER -->
-            <footer class="flex-shrink-0 border-t border-slate-800 bg-slate-900/50 px-6 py-3 flex items-center justify-between">
-                <p class="text-xs text-slate-600">Kitobxon Admin Panel <span class="text-indigo-500">v1.0</span></p>
-                <p class="text-xs text-slate-600">{{ now()->format('d.m.Y') }} — Barcha huquqlar himoyalangan</p>
+            <footer class="flex-shrink-0 border-t border-ink-border bg-ink-950 px-4 lg:px-5 h-9 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-mist">
+                <p>Kitobxon Admin <span class="text-amber-400">v1.0</span></p>
+                <p class="hidden sm:block">{{ now()->format('d.m.Y') }}</p>
             </footer>
         </div>
     </div>

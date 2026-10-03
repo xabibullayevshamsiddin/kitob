@@ -7,53 +7,7 @@
 
     <title>{{ config('app.name', 'Kitobxon') }} — @yield('title', "Kitob o'qish platformasi")</title>
 
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui'],
-                        mono: ['JetBrains Mono', 'ui-monospace'],
-                        serif: ['Merriweather', 'Georgia', 'serif'],
-                    },
-                    colors: {
-                        ink: {
-                            950: '#06080d',
-                            900: '#0a0e17',
-                            800: '#111726',
-                            700: '#1a2236',
-                            600: '#25304c',
-                        },
-                        amber: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        },
-                        primary: {
-                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
-                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
-                            800: '#3730a3', 900: '#1e1b4b', 950: '#0f0e2e'
-                        },
-                        accent: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' },
-                        surface: { DEFAULT: '#ffffff', dark: '#0f172a', 'dark-card': '#1e293b' },
-                    },
-                    boxShadow: {
-                        'spotlight': '0 0 50px -10px rgba(245, 158, 11, 0.25)',
-                        'card-depth': '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-                        'glow-amber': '0 0 35px -5px rgba(245, 158, 11, 0.35)',
-                    },
-                }
-            }
-        }
-    </script>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+    @include('partials.design-system')
 
     <!-- Alpine.js + Plugins (Collapse must load before Alpine starts) -->
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
@@ -66,7 +20,7 @@
     @endif
     @stack('styles')
 
-    <style>        /* Number input spinner tugmalari — dark dizaynga mos (oq tugmachalarni yo'qotish) */
+    <style>
         input[type="number"] {
             -moz-appearance: textfield;
             appearance: textfield;
@@ -77,99 +31,28 @@
             margin: 0;
         }
 
-
         [x-cloak] { display: none !important; }
 
-        /* Native Select Custom Dark Styling (Taste-Skill) */
-        select {
-            background-color: #0c101b !important;
-            color: #f1f5f9 !important;
-            border-color: rgba(255, 255, 255, 0.12) !important;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-            background-position: right 0.65rem center !important;
-            background-repeat: no-repeat !important;
-            background-size: 1.25em 1.25em !important;
-            padding-right: 2.25rem !important;
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            appearance: none !important;
-        }
-        select:focus {
-            border-color: rgba(245, 158, 11, 0.5) !important;
-            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
-            outline: none !important;
-        }
-        select option {
-            background-color: #0a0e17 !important;
-            color: #f1f5f9 !important;
-            padding: 10px 14px !important;
-        }
-
-        /* Anti-slop micro texture overlay */
-        .noise-bg {
-            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
-            background-size: 24px 24px;
-        }
-
-        /* One-time content entrance */
-        @keyframes contentRise {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .page-enter { animation: contentRise 0.3s ease-out; }
-
-        @keyframes slideUp {
-            0% { opacity: 0; transform: translateY(16px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-up { animation: slideUp 0.35s ease-out forwards; }
-
-        @keyframes scaleIn {
-            0% { opacity: 0; transform: scale(0.92); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-        /* Ambient floating orbs */
-        @keyframes orbDrift {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -20px) scale(1.08); }
-        }
-        .orb-animate-1 { animation: orbDrift 14s ease-in-out infinite; }
-        .orb-animate-2 { animation: orbDrift 18s ease-in-out infinite reverse; }
-
         /* Slim custom scrollbar for dark chrome */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: #06080d; }
-        ::-webkit-scrollbar-thumb { background: #1a2236; border-radius: 8px; border: 2px solid #06080d; }
-        ::-webkit-scrollbar-thumb:hover { background: #25304c; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #07090E; }
+        ::-webkit-scrollbar-thumb { background: #1F293D; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2E3E5B; }
 
-        /* Brauzer avtofill (autofill) inputlarni oq bo'ya qo'ymasligi uchun */
+        /* Autofill dark styling */
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,
-        input:-webkit-autofill:active,
         textarea:-webkit-autofill,
-        textarea:-webkit-autofill:hover,
-        textarea:-webkit-autofill:focus,
-        select:-webkit-autofill,
-        select:-webkit-autofill:hover,
-        select:-webkit-autofill:focus {
-            -webkit-text-fill-color: #e2e8f0 !important;
-            -webkit-box-shadow: 0 0 0 1000px #1e293b inset !important;
-            caret-color: #e2e8f0 !important;
+        select:-webkit-autofill {
+            -webkit-text-fill-color: #F0EDE6 !important;
+            -webkit-box-shadow: 0 0 0 1000px #0F141F inset !important;
+            caret-color: #F0EDE6 !important;
             transition: background-color 9999s ease-in-out 0s !important;
-        }
-        input[type="checkbox"], input[type="radio"] {
-            -webkit-box-shadow: none !important;
         }
     </style>
 </head>
-<body class="bg-ink-950 text-slate-200 font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
-
-    <!-- ── Ambient Floating Glows ── -->
-    <div class="fixed top-[-120px] left-1/2 -translate-x-1/2 w-[950px] h-[500px] bg-gradient-to-b from-amber-500/15 via-indigo-600/10 to-transparent rounded-full blur-[150px] pointer-events-none -z-10 orb-animate-1"></div>
-    <div class="fixed bottom-[-100px] right-[-80px] w-[650px] h-[650px] bg-indigo-900/15 rounded-full blur-[160px] pointer-events-none -z-10 orb-animate-2"></div>
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden ks-grain">
 
     <!-- ── Universal Header ── -->
     <x-nav.main-header />
@@ -177,29 +60,29 @@
     <!-- ── Flash Messages & Ban Alert ── -->
     <div class="max-w-7xl mx-auto px-6">
         @if (auth()->check() && auth()->user()->isBanned())
-            <div class="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-red-950/40 border border-red-500/40 text-red-200 rounded-2xl shadow-lg shadow-red-950/30">
+            <div class="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-ink-900 border border-rose-500/30 text-rose-300 rounded-card">
                 <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center flex-shrink-0 text-xl font-bold">
-                        ⚠️
+                    <div class="w-9 h-9 rounded-btn bg-rose-500/15 text-rose-300 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     </div>
                     <div>
-                        <h4 class="text-sm font-bold text-red-300">Sizning profilingiz cheklangan (Bloklangan)</h4>
-                        <p class="text-xs text-red-200/80 mt-0.5">
+                        <h4 class="text-sm font-bold text-rose-300">Sizning profilingiz cheklangan (Bloklangan)</h4>
+                        <p class="text-xs text-mist mt-0.5">
                             Qoidabuzarlik tufayli chat va jamoaviy bo'limlarda xabar yuborish huquqingiz cheklangan.
                         </p>
                         <div class="mt-2 flex flex-wrap items-center gap-3 text-xs">
-                            <span class="px-2.5 py-0.5 rounded-md bg-red-900/60 border border-red-700/50 font-mono text-red-200 font-semibold">
+                            <span class="px-2 py-0.5 rounded-badge bg-ink-950 border border-rose-500/30 font-mono text-rose-300 text-[11px]">
                                 Qolgan muddat: {{ auth()->user()->ban_remaining }}
                             </span>
                             @if(auth()->user()->ban_reason)
-                                <span class="text-red-300/90 italic">
+                                <span class="text-mist italic text-[11px]">
                                     Sabab: "{{ auth()->user()->ban_reason }}"
                                 </span>
                             @endif
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('contact') }}" class="px-3.5 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs font-semibold text-red-200 transition-colors flex-shrink-0 self-end sm:self-center">
+                <a href="{{ route('contact') }}" class="ks-btn-ghost py-1.5 px-3 text-xs text-rose-300 border-rose-500/30 hover:border-rose-500/50 flex-shrink-0">
                     Bog'lanish
                 </a>
             </div>
@@ -210,7 +93,7 @@
     <x-toast-container />
 
     <!-- ── Page Content ── -->
-    <main class="relative pt-10 pb-20 px-4 sm:px-6 noise-bg min-h-[calc(100vh-72px)]">
+    <main class="relative pt-6 pb-20 px-4 sm:px-6 min-h-[calc(100vh-72px)]">
         <div class="max-w-7xl mx-auto">
             {{ $slot ?? '' }}
             @yield('content')

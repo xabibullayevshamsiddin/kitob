@@ -6,43 +6,8 @@
     <meta name="description" content="{{ __('site.books.meta') }}">
     <title>{{ __('site.books.title') }} — Kitobxon</title>
 
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui'],
-                        mono: ['JetBrains Mono', 'ui-monospace'],
-                    },
-                    colors: {
-                        ink: {
-                            950: '#07090e',
-                            900: '#0b0f17',
-                            800: '#111726',
-                            700: '#1a2236',
-                        },
-                        amber: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        },
-                    },
-                    boxShadow: {
-                        'card-depth': '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-                        'glow-amber': '0 0 35px -5px rgba(245, 158, 11, 0.3)',
-                    },
-                }
-            }
-        }
-    </script>
+    @include('partials.design-system')
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- GSAP & ScrollTrigger for Pro-level Physics Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -146,96 +111,30 @@
                 </p>
             </div>
 
-            <!-- Books Grid (Staggered Entrance + 3D Hover Tilt) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                
+            <!-- Books Grid with 3D Book Cards (MASTER §5.2) -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
                 @forelse($books as $book)
-                    <div class="book-card spotlight-card rounded-3xl p-5 flex flex-col justify-between group">
-                        <div>
-                            <!-- Cover preview (3D Tilt effect) -->
-                            <div class="book-cover-3d w-full h-64 rounded-2xl overflow-hidden relative mb-4 shadow-lg border border-white/10 group-hover:border-amber-400/40 transition-colors bg-slate-900">
-                                @if($book->cover_image)
-                                    <img src="{{ $book->cover_url }}" alt="{{ $book->title }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                         onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($book->title) }}&size=512&background=1e1b4b&color=fff&bold=true'">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent"></div>
-
-                                    {{-- Badges on cover image --}}
-                                    <div class="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
-                                        <span class="text-[10px] font-mono text-amber-400 font-bold bg-ink-950/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 shadow">
-                                            {{ $book->week_number }}{{ __('site.home.week_badge') }}
-                                        </span>
-                                        <span class="text-[10px] font-semibold text-white bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md">
-                                            {{ $book->genre }}
-                                        </span>
-                                    </div>
-
-                                    <div class="absolute bottom-3 left-3 right-3 z-10 pointer-events-none">
-                                        <h3 class="text-base font-bold text-white leading-tight line-clamp-1 group-hover:text-amber-300 transition-colors drop-shadow-md">
-                                            {{ $book->title }}
-                                        </h3>
-                                        <p class="text-xs text-slate-300 mt-0.5 drop-shadow line-clamp-1">{{ $book->author }}</p>
-                                    </div>
-                                @else
-                                    <div class="w-full h-full bg-gradient-to-br from-indigo-950 via-ink-900 to-slate-900 flex flex-col justify-between p-4">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-xs font-mono text-amber-400 font-bold bg-ink-950/70 px-2.5 py-1 rounded-md border border-white/10">
-                                                {{ $book->week_number }}{{ __('site.home.week_badge') }}
-                                            </span>
-                                            <div class="flex items-center gap-1">
-                                                <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
-                                                <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
-                                                <span class="w-1 bg-amber-400 rounded-full bar-anim"></span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <h3 class="text-lg font-bold text-white leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
-                                                {{ $book->title }}
-                                            </h3>
-                                            <p class="text-xs text-slate-400 mt-1">{{ $book->author }}</p>
-                                        </div>
-
-                                        <div class="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
-                                            <span>📖 {{ __('site.books.text') }}</span> • <span>🎧 {{ __('site.books.audio') }}</span> • <span>🎥 {{ __('site.books.video') }}</span>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-
-                            @if(!$book->cover_image)
-                                <span class="inline-block px-2.5 py-1 rounded-lg bg-amber-400/10 text-amber-400 font-mono text-[11px] mb-2 font-medium">
-                                    {{ $book->genre }}
-                                </span>
-                            @endif
-
-                            <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                                {{ $book->description }}
-                            </p>
-                        </div>
-
-                        <div class="pt-4 border-t border-white/5 mt-4 flex items-center justify-between">
-                            <span class="text-[11px] text-slate-500 font-mono">{{ __('site.home.genre_fallback') }}</span>
+                    <x-ui.book-card :book="$book">
+                        <div class="pt-3 mt-3 border-t border-ink-border flex items-center justify-between">
+                            <span class="ks-eyebrow">{{ $book->genre }}</span>
                             @auth
                                 <a href="{{ route('books.show', $book->slug) }}" 
-                                   class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md shadow-amber-500/20">
+                                   class="ks-btn-primary !py-1 !px-2.5 !text-[11px]">
                                     {{ __('site.books.read_cta') }} →
                                 </a>
                             @else
                                 <a href="{{ route('login') }}" 
-                                   class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-all active:scale-95">
+                                   class="ks-btn-ghost !py-1 !px-2.5 !text-[11px]">
                                     {{ __('site.nav.login') }}
                                 </a>
                             @endauth
                         </div>
-                    </div>
+                    </x-ui.book-card>
                 @empty
-                    <div class="col-span-full p-12 rounded-3xl bg-ink-900 border border-white/10 text-center space-y-3">
-                        <span class="text-4xl">📚</span>
-                        <p class="text-slate-400 text-sm">{{ __('site.books.empty') }}</p>
+                    <div class="col-span-full py-16 ks-panel text-center space-y-3">
+                        <p class="text-mist text-sm">{{ __('site.books.empty') }}</p>
                     </div>
                 @endforelse
-
             </div>
 
             @if($books->hasPages())

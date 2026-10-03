@@ -6,43 +6,8 @@
     <meta name="description" content="{{ __('site.terms.meta_desc') }}">
     <title>{{ __('site.terms.page_title') }}</title>
 
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui'],
-                        mono: ['JetBrains Mono', 'ui-monospace'],
-                    },
-                    colors: {
-                        ink: {
-                            950: '#07090e',
-                            900: '#0b0f17',
-                            800: '#111726',
-                            700: '#1a2236',
-                        },
-                        amber: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        },
-                    },
-                    boxShadow: {
-                        'card-depth': '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-                        'glow-amber': '0 0 35px -5px rgba(245, 158, 11, 0.3)',
-                    },
-                }
-            }
-        }
-    </script>
+    @include('partials.design-system')
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- GSAP for Smooth Motion -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -86,38 +51,38 @@
 
     <!-- ── Hero Section ── -->
     <section class="relative pt-24 pb-16 overflow-hidden border-b border-white/[0.06]">
-        <!-- Ambient Glows -->
-        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-b from-amber-500/10 via-indigo-600/10 to-transparent rounded-full blur-[140px] pointer-events-none -z-10"></div>
-
         <div class="max-w-6xl mx-auto px-6">
             <div class="flex flex-col items-center text-center space-y-4">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-mono font-semibold tracking-wider uppercase">
-                    <span>✦</span>
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-pill bg-gold/10 border border-gold/25 text-gold text-xs font-mono font-semibold tracking-wider uppercase">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     <span>{{ __('site.terms.badge') }}</span>
                 </div>
 
-                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1] max-w-4xl">
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-serif font-bold text-paper tracking-tight leading-[1.1] max-w-4xl">
                     {{ __('site.terms.h1_a') }} <br class="hidden sm:inline">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500">{{ __('site.terms.h1_b') }}</span>
+                    <span class="text-gold italic">{{ __('site.terms.h1_b') }}</span>
                 </h1>
 
-                <p class="text-sm sm:text-base text-slate-400 max-w-2xl leading-relaxed">
+                <p class="text-sm sm:text-base text-mist max-w-2xl leading-relaxed">
                     {{ __('site.terms.intro') }}
                 </p>
 
                 <!-- Info Badges -->
                 <div class="pt-4 flex flex-wrap items-center justify-center gap-3 text-xs">
-                    <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-ink-900/80 border border-white/10 text-slate-300">
-                        <span class="text-amber-400 font-bold">📅 {{ __('site.terms.effective') }}</span>
-                        <span class="font-mono text-slate-400">{{ __('site.terms.effective_value') }}</span>
+                    <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-btn bg-ink-900 border border-ink-border text-paper-muted">
+                        <svg class="w-4 h-4 text-gold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span class="text-gold font-bold">{{ __('site.terms.effective') }}</span>
+                        <span class="font-mono text-mist">{{ __('site.terms.effective_value') }}</span>
                     </div>
-                    <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-ink-900/80 border border-white/10 text-slate-300">
-                        <span class="text-emerald-400 font-bold">👥 {{ __('site.terms.scope') }}</span>
-                        <span class="text-slate-400">{{ __('site.terms.scope_value') }}</span>
+                    <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-btn bg-ink-900 border border-ink-border text-paper-muted">
+                        <svg class="w-4 h-4 text-gold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        <span class="text-gold font-bold">{{ __('site.terms.scope') }}</span>
+                        <span class="text-mist">{{ __('site.terms.scope_value') }}</span>
                     </div>
-                    <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-ink-900/80 border border-white/10 text-slate-300">
-                        <span class="text-indigo-400 font-bold">⚖️ {{ __('site.terms.control') }}</span>
-                        <span class="text-slate-400">{{ __('site.terms.control_value') }}</span>
+                    <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-btn bg-ink-900 border border-ink-border text-paper-muted">
+                        <svg class="w-4 h-4 text-gold shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                        <span class="text-gold font-bold">{{ __('site.terms.control') }}</span>
+                        <span class="text-mist">{{ __('site.terms.control_value') }}</span>
                     </div>
                 </div>
             </div>
@@ -129,52 +94,52 @@
         <div class="max-w-6xl mx-auto px-6">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Card 1 -->
-                <div class="p-5 rounded-2xl bg-ink-900/90 border border-white/10 flex flex-col justify-between spotlight-card">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-3">
-                        📖
+                <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between spotlight-card">
+                    <div class="w-10 h-10 rounded-btn bg-gold/10 border border-gold/20 text-gold flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-white mb-1">{{ __('site.terms.card1_title') }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">
+                        <h3 class="text-sm font-bold text-paper mb-1">{{ __('site.terms.card1_title') }}</h3>
+                        <p class="text-xs text-mist leading-relaxed">
                             {{ __('site.terms.card1_text') }}
                         </p>
                     </div>
                 </div>
 
                 <!-- Card 2 -->
-                <div class="p-5 rounded-2xl bg-ink-900/90 border border-white/10 flex flex-col justify-between spotlight-card">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-3">
-                        💬
+                <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between spotlight-card">
+                    <div class="w-10 h-10 rounded-btn bg-gold/10 border border-gold/20 text-gold flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-white mb-1">{{ __('site.terms.card2_title') }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">
+                        <h3 class="text-sm font-bold text-paper mb-1">{{ __('site.terms.card2_title') }}</h3>
+                        <p class="text-xs text-mist leading-relaxed">
                             {{ __('site.terms.card2_text') }}
                         </p>
                     </div>
                 </div>
 
                 <!-- Card 3 -->
-                <div class="p-5 rounded-2xl bg-ink-900/90 border border-white/10 flex flex-col justify-between spotlight-card">
-                    <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-xl mb-3">
-                        🚫
+                <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between spotlight-card">
+                    <div class="w-10 h-10 rounded-btn bg-gold/10 border border-gold/20 text-gold flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-white mb-1">{{ __('site.terms.card3_title') }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">
+                        <h3 class="text-sm font-bold text-paper mb-1">{{ __('site.terms.card3_title') }}</h3>
+                        <p class="text-xs text-mist leading-relaxed">
                             {{ __('site.terms.card3_text') }}
                         </p>
                     </div>
                 </div>
 
                 <!-- Card 4 -->
-                <div class="p-5 rounded-2xl bg-ink-900/90 border border-white/10 flex flex-col justify-between spotlight-card">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl mb-3">
-                        🚩
+                <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between spotlight-card">
+                    <div class="w-10 h-10 rounded-btn bg-gold/10 border border-gold/20 text-gold flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-white mb-1">{{ __('site.terms.card4_title') }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">
+                        <h3 class="text-sm font-bold text-paper mb-1">{{ __('site.terms.card4_title') }}</h3>
+                        <p class="text-xs text-mist leading-relaxed">
                             {{ __('site.terms.card4_text') }}
                         </p>
                     </div>
@@ -246,22 +211,19 @@
             </div>
         </article>
 
-        <!-- ── 🔥 5-MODDA: ASOSIY BAN ME'YORLARI JADVALI 🔥 ── -->
-        <article class="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-ink-900/90 via-ink-900/80 to-ink-950 border border-amber-500/30 shadow-2xl relative overflow-hidden">
-            <!-- Glow effect -->
-            <div class="absolute -top-24 -right-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
+        <!-- ── 5-MODDA: ASOSIY BAN ME'YORLARI JADVALI ── -->
+        <article class="p-8 sm:p-10 rounded-panel bg-ink-900 border border-gold/30 shadow-card-depth relative overflow-hidden">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
                 <div class="flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-bold text-lg">
-                        ⚖️
+                    <span class="w-10 h-10 rounded-btn bg-gold/10 text-gold border border-gold/25 flex items-center justify-center font-bold text-lg">
+                        <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
                     </span>
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-black text-white">{{ __('site.terms.a5_title') }}</h2>
-                        <p class="text-xs text-amber-400/80 mt-0.5 font-mono">{{ __('site.terms.a5_sub') }}</p>
+                        <h2 class="text-xl sm:text-2xl font-serif font-bold text-paper">{{ __('site.terms.a5_title') }}</h2>
+                        <p class="text-xs text-gold/80 mt-0.5 font-mono">{{ __('site.terms.a5_sub') }}</p>
                     </div>
                 </div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-btn bg-vermilion/10 border border-vermilion/20 text-rose-300 text-xs font-bold font-mono">
                     <span>{{ __('site.terms.a5_tiers') }}</span>
                 </div>
             </div>
@@ -401,61 +363,63 @@
             </div>
 
             <!-- Note on Ban Execution -->
-            <div class="mt-6 p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400 leading-relaxed flex items-start gap-3">
-                <span class="text-base text-amber-400">💡</span>
+            <div class="mt-6 p-4 rounded-btn bg-ink-950/80 border border-ink-border text-xs text-mist leading-relaxed flex items-start gap-3">
+                <span class="w-5 h-5 text-gold shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                </span>
                 <div>
-                    <strong class="text-slate-200">{{ __('site.terms.a5_note_title') }}</strong> {{ __('site.terms.a5_note_text') }}
+                    <strong class="text-paper">{{ __('site.terms.a5_note_title') }}</strong> {{ __('site.terms.a5_note_text') }}
                 </div>
             </div>
         </article>
 
         <!-- 6-Modda -->
-        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-white/10 space-y-4">
+        <article class="p-8 sm:p-10 rounded-panel bg-ink-900 border border-ink-border space-y-4">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
+                <span class="w-8 h-8 rounded-btn bg-gold/10 text-gold border border-gold/25 flex items-center justify-center font-mono font-bold text-sm">
                     06
                 </span>
-                <h2 class="text-xl font-bold text-white">{{ __('site.terms.a6_title') }}</h2>
+                <h2 class="text-xl font-serif font-bold text-paper">{{ __('site.terms.a6_title') }}</h2>
             </div>
-            <div class="text-sm text-slate-300 leading-relaxed space-y-3 pl-0 sm:pl-11">
+            <div class="text-sm text-paper-muted leading-relaxed space-y-3 pl-0 sm:pl-11">
                 <p>{!! __('site.terms.a6_p1') !!}</p>
                 <p>{{ __('site.terms.a6_p2') }}</p>
                 <p>
                     {{ __('site.terms.a6_p3_pre') }}
-                    <a href="{{ route('contact') }}" class="text-amber-400 underline hover:text-amber-300 font-semibold">{{ __('site.terms.a6_link') }}</a>
+                    <a href="{{ route('contact') }}" class="text-gold underline hover:text-gold-light font-semibold">{{ __('site.terms.a6_link') }}</a>
                     {{ __('site.terms.a6_p3_post') }}
                 </p>
             </div>
         </article>
 
         <!-- 7-Modda -->
-        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-white/10 space-y-4">
+        <article class="p-8 sm:p-10 rounded-panel bg-ink-900 border border-ink-border space-y-4">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
+                <span class="w-8 h-8 rounded-btn bg-gold/10 text-gold border border-gold/25 flex items-center justify-center font-mono font-bold text-sm">
                     07
                 </span>
-                <h2 class="text-xl font-bold text-white">{{ __('site.terms.a7_title') }}</h2>
+                <h2 class="text-xl font-serif font-bold text-paper">{{ __('site.terms.a7_title') }}</h2>
             </div>
-            <div class="text-sm text-slate-300 leading-relaxed space-y-3 pl-0 sm:pl-11">
+            <div class="text-sm text-paper-muted leading-relaxed space-y-3 pl-0 sm:pl-11">
                 <p>{{ __('site.terms.a7_p1') }}</p>
                 <p>{{ __('site.terms.a7_p2') }}</p>
             </div>
         </article>
 
         <!-- CTA Contact Block -->
-        <div class="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-ink-900 via-slate-900 to-ink-900 border border-white/10 text-center space-y-4">
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto">
-                📬
+        <div class="p-8 sm:p-10 rounded-panel bg-ink-900 border border-gold/25 text-center space-y-4 shadow-card-depth">
+            <div class="w-12 h-12 rounded-btn bg-gold/10 border border-gold/20 text-gold flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
-            <h3 class="text-xl font-black text-white">{{ __('site.terms.cta_title') }}</h3>
-            <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
+            <h3 class="text-xl sm:text-2xl font-serif font-bold text-paper">{{ __('site.terms.cta_title') }}</h3>
+            <p class="text-xs sm:text-sm text-mist max-w-xl mx-auto leading-relaxed">
                 {{ __('site.terms.cta_text') }}
             </p>
             <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
-                <a href="{{ route('contact') }}" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-ink-950 font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all active:scale-95">
+                <a href="{{ route('contact') }}" class="ks-btn-gold px-6 py-3">
                     {{ __('site.terms.cta_contact') }}
                 </a>
-                <a href="{{ route('home') }}" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors border border-slate-700">
+                <a href="{{ route('home') }}" class="ks-btn-ghost px-6 py-3">
                     {{ __('site.terms.cta_home') }}
                 </a>
             </div>

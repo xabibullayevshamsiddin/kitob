@@ -25,31 +25,31 @@
     x-init="initStudio()">
 
     <!-- ── 1. TOP HEADER & STATUS BAR ── -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-3xl shadow-soft">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-ink-900 border border-ink-border p-4 sm:p-5 rounded-panel shadow-soft">
         <div class="flex items-center gap-3">
-            <a href="{{ route('live.index') }}" class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" title="Orqaga">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <a href="{{ route('live.index') }}" class="p-2 rounded-btn bg-ink-950/80 border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors" title="Orqaga">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
             <div>
                 <div class="flex items-center gap-2">
-                    <h1 class="text-lg sm:text-2xl font-black text-slate-900 dark:text-white font-manrope truncate max-w-xl">{{ $event->title }}</h1>
+                    <h1 class="text-base sm:text-xl font-bold font-serif text-paper truncate max-w-xl">{{ $event->title }}</h1>
                     @if($event->is_live)
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider animate-pulse">
-                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 text-[11px] font-mono font-bold uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
                             <span>{{ __('site.live.filter_live') }}</span>
                         </span>
                     @else
-                        <span class="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-bold uppercase">
+                        <span class="px-2 py-0.5 rounded-pill bg-ink-800 border border-ink-border text-mist text-[11px] font-mono uppercase">
                             {{ ucfirst($event->status) }}
                         </span>
                     @endif
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-2">
+                <p class="text-xs font-mono text-mist mt-0.5 flex flex-wrap items-center gap-2">
                     @if($event->hostUser)
-                        <span>{{ __('site.live.host') }} <strong class="text-slate-700 dark:text-slate-200">{{ $event->hostUser->name }}</strong></span>
+                        <span>{{ __('site.live.host') }}: <strong class="text-paper">{{ $event->hostUser->name }}</strong></span>
                     @endif
                     @if($event->book)
-                        <span>• 📖 {{ $event->book->title }}</span>
+                        <span>• {{ $event->book->title }}</span>
                     @endif
                     <span>• {{ $event->scheduled_at?->timezone('Asia/Tashkent')->format('d M, H:i') }}</span>
                 </p>
@@ -57,9 +57,9 @@
         </div>
 
         <!-- Right: Current Permission Pill & Host Quick End -->
-        <div class="flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-2.5 shrink-0">
             <!-- Permission indicator badge -->
-            <div class="px-3.5 py-2 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center gap-2">
+            <div class="px-3 py-1.5 rounded-btn bg-ink-950/80 border border-ink-border text-mist font-mono text-xs font-medium flex items-center gap-1.5">
                 @if($event->permission_mode === 'chat_only')
                     <span>{{ __('site.live.perm_filter_chat') }}</span>
                 @elseif($event->permission_mode === 'voice_only')
@@ -74,12 +74,12 @@
             @if($isHost || $canManage)
                 @if($event->status === 'live')
                     <button wire:click="endLiveStream" wire:confirm="{{ __('site.live.end_confirm', ['title' => '']) }}"
-                        class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
+                        class="px-3.5 py-1.5 bg-[#C1392B] hover:bg-[#a63024] text-paper font-mono font-bold text-xs uppercase tracking-wider rounded-btn transition-all">
                         {{ __('site.live.end') }}
                     </button>
                 @else
                     <button wire:click="restartLiveStream"
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95">
+                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-paper font-mono font-bold text-xs uppercase tracking-wider rounded-btn transition-all">
                         ▶ {{ __('site.live.restart') }}
                     </button>
                 @endif
@@ -95,13 +95,13 @@
     @endif
 
     <!-- ── 2. TWO-COLUMN STUDIO GRID ── -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
         <!-- ════ LEFT: BROADCAST VIDEO & HOST CONSOLE (8 Cols) ════ -->
         <div class="lg:col-span-7 xl:col-span-8 space-y-5">
 
             <!-- Video Screen Viewport -->
-            <div class="relative w-full aspect-video rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center group"
+            <div class="relative w-full aspect-video rounded-panel bg-ink-950 border border-ink-border shadow-soft overflow-hidden flex items-center justify-center group"
                  @click="if (!isHost && (needsUnmute || isViewerMuted)) unmuteAudio()">
                 
                 <!-- Live Video Element (Webcam / Stream) -->
@@ -109,90 +109,90 @@
                        :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }">
                 </video>
 
-                <!-- Dedicated Audio Element for WebRTC audio stream playback (off-screen, never display:none) -->
+                <!-- Dedicated Audio Element for WebRTC audio stream playback -->
                 <audio id="liveAudioPlayer" autoplay playsinline style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></audio>
 
-                <!-- Efir tugadi overlay (host efirni o'chirganda) -->
+                <!-- Efir tugadi overlay -->
                 <div x-show="streamEnded" x-cloak
-                    class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
-                    <div class="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-4xl backdrop-blur-md">📺</div>
+                    class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-ink-950/95 p-6 text-center space-y-3">
+                    <div class="w-16 h-16 rounded-btn bg-ink-900 border border-ink-border flex items-center justify-center text-amber-400">
+                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                    </div>
                     <div>
-                        <h3 class="text-lg sm:text-xl font-black text-white">{{ __('site.live.ended_title') }}</h3>
-                        <p class="text-xs text-slate-400 mt-2 max-w-sm">{{ __('site.live.ended_sub') }}</p>
+                        <h3 class="text-base font-bold text-paper font-serif">{{ __('site.live.ended_title') }}</h3>
+                        <p class="text-xs text-mist font-mono mt-1 max-w-sm">{{ __('site.live.ended_sub') }}</p>
                     </div>
                     <a :href="liveIndexUrl"
-                        class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg transition-all active:scale-95 flex items-center gap-2">
-                        📺 {{ __('site.live.watch_others') }} →
+                        class="ks-btn-primary text-xs py-2 px-4 font-mono">
+                        {{ __('site.live.watch_others') }} →
                     </a>
                 </div>
 
-                <!-- Avatar Backdrop when Camera is Off or audio-only -->
-                <div x-show="!isVideoOn" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 p-6 text-center space-y-4">
+                <!-- Avatar Backdrop when Camera is Off -->
+                <div x-show="!isVideoOn" class="absolute inset-0 flex flex-col items-center justify-center bg-ink-950 p-6 text-center space-y-3">
                     <div class="relative">
-                        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-rose-500 to-amber-500 p-1 shadow-2xl">
-                            <img src="{{ $event->hostUser?->avatar_url ?? 'https://ui-avatars.com/api/?name=Kitobxon&background=4f46e5&color=fff' }}" 
-                                class="w-full h-full rounded-[22px] object-cover">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-panel border-2 border-amber-400/40 p-1">
+                            <img src="{{ $event->hostUser?->avatar_url ?? 'https://ui-avatars.com/api/?name=Kitobxon&background=1e293b&color=fff' }}" 
+                                class="w-full h-full rounded-panel object-cover">
                         </div>
-                        <!-- Audio Wave Ping if mic is on -->
-                        <div x-show="isMicOn" class="absolute -inset-2 rounded-3xl border-2 border-rose-500/40 animate-ping pointer-events-none"></div>
+                        <div x-show="isMicOn" class="absolute -inset-1 rounded-panel border border-amber-400/40 animate-ping pointer-events-none"></div>
                     </div>
                     <div>
-                        <h3 class="text-base sm:text-lg font-bold text-white">{{ $event->hostUser?->name ?? 'Ustoz' }}</h3>
-                        <p class="text-xs text-slate-400 font-mono">
-                            <span x-text="!hasRemoteStream && !isHost ? '📡 ' + waitingHost : (isMicOn ? '🎙️ ' + micStreaming : '🔇 ' + micCamOff)"></span>
+                        <h3 class="text-sm sm:text-base font-bold text-paper font-serif">{{ $event->hostUser?->name ?? 'Ustoz' }}</h3>
+                        <p class="text-xs text-mist font-mono">
+                            <span x-text="!hasRemoteStream && !isHost ? waitingHost : (isMicOn ? micStreaming : micCamOff)"></span>
                         </p>
                     </div>
                 </div>
 
-                <!-- Viewer Connecting / Status Pill (Non-blocking) -->
-                <div x-show="!isHost && !hasRemoteStream" class="absolute top-4 left-32 z-20 flex items-center gap-2 bg-indigo-950/90 border border-indigo-500/40 text-indigo-200 text-xs px-3.5 py-1 rounded-full backdrop-blur-md animate-pulse shadow-lg">
-                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
-                    <span>📡 {{ __('site.live.connecting') }}</span>
+                <!-- Viewer Connecting / Status Pill -->
+                <div x-show="!isHost && !hasRemoteStream" class="absolute top-4 left-32 z-20 flex items-center gap-2 bg-ink-900/90 border border-amber-500/40 text-amber-400 text-xs font-mono px-3 py-1 rounded-pill backdrop-blur-md animate-pulse shadow-lg">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                    <span>{{ __('site.live.connecting') }}</span>
                 </div>
 
-                <!-- Reconnect Button if stream takes more than 2 attempts -->
+                <!-- Reconnect Button -->
                 <div x-show="!isHost && !hasRemoteStream && connectionAttempts >= 2" class="absolute bottom-12 left-1/2 -translate-x-1/2 z-20">
-                    <button @click="reconnect()" class="px-4 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/20 text-white font-bold text-xs flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95">
-                        <span>🔄 {{ __('site.live.reconnect') }}</span>
+                    <button @click="reconnect()" class="px-3.5 py-1.5 rounded-btn bg-ink-900/90 hover:bg-ink-800 border border-ink-border text-paper font-mono text-xs flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all active:scale-95">
+                        <span>{{ __('site.live.reconnect') }}</span>
                     </button>
                 </div>
 
-                <!-- Viewer Unmute prompt banner (when browser policy requires user gesture for sound) -->
-                <div x-show="!isHost && needsUnmute" class="absolute inset-0 z-40 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-                    <button @click="unmuteAudio()" class="px-6 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-2xl flex items-center gap-2.5 transform hover:scale-105 active:scale-95 transition-all">
-                        <span class="text-lg">🔊</span>
+                <!-- Viewer Unmute prompt banner -->
+                <div x-show="!isHost && needsUnmute" class="absolute inset-0 z-40 flex items-center justify-center bg-ink-950/80 backdrop-blur-sm p-4">
+                    <button @click="unmuteAudio()" class="px-5 py-2.5 rounded-btn bg-[#C1392B] hover:bg-[#a63024] text-paper font-mono font-bold text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 transform hover:scale-105 active:scale-95 transition-all">
                         <span>{{ __('site.live.unmute_prompt') }}</span>
                     </button>
                 </div>
 
                 <!-- Top Left Overlays (LIVE badge + Timer) -->
                 <div class="absolute top-4 left-4 flex items-center gap-2 z-20">
-                    <div class="px-3 py-1 rounded-full bg-rose-600/90 text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg backdrop-blur-md">
-                        <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                    <div class="px-2.5 py-0.5 rounded-pill bg-[#C1392B] text-paper font-mono text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg backdrop-blur-md">
+                        <span class="w-1.5 h-1.5 rounded-full bg-paper animate-ping"></span>
                         <span>LIVE</span>
                     </div>
-                    <div class="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white font-mono text-xs font-semibold" x-text="formattedDuration">
+                    <div class="px-2.5 py-0.5 rounded-pill bg-ink-950/80 backdrop-blur-md text-paper font-mono text-xs border border-ink-border" x-text="formattedDuration">
                         00:00:00
                     </div>
                 </div>
 
                 <!-- Top Right Recording Overlay -->
                 <div x-show="isRecording" class="absolute top-4 right-4 z-20 animate-pulse">
-                    <div class="px-3 py-1 rounded-full bg-rose-500/90 text-white font-mono text-xs font-bold flex items-center gap-2 shadow-lg backdrop-blur-md">
-                        <span class="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+                    <div class="px-2.5 py-0.5 rounded-pill bg-[#C1392B] text-paper font-mono text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                        <span class="w-2 h-2 rounded-full bg-paper animate-ping"></span>
                         <span>REC <span x-text="formattedRecordDuration">00:00</span></span>
                     </div>
                 </div>
 
-                <!-- Bottom Left Audio VU Meter (Mikrofon indikatori) & Controls -->
+                <!-- Bottom Left Audio VU Meter -->
                 <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-                    <div class="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10">
-                        <span class="text-xs" x-text="isMicOn ? '🎙️' : '🔇'"></span>
-                        <div class="flex items-center gap-1 h-3">
-                            <div class="w-1 bg-emerald-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 1.5)) + '%' }"></div>
-                            <div class="w-1 bg-emerald-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2)) + '%' }"></div>
-                            <div class="w-1 bg-amber-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2.5)) + '%' }"></div>
-                            <div class="w-1 bg-rose-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 3)) + '%' }"></div>
+                    <div class="flex items-center gap-2 bg-ink-950/80 backdrop-blur-md px-2.5 py-1 rounded-btn border border-ink-border">
+                        <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                        <div class="flex items-center gap-0.5 h-2.5">
+                            <div class="w-0.5 bg-emerald-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 1.5)) + '%' }"></div>
+                            <div class="w-0.5 bg-emerald-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2)) + '%' }"></div>
+                            <div class="w-0.5 bg-amber-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2.5)) + '%' }"></div>
+                            <div class="w-0.5 bg-[#C1392B] rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 3)) + '%' }"></div>
                         </div>
                     </div>
 
@@ -201,157 +201,148 @@
                         <div class="flex items-center gap-2">
                             <button @click="unmuteAudio()"
                                 x-show="needsUnmute || isViewerMuted"
-                                class="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/20 text-white text-xs font-bold transition-all shadow-lg active:scale-95 animate-pulse">
-                                <span>🔊 {{ __('site.live.unmute_short') }}</span>
+                                class="flex items-center gap-1.5 bg-[#C1392B] hover:bg-[#a63024] backdrop-blur-md px-3 py-1 rounded-btn border border-rose-500/40 text-paper text-xs font-mono font-bold transition-all shadow-lg active:scale-95 animate-pulse">
+                                <span>{{ __('site.live.unmute_short') }}</span>
                             </button>
                             <button @click="toggleViewerMute()"
                                 x-show="!needsUnmute && !isViewerMuted"
-                                class="flex items-center gap-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10 text-white text-xs font-medium transition-colors">
-                                <span>🔊 {{ __('site.live.muted_on') }}</span>
+                                class="flex items-center gap-1.5 bg-ink-950/80 hover:bg-ink-800 backdrop-blur-md px-3 py-1 rounded-btn border border-ink-border text-paper text-xs font-mono transition-colors">
+                                <span>{{ __('site.live.muted_on') }}</span>
                             </button>
                         </div>
                     </template>
                 </div>
 
                 <!-- Bottom Right Watermark -->
-                <div class="absolute bottom-4 right-4 z-20 hidden sm:flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] text-slate-300 font-mono">
+                <div class="absolute bottom-4 right-4 z-20 hidden sm:flex items-center gap-1.5 bg-ink-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-pill text-[10px] text-mist font-mono border border-ink-border">
                     <span>Kitobxon Live Studio</span>
                 </div>
             </div>
 
             <!-- ── HOST TOOLBAR (Ustoz / Admin Uskunalari) ── -->
             @if($isHost)
-                <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft space-y-4">
+                <div class="p-4 sm:p-5 rounded-panel bg-ink-900 border border-ink-border shadow-soft space-y-3.5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-slate-900 dark:text-white">🎛️ {{ __('site.live.studio_title') }}</span>
-                            <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 font-bold">Broadcaster</span>
+                            <span class="text-xs sm:text-sm font-bold font-serif text-paper">{{ __('site.live.studio_title') }}</span>
+                            <span class="text-[9px] uppercase font-mono px-2 py-0.5 rounded-pill bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 font-bold">Broadcaster</span>
                         </div>
 
                         <!-- Hardware Settings Toggle button -->
                         <button @click="showDeviceSettings = !showDeviceSettings"
-                            class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors">
-                            <span>⚙️ {{ __('site.live.device_settings') }}</span>
+                            class="text-xs font-mono px-2.5 py-1 rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 flex items-center gap-1.5 transition-colors">
+                            <span>{{ __('site.live.device_settings') }}</span>
                             <span x-text="showDeviceSettings ? '▲' : '▼'"></span>
                         </button>
                     </div>
 
                     <!-- Action Buttons Toolbar -->
-                    <div class="flex flex-wrap items-center gap-2.5 pt-1">
+                    <div class="flex flex-wrap items-center gap-2 pt-1 font-mono text-xs">
                         <!-- Mic toggle -->
                         <button @click="toggleMic()"
-                            class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
-                            :class="isMicOn ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-rose-500/10 border border-rose-500/30 text-rose-500 hover:bg-rose-500/20'">
-                            <span x-text="isMicOn ? '🎙️ ' + micOn : '🔇 ' + micOff"></span>
+                            class="px-3.5 py-2 rounded-btn font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                            :class="isMicOn ? 'ks-btn-primary' : 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 hover:bg-[#C1392B]/25'">
+                            <span x-text="isMicOn ? micOn : micOff"></span>
                         </button>
 
                         <!-- Camera toggle -->
                         <button @click="toggleVideo()"
-                            class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
-                            :class="isVideoOn ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'">
-                            <span x-text="isVideoOn ? '📹 ' + camOn : '📷 ' + camOff"></span>
+                            class="px-3.5 py-2 rounded-btn font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                            :class="isVideoOn ? 'ks-btn-primary' : 'ks-btn-ghost'">
+                            <span x-text="isVideoOn ? camOn : camOff"></span>
                         </button>
 
                         <!-- Screen share -->
                         <button @click="toggleScreenShare()"
-                            class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
-                            :class="isScreenSharing ? 'bg-amber-500 text-ink-950 font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'">
+                            class="px-3.5 py-2 rounded-btn font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                            :class="isScreenSharing ? 'ks-btn-gold' : 'ks-btn-ghost'">
                             <span x-text="isScreenSharing ? stopShare : shareScreen"></span>
                         </button>
 
-                        <!-- Video Recording (Zapis) -->
+                        <!-- Video Recording -->
                         <button @click="toggleRecording()"
-                            class="px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm"
-                            :class="isRecording ? 'bg-rose-600 text-white animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'">
+                            class="px-3.5 py-2 rounded-btn font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                            :class="isRecording ? 'bg-[#C1392B] text-paper animate-pulse' : 'ks-btn-ghost'">
                             <span x-text="isRecording ? stopRec : startRec"></span>
                         </button>
                     </div>
 
-                    <!-- ── EKRAN ULASHISH AUDIO ESLATMASI ── -->
+                    <!-- Ekran ulashish audio eslatmasi -->
                     <div x-show="isScreenSharing" x-transition
-                        class="px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2.5">
-                        <span class="text-base shrink-0">💡</span>
+                        class="px-3.5 py-2.5 rounded-btn bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-start gap-2">
                         <div>
-                            <p class="font-bold mb-0.5">{{ __('site.live.share_audio_title') }}</p>
-                            <p>{!! __('site.live.share_audio_sub') !!}</p>
-                            <p class="mt-1 text-amber-600/70 dark:text-amber-400/70">⚠️ {{ __('site.live.share_audio_warn') }}</p>
+                            <p class="font-bold mb-0.5 font-serif">{{ __('site.live.share_audio_title') }}</p>
+                            <p class="font-sans text-[11px] leading-relaxed">{!! __('site.live.share_audio_sub') !!}</p>
+                            <p class="mt-1 font-mono text-[10px] text-amber-400/80">⚠️ {{ __('site.live.share_audio_warn') }}</p>
                         </div>
                     </div>
 
-                    <!-- ── KOMPYUTER MIKRAFON VA KAMERA SOZLAMALARI (Collapsible) ── -->
-                    <div x-show="showDeviceSettings" x-collapse x-cloak class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Microphone Selector (enumerateDevices) -->
+                    <!-- Qurilma sozlamalari -->
+                    <div x-show="showDeviceSettings" x-collapse x-cloak class="p-3.5 rounded-btn bg-ink-950/80 border border-ink-border space-y-3 font-mono text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                                    <span>🎤</span>
-                                    <span>{{ __('site.live.mic_select') }}</span>
+                                <label class="block text-[11px] uppercase tracking-wider text-mist mb-1">
+                                    {{ __('site.live.mic_select') }}
                                 </label>
                                 <select id="audioSourceSelect" @change="changeAudioSource($event.target.value)"
-                                    class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                    class="w-full px-2.5 py-1.5 bg-ink-900 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none">
                                     <template x-for="device in audioDevices" :key="device.deviceId">
                                         <option :value="device.deviceId" x-text="device.label || `Mikrafon ${$index + 1}`" :selected="device.deviceId === selectedAudioDevice"></option>
                                     </template>
                                 </select>
-                                <p class="text-[11px] text-slate-400 mt-1">{{ __('site.live.mic_select_hint') }}</p>
+                                <p class="text-[10px] text-mist mt-1 font-sans">{{ __('site.live.mic_select_hint') }}</p>
                             </div>
 
-                            <!-- Camera Selector (enumerateDevices) -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                                    <span>📹</span>
-                                    <span>{{ __('site.live.cam_select') }}</span>
+                                <label class="block text-[11px] uppercase tracking-wider text-mist mb-1">
+                                    {{ __('site.live.cam_select') }}
                                 </label>
                                 <select id="videoSourceSelect" @change="changeVideoSource($event.target.value)"
-                                    class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                                    class="w-full px-2.5 py-1.5 bg-ink-900 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none">
                                     <template x-for="device in videoDevices" :key="device.deviceId">
                                         <option :value="device.deviceId" x-text="device.label || `Kamera ${$index + 1}`" :selected="device.deviceId === selectedVideoDevice"></option>
                                     </template>
                                 </select>
-                                <p class="text-[11px] text-slate-400 mt-1">{{ __('site.live.cam_select_hint') }}</p>
+                                <p class="text-[10px] text-mist mt-1 font-sans">{{ __('site.live.cam_select_hint') }}</p>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700 text-xs">
-                            <span class="text-slate-400">{{ __('site.live.devices_hint') }}</span>
-                            <button @click="scanMediaDevices()" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
-                                🔄 {{ __('site.live.rescan_devices') }}
+                        <div class="flex items-center justify-between pt-2 border-t border-ink-border text-xs">
+                            <span class="text-mist">{{ __('site.live.devices_hint') }}</span>
+                            <button @click="scanMediaDevices()" class="text-amber-400 hover:underline">
+                                {{ __('site.live.rescan_devices') }}
                             </button>
                         </div>
                     </div>
 
-                    <!-- ── AUDIENCE PERMISSION SWITCHER (Real-time) — FAQAT HOST ko'radi ── -->
+                    <!-- Audience permission switcher -->
                     @if($canEditSettings)
-                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                            ⚙️ {{ __('site.live.audience_perms') }}
+                    <div class="pt-3 border-t border-ink-border space-y-2">
+                        <label class="block text-xs font-mono uppercase tracking-wider text-mist">
+                            {{ __('site.live.audience_perms') }}
                         </label>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            <!-- Both -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
                             <button wire:click="updatePermissionMode('both')"
-                                class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'both' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
+                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'both' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
                                 <span class="block">{{ __('site.live.perm_both') }}</span>
                                 <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_both_sub') }}</span>
                             </button>
 
-                            <!-- Chat only -->
                             <button wire:click="updatePermissionMode('chat_only')"
-                                class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'chat_only' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
+                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'chat_only' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
                                 <span class="block">{{ __('site.live.perm_chat') }}</span>
                                 <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_chat_sub') }}</span>
                             </button>
 
-                            <!-- Voice only -->
                             <button wire:click="updatePermissionMode('voice_only')"
-                                class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'voice_only' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
+                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'voice_only' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
                                 <span class="block">{{ __('site.live.perm_voice') }}</span>
                                 <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_voice_sub') }}</span>
                             </button>
 
-                            <!-- View only -->
                             <button wire:click="updatePermissionMode('view_only')"
-                                class="p-2.5 rounded-xl border text-left text-xs transition-all {{ $event->permission_mode === 'view_only' ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-500 text-indigo-700 dark:text-indigo-300 font-bold ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400' }}">
+                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'view_only' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
                                 <span class="block">{{ __('site.live.perm_view') }}</span>
                                 <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_view_sub') }}</span>
                             </button>
@@ -363,9 +354,9 @@
 
             <!-- Event Details Note -->
             @if($event->description)
-                <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{{ __('site.live.about') }}</h3>
-                    <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{{ $event->description }}</p>
+                <div class="p-4 rounded-panel bg-ink-900 border border-ink-border shadow-soft">
+                    <h3 class="text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.live.about') }}</h3>
+                    <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">{{ $event->description }}</p>
                 </div>
             @endif
 

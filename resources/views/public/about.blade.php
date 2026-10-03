@@ -6,43 +6,8 @@
     <meta name="description" content="{{ __('site.about.meta') }}">
     <title>{{ __('site.about.title') }} — Kitobxon</title>
 
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui'],
-                        mono: ['JetBrains Mono', 'ui-monospace'],
-                    },
-                    colors: {
-                        ink: {
-                            950: '#07090e',
-                            900: '#0b0f17',
-                            800: '#111726',
-                            700: '#1a2236',
-                        },
-                        amber: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        },
-                    },
-                    boxShadow: {
-                        'card-depth': '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-                        'glow-amber': '0 0 35px -5px rgba(245, 158, 11, 0.3)',
-                    },
-                }
-            }
-        }
-    </script>
+    @include('partials.design-system')
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- GSAP & ScrollTrigger for Pro-level Physics Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -187,37 +152,37 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                <div class="value-card spotlight-card rounded-3xl p-8 sm:p-10 space-y-5">
-                    <div class="w-14 h-14 rounded-2xl bg-amber-400/10 border border-amber-400/25 text-amber-400 flex items-center justify-center text-3xl">
-                        💎
+                <div class="value-card spotlight-card rounded-panel p-6 sm:p-8 space-y-4">
+                    <div class="w-12 h-12 rounded-btn bg-amber-400/10 border border-amber-400/25 text-amber-400 flex items-center justify-center">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l4 6-10 12L2 9z"/></svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-white tracking-tight">{{ __('site.about.value1_title') }}</h3>
-                    <p class="text-sm text-slate-300 leading-relaxed">
+                    <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.about.value1_title') }}</h3>
+                    <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">
                         {{ __('site.about.value1_sub') }}
                     </p>
                     <div class="pt-2 text-xs font-mono text-amber-400">{{ __('site.about.value1_tag') }}</div>
                 </div>
 
-                <div class="value-card spotlight-card rounded-3xl p-8 sm:p-10 space-y-5">
-                    <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 flex items-center justify-center text-3xl">
-                        ⚡️
+                <div class="value-card spotlight-card rounded-panel p-6 sm:p-8 space-y-4">
+                    <div class="w-12 h-12 rounded-btn bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-white tracking-tight">{{ __('site.about.value2_title') }}</h3>
-                    <p class="text-sm text-slate-300 leading-relaxed">
+                    <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.about.value2_title') }}</h3>
+                    <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">
                         {{ __('site.about.value2_sub') }}
                     </p>
-                    <div class="pt-2 text-xs font-mono text-indigo-400">{{ __('site.about.value2_tag') }}</div>
+                    <div class="pt-2 text-xs font-mono text-amber-400">{{ __('site.about.value2_tag') }}</div>
                 </div>
 
-                <div class="value-card spotlight-card rounded-3xl p-8 sm:p-10 space-y-5">
-                    <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-400 flex items-center justify-center text-3xl">
-                        🤝
+                <div class="value-card spotlight-card rounded-panel p-6 sm:p-8 space-y-4">
+                    <div class="w-12 h-12 rounded-btn bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-white tracking-tight">{{ __('site.about.value3_title') }}</h3>
-                    <p class="text-sm text-slate-300 leading-relaxed">
+                    <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.about.value3_title') }}</h3>
+                    <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">
                         {{ __('site.about.value3_sub') }}
                     </p>
-                    <div class="pt-2 text-xs font-mono text-rose-400">{{ __('site.about.value3_tag') }}</div>
+                    <div class="pt-2 text-xs font-mono text-amber-400">{{ __('site.about.value3_tag') }}</div>
                 </div>
 
             </div>
