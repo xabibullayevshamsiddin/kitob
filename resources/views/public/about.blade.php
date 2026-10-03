@@ -272,22 +272,8 @@
         </div>
     </section>
 
-    <!-- ── Footer ── -->
-    <footer class="border-t border-white/[0.07] bg-ink-950 py-10 text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-3">
-                <span class="font-bold text-white text-sm">Kitobxon</span>
-                <span>•</span>
-                <span>© {{ date('Y') }} {{ __('site.common.all_rights') }}</span>
-            </div>
-            <div class="flex items-center gap-6">
-                <a href="{{ route('home') }}" class="hover:text-slate-300 transition-colors">{{ __('site.common.back_home') }}</a>
-                <a href="{{ route('books.public') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.books') }}</a>
-                <a href="{{ route('faq') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.faq') }}</a>
-                <a href="{{ route('contact') }}" class="hover:text-slate-300 transition-colors">{{ __('site.nav.contact') }}</a>
-            </div>
-        </div>
-    </footer>
+    <!-- ── Universal Footer ── -->
+    <x-nav.main-footer />
     </div>
 
     <!-- ── Advanced Motion & Physics Script ── -->

@@ -230,17 +230,8 @@
         </div>
     </main>
 
-    <!-- ── Footer ── -->
-    <footer class="border-t border-white/[0.07] py-6">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p class="text-xs text-slate-500">© {{ date('Y') }} Kitobxon. Barcha huquqlar himoyalangan.</p>
-            <div class="flex items-center gap-5 text-xs text-slate-500">
-                <a href="{{ route('books.public') }}" class="hover:text-amber-400 transition-colors">Kitoblar</a>
-                <a href="{{ route('faq') }}" class="hover:text-amber-400 transition-colors">FAQ</a>
-                <a href="{{ route('contact') }}" class="hover:text-amber-400 transition-colors">Aloqa</a>
-            </div>
-        </div>
-    </footer>
+    <!-- ── Universal Footer ── -->
+    <x-nav.main-footer />
 
     @if(class_exists('Livewire\Livewire'))
         @livewireScripts
