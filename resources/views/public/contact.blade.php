@@ -141,7 +141,9 @@
                     @endif
 
                     @php
-                        $isReport = request('report') == 1;
+                        // "Shikoyat rejimi" faqat chatdagi 🚩 tugmasidan kelgan haqiqiy ma'lumotlar
+                        // (reported_user_id) bilan, bo'sh footer havolasi bilan emas, faollashadi.
+                        $isReport = request('report') == 1 && request('reported_user_id');
                         $defaultSubject = $isReport ? "🚩 Qoidabuzarlik / Haqorat bo'yicha shikoyat (#" . request('reported_user_id') . ")" : old('subject');
                         
                         $defaultMessage = old('message');
