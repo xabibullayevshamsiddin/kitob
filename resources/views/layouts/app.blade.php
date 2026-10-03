@@ -204,23 +204,10 @@
                 </a>
             </div>
         @endif
-        @if (session()->has('success'))
-            <div class="mt-6 flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 rounded-2xl">
-                <div class="flex items-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    <span class="text-sm font-semibold">{{ session('success') }}</span>
-                </div>
-            </div>
-        @endif
-        @if (session()->has('error'))
-            <div class="mt-6 flex items-center justify-between p-4 bg-rose-500/10 border border-rose-500/25 text-rose-400 rounded-2xl">
-                <div class="flex items-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span class="text-sm font-semibold">{{ session('error') }}</span>
-                </div>
-            </div>
-        @endif
     </div>
+
+    <!-- ── Universal Toast Notification Container ── -->
+    <x-toast-container />
 
     <!-- ── Page Content ── -->
     <main class="relative pt-10 pb-20 px-4 sm:px-6 noise-bg min-h-[calc(100vh-72px)]">

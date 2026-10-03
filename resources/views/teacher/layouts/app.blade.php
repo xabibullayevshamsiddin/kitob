@@ -199,20 +199,8 @@
         <!-- Page content scrollable -->
         <main class="flex-1 overflow-y-auto sidebar-scroll p-4 sm:p-6 lg:p-8">
             <div class="max-w-7xl mx-auto space-y-6">
-                <!-- Flash messages -->
-                @if(session('success'))
-                    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show=false, 4000)"
-                         class="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center gap-2 text-sm font-medium">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        <span>{{ session('success') }}</span>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-sm font-medium">
-                        {{ session('error') }}
-                    </div>
-                @endif
+                <!-- ── Universal Toast Notification Container ── -->
+                <x-toast-container />
 
                 {{ $slot ?? '' }}
                 @yield('content')

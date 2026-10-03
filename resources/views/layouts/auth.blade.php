@@ -110,6 +110,9 @@
         </div>
     </div>
 
+    <!-- ── Universal Toast Notification Container ── -->
+    <x-toast-container />
+
     @if(class_exists('Livewire\Livewire'))
         @livewireScripts
     @endif

@@ -20,16 +20,12 @@
         </button>
     </div>
 
-    <!-- Flash Notifications -->
+    <!-- Flash Notifications via Toast -->
     @if (session()->has('success'))
-        <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold flex items-center gap-2">
-            <span>✅</span> {{ session('success') }}
-        </div>
+        <div x-init="window.toast({ type: 'success', message: @js(session('success')), title: 'Muvaffaqiyatli!' })"></div>
     @endif
     @if (session()->has('error'))
-        <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs font-semibold flex items-center gap-2">
-            <span>⚠️</span> {{ session('error') }}
-        </div>
+        <div x-init="window.toast({ type: 'error', message: @js(session('error')), title: 'Xatolik yuz berdi' })"></div>
     @endif
 
     <!-- ── GURUHLAR FILTERLARI VA QIDIRUV ── -->

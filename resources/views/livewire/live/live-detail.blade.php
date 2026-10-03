@@ -88,16 +88,10 @@
     </div>
 
     @if (session()->has('success'))
-        <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold flex items-center gap-2 animate-fade-in">
-            <span>✓</span>
-            <span>{{ session('success') }}</span>
-        </div>
+        <div x-init="window.toast({ type: 'success', message: @js(session('success')), title: 'Muvaffaqiyatli!' })"></div>
     @endif
     @if (session()->has('error'))
-        <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-semibold flex items-center gap-2 animate-fade-in">
-            <span>⚠</span>
-            <span>{{ session('error') }}</span>
-        </div>
+        <div x-init="window.toast({ type: 'error', message: @js(session('error')), title: 'Xatolik yuz berdi' })"></div>
     @endif
 
     <!-- ── 2. TWO-COLUMN STUDIO GRID ── -->

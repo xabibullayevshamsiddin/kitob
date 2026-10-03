@@ -486,5 +486,8 @@
             });
         });
     </script>
+
+    <!-- ── Universal Toast Notification Container ── -->
+    <x-toast-container />
 </body>
 </html>

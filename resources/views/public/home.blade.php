@@ -767,5 +767,7 @@
         setInterval(__kitobxonVisibilityFailsafe, 2000);
     </script>
 
+    <!-- ── Universal Toast Notification Container ── -->
+    <x-toast-container />
 </body>
 </html>
