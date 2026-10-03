@@ -70,6 +70,31 @@ class LiveEvent extends Model
         return $this->hasMany(LiveEventLike::class);
     }
 
+    public function getCurrentViewersAttribute(): int
+    {
+        if ($this->status !== self::STATUS_LIVE) {
+            return 0;
+        }
+
+        $cached = \Illuminate\Support\Facades\Cache::get("live_event_{$this->id}_viewers");
+        if ($cached !== null) {
+            return (int) $cached;
+        }
+
+        $signal = \App\Models\LiveSignal::where('live_event_id', $this->id)
+            ->where('type', 'viewer-count')
+            ->where('created_at', '>', now()->subSeconds(30))
+            ->latest('id')
+            ->value('payload');
+
+        if ($signal) {
+            $decoded = is_array($signal) ? $signal : json_decode($signal, true);
+            return (int) ($decoded['count'] ?? 0);
+        }
+
+        return 0;
+    }
+
     // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------

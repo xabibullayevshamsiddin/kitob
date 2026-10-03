@@ -34,6 +34,15 @@ class LiveSignalController extends Controller
             'created_at'    => now(),
         ]);
 
+        if ($validated['type'] === 'viewer-count') {
+            $decodedPayload = is_array($validated['payload'])
+                ? $validated['payload']
+                : json_decode($validated['payload'], true);
+            if (isset($decodedPayload['count'])) {
+                \Illuminate\Support\Facades\Cache::put("live_event_{$event->id}_viewers", (int) $decodedPayload['count'], 30);
+            }
+        }
+
         // Cleanup old signals older than 2 minutes to keep table lightweight
         if (random_int(1, 20) === 1) {
             LiveSignal::where('created_at', '<', now()->subMinutes(2))->delete();

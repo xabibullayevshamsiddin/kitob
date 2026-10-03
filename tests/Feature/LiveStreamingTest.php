@@ -385,4 +385,28 @@ class LiveStreamingTest extends TestCase
         $this->assertNotNull($vcSignal);
         $this->assertEquals(14, $vcSignal['payload']['count']);
     }
+
+    public function test_live_index_displays_stream_likes_and_viewers_count(): void
+    {
+        $host = $this->makeUser('index_display_host');
+        $event = $this->makeLiveEvent($host, 'Efir Kartasi Sinovi');
+        $event->update([
+            'status'      => LiveEvent::STATUS_LIVE,
+            'likes_count' => 25,
+        ]);
+
+        // Broadcast viewer count
+        $this->postJson(route('live.signal.send', $event), [
+            'sender_id'   => 'host_card_test',
+            'receiver_id' => 'all',
+            'type'        => 'viewer-count',
+            'payload'     => ['count' => 9],
+        ]);
+
+        $response = $this->get(route('live.index'));
+        $response->assertOk();
+        $response->assertSee('Efir Kartasi Sinovi');
+        $response->assertSee('25'); // Stream likes count
+        $response->assertSee('9');  // Live viewers count
+    }
 }

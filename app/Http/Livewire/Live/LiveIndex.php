@@ -274,9 +274,8 @@ class LiveIndex extends Component
         $liveCount = LiveEvent::where('status', LiveEvent::STATUS_LIVE)->count();
         $scheduledCount = LiveEvent::where('status', LiveEvent::STATUS_SCHEDULED)->count();
 
-        // Har bir efir kartasida jami like sonini ko'rsatish uchun agregat
+        // Efirlar ro'yxati (live_events.likes_count to'g'ridan-to'g'ri modelda mavjud)
         $query = LiveEvent::with(['book', 'hostUser'])
-            ->withSum('questions as questions_likes_sum', 'likes_count')
             ->whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE]);
 
         // Status filter
