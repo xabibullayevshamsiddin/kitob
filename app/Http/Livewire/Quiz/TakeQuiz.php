@@ -24,33 +24,40 @@ class TakeQuiz extends Component
     public ?string $quizDifficulty = null;
     public ?int $timeLimitMinutes = null;
 
+    /** Maximum reward points set for this quiz (max 50 for teachers, max 200 for admins) */
+    public int $maxRewardPoints = 50;
+
     /** Currently displayed question index */
     public int $currentQuestion = 0;
 
     /** Selected option id for the current question */
     public $selectedOption = null;
 
+    /** Number of questions answered correctly */
+    public int $correctCount = 0;
+
     /** Set when the whole quiz is finished */
     public bool $finished = false;
 
-    /** Accumulated server-side score */
+    /** Earned score in points */
     public int $score = 0;
 
-    /** Total possible points */
+    /** Max possible score in points */
     public int $maxScore = 0;
 
-    /** Percentage achieved */
+    /** Percentage of correct answers (0 - 100%) */
     public float $percent = 0;
 
-    /** Points actually added in this attempt (shown in result screen) */
+    /** Points actually added to the user's account in this attempt */
     public int $pointsAwarded = 0;
 
+    /** True if the user has already taken this test before (prevent duplicate points) */
     public bool $alreadyHadFullPoints = false;
 
-    /** Collected per-question feedback: ['correct' => bool, 'explanation' => ?string, 'selected_text' => ?string] */
+    /** Collected per-question feedback */
     public array $feedback = [];
 
-    /** All quiz data for rendering (no correct answers leaked to the client) */
+    /** All quiz data for rendering */
     public array $questions = [];
 
     protected $queryString = [
@@ -63,11 +70,6 @@ class TakeQuiz extends Component
 
         $targetQuizId = $quiz_id ?: request()->query('quiz_id', $this->quizId);
         $this->loadQuiz($targetQuizId ? (int) $targetQuizId : null);
-    }
-
-    public function selectQuiz(int $id): void
-    {
-        $this->loadQuiz($id);
     }
 
     public function restartQuiz(): void
@@ -84,10 +86,8 @@ class TakeQuiz extends Component
         if ($targetQuizId) {
             $quiz = (clone $query)->where('id', $targetQuizId)->first();
         } else {
-            // Prefer active quiz that actually has questions, or latest quiz
-            $quiz = (clone $query)->active()->whereHas('questions')->latest()->first()
-                 ?? (clone $query)->whereHas('questions')->latest()->first()
-                 ?? (clone $query)->active()->latest()->first()
+            // Har bir kitobda bitta test bo'lgani sababli oxirgi faol testni olamiz
+            $quiz = (clone $query)->active()->latest()->first()
                  ?? (clone $query)->latest()->first();
         }
 
@@ -95,7 +95,7 @@ class TakeQuiz extends Component
             $this->quizId = null;
             $this->quizTitle = null;
             $this->questions = [];
-            $this->maxScore = 0;
+            $this->maxRewardPoints = 50;
             return;
         }
 
@@ -104,20 +104,20 @@ class TakeQuiz extends Component
         $this->quizDescription = $quiz->description;
         $this->quizDifficulty = $quiz->difficulty ?? 'medium';
         $this->timeLimitMinutes = $quiz->time_limit_minutes;
+        $this->maxRewardPoints = (int) ($quiz->reward_points ?: 50);
 
         if ($quiz->questions->isEmpty()) {
             $this->questions = [];
-            $this->maxScore = 0;
+            $this->maxScore = $this->maxRewardPoints;
             return;
         }
 
-        $this->maxScore = (int) $quiz->questions->sum('points');
+        $this->maxScore = $this->maxRewardPoints;
 
         $this->questions = $quiz->questions->values()->map(function ($q) {
             return [
                 'id'          => $q->id,
                 'text'        => $q->question_text,
-                'points'      => (int) ($q->points ?: 10),
                 'explanation' => $q->explanation,
                 'options'     => $q->options->values()->map(fn ($o) => [
                     'id'   => $o->id,
@@ -131,6 +131,7 @@ class TakeQuiz extends Component
     {
         $this->currentQuestion = 0;
         $this->selectedOption = null;
+        $this->correctCount = 0;
         $this->finished = false;
         $this->score = 0;
         $this->maxScore = 0;
@@ -161,7 +162,7 @@ class TakeQuiz extends Component
             && (int) $this->selectedOption === (int) $correctOptionId;
 
         if ($isCorrect) {
-            $this->score += $question['points'];
+            $this->correctCount++;
         }
 
         $selectedOptionText = null;
@@ -179,7 +180,6 @@ class TakeQuiz extends Component
             'selected_text' => $selectedOptionText,
             'correct_text'  => $correctOption ? $correctOption->option_text : null,
             'explanation'   => $question['explanation'],
-            'points'        => $isCorrect ? $question['points'] : 0,
         ];
 
         $this->selectedOption = null;
@@ -198,29 +198,34 @@ class TakeQuiz extends Component
         $user = Auth::user();
         $quiz = Quiz::find($this->quizId);
 
-        $this->percent = $this->maxScore > 0 ? round(($this->score / $this->maxScore) * 100, 2) : 0;
+        $totalQuestions = count($this->questions);
+        $this->percent = $totalQuestions > 0 ? round(($this->correctCount / $totalQuestions) * 100, 2) : 0;
+
+        // O'quvchi testni qancha yechganiga (foiziga) qarab mutanosib ball beriladi
+        $calculatedPoints = (int) round(($this->percent / 100) * $this->maxRewardPoints);
+        $this->score = $calculatedPoints;
+        $this->maxScore = $this->maxRewardPoints;
 
         if (!$quiz || !$user) {
             return;
         }
 
-        // Anti-farming: full points only on the very first attempt where max score is reached
-        $alreadyPassed = QuizAttempt::where('user_id', $user->id)
+        // Qayta topshirilganda takroriy ball berilmasin (anti-farming)
+        $alreadyAttempted = QuizAttempt::where('user_id', $user->id)
             ->where('quiz_id', $quiz->id)
-            ->where('score', '>=', $this->maxScore)
             ->exists();
 
-        $pointsToAward = ($this->score > 0 && !$alreadyPassed) ? $this->score : 0;
+        $pointsToAward = (!$alreadyAttempted && $calculatedPoints > 0) ? $calculatedPoints : 0;
 
-        DB::transaction(function () use ($user, $quiz, $pointsToAward) {
+        DB::transaction(function () use ($user, $quiz, $pointsToAward, $calculatedPoints) {
             QuizAttempt::create([
                 'user_id'                => $user->id,
                 'quiz_id'                => $quiz->id,
-                'score'                  => $this->score,
-                'max_score'              => $this->maxScore,
+                'score'                  => $calculatedPoints,
+                'max_score'              => $this->maxRewardPoints,
                 'percent'                => $this->percent,
                 'answers'                => $this->feedback,
-                'is_full_points_awarded' => $pointsToAward === $this->score && $this->score > 0,
+                'is_full_points_awarded' => $pointsToAward === $this->maxRewardPoints && $pointsToAward > 0,
                 'completed_at'           => now(),
             ]);
 
@@ -229,55 +234,51 @@ class TakeQuiz extends Component
                     $user,
                     $pointsToAward,
                     'quiz',
-                    '«' . $this->book->title . '» (' . $quiz->title . ') testi: ' . $this->score . '/' . $this->maxScore . ' ball'
+                    '«' . $this->book->title . '» testi: ' . $pointsToAward . ' ball (' . $this->percent . '%)'
                 );
             }
         });
 
         $this->pointsAwarded = $pointsToAward;
-        $this->alreadyHadFullPoints = $alreadyPassed;
+        $this->alreadyHadFullPoints = $alreadyAttempted;
 
         // Bildirishnoma yuborish
         \App\Services\NotifyUser::send(
             $user,
             'quiz',
             $this->percent >= 80 ? 'Test a\'lo darajada o\'tdi! 🎯' : ($this->percent >= 50 ? 'Test muvaffaqiyatli yakunlandi' : 'Test yakunlandi'),
-            '«' . $this->book->title . '» — ' . $quiz->title . ': ' . $this->score . '/' . $this->maxScore . ' ball (' . $this->percent . '%)',
+            '«' . $this->book->title . '» — ' . $quiz->title . ': ' . $calculatedPoints . '/' . $this->maxRewardPoints . ' ball (' . $this->percent . '%)',
             '📝',
-            route('quiz.show', ['book' => $this->book->id, 'quiz_id' => $quiz->id])
+            route('quiz.show', ['book' => $this->book->id])
         );
     }
 
     public function render()
     {
-        $allQuizzes = $this->book->quizzes()
-            ->withCount('questions')
-            ->orderBy('id', 'desc')
-            ->get();
-
         $attemptCount = (Auth::check() && $this->quizId)
             ? QuizAttempt::where('user_id', Auth::id())->where('quiz_id', $this->quizId)->count()
             : 0;
 
         return view('livewire.quiz.take-quiz', [
-            'book'             => $this->book,
-            'allQuizzes'       => $allQuizzes,
-            'quizId'           => $this->quizId,
-            'quizTitle'        => $this->quizTitle,
-            'quizDescription'  => $this->quizDescription,
-            'quizDifficulty'   => $this->quizDifficulty,
-            'timeLimitMinutes' => $this->timeLimitMinutes,
-            'attemptCount'     => $attemptCount,
-            'questions'        => $this->questions,
-            'currentQuestion'  => $this->currentQuestion,
-            'selectedOption'   => $this->selectedOption,
-            'finished'         => $this->finished,
-            'score'            => $this->score,
-            'maxScore'         => $this->maxScore,
-            'percent'          => $this->percent,
-            'pointsAwarded'    => $this->pointsAwarded,
+            'book'                 => $this->book,
+            'quizId'               => $this->quizId,
+            'quizTitle'            => $this->quizTitle,
+            'quizDescription'      => $this->quizDescription,
+            'quizDifficulty'       => $this->quizDifficulty,
+            'timeLimitMinutes'     => $this->timeLimitMinutes,
+            'maxRewardPoints'      => $this->maxRewardPoints,
+            'attemptCount'         => $attemptCount,
+            'questions'            => $this->questions,
+            'currentQuestion'      => $this->currentQuestion,
+            'correctCount'         => $this->correctCount,
+            'selectedOption'       => $this->selectedOption,
+            'finished'             => $this->finished,
+            'score'                => $this->score,
+            'maxScore'             => $this->maxScore,
+            'percent'              => $this->percent,
+            'pointsAwarded'        => $this->pointsAwarded,
             'alreadyHadFullPoints' => $this->alreadyHadFullPoints,
-            'feedback'         => $this->feedback,
+            'feedback'             => $this->feedback,
         ])->layout('layouts.app', ['title' => 'Test – ' . $this->book->title]);
     }
 }

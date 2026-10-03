@@ -217,10 +217,28 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Returns current streak count from related streak record.
+     *
+     * Self-healing: agar foydalanuvchi kecha ham, bugun ham o'qimagan bo'lsa
+     * (yoki umuman faol bo'lmagan bo'lsa), streakni 0 ko'rsatamiz — hatto
+     * kunlik `streaks:calculate` rejimlangan vazifasi ishlamagan bo'lsa ham
+     * (masalan, lokal OSPanel muhitida cron yo'q).
      */
     public function getCurrentStreakAttribute(): int
     {
-        return $this->streak?->current_streak ?? 0;
+        $streak = $this->streak;
+
+        if (!$streak || (int) $streak->current_streak < 1 || !$streak->last_active_date) {
+            return 0;
+        }
+
+        $today     = now('Asia/Tashkent')->toDateString();
+        $yesterday = now('Asia/Tashkent')->subDay()->toDateString();
+        $last      = $streak->last_active_date->toDateString();
+
+        // Streak faqat shu ikki holatda jonli: bugun yoki kecha faol bo'lsa.
+        return in_array($last, [$today, $yesterday], true)
+            ? (int) $streak->current_streak
+            : 0;
     }
 
     // -------------------------------------------------------------------------

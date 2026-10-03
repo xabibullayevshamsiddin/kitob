@@ -18,12 +18,14 @@ class Quiz extends Model
         'title',
         'description',
         'difficulty',
+        'reward_points',
         'time_limit_minutes',
         'is_active',
     ];
 
     protected $casts = [
         'is_active'          => 'boolean',
+        'reward_points'      => 'integer',
         'chapter_number'     => 'integer',
         'time_limit_minutes' => 'integer',
     ];

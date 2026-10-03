@@ -14,6 +14,9 @@
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/25">
                         {{ $book->week_number ? "{$book->week_number}-hafta" : 'Kitob Testi' }}
                     </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">
+                        Maks. {{ $maxRewardPoints }} ball
+                    </span>
                     @if($quizDifficulty)
                         @php
                             $diffLabels = [
@@ -36,38 +39,12 @@
         </div>
 
         <div class="flex items-center gap-2 self-start sm:self-center">
-            @if(auth()->check() && auth()->user()->isAdminOrTeacher())
-                <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}" 
-                   class="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
-                   title="Ushbu kitobga yangi test qo'shish">
-                    <span>+ Yangi test qo'shish</span>
-                </a>
-            @endif
             <a href="{{ route('books.show', $book->slug) }}" 
                class="px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1">
                 <span>← Chiqish</span>
             </a>
         </div>
     </div>
-
-    {{-- ── Agar bir nechta test mavjud bo'lsa: Test Tanlash Tabilari ── --}}
-    @if($allQuizzes->count() > 1)
-        <div class="p-3 rounded-2xl bg-slate-900/40 border border-white/[0.06] flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <span class="text-xs text-slate-400 font-semibold pl-2 shrink-0">Barcha testlar:</span>
-            <div class="flex items-center gap-2">
-                @foreach($allQuizzes as $qItem)
-                    <button type="button" 
-                            wire:click="selectQuiz({{ $qItem->id }})"
-                            class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 flex items-center gap-2 border {{ (int)$quizId === (int)$qItem->id ? 'bg-amber-500 text-ink-950 font-bold border-amber-400 shadow-lg shadow-amber-500/20' : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border-white/[0.08]' }}">
-                        <span>🎯 {{ $qItem->title }}</span>
-                        <span class="px-1.5 py-0.2 rounded-md text-[10px] {{ (int)$quizId === (int)$qItem->id ? 'bg-ink-950/20 text-ink-950' : 'bg-slate-700 text-slate-300' }}">
-                            {{ $qItem->questions_count }} savol
-                        </span>
-                    </button>
-                @endforeach
-            </div>
-        </div>
-    @endif
 
     {{-- ── Bo'sh holat: Test savollari mavjud emas ── --}}
     @if (count($questions) === 0)
@@ -76,29 +53,18 @@
                 🧠
             </div>
             <h2 class="text-lg font-bold text-white">
-                @if($quizTitle)
-                    «{{ $quizTitle }}» uchun hozircha savollar kiritilmagan
-                @else
-                    Bu kitob uchun hozircha test savollari yuklanmagan
-                @endif
+                Bu kitob uchun hozircha test savollari kiritilmagan
             </h2>
             <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-                Ushbu kitob yoki test bo'yicha savol-javoblar tez orada kiritiladi. O'qituvchilar yoki admin yangi savollar yuklashi mumkin.
+                Ushbu kitob bo'yicha savol-javoblar tez orada ustozlar tomonidan yuklanadi.
             </p>
 
             <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
                 @if(auth()->check() && auth()->user()->isAdminOrTeacher())
-                    @if($quizId)
-                        <a href="{{ route('teacher.quizzes.show', $quizId) }}" 
-                           class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/30">
-                            ✍️ Ushbu testga savol qo'shish
-                        </a>
-                    @else
-                        <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}" 
-                           class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/30">
-                            + Yangi test yaratish
-                        </a>
-                    @endif
+                    <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}" 
+                       class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/30">
+                        + Ushbu kitobga test qo'shish
+                    </a>
                 @endif
 
                 <a href="{{ route('books.show', $book->slug) }}" 
@@ -137,10 +103,10 @@
 
                     <div class="flex items-center gap-2">
                         <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 font-bold font-mono">
-                            +{{ $questions[$currentQuestion]['points'] ?? 10 }} Ball
+                            Jami: {{ $maxRewardPoints }} Ball
                         </span>
                         @if($attemptCount > 0)
-                            <span class="text-[11px] text-slate-500">
+                            <span class="text-[11px] text-amber-400/80 font-semibold">
                                 ({{ $attemptCount }}-urinish)
                             </span>
                         @endif
@@ -184,14 +150,6 @@
                     @endforeach
                 </div>
 
-                {{-- Izoh yoki yordamchi maslahat (agar feedback mavjud bo'lsa) --}}
-                @if (isset($feedback[$currentQuestion]) && $feedback[$currentQuestion]['explanation'])
-                    <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 leading-relaxed flex items-start gap-2.5">
-                        <span class="text-base shrink-0">💡</span>
-                        <span>{{ $feedback[$currentQuestion]['explanation'] }}</span>
-                    </div>
-                @endif
-
                 {{-- Navigation Buttons --}}
                 <div class="pt-6 flex items-center justify-between border-t border-white/[0.06]">
                     <div class="text-xs text-slate-500">
@@ -226,27 +184,27 @@
                         {{ $percent >= 80 ? 'Ajoyib natija! Barakalla!' : ($percent >= 50 ? 'Yaxshi natija!' : 'Yana harakat qiling!') }}
                     </h2>
                     <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-                        Siz «{{ $book->title }}» kitobi bo'yicha <strong>{{ count($questions) }} ta savolga</strong> javob berdingiz.
+                        Siz «{{ $book->title }}» kitobi bo'yicha <strong>{{ count($questions) }} ta savoldan {{ $correctCount }} tasiga</strong> to'g'ri javob berdingiz.
                     </p>
                 </div>
 
                 {{-- Ballar bloki --}}
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
                     <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/[0.08] text-center">
-                        <span class="text-xs text-slate-400 block mb-1">To'plangan ball</span>
-                        <span class="text-2xl font-black text-white font-mono">{{ $score }} <span class="text-xs text-slate-500 font-normal">/ {{ $maxScore }}</span></span>
+                        <span class="text-xs text-slate-400 block mb-1">To'g'ri javoblar</span>
+                        <span class="text-2xl font-black text-white font-mono">{{ $correctCount }} <span class="text-xs text-slate-500 font-normal">/ {{ count($questions) }}</span></span>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/[0.08] text-center">
-                        <span class="text-xs text-slate-400 block mb-1">Aniqlik darajasi</span>
+                        <span class="text-xs text-slate-400 block mb-1">Natija foizi</span>
                         <span class="text-2xl font-black {{ $percent >= 70 ? 'text-emerald-400' : ($percent >= 50 ? 'text-amber-400' : 'text-rose-400') }} font-mono">
                             {{ round($percent) }}%
                         </span>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/[0.08] text-center">
-                        <span class="text-xs text-slate-400 block mb-1">Qo'shilgan ball</span>
-                        <span class="text-2xl font-black text-amber-400 font-mono">+{{ $pointsAwarded }}</span>
+                        <span class="text-xs text-slate-400 block mb-1">Hisoblangan ball</span>
+                        <span class="text-2xl font-black text-amber-400 font-mono">{{ $score }} <span class="text-xs text-slate-500 font-normal">/ {{ $maxScore }}</span></span>
                     </div>
                 </div>
 
@@ -255,17 +213,17 @@
                     @if ($pointsAwarded > 0)
                         <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold">
                             <span>⭐️</span>
-                            <span>{{ $pointsAwarded }} ball profilingizga qo'shildi va peshqadamlar reytingida yangilandi!</span>
+                            <span>+{{ $pointsAwarded }} ball profilingizga qo'shildi va peshqadamlar reytingida yangilandi!</span>
                         </div>
                     @elseif ($alreadyHadFullPoints)
                         <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold">
-                            <span>ℹ️</span>
-                            <span>Siz bu testdan avval to'liq ball olgansiz — takroriy urinishlar uchun ball hisoblanmaydi.</span>
+                            <span>⚠️</span>
+                            <span>Siz ushbu testni avval topshirgansiz. Qoidaga ko'ra, takroriy urinishlarda reyting ballari qayta berilmaydi.</span>
                         </div>
                     @else
                         <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-800 border border-white/10 text-slate-400 text-xs">
                             <span>💡</span>
-                            <span>Kitob boblarini qaytadan mutolaa qilib, testni takror topshirishingiz mumkin.</span>
+                            <span>Test savollariga to'g'ri javob berib, ball to'plashingiz mumkin.</span>
                         </div>
                     @endif
                 </div>
@@ -331,12 +289,5 @@
         @endif
 
     @endif
-
-    {{-- Reading Tracker & AFK Modal --}}
-    @include('components.reading-tracker', [
-        'bookId' => $book->id,
-        'chapterId' => null,
-        'pageType' => 'quiz'
-    ])
 
 </div>
