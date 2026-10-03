@@ -1,13 +1,13 @@
 <div class="max-w-3xl mx-auto space-y-8 pb-16">
 
     <div>
-        <h1 class="text-2xl font-black text-slate-900 dark:text-white font-manrope">Hisob sozlamalari</h1>
-        <p class="text-xs text-slate-400 mt-1">Shaxsiy ma'lumotlaringiz va o'qish afzalliklaringizni boshqaring</p>
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white font-manrope">{{ __('site.settings.title') }}</h1>
+        <p class="text-xs text-slate-400 mt-1">{{ __('site.settings.subtitle') }}</p>
     </div>
 
     <!-- Profile Settings Card -->
     <div class="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-soft space-y-6">
-        <h3 class="text-sm font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">Profil ma'lumotlari</h3>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">{{ __('site.settings.profile_info') }}</h3>
 
         <!-- Avatar Preview -->
         <div class="flex items-center gap-4">
@@ -19,48 +19,48 @@
                 @endif
             </div>
             <div class="flex-1">
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Profil surati</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">{{ __('site.settings.avatar') }}</label>
                 <input type="file" wire:model="avatar" accept="image/*"
                     class="text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer">
-                <span wire:loading wire:target="avatar" class="text-[11px] text-amber-500 block mt-1">Yuklanmoqda...</span>
+                <span wire:loading wire:target="avatar" class="text-[11px] text-amber-500 block mt-1">{{ __('site.settings.uploading') }}</span>
                 @error('avatar') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
 
         <div class="space-y-4">
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">To'liq ism</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">{{ __('site.settings.full_name') }}</label>
                 <input type="text" wire:model="name"
                     class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white">
                 @error('name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Username</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">{{ __('site.settings.username') }}</label>
                 <input type="text" wire:model="username"
                     class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white">
                 @error('username') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">{{ __('site.settings.email') }}</label>
                 <input type="email" value="{{ auth()->user()->email }}" disabled
                     class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-500 cursor-not-allowed">
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Bio</label>
-                <textarea rows="3" wire:model="bio" placeholder="O'zingiz haqingizda qisqacha..."
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">{{ __('site.settings.bio') }}</label>
+                <textarea rows="3" wire:model="bio" placeholder="{{ __('site.settings.bio_placeholder') }}"
                     class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white resize-none"></textarea>
                 @error('bio') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
 
         <div class="flex items-center justify-end gap-3 pt-2">
-            <span wire:loading wire:target="save" class="text-xs text-slate-400">Saqlanmoqda...</span>
+            <span wire:loading wire:target="save" class="text-xs text-slate-400">{{ __('site.settings.saving') }}</span>
             <button wire:click="save" wire:loading.attr="disabled"
                 class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all">
-                O'zgarishlarni saqlash
+                {{ __('site.settings.save') }}
             </button>
         </div>
     </div>

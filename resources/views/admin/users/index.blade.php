@@ -5,14 +5,36 @@
 
 @section('content')
 
+<div x-data="{
+    banModalOpen: false,
+    rulesModalOpen: false,
+    targetUserId: null,
+    targetUserName: '',
+    banActionUrl: '',
+    openBan(userId, userName) {
+        this.targetUserId = userId;
+        this.targetUserName = userName;
+        this.banActionUrl = '{{ url('/admin/users') }}/' + userId + '/ban';
+        this.banModalOpen = true;
+    }
+}">
+
 {{-- Page header --}}
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
         <h1 class="text-xl font-bold text-white">Foydalanuvchilar</h1>
         <p class="text-sm text-slate-500 mt-0.5">Barcha ro'yxatdan o'tgan foydalanuvchilarni boshqaring</p>
     </div>
-    <div class="flex items-center gap-2">
-        <span class="text-xs text-slate-500 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg">
+    <div class="flex items-center gap-2.5 flex-wrap">
+        {{-- Button to open Rules & Violations Guide modal --}}
+        <button type="button"
+                @click="rulesModalOpen = true"
+                class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition-all shadow-sm shadow-amber-950/30 hover:scale-[1.02] active:scale-[0.98]">
+            <span class="text-sm">⚖️</span>
+            <span>Qoidalar & Ban me'yorlari</span>
+        </button>
+
+        <span class="text-xs text-slate-500 bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl font-medium">
             Jami: <span class="text-indigo-400 font-semibold">{{ $users->total() }}</span> ta
         </span>
     </div>
@@ -71,19 +93,7 @@
 </div>
 
 {{-- Table --}}
-<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm"
-     x-data="{
-         banModalOpen: false,
-         targetUserId: null,
-         targetUserName: '',
-         banActionUrl: '',
-         openBan(userId, userName) {
-             this.targetUserId = userId;
-             this.targetUserName = userName;
-             this.banActionUrl = '{{ url('/admin/users') }}/' + userId + '/ban';
-             this.banModalOpen = true;
-         }
-     }">
+<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead>
@@ -327,6 +337,163 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ── Rules & Violations Guide Modal (Admin Qoidalar & Ban Me'yorlari) ── -->
+    <div x-show="rulesModalOpen"
+         x-cloak
+         @keydown.escape.window="rulesModalOpen = false"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div @click.away="rulesModalOpen = false"
+             class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden relative"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+
+            <!-- Modal Header -->
+            <div class="px-6 py-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl font-bold">
+                        ⚖️
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-black text-white">Qoidabuzarliklar va Ban Me'yorlari</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Admin va moderatorlar uchun intizomiy choralar qo'llanmasi</p>
+                    </div>
+                </div>
+                <button type="button" @click="rulesModalOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
+                <!-- Info Alert -->
+                <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300/90 text-xs flex items-start gap-2.5">
+                    <span class="text-base flex-shrink-0">💡</span>
+                    <span>
+                        <strong>Admin eslatmasi:</strong> Ban berishda adolatli va xolis bo'ling. Foydalanuvchi birinchi marta xato qilgan bo'lsa, qisqa muddat (1 soat yoki 1 kun) yetarlidir. Qayta takrorlasa, muddatni bosqichma-bosqich oshiring.
+                    </span>
+                </div>
+
+                <!-- Tier 1 -->
+                <div class="p-4 rounded-2xl bg-slate-950/60 border border-amber-500/30">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-mono font-bold text-xs border border-amber-500/30">
+                                ⏱️ 1 SOAT
+                            </span>
+                            <h4 class="text-xs sm:text-sm font-bold text-white">1-Daraja: Yengil tartibbuzarlik (Sovutish)</h4>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono">Vaqtincha cheklov</span>
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                        <li>Spam, flood, bir xil xabarlarni to'xtovsiz jo'natish;</li>
+                        <li>Faqat katta harflar bilan (CAPS LOCK) baqirib yozish yoki bema'ni belgilar;</li>
+                        <li>Ovozli xabarlarda qasddan shovqin, baland qichqiriq chiqarish;</li>
+                        <li>Ruxsatsiz shaxsiy kanal yoki bot havolalarini tashlash.</li>
+                    </ul>
+                </div>
+
+                <!-- Tier 2 -->
+                <div class="p-4 rounded-2xl bg-slate-950/60 border border-orange-500/30">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-300 font-mono font-bold text-xs border border-orange-500/30">
+                                📅 1 KUN (24 SOAT)
+                            </span>
+                            <h4 class="text-xs sm:text-sm font-bold text-white">2-Daraja: Odobsizlik va Provokatsiya</h4>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono">O'rtacha chora</span>
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                        <li>Birinchi marotaba haqoratli yoki nojo'ya so'z ishlatish;</li>
+                        <li>Suhbatdoshning shaxsiyatiga tegish, kamsitish, masxara qilish;</li>
+                        <li>Provokatsion xabarlar orqali janjal qo'zg'ash (trolling);</li>
+                        <li>Moderatorning to'xtatish haqidagi ogohlantirishini inkor qilish.</li>
+                    </ul>
+                </div>
+
+                <!-- Tier 3 -->
+                <div class="p-4 rounded-2xl bg-slate-950/60 border border-rose-500/40">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-mono font-bold text-xs border border-rose-500/30">
+                                🗓️ 1 HAFTA (7 KUN)
+                            </span>
+                            <h4 class="text-xs sm:text-sm font-bold text-white">3-Daraja: Takroriy haqorat va Ommaviy nizo</h4>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono">Jiddiy qoidabuzarlik</span>
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                        <li>1 kunlik bandan so'ng yana takroriy haqorat va so'kinish;</li>
+                        <li>Guruh yoki chatda ommaviy nizo (flame) uyushtirish, tortishuv;</li>
+                        <li>Boshqa birovning shaxsiy ma'lumotlarini (telefon, rasm) tarqatish (doxxing);</li>
+                        <li>Firibgarlik (scam) yoki xavfli havolalarni yuborish.</li>
+                    </ul>
+                </div>
+
+                <!-- Tier 4 -->
+                <div class="p-4 rounded-2xl bg-slate-950/60 border border-purple-500/40">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-mono font-bold text-xs border border-purple-500/30">
+                                🌕 1 OY (30 KUN)
+                            </span>
+                            <h4 class="text-xs sm:text-sm font-bold text-white">4-Daraja: Nafrat qo'zg'ash va Tizim manipulyatsiyasi</h4>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono">O'ta jiddiy holat</span>
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                        <li>Milliy, diniy, irqiy yoki gender kamsitish (hate speech);</li>
+                        <li>Ustozlar, mualliflar yoki platformaga tuhmat va tahdid qilish;</li>
+                        <li>Ballar yoki reyting tizimini aldash, botlardan foydalanish;</li>
+                        <li>Tizimli ravishda platforma faoliyatiga to'sqinlik qilish.</li>
+                    </ul>
+                </div>
+
+                <!-- Tier 5 -->
+                <div class="p-4 rounded-2xl bg-red-950/40 border border-red-500/50">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-red-600 text-white font-mono font-bold text-xs">
+                                ⛔ BUTUN UMRGA (DOIMIY)
+                            </span>
+                            <h4 class="text-xs sm:text-sm font-bold text-red-300">5-Daraja: Qonunbuzarlik va Kiberhujum</h4>
+                        </div>
+                        <span class="text-[10px] text-red-400 font-mono">Qayta tiklanmaydi</span>
+                    </div>
+                    <ul class="text-xs text-red-100/90 space-y-1 list-disc list-inside">
+                        <li>Ekstremizm, terrorizm, pornografiya yoki zo'ravonlik materiallari;</li>
+                        <li>Platformaga kiberhujumlar, SQL injection, XSS yoki buzishga urinishlar;</li>
+                        <li>Moliyaviy firibgarlik va boshqa foydalanuvchilar akkauntlarini o'g'irlash;</li>
+                        <li>Avvalgi barcha jazolardan xulosa chiqarmasdan qasddan ziyon yetkazish.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between gap-3 flex-shrink-0">
+                <a href="{{ route('terms') }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 hover:underline">
+                    <span>🔗 To'liq ommaviy qoidalar sahifasi</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+                <button type="button" @click="rulesModalOpen = false"
+                        class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors border border-slate-700">
+                    Tushunarli / Yopish
+                </button>
+            </div>
         </div>
     </div>
 </div>

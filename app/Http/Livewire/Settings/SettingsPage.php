@@ -41,9 +41,9 @@ class SettingsPage extends Component
     }
 
     protected $validationAttributes = [
-        'name'     => 'ism',
-        'username' => 'username',
-        'bio'      => 'bio',
+        'name'     => 'site.settings.attr_name',
+        'username' => 'site.settings.username',
+        'bio'      => 'site.settings.bio',
     ];
 
     public function save(): void
@@ -65,12 +65,12 @@ class SettingsPage extends Component
 
         $this->reset('avatar');
 
-        session()->flash('success', 'Sozlamalar saqlandi! ✅');
+        session()->flash('success', __('site.settings.saved_success'));
     }
 
     public function render()
     {
         return view('livewire.settings.settings-page')
-            ->layout('layouts.app', ['title' => 'Sozlamalar']);
+            ->layout('layouts.app', ['title' => __('site.settings.title')]);
     }
 }
