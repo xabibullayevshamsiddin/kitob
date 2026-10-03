@@ -144,18 +144,31 @@
                                     </span>
                                 </div>
 
-                                {{-- Signature 3D Book Card --}}
-                                <div class="my-2">
-                                    <x-ui.book-card :book="$featuredBook" ratio="4 / 5" />
+                                {{-- Signature 3D Book Card — hero: muqova katta, meta pastda --}}
+                                <div class="w-full" style="max-width: 280px; margin: 0 auto;">
+                                    <x-ui.book-card :book="$featuredBook" ratio="3 / 4" :show-meta="false" class="w-full" />
+                                </div>
+
+                                {{-- Kitob ma'lumoti — muqova ostida --}}
+                                <div class="mt-5 flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <h3 class="font-serif font-bold text-paper text-base leading-tight line-clamp-2">{{ $featuredBook->title }}</h3>
+                                        <p class="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-mist">{{ $featuredBook->author }}</p>
+                                    </div>
+                                    <a href="{{ route('books.show', $featuredBook->slug) }}"
+                                       class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-ink-950 font-semibold text-xs transition-colors cursor-pointer">
+                                        O'qish
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                    </a>
                                 </div>
 
                                 @php
                                     $featuredAudio = $featuredBook->audios()->first();
                                 @endphp
                                 @if($featuredAudio)
-                                    <div class="mt-4 p-3 rounded-card bg-ink-950 border border-ink-border flex items-center justify-between">
+                                    <div class="mt-3 p-3 rounded-card bg-ink-950 border border-ink-border flex items-center justify-between">
                                         <div class="flex items-center gap-3">
-                                            <button @click="playing = !playing" class="w-8 h-8 rounded-btn bg-amber-500 hover:bg-amber-400 text-ink-950 flex items-center justify-center font-bold text-xs transition-colors">
+                                            <button @click="playing = !playing" class="w-8 h-8 rounded-btn bg-amber-500 hover:bg-amber-400 text-ink-950 flex items-center justify-center font-bold text-xs transition-colors cursor-pointer">
                                                 <span x-text="playing ? '⏸' : '▶'">▶</span>
                                             </button>
                                             <div class="min-w-0">
