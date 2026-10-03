@@ -61,7 +61,12 @@
 
             <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
                 @if(auth()->check() && auth()->user()->isAdminOrTeacher())
-                    <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}" 
+                    @php
+                        $quizCreateRoute = auth()->user()->isAdmin()
+                            ? route('admin.quizzes.create', ['book_id' => $book->id])
+                            : route('teacher.quizzes.create', ['book_id' => $book->id]);
+                    @endphp
+                    <a href="{{ $quizCreateRoute }}" 
                        class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/30">
                         + Ushbu kitobga test qo'shish
                     </a>
