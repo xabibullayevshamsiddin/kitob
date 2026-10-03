@@ -29,9 +29,13 @@
                         700: '#1F293D', 600: '#2A3650', border: '#1F293D',
                     },
                     paper: { DEFAULT: '#F0EDE6', 50: '#FAF7F2', 100: '#F0EDE6', 200: '#E5DFD5' },
+                    'paper-muted': '#C9C4B8',
                     mist: { DEFAULT: '#8B9BAD', 600: '#526071' },
                     vermilion: { DEFAULT: '#C1392B', 600: '#C1392B', 700: '#A82E22', light: '#B83224' },
                     gilt: { DEFAULT: '#B8860B' },
+                    // Aurora aksentlar (ui-ux-pro-max: Aurora UI — komplementar amber/teal/coral)
+                    gold: { DEFAULT: '#F59E0B', light: '#FBBF24' },
+                    aurora: { teal: '#2DD4BF', coral: '#FB7185' },
                     amber: { 300: '#FCD34D', 400: '#FBBF24', 500: '#F59E0B', 600: '#D97706' },
                     // Eski nomlar (orqaga moslik) — yangi palitraga yo'naltirilgan
                     primary: {
@@ -210,3 +214,6 @@
         .ks-flame.is-lit { animation: none !important; }
     }
 </style>
+
+{{-- Motion layer: scroll-reveal, aurora, spotlight, ripple, counters, page transitions --}}
+@include('partials.motion')

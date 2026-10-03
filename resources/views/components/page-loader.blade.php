@@ -1,45 +1,11 @@
-<!-- ── Kitobxon Pro Seamless Page Transition & Kinetic Loader ── -->
-<div id="page-loader-root" class="pointer-events-none select-none">
-    <!-- 1. Top Kinetic Laser Progress Bar with Glowing Ambience -->
-    <div id="top-loader-bar" 
-         class="fixed top-0 left-0 h-[3px] w-0 z-[99999] pointer-events-none transition-all duration-300 ease-out"
-         style="background: linear-gradient(90deg, #d97706 0%, #f59e0b 45%, #fbbf24 80%, #ffffff 100%); box-shadow: 0 0 16px rgba(245, 158, 11, 0.95), 0 0 35px rgba(245, 158, 11, 0.6);">
-    </div>
-
-    <!-- 2. Cinematic Obsidian Curtain Overlay (Silky Smooth Fade Veil) -->
-    <div id="page-transition-curtain" 
-         class="fixed inset-0 z-[99990] bg-[#06080d]/85 backdrop-blur-2xl flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out">
-        
-        <!-- Ambient central golden glow -->
-        <div class="absolute w-80 h-80 rounded-full bg-amber-500/12 blur-[90px] pointer-events-none animate-pulse"></div>
-
-        <!-- Center Branded Animated Monogram -->
-        <div class="relative z-10 flex flex-col items-center gap-4">
-            
-            <!-- Book Icon with Dual Kinetic Pulsing Ring -->
-            <div class="relative flex items-center justify-center">
-                <div class="absolute w-20 h-20 rounded-3xl border border-amber-400/30 animate-ping opacity-25"></div>
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-ink-950 font-black text-2xl shadow-2xl shadow-amber-500/40">
-                    📖
-                </div>
-            </div>
-
-            <!-- Kinetic Micro Spinner & Editorial Status -->
-            <div class="flex items-center gap-3 mt-1">
-                <div class="w-4 h-4 rounded-full border-2 border-amber-400/20 border-t-amber-400 animate-spin"></div>
-                <span class="font-mono text-xs uppercase tracking-widest text-slate-300">
-                    Yuklanmoqda...
-                </span>
-            </div>
-
-        </div>
-    </div>
-</div>
+<!-- ── Kitobxon Seamless Page Transition (PJAX) ──
+     Vizual qism (kitob varaqlayotgan loader) partials/motion.blade.php ichida: window.ksCurtain.show()/hide() -->
+<div id="page-loader-root" class="pointer-events-none select-none"></div>
 
 <script>
 (function() {
-    const topBar = document.getElementById('top-loader-bar');
-    const curtain = document.getElementById('page-transition-curtain');
+    const topBar = null;   // eski chiziq o'rniga ks-progress va ksCurtain ishlatiladi
+    const curtain = null;
     let isTransitioning = false;
 
     // Helper: Initialize all interactions & GSAP animations across any page
@@ -275,25 +241,13 @@
 
         const currentWrapper = document.getElementById('smooth-page-wrapper');
 
-        // 1. Start glowing progress bar
-        if (topBar) {
-            topBar.style.width = '35%';
-            topBar.style.opacity = '1';
-        }
-
-        // 2. Play subtle smooth exit animation (fade + slight scale)
-        if (curtain) {
-            curtain.style.pointerEvents = 'auto';
-            gsap.to(curtain, { opacity: 1, duration: 0.28, ease: "power2.inOut" });
-        }
-        if (currentWrapper) {
-            gsap.to(currentWrapper, { opacity: 0.4, filter: 'blur(3px)', duration: 0.25, ease: "power2.in" });
-        }
+        // 1. Kitob varaqlovchi loader'ni ko'rsat
+        if (window.ksCurtain) window.ksCurtain.show();
 
         try {
             const [response] = await Promise.all([
                 fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }),
-                new Promise(r => setTimeout(r, 260)) // Ensures minimum smooth visual cadence
+                new Promise(r => setTimeout(r, 650)) // loader animatsiyasi ko'rinib ulgurishi uchun
             ]);
 
             if (!response.ok) {
@@ -325,35 +279,12 @@
             // 5. Update nav active links
             updateActiveNavLinks(url);
 
-            // 6. Complete top progress laser
-            if (topBar) topBar.style.width = '100%';
-
-            // 7. Re-initialize interactive animations on new DOM
+            // 6. Re-initialize interactive animations on new DOM
             initAllPageInteractions();
 
-            // 8. Silky smooth entrance reveal of the new page
-            gsap.fromTo(currentWrapper,
-                { opacity: 0.5, filter: 'blur(3px)' },
-                { opacity: 1, filter: 'blur(0px)', duration: 0.35, ease: "power2.out", clearProps: "filter,opacity" }
-            );
-
-            if (curtain) {
-                gsap.to(curtain, {
-                    opacity: 0,
-                    duration: 0.35,
-                    ease: "power2.out",
-                    onComplete: () => {
-                        curtain.style.pointerEvents = 'none';
-                        if (topBar) {
-                            topBar.style.opacity = '0';
-                            setTimeout(() => { topBar.style.width = '0%'; }, 250);
-                        }
-                        isTransitioning = false;
-                    }
-                });
-            } else {
-                isTransitioning = false;
-            }
+            // 7. Loader'ni yashir — yangi sahifa kartalari scroll-reveal bilan paydo bo'ladi
+            if (window.ksCurtain) window.ksCurtain.hide();
+            isTransitioning = false;
 
         } catch (err) {
             // Fallback on any network or parse failure
