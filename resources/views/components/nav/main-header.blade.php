@@ -68,13 +68,61 @@
 
             @auth
                 {{-- Streak / Points / Coins — faqat keng ekranlarda --}}
-                <div class="hidden xl:flex items-center gap-1.5">
+                <div class="hidden xl:flex items-center gap-1.5"
+                     x-data="{
+                         totalPoints: {{ auth()->check() ? auth()->user()->total_points : 0 }},
+                         pointsBump: false,
+                         floater: null,
+                         animateAdd(pts, newTot) {
+                             if (!pts || pts <= 0) return;
+                             this.floater = '+' + pts;
+                             this.pointsBump = true;
+                             let start = this.totalPoints;
+                             let end = newTot;
+                             let duration = 1200;
+                             let startTime = performance.now();
+                             let self = this;
+                             function step(now) {
+                                 let progress = Math.min((now - startTime) / duration, 1);
+                                 self.totalPoints = Math.round(start + (end - start) * progress);
+                                 if (progress < 1) {
+                                     requestAnimationFrame(step);
+                                 } else {
+                                     self.totalPoints = end;
+                                     setTimeout(() => { self.pointsBump = false; self.floater = null; }, 2500);
+                                 }
+                             }
+                             requestAnimationFrame(step);
+                         }
+                     }"
+                     @points-awarded.window="animateAdd($event.detail.points, $event.detail.newTotal)">
+                    
                     <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-400/10 border border-amber-400/25 text-amber-400 font-mono text-[11px] font-bold" title="{{ __('site.common.streak') }}">
                         🔥 {{ auth()->user()->current_streak }}
                     </span>
-                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-200 font-mono text-[11px] font-bold" title="{{ __('site.common.points') }}">
-                        ⭐ {{ number_format(auth()->user()->total_points) }}
-                    </span>
+
+                    <div class="relative">
+                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-mono text-[11px] font-bold transition-all duration-300"
+                              :class="pointsBump ? 'bg-amber-400/25 border-amber-400 text-amber-300 scale-110 shadow-[0_0_20px_rgba(245,158,11,0.6)]' : 'bg-white/5 border-white/10 text-slate-200'"
+                              title="{{ __('site.common.points') }}">
+                            <span>⭐</span>
+                            <span x-text="totalPoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span>
+                        </span>
+
+                        {{-- Floating +Points Pop Animation --}}
+                        <span x-show="floater"
+                              x-transition:enter="transition cubic-bezier(0.34, 1.56, 0.64, 1) duration-500"
+                              x-transition:enter-start="opacity-0 translate-y-2 scale-75"
+                              x-transition:enter-end="opacity-100 -translate-y-5 scale-110"
+                              x-transition:leave="transition ease-in duration-600"
+                              x-transition:leave-start="opacity-100 -translate-y-5 scale-110"
+                              x-transition:leave-end="opacity-0 -translate-y-9 scale-90"
+                              class="absolute -top-1 left-1/2 -translate-x-1/2 pointer-events-none px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-ink-950 font-black text-[11px] font-mono shadow-xl z-50 whitespace-nowrap border border-amber-300"
+                              x-text="floater"
+                              x-cloak>
+                        </span>
+                    </div>
+
                     <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-200 font-mono text-[11px] font-bold" title="{{ __('site.common.coins') }}">
                         🪙 {{ number_format(auth()->user()->coin_balance) }}
                     </span>
@@ -131,9 +179,11 @@
                             </div>
 
                             {{-- Stats for small screens --}}
-                            <div class="mt-2.5 pt-2 border-t border-white/[0.06] flex items-center justify-between xl:hidden">
+                            <div class="mt-2.5 pt-2 border-t border-white/[0.06] flex items-center justify-between xl:hidden"
+                                 x-data="{ mobilePoints: {{ auth()->check() ? auth()->user()->total_points : 0 }} }"
+                                 @points-awarded.window="mobilePoints = $event.detail.newTotal">
                                 <span class="text-amber-400 font-mono text-[10px] font-bold">🔥 {{ auth()->user()->current_streak }}</span>
-                                <span class="text-slate-200 font-mono text-[10px] font-bold">⭐ {{ number_format(auth()->user()->total_points) }}</span>
+                                <span class="text-slate-200 font-mono text-[10px] font-bold">⭐ <span x-text="mobilePoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span></span>
                                 <span class="text-slate-200 font-mono text-[10px] font-bold">🪙 {{ number_format(auth()->user()->coin_balance) }}</span>
                             </div>
                         </div>

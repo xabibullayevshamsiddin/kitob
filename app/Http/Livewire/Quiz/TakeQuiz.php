@@ -203,8 +203,6 @@ class TakeQuiz extends Component
 
         // O'quvchi testni qancha yechganiga (foiziga) qarab mutanosib ball beriladi
         $calculatedPoints = (int) round(($this->percent / 100) * $this->maxRewardPoints);
-        $this->score = $calculatedPoints;
-        $this->maxScore = $this->maxRewardPoints;
 
         if (!$quiz || !$user) {
             return;
@@ -215,17 +213,30 @@ class TakeQuiz extends Component
             ->where('quiz_id', $quiz->id)
             ->exists();
 
-        $pointsToAward = (!$alreadyAttempted && $calculatedPoints > 0) ? $calculatedPoints : 0;
+        if ($alreadyAttempted) {
+            // Takroriy urinish: foydalanuvchiga 0 ball ko'rsatiladi va hisobiga ham 0 ball qo'shiladi!
+            $pointsToAward = 0;
+            $this->score = 0;
+            $this->alreadyHadFullPoints = true;
+        } else {
+            // Birinchi urinish: hisoblangan ball beriladi
+            $pointsToAward = $calculatedPoints;
+            $this->score = $calculatedPoints;
+            $this->alreadyHadFullPoints = false;
+        }
 
-        DB::transaction(function () use ($user, $quiz, $pointsToAward, $calculatedPoints) {
+        $this->maxScore = $this->maxRewardPoints;
+        $this->pointsAwarded = $pointsToAward;
+
+        DB::transaction(function () use ($user, $quiz, $pointsToAward, $alreadyAttempted) {
             QuizAttempt::create([
                 'user_id'                => $user->id,
                 'quiz_id'                => $quiz->id,
-                'score'                  => $calculatedPoints,
+                'score'                  => $pointsToAward,
                 'max_score'              => $this->maxRewardPoints,
                 'percent'                => $this->percent,
                 'answers'                => $this->feedback,
-                'is_full_points_awarded' => $pointsToAward === $this->maxRewardPoints && $pointsToAward > 0,
+                'is_full_points_awarded' => !$alreadyAttempted && $pointsToAward === $this->maxRewardPoints && $pointsToAward > 0,
                 'completed_at'           => now(),
             ]);
 
@@ -239,15 +250,21 @@ class TakeQuiz extends Component
             }
         });
 
-        $this->pointsAwarded = $pointsToAward;
-        $this->alreadyHadFullPoints = $alreadyAttempted;
+        // Tepadagi navbar ball hisoblagichiga jonli animatsiya yuborish
+        if ($pointsToAward > 0) {
+            $user->refresh();
+            $this->dispatchBrowserEvent('points-awarded', [
+                'points'   => $pointsToAward,
+                'newTotal' => (int) $user->total_points,
+            ]);
+        }
 
         // Bildirishnoma yuborish
         \App\Services\NotifyUser::send(
             $user,
             'quiz',
             $this->percent >= 80 ? 'Test a\'lo darajada o\'tdi! 🎯' : ($this->percent >= 50 ? 'Test muvaffaqiyatli yakunlandi' : 'Test yakunlandi'),
-            '«' . $this->book->title . '» — ' . $quiz->title . ': ' . $calculatedPoints . '/' . $this->maxRewardPoints . ' ball (' . $this->percent . '%)',
+            '«' . $this->book->title . '» — ' . $quiz->title . ': ' . $this->score . '/' . $this->maxRewardPoints . ' ball (' . $this->percent . '%)',
             '📝',
             route('quiz.show', ['book' => $this->book->id])
         );

@@ -203,22 +203,28 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/[0.08] text-center">
-                        <span class="text-xs text-slate-400 block mb-1">Hisoblangan ball</span>
-                        <span class="text-2xl font-black text-amber-400 font-mono">{{ $score }} <span class="text-xs text-slate-500 font-normal">/ {{ $maxScore }}</span></span>
+                        <span class="text-xs text-slate-400 block mb-1">Ushbu urinish uchun ball</span>
+                        @if($alreadyHadFullPoints)
+                            <span class="text-2xl font-black text-rose-400 font-mono">0 <span class="text-xs text-slate-500 font-normal">/ {{ $maxScore }}</span></span>
+                            <span class="block text-[10px] text-rose-400/90 font-bold mt-0.5">Takroriy urinish (0 ball)</span>
+                        @else
+                            <span class="text-2xl font-black text-amber-400 font-mono">+{{ $pointsAwarded }} <span class="text-xs text-slate-500 font-normal">/ {{ $maxScore }}</span></span>
+                            <span class="block text-[10px] text-emerald-400 font-bold mt-0.5">Hisobga qo'shildi</span>
+                        @endif
                     </div>
                 </div>
 
                 {{-- Ball statusi xabari --}}
                 <div class="text-center">
                     @if ($pointsAwarded > 0)
-                        <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold">
-                            <span>⭐️</span>
-                            <span>+{{ $pointsAwarded }} ball profilingizga qo'shildi va peshqadamlar reytingida yangilandi!</span>
+                        <div class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold shadow-lg shadow-emerald-500/10">
+                            <span class="text-lg">⭐️</span>
+                            <span>+{{ $pointsAwarded }} ball hisobingizga qo'shildi va tepadagi reytingingizda animatsiya bilan yangilandi!</span>
                         </div>
                     @elseif ($alreadyHadFullPoints)
-                        <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold">
-                            <span>⚠️</span>
-                            <span>Siz ushbu testni avval topshirgansiz. Qoidaga ko'ra, takroriy urinishlarda reyting ballari qayta berilmaydi.</span>
+                        <div class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold shadow-lg shadow-amber-500/10">
+                            <span class="text-lg">⚠️</span>
+                            <span>Siz ushbu testdan avval ball olgansiz. Qoidaga ko'ra, takroriy urinishda reyting balli berilmaydi (0 ball).</span>
                         </div>
                     @else
                         <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-800 border border-white/10 text-slate-400 text-xs">
@@ -288,6 +294,20 @@
             </div>
         @endif
 
-    @endif
-
+    {{-- Confetti & Celebration Script --}}
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.addEventListener('points-awarded', (e) => {
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 80,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#f59e0b', '#10b981', '#6366f1', '#ec4899', '#ffffff']
+                    });
+                }
+            });
+        });
+    </script>
 </div>
