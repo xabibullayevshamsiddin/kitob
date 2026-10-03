@@ -34,8 +34,8 @@
     <div class="ks-panel p-6 sm:p-10 bg-ink-900 border border-ink-border text-paper relative overflow-hidden">
         <div class="relative z-10 flex flex-col sm:flex-row gap-8 items-center sm:items-start">
             
-            <!-- Book Cover -->
-            <div class="w-44 h-64 rounded-card overflow-hidden shadow-2xl shrink-0 border border-ink-border relative group bg-ink-950">
+            <!-- Book Cover (2:3 nisbat) -->
+            <div class="w-44 sm:w-48 aspect-[2/3] rounded-card overflow-hidden shadow-2xl shrink-0 border border-ink-border relative group bg-ink-950">
                 <img src="{{ $book->cover_url }}" alt="{{ $book->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                 <div class="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none"></div>
             </div>

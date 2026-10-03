@@ -15,6 +15,8 @@ class LiveDetail extends Component
 
     public string $activeTab = 'chat'; // 'chat', 'settings', 'questions'
 
+    public bool $hasLiked = false;
+
     protected $rules = [
         'question' => 'required|string|min:2|max:300',
     ];
@@ -22,6 +24,12 @@ class LiveDetail extends Component
     public function mount(LiveEvent $event): void
     {
         $this->event = $event;
+
+        if (Auth::check()) {
+            $this->hasLiked = \App\Models\LiveEventLike::where('live_event_id', $this->event->id)
+                ->where('user_id', Auth::id())
+                ->exists();
+        }
 
         if ($this->event->status === LiveEvent::STATUS_LIVE && !$this->event->started_at) {
             $this->event->update(['started_at' => $this->event->created_at ?? now()]);
@@ -107,6 +115,52 @@ class LiveDetail extends Component
         $this->event->refresh();
 
         session()->flash('success', 'Jonli efir qayta boshlandi!');
+    }
+
+    public function toggleStreamLike(): void
+    {
+        if (!Auth::check()) {
+            session()->flash('error', 'Like bosish uchun avval tizimga kiring.');
+            return;
+        }
+
+        $userId = Auth::id();
+        $existing = \App\Models\LiveEventLike::where('live_event_id', $this->event->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            \App\Models\LiveEvent::where('id', $this->event->id)
+                ->where('likes_count', '>', 0)
+                ->decrement('likes_count');
+            $this->hasLiked = false;
+        } else {
+            \App\Models\LiveEventLike::firstOrCreate([
+                'live_event_id' => $this->event->id,
+                'user_id'       => $userId,
+            ]);
+            \App\Models\LiveEvent::where('id', $this->event->id)
+                ->increment('likes_count');
+            $this->hasLiked = true;
+        }
+
+        $newTotal = (int) \App\Models\LiveEvent::where('id', $this->event->id)->value('likes_count');
+        $this->event->likes_count = $newTotal;
+
+        \App\Models\LiveSignal::create([
+            'live_event_id' => $this->event->id,
+            'sender_id'     => 'server_' . $userId,
+            'receiver_id'   => 'all',
+            'type'          => 'like',
+            'payload'       => json_encode(['total' => $newTotal]),
+            'created_at'    => now(),
+        ]);
+    }
+
+    public function sendLikes(int $count = 1): void
+    {
+        $this->toggleStreamLike();
     }
 
     public function submitQuestion(): void
@@ -219,6 +273,7 @@ class LiveDetail extends Component
             'isHost'            => $this->isHost,
             'canManage'         => $this->canManage,
             'canEditSettings'   => $this->isHost,
+            'hasLiked'          => $this->hasLiked,
         ])->layout('layouts.app', ['title' => $this->event->title]);
     }
 }

@@ -38,7 +38,7 @@
             cur.innerHTML =
                 '<div class="ks-cur-glow"><i></i><i></i></div>' +
                 '<div class="ks-cur-inner">' +
-                  '<div class="ks-book"><b class="ks-bk-back"></b><b class="ks-bk-l"></b><b class="ks-bk-r"></b>' +
+                  '<div class="ks-cur-book"><b class="ks-bk-back"></b><b class="ks-bk-l"></b><b class="ks-bk-r"></b>' +
                     '<b class="ks-pg" style="--i:0"></b><b class="ks-pg" style="--i:1"></b><b class="ks-pg" style="--i:2"></b><b class="ks-pg" style="--i:3"></b>' +
                   '</div>' +
                   '<div class="ks-cur-word">' + word + '</div>' +
@@ -326,8 +326,8 @@
     .ks-cur-glow i:nth-child(2) { width: 32vmax; height: 32vmax; right: 6%; bottom: 0; background: radial-gradient(circle, rgba(45,212,191,.16), transparent 65%); animation: ksDriftB 11s ease-in-out infinite alternate; }
     .ks-cur-inner { position: relative; text-align: center; transform: translateY(-2vh); }
 
-    .ks-book { position: relative; width: 84px; height: 58px; margin: 0 auto 30px; perspective: 800px; transform: rotateX(16deg); transform-style: preserve-3d; }
-    .ks-book b { position: absolute; display: block; }
+    .ks-cur-book { position: relative; width: 84px; height: 58px; margin: 0 auto 30px; perspective: 800px; transform: rotateX(16deg); transform-style: preserve-3d; }
+    .ks-cur-book b { position: absolute; display: block; }
     .ks-bk-back { inset: -4px -5px -6px; border-radius: 4px 8px 8px 4px; background: linear-gradient(135deg, #92400E, #F59E0B 55%, #B45309); box-shadow: 0 18px 34px -12px rgba(245,158,11,.55), inset 0 0 0 1px rgba(255,255,255,.12); }
     .ks-bk-l, .ks-bk-r, .ks-pg {
         top: 0; width: 40px; height: 58px;

@@ -31,12 +31,14 @@ class LiveEvent extends Model
         'permission_mode',
         'is_recording',
         'replay_url',
+        'likes_count',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
         'started_at'   => 'datetime',
         'is_recording' => 'boolean',
+        'likes_count'  => 'integer',
     ];
 
     // -------------------------------------------------------------------------
@@ -61,6 +63,11 @@ class LiveEvent extends Model
     public function signals(): HasMany
     {
         return $this->hasMany(\App\Models\LiveSignal::class);
+    }
+
+    public function eventLikes(): HasMany
+    {
+        return $this->hasMany(LiveEventLike::class);
     }
 
     // -------------------------------------------------------------------------

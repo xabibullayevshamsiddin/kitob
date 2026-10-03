@@ -28,6 +28,9 @@ class LiveChatPanel extends Component
 
     public string $message = '';
 
+    /** Shu foydalanuvchi (brauzer) like bosgan xabarlar ID'lari — component state'da saqlanadi */
+    public array $myLikedIds = [];
+
     protected $rules = [
         'message' => 'required|string|min:2|max:300',
     ];
@@ -173,6 +176,39 @@ class LiveChatPanel extends Component
         }
     }
 
+    /**
+     * Xabarga like bosish (toggle): birinchi bosishda +1, qayta bosishda -1.
+     * Boshqa foydalanuvchilar uchun hisob wire:poll (2s) orqali avtomatik yangilanadi —
+     * sahifani qayta yuklash (obnova) shart emas.
+     */
+    public function toggleLike(int $questionId): void
+    {
+        if (!Auth::check()) {
+            session()->flash('error', 'Like bosish uchun avval tizimga kiring.');
+            return;
+        }
+
+        if (!$this->event) {
+            return;
+        }
+
+        $q = LiveQuestion::where('live_event_id', $this->event->id)->find($questionId);
+        if (!$q) {
+            return;
+        }
+
+        if (in_array($questionId, $this->myLikedIds, true)) {
+            // Qayta bosildi — like olib tashlanadi (0 dan pastga tushmasin)
+            $this->myLikedIds = array_values(array_diff($this->myLikedIds, [$questionId]));
+            if ($q->likes_count > 0) {
+                $q->decrement('likes_count');
+            }
+        } else {
+            $this->myLikedIds[] = $questionId;
+            $q->increment('likes_count');
+        }
+    }
+
     public function render()
     {
         $event = $this->event;
@@ -205,10 +241,14 @@ class LiveChatPanel extends Component
             ->reverse()
             ->values();
 
+        // Umumiy like soni (hamma ko'radi, shu jumladan efir boshlagan odam)
+        $totalLikes = (int) LiveQuestion::where('live_event_id', $event->id)->sum('likes_count');
+
         return view('livewire.live.live-chat-panel', [
-            'event'    => $event,
-            'pinned'   => $pinned,
-            'messages' => $messages,
+            'event'      => $event,
+            'pinned'     => $pinned,
+            'messages'   => $messages,
+            'totalLikes' => $totalLikes,
         ]);
     }
 }

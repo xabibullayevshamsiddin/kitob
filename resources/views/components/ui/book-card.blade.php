@@ -28,8 +28,8 @@
 
 @once
     <style>
-        .ks-book { perspective: 1200px; }
-        .ks-book__stage { position: relative; aspect-ratio: 2 / 3; }
+        .ks-book { perspective: 1200px; width: 100%; }
+        .ks-book__stage { position: relative; aspect-ratio: 2 / 3; width: 100%; }
         .ks-book__shadow {
             position: absolute; left: 10%; right: 6%; bottom: -10px; height: 18px; border-radius: 50%;
             background: rgba(0,0,0,.55); filter: blur(12px); opacity: .7;

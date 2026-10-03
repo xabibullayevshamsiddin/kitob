@@ -13,7 +13,7 @@
         <div class="ks-panel p-5 sm:p-6 bg-ink-900 border border-ink-border">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <img src="{{ auth()->user()->avatar_url }}" class="w-13 h-13 rounded-card object-cover border border-amber-500/40" alt="{{ auth()->user()->name }}">
+                    <img src="{{ auth()->user()->avatar_url }}" class="w-12 h-12 rounded-card object-cover border border-amber-500/40 shrink-0" alt="{{ auth()->user()->name }}">
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">{{ __('site.leaderboard.your_result') }}</span>

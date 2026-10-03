@@ -144,22 +144,18 @@
                                     </span>
                                 </div>
 
-                                {{-- Signature 3D Book Card — hero: muqova katta, meta pastda --}}
-                                <div class="w-full" style="max-width: 280px; margin: 0 auto;">
-                                    <x-ui.book-card :book="$featuredBook" ratio="3 / 4" :show-meta="false" class="w-full" />
-                                </div>
-
-                                {{-- Kitob ma'lumoti — muqova ostida --}}
-                                <div class="mt-5 flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <h3 class="font-serif font-bold text-paper text-base leading-tight line-clamp-2">{{ $featuredBook->title }}</h3>
-                                        <p class="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-mist">{{ $featuredBook->author }}</p>
-                                    </div>
-                                    <a href="{{ route('books.show', $featuredBook->slug) }}"
-                                       class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-ink-950 font-semibold text-xs transition-colors cursor-pointer">
-                                        O'qish
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                    </a>
+                                {{-- Signature 3D Book Card (2:3 nisbat) --}}
+                                <div class="w-full max-w-[260px] mx-auto py-2">
+                                    <x-ui.book-card :book="$featuredBook" ratio="2 / 3">
+                                        <div class="pt-3 mt-3 border-t border-ink-border flex items-center justify-between">
+                                            <span class="ks-eyebrow">{{ $featuredBook->genre }}</span>
+                                            <a href="{{ route('books.show', $featuredBook->slug) }}"
+                                               class="ks-btn-primary !py-1 !px-3 !text-xs inline-flex items-center gap-1.5">
+                                                <span>O'qish</span>
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                            </a>
+                                        </div>
+                                    </x-ui.book-card>
                                 </div>
 
                                 @php

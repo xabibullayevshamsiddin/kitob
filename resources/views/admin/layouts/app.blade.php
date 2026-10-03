@@ -159,7 +159,7 @@
 
             <!-- Sidebar footer -->
             <div class="flex-shrink-0 px-4 py-3 border-t border-ink-border">
-                <a href="{{ route('home') }}" class="flex items-center gap-2 text-xs text-mist hover:text-paper transition-colors duration-base">
+                <a href="{{ route('home') }}" target="_blank" rel="noopener" class="flex items-center gap-2 text-xs text-mist hover:text-paper transition-colors duration-base">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                     Saytga qaytish
                 </a>

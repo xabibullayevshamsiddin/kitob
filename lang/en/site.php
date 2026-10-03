@@ -641,6 +641,7 @@ return [
         'next_up'            => 'Next broadcast: :time',
         'host'               => 'Teacher:',
         'enter_hall'         => '🔴 Enter broadcast hall',
+        'likes_total_title'  => 'Total likes in this broadcast',
         'end'                => '⏹️ End broadcast',
         'end_confirm'        => 'End the broadcast ":title"? The broadcast and its questions will be removed from the site.',
         'ask_title'          => '🎤 Ask the author a question in advance',

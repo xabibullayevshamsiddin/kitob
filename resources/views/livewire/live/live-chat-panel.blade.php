@@ -57,7 +57,9 @@
                 </span>
             </div>
         </div>
-        <span class="text-xs text-mist font-mono">{{ $messages->count() }} ta xabar</span>
+        <div class="flex items-center gap-2.5">
+            <span class="text-xs text-mist font-mono">{{ $messages->count() }} ta xabar</span>
+        </div>
     </div>
 
     <!-- PINNED xabarlar -->
@@ -124,6 +126,32 @@
                             <span class="text-[10px] text-mist font-mono">{{ $msg->created_at->timezone('Asia/Tashkent')->format('H:i') }}</span>
                             @if($msg->is_answered)
                                 <span class="text-[10px] font-mono text-emerald-400">✓ javob berildi</span>
+                            @endif
+
+                            {{-- Like tugmasi (toggle): bosilganda +1, qayta bosilganda -1. Hisob barchada real vaqtda kopyiladi --}}
+                            @if(auth()->check())
+                                <button type="button"
+                                    wire:click="toggleLike({{ $msg->id }})"
+                                    wire:loading.attr="disabled" wire:target="toggleLike({{ $msg->id }})"
+                                    wire:key="like-btn-{{ $msg->id }}"
+                                    title="Like bosish"
+                                    class="flex items-center gap-0.5 p-0.5 rounded transition-all {{ in_array($msg->id, $this->myLikedIds, true) ? 'text-rose-400' : 'text-mist opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-rose-400' }}">
+                                    <svg class="w-3 h-3 {{ in_array($msg->id, $this->myLikedIds, true) ? 'fill-current' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                    @if($msg->likes_count > 0)
+                                        <span class="text-[10px] font-mono font-bold">{{ $msg->likes_count }}</span>
+                                    @endif
+                                </button>
+                            @else
+                                <span class="flex items-center gap-0.5 text-mist" title="Like bosish uchun tizimga kiring">
+                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                    @if($msg->likes_count > 0)
+                                        <span class="text-[10px] font-mono">{{ $msg->likes_count }}</span>
+                                    @endif
+                                </span>
                             @endif
 
                             @if($isHost)

@@ -17,11 +17,13 @@ class LiveQuestion extends Model
         'question',
         'is_selected',
         'is_answered',
+        'likes_count',
     ];
 
     protected $casts = [
         'is_selected' => 'boolean',
         'is_answered' => 'boolean',
+        'likes_count' => 'integer',
     ];
 
     // -------------------------------------------------------------------------

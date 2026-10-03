@@ -239,7 +239,8 @@
         </div>
     </div>
 
-    <!-- ── EFIRLAR RO'YXATI ── -->
+    <!-- ── EFIRLAR RO'YXATI ── (wire:poll.5s — like'lar va holat real vaqtda yangilanadi, sahifa refresh shart emas) -->
+    <div wire:poll.5s>
     @if ($upcoming->isEmpty())
         <div class="p-10 rounded-panel bg-ink-900 border border-ink-border text-center space-y-3">
             @if($hasActiveFilters)
@@ -269,18 +270,27 @@
                         <span>{{ $event->is_live ? __('site.live.now_live') : __('site.live.next_up', ['time' => $event->scheduled_at?->timezone('Asia/Tashkent')->format('d M, H:i')]) }}</span>
                     </div>
 
-                    <!-- Permission mode badge -->
-                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-pill bg-ink-800 border border-ink-border text-mist">
-                        @if($event->permission_mode === 'chat_only')
-                            {{ __('site.live.perm_filter_chat') }}
-                        @elseif($event->permission_mode === 'voice_only')
-                            {{ __('site.live.perm_filter_voice') }}
-                        @elseif($event->permission_mode === 'view_only')
-                            {{ __('site.live.perm_filter_view') }}
-                        @else
-                            {{ __('site.live.perm_filter_both') }}
-                        @endif
-                    </span>
+                    <div class="flex items-center gap-2">
+                        {{-- Jami like'lar — efir ro'yxatida ham ko'rinadi --}}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill bg-rose-500/10 border border-rose-500/25 text-rose-300 font-mono text-[11px] font-bold"
+                            title="{{ __('site.live.likes_total_title') }}">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            <span wire:key="likes-sum-{{ $event->id }}">{{ (int) ($event->questions_likes_sum ?? 0) }}</span>
+                        </span>
+
+                        <!-- Permission mode badge -->
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-pill bg-ink-800 border border-ink-border text-mist">
+                            @if($event->permission_mode === 'chat_only')
+                                {{ __('site.live.perm_filter_chat') }}
+                            @elseif($event->permission_mode === 'voice_only')
+                                {{ __('site.live.perm_filter_voice') }}
+                            @elseif($event->permission_mode === 'view_only')
+                                {{ __('site.live.perm_filter_view') }}
+                            @else
+                                {{ __('site.live.perm_filter_both') }}
+                            @endif
+                        </span>
+                    </div>
                 </div>
 
                 <h2 class="text-xl sm:text-2xl font-bold font-serif text-paper leading-snug">{{ $event->title }}</h2>
@@ -322,9 +332,10 @@
             <div class="pt-2 font-mono text-xs">
                 {{ $upcoming->links('vendor.pagination.taste-livewire') }}
             </div>
-        @endif
+    @endif
+    </div>
 
-        <!-- Question submission box -->
+    <!-- Question submission box -->
         <div class="p-5 rounded-panel bg-ink-900 border border-ink-border space-y-3.5">
             <h3 class="text-xs font-mono uppercase tracking-wider text-mist">{{ __('site.live.ask_title') }}</h3>
             <form wire:submit.prevent="submitQuestion" class="flex flex-col sm:flex-row gap-2">

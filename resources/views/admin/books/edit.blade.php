@@ -72,7 +72,7 @@
                         🖼️ Kitob muqovasi (Rasm)
                     </label>
                     <p class="text-xs text-slate-500 dark:text-slate-400">
-                        Yangi rasm tanlasangiz, eski muqova almashtiriladi (maks. 15 MB)
+                        Yangi rasm tanlasangiz, eski muqova almashtiriladi. Tavsiya etilgan o'lcham: <strong class="text-amber-500">2:3 nisbat (masalan, 800×1200 px)</strong> (maks. 15 MB)
                     </p>
 
                     <label for="cover_image" class="group relative flex flex-col items-center justify-center w-full min-h-[170px] p-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 hover:border-amber-500 hover:bg-amber-500/5 transition-all cursor-pointer overflow-hidden">
@@ -82,13 +82,13 @@
                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-500 transition-colors">
                                     Yangi muqova rasmini tanlang
                                 </span>
-                                <span class="text-[11px] text-slate-400 mt-1">JPG, PNG, WEBP</span>
+                                <span class="text-[11px] text-slate-400 mt-1">2:3 nisbatda (800×1200 px) JPG, PNG, WEBP</span>
                             </div>
                         </template>
 
                         <template x-if="previewUrl">
                             <div class="flex items-center gap-4 w-full">
-                                <img :src="previewUrl" alt="Muqova" class="w-20 h-28 object-cover rounded-xl shadow-md border border-white/20 shrink-0">
+                                <img :src="previewUrl" alt="Muqova" class="w-20 aspect-[2/3] object-cover rounded-xl shadow-md border border-white/20 shrink-0">
                                 <div class="min-w-0">
                                     <span class="inline-block px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase mb-1">Mavjud muqova</span>
                                     <p class="text-xs font-semibold text-slate-800 dark:text-white truncate">Almashtirish uchun bosing</p>

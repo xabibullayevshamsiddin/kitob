@@ -5,6 +5,8 @@
         eventId: {{ $event->id }},
         startedAt: {{ $event->started_at ? $event->started_at->timestamp : ($event->created_at ? $event->created_at->timestamp : now()->timestamp) }},
         serverNow: {{ now()->timestamp }},
+        initialLikes: {{ (int) ($event->likes_count ?? 0) }},
+        initialHasLiked: @js($hasLiked),
         permissionMode: @js($event->permission_mode),
         signalSendUrl: @js(route('live.signal.send', $event)),
         signalPollUrl: @js(route('live.signal.poll', $event)),
@@ -165,7 +167,7 @@
                     </button>
                 </div>
 
-                <!-- Top Left Overlays (LIVE badge + Timer) -->
+                <!-- Top Left Overlays (LIVE badge + Timer + Viewers count) -->
                 <div class="absolute top-4 left-4 flex items-center gap-2 z-20">
                     <div class="px-2.5 py-0.5 rounded-pill bg-[#C1392B] text-paper font-mono text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg backdrop-blur-md">
                         <span class="w-1.5 h-1.5 rounded-full bg-paper animate-ping"></span>
@@ -173,6 +175,14 @@
                     </div>
                     <div class="px-2.5 py-0.5 rounded-pill bg-ink-950/80 backdrop-blur-md text-paper font-mono text-xs border border-ink-border" x-text="formattedDuration">
                         00:00:00
+                    </div>
+                    <div class="px-2.5 py-0.5 rounded-pill bg-ink-950/80 backdrop-blur-md text-amber-400 font-mono text-xs border border-ink-border flex items-center gap-1.5 shadow-md"
+                         title="Jonli efirni tomosha qilayotganlar">
+                        <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span class="font-bold tabular-nums" x-text="formatNumber(Math.round(animatedViewerCount))">0</span>
                     </div>
                 </div>
 
@@ -213,9 +223,48 @@
                     </template>
                 </div>
 
-                <!-- Bottom Right Watermark -->
-                <div class="absolute bottom-4 right-4 z-20 hidden sm:flex items-center gap-1.5 bg-ink-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-pill text-[10px] text-mist font-mono border border-ink-border">
-                    <span>Kitobxon Live Studio</span>
+                <!-- Floating Hearts Container (Instagram / TikTok Live style) -->
+                <div class="absolute bottom-16 right-4 w-32 h-72 pointer-events-none z-30 overflow-hidden" aria-hidden="true">
+                    <template x-for="heart in floatingHearts" :key="heart.id">
+                        <div class="ks-floating-heart absolute bottom-0 right-4 select-none"
+                             :style="{
+                                 '--tx': heart.tx + 'px',
+                                 '--rot': heart.rot + 'deg',
+                                 '--scale': heart.scale,
+                                 '--dur': heart.dur + 'ms',
+                                 color: heart.color
+                             }">
+                            <svg class="w-6 h-6 fill-current drop-shadow-md" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Bottom Right Watermark & Interactive Like Button -->
+                <div class="absolute bottom-4 right-4 z-30 flex items-center gap-2">
+                    <div class="hidden sm:flex items-center gap-1.5 bg-ink-950/80 backdrop-blur-md px-2 py-1 rounded-pill text-[10px] text-mist font-mono border border-ink-border">
+                        <span>Kitobxon Studio</span>
+                    </div>
+
+                    <!-- Single Like Toggle Button (1 like per user) -->
+                    <button type="button"
+                            @click.stop="toggleLike()"
+                            class="group/like relative flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg transition-all active:scale-90 cursor-pointer border"
+                            :class="hasLiked ? 'bg-rose-500/20 border-rose-500/60 text-rose-300 ring-1 ring-rose-500/30' : 'bg-ink-950/85 hover:bg-ink-900 border-rose-500/40 hover:border-rose-400 text-paper'"
+                            :title="hasLiked ? 'Like bekor qilish' : 'Jonli efirga like bosish'">
+                        <span class="transition-transform group-hover/like:scale-125 flex items-center justify-center"
+                              :class="hasLiked ? 'text-rose-500' : 'text-mist group-hover/like:text-rose-400'">
+                            <svg class="w-4.5 h-4.5 transition-colors"
+                                 :class="hasLiked ? 'fill-rose-500 text-rose-500' : 'fill-none text-current'"
+                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </span>
+                        <span class="font-bold font-mono min-w-[18px] text-left tabular-nums text-xs"
+                              :class="hasLiked ? 'text-rose-300' : 'text-paper'"
+                              x-text="formatNumber(likesCount)">0</span>
+                    </button>
                 </div>
             </div>
 
@@ -371,6 +420,29 @@
 
     </div>
 
+    <style>
+        @keyframes ksFloatHeart {
+            0% {
+                opacity: 1;
+                transform: translateY(0) translateX(0) rotate(0deg) scale(var(--scale, 1));
+            }
+            50% {
+                opacity: 0.95;
+                transform: translateY(-90px) translateX(calc(var(--tx, 0px) * 0.7)) rotate(calc(var(--rot, 0deg) * 0.5)) scale(calc(var(--scale, 1) * 1.15));
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-220px) translateX(var(--tx, 0px)) rotate(var(--rot, 0deg)) scale(calc(var(--scale, 1) * 0.7));
+            }
+        }
+        .ks-floating-heart {
+            animation: ksFloatHeart var(--dur, 1600ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            will-change: transform, opacity;
+            pointer-events: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
     <!-- ── 3. WEBRTC / MEDIA STUDIO JAVASCRIPT CONTROLLER ── -->
     <script>
 
@@ -428,6 +500,15 @@ function liveStudioController(config) {
         isScreenSharing: false,
         isRecording: false,
         showDeviceSettings: false,
+
+        // Real-time Likes (1-like-per-user) & Viewers
+        likesCount: Number(config.initialLikes || 0),
+        hasLiked: Boolean(config.initialHasLiked),
+        floatingHearts: [],
+        viewerCount: 0,
+        animatedViewerCount: 0,
+        activeViewers: new Map(), // Host: viewerId -> lastSeenTimestamp
+        viewerPingInterval: null,
 
         // Hardware devices (host)
         audioDevices: [],
@@ -519,14 +600,31 @@ function liveStudioController(config) {
                 await this.scanMediaDevices();
                 await this.startMediaStream();
 
-                // Periodic heartbeat from Host to announce presence
+                // Periodic heartbeat from Host to announce presence and prune inactive viewers
                 this.heartbeatInterval = setInterval(() => {
+                    if (this.streamEnded) {
+                        clearInterval(this.heartbeatInterval);
+                        return;
+                    }
                     this.sendSignal('stream-status', 'all', {
                         isVideoOn: this.isVideoOn,
                         isMicOn: this.isMicOn,
                         isHostOnline: true
                     });
-                }, 3000);
+
+                    // Prune inactive viewers (no ping in last 7 seconds)
+                    const now = Date.now();
+                    for (const [id, ts] of this.activeViewers.entries()) {
+                        if (now - ts > 7000) {
+                            this.activeViewers.delete(id);
+                            if (this.peers && this.peers[id]) {
+                                try { this.peers[id].close(); } catch(e) {}
+                                delete this.peers[id];
+                            }
+                        }
+                    }
+                    this.broadcastViewerCount();
+                }, 2500);
             } else {
                 // Auto-unmute for viewer on first user interaction anywhere on page (click, touch, key)
                 const autoUnmuteHandler = () => {
@@ -538,6 +636,22 @@ function liveStudioController(config) {
 
                 // Viewer startup: send join announcement to host
                 this.sendSignal('join', 'host:*', { ts: Date.now() });
+
+                // Periodic presence ping every 3 seconds to keep viewer count fresh on host
+                this.viewerPingInterval = setInterval(() => {
+                    if (this.streamEnded) {
+                        clearInterval(this.viewerPingInterval);
+                        return;
+                    }
+                    this.sendSignal('viewer-ping', 'host:*', { ts: Date.now() });
+                }, 3000);
+
+                // Notify host immediately when tab is closed or navigated away
+                const handleLeave = () => {
+                    this.sendSignal('leave', 'host:*', { ts: Date.now() });
+                };
+                window.addEventListener('beforeunload', handleLeave);
+                window.addEventListener('pagehide', handleLeave);
 
                 // Retry join only if we still have no remote stream AND peer is not already connecting
                 this.heartbeatInterval = setInterval(() => {
@@ -761,6 +875,23 @@ function liveStudioController(config) {
                 this.processedSignalKeys.delete(first);
             }
 
+            // Universal real-time stream signals: Likes
+            if (msg.type === 'like') {
+                if (payload && typeof payload.total === 'number') {
+                    this.likesCount = payload.total;
+                }
+                this.spawnFloatingHeart(false);
+                return;
+            }
+
+            // Universal real-time stream signals: Viewer Count
+            if (msg.type === 'viewer-count') {
+                if (payload && typeof payload.count === 'number') {
+                    this.updateViewerCount(payload.count);
+                }
+                return;
+            }
+
             if (this.isHost) {
                 await this.handleHostSignal(msg);
             } else {
@@ -771,6 +902,29 @@ function liveStudioController(config) {
         // ── HOST SIGNAL HANDLERS ──
         async handleHostSignal(msg) {
             const viewerId = msg.sender_id;
+
+            // Track real-time viewer presence on ANY viewer signal
+            if (viewerId && viewerId.startsWith('viewer_')) {
+                if (msg.type === 'leave') {
+                    this.activeViewers.delete(viewerId);
+                    if (this.peers && this.peers[viewerId]) {
+                        try { this.peers[viewerId].close(); } catch (e) {}
+                        delete this.peers[viewerId];
+                    }
+                    this.broadcastViewerCount();
+                    return;
+                }
+
+                const isNew = !this.activeViewers.has(viewerId);
+                this.activeViewers.set(viewerId, Date.now());
+                if (isNew) {
+                    this.broadcastViewerCount();
+                }
+            }
+
+            if (msg.type === 'viewer-ping') {
+                return;
+            }
 
             if (msg.type === 'join') {
                 await this.createPeerForViewer(viewerId);
@@ -1578,6 +1732,86 @@ function liveStudioController(config) {
                     alert('Brauzeringizda ushbu formatda yozib olish qo\'llab-quvvatlanmadi.');
                 }
             }
+        },
+
+        // ── REAL-TIME LIKES (1-like-per-user toggle) & VIEWER COUNT ──
+        toggleLike() {
+            // Optimistic UI toggle
+            if (!this.hasLiked) {
+                this.hasLiked = true;
+                this.likesCount++;
+                this.spawnFloatingHeart(true);
+            } else {
+                this.hasLiked = false;
+                this.likesCount = Math.max(0, this.likesCount - 1);
+            }
+
+            // Immediately invoke server toggle
+            const comp = this.$wire || (window.Livewire && this.$el ? window.Livewire.find(this.$el.closest('[wire\\:id]')?.getAttribute('wire:id')) : null);
+            if (comp) {
+                if (typeof comp.toggleStreamLike === 'function') {
+                    comp.toggleStreamLike();
+                } else if (typeof comp.call === 'function') {
+                    comp.call('toggleStreamLike');
+                } else if (typeof comp.sendLikes === 'function') {
+                    comp.sendLikes(1);
+                }
+            }
+        },
+
+        sendLike() {
+            this.toggleLike();
+        },
+
+        broadcastViewerCount() {
+            const count = this.activeViewers ? this.activeViewers.size : 0;
+            this.updateViewerCount(count);
+            this.sendSignal('viewer-count', 'all', { count: count });
+        },
+
+        spawnFloatingHeart(isLocal = true) {
+            const id = Date.now() + Math.random();
+            const colors = ['#F43F5E', '#FB7185', '#E11D48', '#FDA4AF', '#F59E0B', '#FBBF24'];
+            const heart = {
+                id: id,
+                tx: (Math.random() - 0.5) * 60,
+                rot: (Math.random() - 0.5) * 44,
+                scale: (isLocal ? 1.0 : 0.8) + (Math.random() * 0.4),
+                dur: 1400 + Math.floor(Math.random() * 600),
+                color: colors[Math.floor(Math.random() * colors.length)]
+            };
+            this.floatingHearts.push(heart);
+            if (this.floatingHearts.length > 25) {
+                this.floatingHearts.shift();
+            }
+            setTimeout(() => {
+                this.floatingHearts = this.floatingHearts.filter(h => h.id !== id);
+            }, heart.dur);
+        },
+
+        updateViewerCount(newCount) {
+            const target = Math.max(0, Number(newCount) || 0);
+            this.viewerCount = target;
+            if (window.gsap) {
+                window.gsap.to(this, {
+                    animatedViewerCount: target,
+                    duration: 0.6,
+                    ease: 'power1.out'
+                });
+            } else {
+                this.animatedViewerCount = target;
+            }
+        },
+
+        formatNumber(num) {
+            num = Math.round(Number(num) || 0);
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+            }
+            return String(num);
         }
     };
 }

@@ -641,6 +641,7 @@ return [
         'next_up'            => 'Navbatdagi efir: :time',
         'host'               => 'Ustoz:',
         'enter_hall'         => '🔴 Efir zaliga kirish',
+        'likes_total_title'  => 'Bu efirdagi jami like\'lar',
         'end'                => "⏹️ Efirni tugatish",
         'end_confirm'        => "':title' efirini tugatasizmi? Efir va undagi savollar saytdan o'chiriladi.",
         'ask_title'          => '🎤 Muallifga oldindan savol yuborish',
