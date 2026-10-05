@@ -11,3 +11,11 @@ output-skill: Prevents AI from being lazy, skipping code blocks, or using placeh
 minimalist-skill: Enforces clean, editorial-style interfaces (Notion/Linear style) with strict monochrome palettes.
 brutalist-skill: Raw mechanical interfaces, Swiss typography, extreme scale contrast. (Beta)
 stitch-skill: Google Stitch-compatible semantic design rules for premium AI UI generation.
+gsap-core: Official GSAP core API skill — gsap.to/from/fromTo, easing, duration, stagger, defaults, transforms, autoAlpha, gsap.matchMedia() (responsive, prefers-reduced-motion). Use for any JS animation request (vanilla/Laravel+Alpine included).
+gsap-timeline: GSAP timelines — gsap.timeline(), position parameter, labels, nesting, playback control for multi-step animation sequencing.
+gsap-scrolltrigger: GSAP ScrollTrigger — scroll-linked animations, pinning, scrub, triggers, refresh and cleanup patterns.
+gsap-plugins: GSAP plugins — ScrollToPlugin, ScrollSmoother, Flip, Draggable, Inertia, Observer, SplitText, ScrambleText, SVG/physics, CustomEase. All plugins now 100% free from the public gsap npm package (no Club membership or auth token).
+gsap-utils: gsap.utils helpers — clamp, mapRange, normalize, interpolate, random, snap, toArray, wrap, pipe.
+gsap-react: GSAP in React — useGSAP hook, refs, gsap.context(), cleanup, SSR. (Loyihada React yo'q, lekin to'liq rasmiy to'plam sifatida qo'shilgan.)
+gsap-frameworks: GSAP in Vue/Svelte and other frameworks — lifecycle, tween/ScrollTrigger creation and kill, scoping, cleanup. (Loyihada ishlatilmaydi, to'plam to'qligi uchun.)
+gsap-performance: GSAP performance — transforms over layout props, will-change, batching, ScrollTrigger 60fps tips.

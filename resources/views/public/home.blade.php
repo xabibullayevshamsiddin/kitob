@@ -52,6 +52,26 @@
             0%, 100% { height: 4px; }
             50% { height: 18px; }
         }
+
+        /* Scrollytelling 3D Book Stage (Apple-grade Physics) */
+        .scrolly-book-stage {
+            perspective: 1600px;
+            transform-style: preserve-3d;
+        }
+        .scrolly-book-cover {
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            will-change: transform;
+        }
+        .scrolly-book-inside {
+            transform-style: preserve-3d;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .scrolly-book-cover {
+                transform: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden ks-grain">
@@ -194,7 +214,193 @@
         </div>
     </section>
 
-    <!-- ── 2. EDITORIAL KINETIC TICKER ── -->
+    <!-- ── 2. SCROLLYTELLING BOOK REVEAL SECTION (APPLE-GRADE PINNED SCROLL) ── -->
+    @php
+        $scrollyBook = $featuredBook ?? null;
+        $scrollyTitle = $scrollyBook ? $scrollyBook->title : "O'tkan Kunlar";
+        $scrollyAuthor = $scrollyBook ? $scrollyBook->author : "Abdulla Qodiriy";
+        $scrollyGenre = $scrollyBook ? $scrollyBook->genre : "Tarixiy Roman";
+        $scrollyDesc = $scrollyBook && $scrollyBook->description 
+            ? \Illuminate\Support\Str::limit(strip_tags((string)$scrollyBook->description), 280) 
+            : "O'zbek adabiyotining shoh asari bo'lmish ushbu kitobda inson qadri, muhabbat va vatan taqdiri teran falsafiy nigoh bilan yoritilgan.";
+        $scrollyInsideExcerpt = $scrollyBook && $scrollyBook->description
+            ? \Illuminate\Support\Str::limit(strip_tags((string)$scrollyBook->description), 160)
+            : "Har bir sahifada chuqur ma'no, har bir bobda yangi kashfiyot...";
+        $scrollyLink = $scrollyBook ? route('books.show', $scrollyBook->slug) : route('books.public');
+        $scrollyReaders = $featuredReadersCount ?? ($scrollyBook ? 48 : 24);
+        $scrollyChapters = $featuredChaptersCount ?? ($scrollyBook ? 18 : 12);
+        $scrollyAudio = $featuredAudioMinutes ?? 35;
+        $scrollyCover = $scrollyBook->cover_url ?? null;
+    @endphp
+
+    <section id="book-reveal-section" class="relative w-full min-h-screen bg-ink-950 border-b border-ink-border flex items-center justify-center py-16 lg:py-0 overflow-hidden">
+        <!-- Atmospheric Ambient Spotlight behind the book -->
+        <div class="scrolly-ambient-glow absolute inset-0 pointer-events-none flex items-center justify-center opacity-60" aria-hidden="true">
+            <div class="w-[500px] lg:w-[650px] h-[500px] lg:h-[650px] rounded-full bg-gradient-radial from-amber-500/15 via-vermilion/5 to-transparent blur-3xl"></div>
+        </div>
+
+        <!-- Inner Centered Container -->
+        <div class="w-full max-w-7xl mx-auto px-6 relative z-10">
+            <!-- Eyebrow Bar: Chapter / Week Indicator -->
+            <div class="scrolly-eyebrow-bar mb-6 lg:mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-ink-border/50 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span class="font-mono text-xs uppercase tracking-widest text-amber-400 font-bold">
+                        {{ $scrollyBook ? ($scrollyBook->week_number . '-HAFTA MUTOLAASI') : 'HAFTANING ASOSIY KITOBI' }}
+                    </span>
+                    <span class="text-mist/40">|</span>
+                    <span class="font-mono text-[11px] text-mist tracking-wider uppercase">
+                        Scrollytelling Tajribasi
+                    </span>
+                </div>
+                <div class="hidden lg:flex items-center gap-2 font-mono text-[11px] text-mist">
+                    <span>Scroll qiling va kitob ochilishini kuzating</span>
+                    <svg class="w-3.5 h-3.5 animate-bounce text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Stage Grid: 3D Book on Left/Center + Revealed Story on Right -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+                
+                <!-- LEFT (cols 1-5): The Grand 3D Book Stage -->
+                <div class="lg:col-span-5 flex justify-center items-center">
+                    <div class="scrolly-book-stage relative w-[240px] sm:w-[280px] lg:w-[320px] aspect-[2/3] select-none">
+                        
+                        <!-- Dynamic Floor Shadow underneath book -->
+                        <div class="scrolly-book-shadow absolute -bottom-6 left-[8%] right-[8%] h-7 rounded-full bg-black/80 blur-xl"></div>
+
+                        <!-- Inner Spine and Layered Paper Edge (Right) -->
+                        <div class="scrolly-book-pages-edge absolute top-1 bottom-1 -right-2 w-4 rounded-r-sm bg-gradient-to-r from-[#D9D2C5] via-[#FAF7F2] to-[#E5DFD5] shadow-md border-r border-[#B8B0A2]"
+                             style="background-image: repeating-linear-gradient(90deg, #D9D2C5 0 1px, #FAF7F2 1px 2px);"></div>
+
+                        <!-- Inside Book Surface (Revealed as cover opens) -->
+                        <div class="scrolly-book-inside absolute inset-0 rounded-l-[2px] rounded-r-md bg-[#FAF7F2] text-ink-950 p-6 flex flex-col justify-between overflow-hidden shadow-inner border border-[#E5DFD5]">
+                            <div class="border-b border-[#E5DFD5] pb-3">
+                                <span class="font-mono text-[10px] uppercase tracking-widest text-[#8B9BAD] block">Kitobxon Nashri</span>
+                                <span class="font-serif italic text-xs text-[#526071] mt-0.5 block">Haftalik Tanlov</span>
+                            </div>
+                            <div class="space-y-2 py-4">
+                                <div class="w-8 h-0.5 bg-amber-500 mb-2"></div>
+                                <p class="font-serif text-xs text-[#1A1D24] leading-relaxed line-clamp-6">
+                                    {{ $scrollyInsideExcerpt }}
+                                </p>
+                            </div>
+                            <div class="border-t border-[#E5DFD5] pt-2 flex items-center justify-between text-[10px] font-mono text-[#8B9BAD]">
+                                <span>1-Bob Mutolaasi</span>
+                                <span>№ {{ $scrollyBook->week_number ?? 1 }}</span>
+                            </div>
+                        </div>
+
+                        <!-- The 3D Book Cover (Rotates open via GSAP scrub) -->
+                        <div class="scrolly-book-cover absolute inset-0 rounded-l-[3px] rounded-r-md bg-ink-900 border border-ink-border overflow-hidden shadow-2xl origin-left transform-gpu">
+                            @if($scrollyCover)
+                                <img src="{{ $scrollyCover }}" alt="{{ $scrollyTitle }}" class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full bg-gradient-to-br from-ink-900 via-ink-800 to-ink-950 p-6 flex flex-col justify-between border border-amber-500/20">
+                                    <div>
+                                        <span class="font-mono text-[10px] text-amber-400 tracking-wider uppercase block">Kitobxon Exclusive</span>
+                                        <h3 class="font-serif text-lg font-bold text-paper mt-2">{{ $scrollyTitle }}</h3>
+                                        <p class="text-xs text-mist font-sans mt-1">{{ $scrollyAuthor }}</p>
+                                    </div>
+                                    <div class="pt-4 border-t border-ink-border flex justify-between items-center text-xs font-mono text-amber-400">
+                                        <span>Hafta Kitobi</span>
+                                        <span>✦</span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Spine Crease Shadow overlay on cover -->
+                            <div class="absolute inset-y-0 left-0 w-8 pointer-events-none bg-gradient-to-r from-black/60 via-black/20 to-transparent"></div>
+                            <div class="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-l-[3px] rounded-r-md"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- RIGHT (cols 6-12): Revealed Content & Scrolly Narrative Panel -->
+                <div class="lg:col-span-7 scrolly-content-panel space-y-6">
+                    
+                    <!-- Badge & Week Tag -->
+                    <div class="scrolly-content-item inline-flex items-center gap-2 px-3 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-xs tracking-wider">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        <span class="uppercase">{{ $scrollyBook ? ($scrollyBook->week_number . '-HAFTA TANLOVI') : 'MAXSUS NASHR' }}</span>
+                    </div>
+
+                    <!-- Book Title & Author -->
+                    <div class="scrolly-content-item space-y-2">
+                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-paper leading-[1.2] tracking-tight">
+                            {{ $scrollyTitle }}
+                        </h2>
+                        <div class="text-base sm:text-lg text-amber-400 font-sans flex flex-wrap items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                            </svg>
+                            <span>{{ $scrollyAuthor }}</span>
+                            @if($scrollyGenre)
+                                <span class="text-mist text-xs font-mono uppercase px-2 py-0.5 rounded-badge bg-ink-900 border border-ink-border">
+                                    {{ $scrollyGenre }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Narrative Description -->
+                    <p class="scrolly-content-item text-sm sm:text-base text-mist leading-relaxed font-sans max-w-2xl">
+                        {{ $scrollyDesc }}
+                    </p>
+
+                    <!-- Actions: Read CTA + Audio / Details -->
+                    <div class="scrolly-content-item flex flex-wrap items-center gap-3 pt-1">
+                        <a href="{{ $scrollyLink }}" class="ks-btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold">
+                            <span>Mutolaani boshlash</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </a>
+                        <a href="{{ route('books.public') }}" class="ks-btn-ghost inline-flex items-center gap-2 px-4 py-2.5 text-sm">
+                            <span>Barcha kitoblar</span>
+                        </a>
+                    </div>
+
+                    <!-- 70-100% STATS ROW: Dynamic Live Counters -->
+                    <div class="scrolly-stats-row pt-6 border-t border-ink-border/70 grid grid-cols-3 gap-3 sm:gap-4 max-w-xl">
+                        
+                        <!-- Stat 1: Readers -->
+                        <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
+                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Faol O'quvchilar</span>
+                            <p class="font-mono text-xl sm:text-2xl font-bold text-paper mt-1">
+                                <span class="scrolly-stat-num" data-target="{{ $scrollyReaders }}">0</span>
+                                <span class="text-xs text-amber-400 font-normal">+</span>
+                            </p>
+                        </div>
+
+                        <!-- Stat 2: Chapters -->
+                        <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
+                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Mundarija</span>
+                            <p class="font-mono text-xl sm:text-2xl font-bold text-amber-400 mt-1">
+                                <span class="scrolly-stat-num" data-target="{{ $scrollyChapters }}">0</span>
+                                <span class="text-xs text-mist font-normal">bob</span>
+                            </p>
+                        </div>
+
+                        <!-- Stat 3: Audio Duration -->
+                        <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
+                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Audio Tahlil</span>
+                            <p class="font-mono text-xl sm:text-2xl font-bold text-emerald-400 mt-1">
+                                <span class="scrolly-stat-num" data-target="{{ $scrollyAudio }}">0</span>
+                                <span class="text-xs text-mist font-normal">daq</span>
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── 3. EDITORIAL KINETIC TICKER ── -->
     <div class="py-3.5 border-b border-ink-border bg-ink-900/60 overflow-hidden relative">
         <div class="ticker-track font-mono text-[11px] uppercase tracking-widest text-mist flex items-center gap-8 whitespace-nowrap">
             @foreach(['ticker_1', 'ticker_2', 'ticker_3', 'ticker_4', 'ticker_5', 'ticker_6', 'ticker_1', 'ticker_2', 'ticker_3', 'ticker_4', 'ticker_5', 'ticker_6'] as $tk)
@@ -537,6 +743,98 @@
                         clearProps: "all"
                     }
                 );
+
+                // ── 2.1. SCROLLYTELLING BOOK REVEAL SCENE (APPLE-GRADE PINNED SCROLL) ──
+                const bookRevealSection = document.getElementById('book-reveal-section');
+                if (bookRevealSection) {
+                    const mm = gsap.matchMedia();
+
+                    // Desktop (min-width: 1024px) AND prefers-reduced-motion: no-preference
+                    mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+                        gsap.set('.scrolly-book-cover', { rotateY: 0, transformOrigin: "left center" });
+                        gsap.set('.scrolly-book-shadow', { scaleX: 1, opacity: 0.6, x: 0 });
+                        gsap.set('.scrolly-content-panel', { opacity: 0, x: 45 });
+                        gsap.set('.scrolly-stats-row', { opacity: 0, y: 25 });
+
+                        const statElements = document.querySelectorAll('.scrolly-stat-num');
+                        const statTargets = Array.from(statElements).map(el => parseInt(el.getAttribute('data-target') || '0', 10));
+                        const statProgressObj = { progress: 0 };
+
+                        const scrollyTl = gsap.timeline({
+                            scrollTrigger: {
+                                trigger: '#book-reveal-section',
+                                start: 'top top',
+                                end: '+=150%',
+                                pin: true,
+                                scrub: 1,
+                                anticipatePin: 1,
+                                invalidateOnRefresh: true,
+                            }
+                        });
+
+                        // 0% -> 30%: Book cover opens in 3D & floor shadow expands
+                        scrollyTl.to('.scrolly-book-cover', {
+                            rotateY: -135,
+                            ease: 'power1.inOut',
+                            duration: 0.35,
+                        }, 0);
+
+                        scrollyTl.to('.scrolly-book-shadow', {
+                            scaleX: 1.25,
+                            x: -24,
+                            opacity: 0.9,
+                            ease: 'power1.inOut',
+                            duration: 0.35,
+                        }, 0);
+
+                        // 30% -> 70%: Story & narrative content panel slides in & fades in
+                        scrollyTl.to('.scrolly-content-panel', {
+                            opacity: 1,
+                            x: 0,
+                            ease: 'power2.out',
+                            duration: 0.38,
+                        }, 0.32);
+
+                        // 70% -> 100%: Live stats row reveals & numbers count up with scroll
+                        scrollyTl.to('.scrolly-stats-row', {
+                            opacity: 1,
+                            y: 0,
+                            ease: 'power2.out',
+                            duration: 0.3,
+                        }, 0.7);
+
+                        scrollyTl.to(statProgressObj, {
+                            progress: 1,
+                            ease: 'none',
+                            duration: 0.3,
+                            onUpdate: () => {
+                                statElements.forEach((el, idx) => {
+                                    const targetVal = statTargets[idx] || 0;
+                                    const currentVal = Math.round(statProgressObj.progress * targetVal);
+                                    el.textContent = currentVal.toLocaleString('en-US');
+                                });
+                            }
+                        }, 0.7);
+
+                        return () => {
+                            scrollyTl.kill();
+                        };
+                    });
+
+                    // Mobile (< 1024px) OR prefers-reduced-motion: reduce
+                    mm.add("(max-width: 1023px), (prefers-reduced-motion: reduce)", () => {
+                        // Static, clean presentation without scroll lock
+                        gsap.set('.scrolly-book-cover', { rotateY: -28, transformOrigin: "left center" });
+                        gsap.set('.scrolly-book-shadow', { scaleX: 1.1, opacity: 0.75, x: 0 });
+                        gsap.set('.scrolly-content-panel', { opacity: 1, x: 0 });
+                        gsap.set('.scrolly-stats-row', { opacity: 1, y: 0 });
+
+                        document.querySelectorAll('.scrolly-stat-num').forEach(el => {
+                            const t = el.getAttribute('data-target') || '0';
+                            el.textContent = parseInt(t, 10).toLocaleString('en-US');
+                        });
+                    });
+                }
 
                 // 3. Bento Grid Reveal
                 gsap.fromTo('.bento-header',

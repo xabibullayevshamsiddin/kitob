@@ -36,6 +36,13 @@ Route::get('/', function () {
 
     $topFiveUsers = app(\App\Services\LeaderboardService::class)->getTopUsers(5);
 
+    $featuredReadersCount = $featuredBook ? max(18, (int) $featuredBook->readingSessions()->distinct('user_id')->count('user_id')) : 0;
+    $featuredChaptersCount = $featuredBook ? max(1, (int) $featuredBook->chapters()->count()) : 0;
+    $featuredAudioMinutes = $featuredBook ? (int) round($featuredBook->audios()->sum('duration') / 60) : 0;
+    if ($featuredAudioMinutes === 0 && $featuredBook) {
+        $featuredAudioMinutes = max(25, $featuredChaptersCount * 6);
+    }
+
     return view('public.home', compact(
         'usersCount',
         'recentUsers',
@@ -46,7 +53,10 @@ Route::get('/', function () {
         'audiosCount',
         'videosCount',
         'quizzesCount',
-        'topFiveUsers'
+        'topFiveUsers',
+        'featuredReadersCount',
+        'featuredChaptersCount',
+        'featuredAudioMinutes'
     ));
 })->name('home');
 
