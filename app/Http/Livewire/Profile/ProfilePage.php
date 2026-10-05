@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Profile;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Badge;
 use App\Models\BookReadingProgress;
 use App\Models\DailyActivity;
@@ -11,12 +12,13 @@ use App\Models\GroupMember;
 use App\Models\QuizAttempt;
 use App\Models\ReadingSession;
 use App\Models\User;
-use App\Services\Gamification\StreakService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class ProfilePage extends Component
 {
+    use WithToast;
+
     public User $user;
     public string $activeTab = 'overview';
     public bool $isFollowing = false;
@@ -46,19 +48,9 @@ class ProfilePage extends Component
             $this->user->save();
         }
 
-        // 2. Streakni tekshirish
-        $today = now('Asia/Tashkent')->toDateString();
-        $hasTodayReading = $this->user->readingSessions()->where('session_date', $today)->exists()
-            || $this->user->dailyActivities()->where('activity_date', $today)->where('minutes_read', '>', 0)->exists();
-
-        $streak = $this->user->streak;
-        if ($hasTodayReading && (!$streak || $streak->current_streak < 1)) {
-            $streakService = app(StreakService::class);
-            $streakService->recordActivity($this->user);
-            $this->user->load('streak');
-        }
-
-        // 3. Yutuqlarni (Badges) tekshirish va biriktirish
+        // 2. Yutuqlarni (Badges) tekshirish va biriktirish
+        // Streak endi global \App\Http\Middleware\TrackDailyStreak middlewareida,
+        // har qanday sahifa yuklanganda kuniga bir marta tekshiriladi.
         $this->checkAndAwardBadges();
     }
 
@@ -99,6 +91,7 @@ class ProfilePage extends Component
 
         $authId = Auth::id();
         if ($authId === $this->user->id) {
+            $this->toastWarning("O'zingizga obuna bo'la olmaysiz.");
             return;
         }
 
@@ -109,12 +102,14 @@ class ProfilePage extends Component
         if ($follow) {
             $follow->delete();
             $this->isFollowing = false;
+            $this->toastInfo("{$this->user->name} obunasi bekor qilindi.");
         } else {
             Follow::create([
                 'follower_id' => $authId,
                 'following_id' => $this->user->id,
             ]);
             $this->isFollowing = true;
+            $this->toastSuccess("{$this->user->name} ga muvaffaqiyatli obuna bo'ldingiz! ✨");
         }
     }
 
@@ -168,7 +163,7 @@ class ProfilePage extends Component
             'current_streak'  => (int) ($this->user->streak?->current_streak ?? 0),
             'books_finished'  => BookReadingProgress::where('user_id', $this->user->id)->where('percent_complete', '>=', 90)->count(),
             'books_reading'   => BookReadingProgress::where('user_id', $this->user->id)->where('percent_complete', '<', 90)->count(),
-            'quizzes_passed'  => QuizAttempt::where('user_id', $this->user->id)->where('percent', '>=', 70)->count(),
+            'quizzes_passed'  => QuizAttempt::where('user_id', $this->user->id)->where('percent', '>=', (int) setting('quiz_passing_percent', 70))->count(),
             'groups_count'    => GroupMember::where('user_id', $this->user->id)->count(),
             'messages_count'  => GlobalChatMessage::where('user_id', $this->user->id)->notDeleted()->count(),
             'notes_count'     => $this->user->notes()->count(),
@@ -178,6 +173,7 @@ class ProfilePage extends Component
 
         return view('livewire.profile.profile-page', [
             'user'              => $this->user,
+            'userRank'          => app(\App\Services\LeaderboardService::class)->getUserRank($this->user),
             'activeTab'         => $this->activeTab,
             'isFollowing'       => $this->isFollowing,
             'readingProgresses' => $readingProgresses,

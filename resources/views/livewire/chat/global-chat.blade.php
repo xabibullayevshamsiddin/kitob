@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto h-[calc(100vh-8rem)] flex flex-col bg-ink-900 rounded-panel border border-ink-border shadow-soft overflow-hidden relative"
+<div class="max-w-4xl mx-auto h-[calc(100dvh-12rem)] sm:h-[calc(100vh-8rem)] flex flex-col bg-ink-900 rounded-panel border border-ink-border shadow-soft overflow-hidden relative"
      wire:poll.visible.15s
      x-data="{
          deleteModalOpen: false,
@@ -64,9 +64,15 @@
             </div>
             <div>
                 <h2 class="text-sm font-bold font-serif text-paper">{{ __('site.chat.title') }}</h2>
-                <span class="text-[11px] text-emerald-400 font-mono font-semibold flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> {{ __('site.chat.live') }}
-                </span>
+                @if($isChatEnabled)
+                    <span class="text-[11px] text-emerald-400 font-mono font-semibold flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> {{ __('site.chat.live') }}
+                    </span>
+                @else
+                    <span class="text-[11px] text-amber-400 font-mono font-semibold flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Vaqtincha to'xtatilgan ⛔
+                    </span>
+                @endif
             </div>
         </div>
         <span class="hidden sm:block text-xs font-mono text-mist">{{ __('site.chat.msg_count', ['count' => $messages->count()]) }}</span>
@@ -79,12 +85,37 @@
                 $isMe = auth()->check() && auth()->id() === $msg->user_id;
                 $isAdmin = auth()->check() && (auth()->user()->role === 'admin' || (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin')));
                 $canDelete = $isMe || $isAdmin;
+
+                $senderRank = $topFiveIds[$msg->user_id] ?? null;
+                $senderTier = $senderRank ? match($senderRank) {
+                    1 => 'gold',
+                    2 => 'silver',
+                    3 => 'bronze',
+                    default => 'top5',
+                } : null;
+
+                $bubbleTierClass = match($senderTier) {
+                    'gold'   => 'border-[#F59E0B]/60 bg-gradient-to-br from-[#F59E0B]/10 via-ink-950 to-ink-950 shadow-[0_0_12px_rgba(245,158,11,0.12)]',
+                    'silver' => 'border-[#E2E8F0]/40 bg-gradient-to-br from-[#E2E8F0]/5 via-ink-950 to-ink-950 shadow-[0_0_10px_rgba(226,232,240,0.08)]',
+                    'bronze' => 'border-[#D97706]/50 bg-gradient-to-br from-[#D97706]/10 via-ink-950 to-ink-950 shadow-[0_0_10px_rgba(217,119,6,0.08)]',
+                    'top5'   => 'border-[#6366F1]/40 bg-gradient-to-br from-[#6366F1]/5 via-ink-950 to-ink-950 shadow-[0_0_8px_rgba(99,102,241,0.08)]',
+                    default  => $isMe ? 'bg-ink-800 border-amber-500/40' : 'bg-ink-950 border-ink-border',
+                };
             @endphp
             <div class="flex items-start gap-2.5 group {{ $isMe ? 'flex-row-reverse' : '' }}" wire:key="msg-{{ $msg->id }}">
-                <img src="{{ $msg->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=User&background=0F141F&color=F0EDE6' }}" class="w-7 h-7 rounded-card object-cover shrink-0 border border-ink-border mt-0.5" alt="{{ $msg->user?->name ?? __('site.chat.user') }}">
+                <x-ui.avatar :user="$msg->user" size="sm" :rank="$senderRank" link />
                 <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md">
                     <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }}">
-                        <span class="text-xs font-semibold text-paper">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
+                        @if($msg->user && !$isMe)
+                            <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-semibold text-paper hover:text-amber-400 hover:underline transition-colors">
+                                {{ $msg->user->name }}
+                            </a>
+                        @else
+                            <span class="text-xs font-semibold text-paper">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
+                        @endif
+                        @if($senderRank)
+                            <x-ui.rank-badge :rank="$senderRank" size="xs" :compact="true" />
+                        @endif
                         @if(($msg->user?->role ?? '') === 'admin' || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('admin')))
                             <span class="px-1.5 py-0.2 bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono font-bold text-[9px] rounded uppercase">{{ __('site.leaderboard.role_admin') }}</span>
                         @endif
@@ -94,7 +125,7 @@
                             <button type="button"
                                 @click="confirmDelete({{ $msg->id }})"
                                 title="{{ $isMe ? __('site.chat.delete_own') : __('site.chat.delete_admin') }}"
-                                class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-rose-300 rounded">
+                                class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-rose-300 rounded">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
@@ -134,14 +165,14 @@
                                 'time'              => $msg->created_at->timezone('Asia/Tashkent')->format('d.m.Y H:i'),
                             ]) }}"
                                title="Ushbu xabar yoki haqorat bo'yicha ma'muriyatga shikoyat qilish"
-                               class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-amber-400 rounded text-[11px] flex items-center gap-0.5">
+                               class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-amber-400 rounded text-[11px] flex items-center gap-0.5">
                                 <span class="text-rose-400 font-mono text-[10px]">🚩</span>
                                 <span class="text-[10px] font-mono hidden sm:inline">Shikoyat</span>
                             </a>
                         @endif
                     </div>
                     @if($msg->audio_path)
-                        <div class="p-3 rounded-card {{ $isMe ? 'bg-ink-800 text-paper rounded-tr-none border border-amber-500/40' : 'bg-ink-950 text-paper rounded-tl-none border border-ink-border' }}"
+                        <div class="p-3 rounded-card text-paper {{ $isMe ? 'rounded-tr-none' : 'rounded-tl-none' }} border {{ $bubbleTierClass }}"
                              x-data="{
                                  playing: false,
                                  progress: 0,
@@ -209,7 +240,7 @@
                             </div>
                         </div>
                     @else
-                        <div class="px-3.5 py-2.5 rounded-card text-xs sm:text-sm leading-relaxed break-words [word-break:break-word] {{ $isMe ? 'bg-ink-800 text-paper rounded-tr-none text-left border border-amber-500/40' : 'bg-ink-950 text-paper rounded-tl-none border border-ink-border' }}">{{ $msg->message }}</div>
+                        <div class="px-3.5 py-2.5 rounded-card text-xs sm:text-sm leading-relaxed break-words [word-break:break-word] text-paper {{ $isMe ? 'rounded-tr-none text-left' : 'rounded-tl-none' }} border {{ $bubbleTierClass }}">{{ $msg->message }}</div>
                     @endif
                 </div>
             </div>
@@ -221,6 +252,14 @@
     </div>
 
     <!-- Message Input Bar with Voice Note Recording -->
+    @if(!$isChatEnabled && !$isAdmin)
+        <div class="p-4 border-t border-ink-border bg-ink-950 flex items-center justify-center">
+            <div class="inline-flex items-center gap-2.5 px-5 py-3 rounded-card bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-medium text-center">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Umumiy global chat ma'muriyat tomonidan vaqtincha to'xtatilgan.</span>
+            </div>
+        </div>
+    @else
     <div class="p-3 sm:p-4 border-t border-ink-border bg-ink-950"
          x-data="{
              isRecording: false,
@@ -385,8 +424,8 @@
 
                 <button type="submit" 
                     x-on:click="count = 0"
-                    class="ks-btn-primary py-2 px-4 text-xs flex items-center gap-1.5 shrink-0">
-                    <span>{{ __('site.chat.send') }}</span>
+                    class="ks-btn-primary py-2 px-3 sm:px-4 text-xs flex items-center gap-1.5 shrink-0">
+                    <span class="hidden sm:inline">{{ __('site.chat.send') }}</span>
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </button>
             </form>
@@ -408,6 +447,7 @@
             </div>
         @endauth
     </div>
+    @endif
 
     <!-- Delete Confirmation Modal -->
     <div x-show="deleteModalOpen" 

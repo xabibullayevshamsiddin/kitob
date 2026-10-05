@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Quiz;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Book;
 use App\Models\PointTransaction;
 use App\Models\Quiz;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class TakeQuiz extends Component
 {
+    use WithToast;
+
     public Book $book;
 
     /** Currently selected Quiz ID */
@@ -299,6 +302,9 @@ class TakeQuiz extends Component
             return;
         }
 
+        $passingPercent = (int) setting('quiz_passing_percent', 70);
+        $isPassed = $this->percent >= $passingPercent;
+
         // Qayta topshirilganda takroriy ball berilmasin (anti-farming)
         $alreadyAttempted = QuizAttempt::where('user_id', $user->id)
             ->where('quiz_id', $quiz->id)
@@ -310,7 +316,7 @@ class TakeQuiz extends Component
             $this->score = 0;
             $this->alreadyHadFullPoints = true;
         } else {
-            // Birinchi urinish: hisoblangan ball beriladi
+            // Birinchi urinish: foizga mutanosib hisoblangan ball beriladi
             $pointsToAward = $calculatedPoints;
             $this->score = $calculatedPoints;
             $this->alreadyHadFullPoints = false;
@@ -348,6 +354,19 @@ class TakeQuiz extends Component
                 'points'   => $pointsToAward,
                 'newTotal' => (int) $user->total_points,
             ]);
+        }
+
+        // Toast bildirishnoma chiqarish
+        if ($pointsToAward > 0) {
+            if ($isPassed) {
+                $this->toastSuccess("Test muvaffaqiyatli topshirildi! +{$pointsToAward} ball hisobingizga qo'shildi! 🎯", 'Ajoyib natija!');
+            } else {
+                $this->toastInfo("Test yakunlandi ({$this->percent}% to'g'ri). +{$pointsToAward} ball hisobingizga qo'shildi.", 'Yaxshi harakat');
+            }
+        } elseif ($alreadyAttempted) {
+            $this->toastInfo("Test yakunlandi ({$this->percent}% to'g'ri). Takroriy urinish bo'lgani uchun qo'shimcha ball berilmadi.", 'Test yakunlandi');
+        } else {
+            $this->toastWarning("Test yakunlandi (0% to'g'ri). Ball berilmadi.", 'Sinov yakunlandi');
         }
 
         // Bildirishnoma yuborish
@@ -389,6 +408,7 @@ class TakeQuiz extends Component
             'feedback'             => $this->feedback,
             'timerRemainingSeconds' => $this->timerRemaining,
             'timedOut'             => $this->timedOut,
+            'passingPercent'       => (int) setting('quiz_passing_percent', 70),
         ])->layout('layouts.app', ['title' => 'Test – ' . $this->book->title]);
     }
 }

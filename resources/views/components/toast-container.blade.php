@@ -19,11 +19,14 @@
 >
     <template x-for="t in toasts" :key="t.id">
         <div 
-            class="pointer-events-auto relative overflow-hidden transition-all duration-300"
-            :class="[
-                t.exiting ? 'opacity-0 translate-x-8 max-h-0 mb-0 py-0 overflow-hidden' : 'opacity-100 translate-x-0 max-h-40',
-                t.reducedMotion ? 'transition-opacity duration-150' : 'transition-all duration-300 ease-out'
-            ]"
+            x-show="t.visible && !t.exiting"
+            x-transition:enter="transition ease-out duration-300 motion-reduce:transition-opacity motion-reduce:duration-150"
+            x-transition:enter-start="opacity-0 translate-x-8 motion-reduce:translate-x-0"
+            x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition-all ease-in duration-200 motion-reduce:transition-opacity motion-reduce:duration-150"
+            x-transition:leave-start="opacity-100 translate-x-0 max-h-40"
+            x-transition:leave-end="opacity-0 translate-x-8 max-h-0 mb-0 py-0 motion-reduce:translate-x-0"
+            class="pointer-events-auto relative overflow-hidden"
             @mouseenter="pauseToast(t)"
             @mouseleave="resumeToast(t)"
             :role="t.type === 'error' ? 'alert' : 'status'"
@@ -136,7 +139,7 @@
                 setInterval(() => {
                     const now = Date.now();
                     this.toasts.forEach(t => {
-                        if (t.paused || t.exiting) return;
+                        if (t.paused || t.exiting || !t.visible) return;
                         const elapsed = now - t.lastTick;
                         t.lastTick = now;
                         t.remaining -= elapsed;
@@ -179,6 +182,7 @@
                     remaining: duration,
                     progress: 100,
                     paused: false,
+                    visible: false,
                     exiting: false,
                     lastTick: Date.now(),
                     accentColor: colors[type] || '#6366F1',
@@ -191,6 +195,16 @@
                 }
 
                 this.toasts.push(newToast);
+
+                // Element avval yashirin (enter-start) holatda chiziladi, keyingi frame'da
+                // ko'rinadigan qilinadi — shunda x-transition:enter haqiqatan ishga tushadi.
+                const proxied = this.toasts.find(t => t.id === id);
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    if (proxied) {
+                        proxied.visible = true;
+                        proxied.lastTick = Date.now();
+                    }
+                }));
             },
 
             pauseToast(toast) {
@@ -227,43 +241,47 @@
     };
 </script>
 
-{{-- Session Flash Bridge: Automatically dispatch toast if controller redirected with session message --}}
-@if (session()->has('success'))
+{{--
+    Session Flash Bridge — FAQAT haqiqiy to'liq sahifa redirect oqimlari uchun:
+    Fortify (login, register, email tasdiqlash, parol tiklash), oddiy controller redirect()->with(...),
+    va Livewire metodlari ichidagi redirect()->route(...) (sahifa to'liq qayta yuklanadi).
+    Livewire AJAX amallari uchun $this->toast(...) (dispatchBrowserEvent('toast')) ishlatiladi.
+--}}
+@php
+    $kxStatus = session('status');
+    $kxStatusMap = [
+        'verification-link-sent'   => "Tasdiqlash havolasi email manzilingizga yuborildi.",
+        'profile-information-updated' => "Profil ma'lumotlari saqlandi.",
+        'password-updated'         => "Parol muvaffaqiyatli yangilandi.",
+        'two-factor-authentication-enabled' => "Ikki bosqichli himoya yoqildi.",
+    ];
+    $kxFlashToasts = array_values(array_filter([
+        session()->has('success') ? ['type' => 'success', 'message' => session('success')] : null,
+        session()->has('error')   ? ['type' => 'error',   'message' => session('error')]   : null,
+        session()->has('warning') ? ['type' => 'warning', 'message' => session('warning')] : null,
+        session()->has('info')    ? ['type' => 'info',    'message' => session('info')]    : null,
+        is_string($kxStatus) && $kxStatus !== '' ? ['type' => 'success', 'message' => $kxStatusMap[$kxStatus] ?? $kxStatus] : null,
+        (!session()->has('error') && isset($errors) && $errors->any()) ? ['type' => 'error', 'title' => 'Xatolik', 'message' => $errors->first()] : null,
+    ]));
+@endphp
+@if (count($kxFlashToasts))
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                window.toast({ type: 'success', message: @js(session('success')), title: 'Muvaffaqiyatli!' });
-            }, 100);
-        });
-    </script>
-@endif
-
-@if (session()->has('error'))
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                window.toast({ type: 'error', message: @js(session('error')), title: 'Xatolik yuz berdi' });
-            }, 100);
-        });
-    </script>
-@endif
-
-@if (session()->has('warning'))
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                window.toast({ type: 'warning', message: @js(session('warning')), title: 'Diqqat!' });
-            }, 100);
-        });
-    </script>
-@endif
-
-@if (session()->has('info'))
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                window.toast({ type: 'info', message: @js(session('info')), title: "Ma'lumot" });
-            }, 100);
-        });
+        (function () {
+            const items = @js($kxFlashToasts);
+            let fired = false;
+            const fire = () => {
+                if (fired) return;
+                fired = true;
+                setTimeout(() => items.forEach(i => window.toast(i)), 120);
+            };
+            // Alpine tayyor bo'lgach (toast konteyner tinglovchisi ulanadi) ishga tushadi;
+            // DOMContentLoaded allaqachon o'tgan bo'lsa ham ishlaydi.
+            if (window.Alpine && document.readyState !== 'loading') {
+                fire();
+            } else {
+                document.addEventListener('alpine:initialized', fire, { once: true });
+                window.addEventListener('load', fire, { once: true });
+            }
+        })();
     </script>
 @endif

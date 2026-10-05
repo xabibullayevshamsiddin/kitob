@@ -171,6 +171,12 @@
                                     +TEST
                                 </a>
 
+                                <a href="{{ route('admin.books.music.index', $book->id) }}"
+                                   class="px-2 py-0.5 rounded-badge bg-ink-950 border border-purple-500/30 text-purple-400 hover:border-purple-500/50 text-[10px] font-mono font-bold transition-colors"
+                                   title="Ushbu kitobga fon musiqalari ulash ({{ $book->musics()->count() }} ta)">
+                                    🎵 {{ $book->musics()->count() > 0 ? $book->musics()->count() . ' MUSIQA' : '+MUSIQA' }}
+                                </a>
+
                                 {{-- PDF yuklab olish --}}
                                 @if($book->chapters()->where('is_published', true)->exists())
                                     <a href="{{ route('books.pdf', $book) }}"

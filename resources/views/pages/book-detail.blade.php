@@ -35,7 +35,7 @@
         <div class="relative z-10 flex flex-col sm:flex-row gap-8 items-center sm:items-start">
             
             <!-- Book Cover (2:3 nisbat) -->
-            <div class="w-44 sm:w-48 aspect-[2/3] rounded-card overflow-hidden shadow-2xl shrink-0 border border-ink-border relative group bg-ink-950">
+            <div class="w-36 sm:w-48 aspect-[2/3] rounded-card overflow-hidden shadow-2xl shrink-0 border border-ink-border relative group bg-ink-950">
                 <img src="{{ $book->cover_url }}" alt="{{ $book->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                 <div class="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none"></div>
             </div>
@@ -147,17 +147,17 @@
 
                 <!-- Mode switcher: 3D Real Kitob vs PDF -->
                 @if($book->pdf_path)
-                    <div class="flex items-center p-1 rounded-btn bg-ink-900 border border-ink-border">
+                    <div class="flex items-center p-0.5 sm:p-1 rounded-btn bg-ink-900 border border-ink-border shrink-0">
                         <button type="button"
                                 @click="readerMode = '3d'; $nextTick(() => { if (window.initFlipbook) window.initFlipbook(); })"
                                 :class="readerMode === '3d' ? 'bg-amber-500 text-ink-950 font-bold' : 'text-mist hover:text-paper'"
-                                class="px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
+                                class="px-2.5 sm:px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
                             <span>3D Haqiqiy kitob</span>
                         </button>
                         <button type="button"
                                 @click="readerMode = 'pdf'"
                                 :class="readerMode === 'pdf' ? 'bg-ink-800 text-paper font-bold' : 'text-mist hover:text-paper'"
-                                class="px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
+                                class="px-2.5 sm:px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
                             <span>Standart PDF</span>
                         </button>
                     </div>
@@ -352,7 +352,7 @@
     </div>
 
     <!-- Tabs Navigation -->
-    <div class="flex items-center gap-2 border-b border-ink-border pb-2 overflow-x-auto">
+    <div class="flex items-center gap-2 border-b border-ink-border pb-2 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 sm:mx-0 sm:px-0">
         <button @click="tab = 'chapters'" :class="{ 'bg-ink-800 text-paper border-b-2 border-amber-400': tab === 'chapters', 'text-mist hover:text-paper': tab !== 'chapters' }"
                 class="px-4 py-2 rounded-btn text-xs font-mono font-bold transition-all whitespace-nowrap">
             Boblar ro'yxati ({{ $book->chapters()->count() }})
@@ -405,6 +405,9 @@
             {{ $book->description }}
         </div>
     </div>
+
+    <!-- Ambient Background Music Player -->
+    <x-ambient-music-player :book="$book" />
 
 </div>
 @endsection

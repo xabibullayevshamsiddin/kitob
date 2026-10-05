@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Book;
 use App\Models\DailyQuote;
 use App\Models\LiveEvent;
@@ -13,6 +14,8 @@ use Livewire\Component;
 
 class Dashboard extends Component
 {
+    use WithToast;
+
     public $likedQuotes = [];
     public $savedQuotes = [];
 
@@ -45,8 +48,10 @@ class Dashboard extends Component
 
         if ($userQuote->liked) {
             $this->likedQuotes[] = $quoteId;
+            $this->toastSuccess("Hikmatli so'z yoqdi! ❤️");
         } else {
             $this->likedQuotes = array_diff($this->likedQuotes, [$quoteId]);
+            $this->toastInfo("Yoqtirish bekor qilindi.");
         }
     }
 
@@ -63,9 +68,10 @@ class Dashboard extends Component
 
         if ($userQuote->saved) {
             $this->savedQuotes[] = $quoteId;
-            $this->emit('toast', "Hikmatli so'z saqlandi! ✨");
+            $this->toastSuccess("Hikmatli so'z saqlandi! ✨");
         } else {
             $this->savedQuotes = array_diff($this->savedQuotes, [$quoteId]);
+            $this->toastInfo("Hikmatli so'z saqlanganlardan olib tashlandi.");
         }
     }
 

@@ -370,6 +370,14 @@ function readingTracker(config) {
             setTimeout(() => {
                 this.showPointsNotification = false;
             }, 4500);
+
+            if (typeof window.toast === 'function') {
+                window.toast({
+                    type: 'success',
+                    title: 'Mutolaa bonusi! 🪙',
+                    message: `+${this.lastPointsAwarded || 10} ball va +${this.lastCoinsAwarded || 1} tanga hisobingizga qo'shildi!`
+                });
+            }
         },
 
         formatTime(totalSec) {

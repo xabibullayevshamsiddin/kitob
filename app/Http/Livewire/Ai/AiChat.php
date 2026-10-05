@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Ai;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\AiChatHistory;
 use App\Services\AI\AiChatService;
 use Illuminate\Support\Facades\Auth;
@@ -9,6 +10,8 @@ use Livewire\Component;
 
 class AiChat extends Component
 {
+    use WithToast;
+
     public string $query = '';
 
     public bool $loading = false;
@@ -63,19 +66,23 @@ class AiChat extends Component
         // Show the user's message immediately
         $this->history[] = ['role' => 'user', 'text' => $question];
 
-        $result = $service->ask($question, [
-            'book_title' => $featuredBook?->title ?? 'Platforma kitoblari',
-        ]);
+        try {
+            $result = $service->ask($question, [
+                'book_title' => $featuredBook?->title ?? 'Platforma kitoblari',
+            ]);
 
-        $service->saveHistory(
-            $user,
-            $featuredBook,
-            $question,
-            $result['response'],
-            (int) $result['tokens_used'] ?? 0
-        );
+            $service->saveHistory(
+                $user,
+                $featuredBook,
+                $question,
+                $result['response'],
+                (int) ($result['tokens_used'] ?? 0)
+            );
 
-        $this->history[] = ['role' => 'assistant', 'text' => $result['response']];
+            $this->history[] = ['role' => 'assistant', 'text' => $result['response']];
+        } catch (\Throwable $e) {
+            $this->toastError('AI xizmatida vaqtinchalik uzilish yuz berdi. Iltimos, keyinroq qayta urinib ko\'ring.');
+        }
 
         $this->reset('query', 'loading');
 

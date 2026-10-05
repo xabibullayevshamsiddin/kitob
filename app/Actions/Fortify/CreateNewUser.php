@@ -21,6 +21,12 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        if (!setting('registration_open', true)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => 'Hozirda yangi foydalanuvchilarni ro\'yxatdan o\'tkazish ma\'muriyat tomonidan vaqtincha to\'xtatilgan.',
+            ]);
+        }
+
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'username' => [
@@ -40,6 +46,8 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
+        $welcomeCoins = (int) setting('welcome_bonus_coins', 50);
+
         $user = User::create([
             'name' => $input['name'],
             'username' => strtolower($input['username']),
@@ -48,8 +56,19 @@ class CreateNewUser implements CreatesNewUsers
             'email_verified_at' => now(),
             'role' => 'reader',
             'total_points' => 0,
-            'coin_balance' => 0,
+            'coin_balance' => $welcomeCoins,
         ]);
+
+        if ($welcomeCoins > 0) {
+            try {
+                \App\Models\CoinTransaction::create([
+                    'user_id'     => $user->id,
+                    'coins'       => $welcomeCoins,
+                    'source'      => 'bonus',
+                    'description' => 'Ro\'yxatdan o\'tish uchun xush kelibsiz bonusi 🎁',
+                ]);
+            } catch (\Throwable $e) {}
+        }
 
         try {
             if (method_exists($user, 'assignRole')) {

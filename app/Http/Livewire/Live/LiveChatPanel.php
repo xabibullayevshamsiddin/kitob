@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Live;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\LiveEvent;
 use App\Models\LiveQuestion;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,8 @@ use Livewire\Component;
  */
 class LiveChatPanel extends Component
 {
+    use WithToast;
+
     /**
      * Event faqat ID sifatida saqlanadi (model emas!).
      * Agar host efirni tugatsa (event o'chiriladi), wire:poll yangilanishida
@@ -67,29 +70,17 @@ class LiveChatPanel extends Component
             return false;
         }
 
-        if (!in_array($this->event->permission_mode, ['both', 'chat_only'], true)) {
+        if (in_array($this->event->permission_mode, ['view_only', 'voice_only'], true)) {
             return false;
         }
 
         return Auth::check();
     }
 
-    /** Ovozli savol so'rash mumkinmi */
+    /** Ovozli suhbat tashrif buyuruvchilar uchun butunlay o'chirilgan */
     public function getCanRequestVoiceProperty(): bool
     {
-        if ($this->isHost) {
-            return false;
-        }
-
-        if (!$this->event) {
-            return false;
-        }
-
-        if (!in_array($this->event->permission_mode, ['both', 'voice_only'], true)) {
-            return false;
-        }
-
-        return Auth::check();
+        return false;
     }
 
     public function sendMessage(): void
@@ -99,12 +90,12 @@ class LiveChatPanel extends Component
         }
 
         if (!$this->canWrite) {
-            session()->flash('error', 'Ushbu efirda yozma chat cheklangan.');
+            $this->toast('error', 'Ushbu efirda yozma chat cheklangan.');
             return;
         }
 
         if (!Auth::check()) {
-            session()->flash('error', 'Xabar yozish uchun avval tizimga kiring.');
+            $this->toast('error', 'Xabar yozish uchun avval tizimga kiring.');
             return;
         }
 
@@ -125,29 +116,7 @@ class LiveChatPanel extends Component
 
     public function requestVoiceSpeech(): void
     {
-        if (!$this->event) {
-            return;
-        }
-
-        if (!$this->canRequestVoice) {
-            session()->flash('error', 'Ushbu efirda ovozli savollar rejimi o\'chirilgan.');
-            return;
-        }
-
-        if (!Auth::check()) {
-            session()->flash('error', 'Ovozli savol so\'rash uchun avval tizimga kiring.');
-            return;
-        }
-
-        LiveQuestion::create([
-            'live_event_id' => $this->event->id,
-            'user_id'       => Auth::id(),
-            'question'      => '✋ [Ovozli savol]: Mikrofon orqali savol berishni so\'ramoqda',
-            'is_selected'   => true,
-            'is_answered'   => false,
-        ]);
-
-        session()->flash('success', 'Ovozli savol so\'rovingiz yuborildi! Ustoz navbatingiz kelganda mikrofon beradi. 🎙️');
+        $this->toast('error', 'Jonli efirda tashrif buyuruvchilar uchun ovozli xabar o\'chirilgan.');
     }
 
     /** HOST: xabarni pin qilish / bekor qilish */
@@ -184,7 +153,7 @@ class LiveChatPanel extends Component
     public function toggleLike(int $questionId): void
     {
         if (!Auth::check()) {
-            session()->flash('error', 'Like bosish uchun avval tizimga kiring.');
+            $this->toast('error', 'Like bosish uchun avval tizimga kiring.');
             return;
         }
 
@@ -249,6 +218,7 @@ class LiveChatPanel extends Component
             'pinned'     => $pinned,
             'messages'   => $messages,
             'totalLikes' => $totalLikes,
+            'topFiveIds' => app(\App\Services\LeaderboardService::class)->getTopFiveIds(),
         ]);
     }
 }

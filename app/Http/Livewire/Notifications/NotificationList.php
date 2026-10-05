@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Notifications;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\DailyActivity;
 use App\Models\LiveEvent;
 use Illuminate\Support\Facades\Auth;
@@ -11,11 +12,13 @@ use Livewire\WithPagination;
 class NotificationList extends Component
 {
     use WithPagination;
+    use WithToast;
 
     protected $paginationTheme = 'tailwind';
     public function markAllRead(): void
     {
         Auth::user()->unreadNotifications->markAsRead();
+        $this->toastSuccess('Barcha bildirishnomalar o\'qilgan deb belgilandi.');
     }
 
     public function markRead(string $id): void
@@ -23,6 +26,7 @@ class NotificationList extends Component
         $notification = Auth::user()->notifications()->where('id', $id)->first();
         if ($notification) {
             $notification->markAsRead();
+            $this->toastInfo('Bildirishnoma o\'qildi.');
         }
     }
 

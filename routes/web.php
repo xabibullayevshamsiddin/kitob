@@ -34,6 +34,8 @@ Route::get('/', function () {
     $videosCount = \App\Models\BookVideo::count();
     $quizzesCount = \App\Models\Quiz::count();
 
+    $topFiveUsers = app(\App\Services\LeaderboardService::class)->getTopUsers(5);
+
     return view('public.home', compact(
         'usersCount',
         'recentUsers',
@@ -43,7 +45,8 @@ Route::get('/', function () {
         'totalMinutes',
         'audiosCount',
         'videosCount',
-        'quizzesCount'
+        'quizzesCount',
+        'topFiveUsers'
     ));
 })->name('home');
 
@@ -175,6 +178,14 @@ Route::middleware(['auth'])->group(function () {
     // Kitoblar va Mutolaa (Barcha login bo'lgan foydalanuvchilar uchun)
     Route::get('/books/{slug}', function ($slug) {
         $book = \App\Models\Book::where('slug', $slug)->firstOrFail();
+        if ($book->published_at && $book->published_at->isFuture()) {
+            $user = auth()->user();
+            $rank = $user ? app(\App\Services\LeaderboardService::class)->getUserRank($user) : null;
+            $canEarlyAccess = ($user && ($user->isAdmin() || (method_exists($user, 'hasRole') && $user->hasRole('admin')) || ($rank !== null && $rank <= 5)));
+            if (!$canEarlyAccess) {
+                abort(403, 'Ushbu kitob hali rasman e\'lon qilinmagan. Top 5 kitobxonlar uchun erta kirish imtiyozi mavjud.');
+            }
+        }
         return view('pages.book-detail', compact('book'));
     })->name('books.show');
 
@@ -291,12 +302,19 @@ Route::middleware(['auth'])->group(function () {
         $newMinutes = $prevMinutes + $minutes;
         $activity->increment('minutes_read', $minutes);
 
-        $streakService = app(\App\Services\Gamification\StreakService::class);
-        $streak = $streakService->recordActivity($user);
+        $streakMinMinutes = (int) setting('streak_minimum_minutes', 15);
+        if ($newMinutes >= $streakMinMinutes) {
+            $streakService = app(\App\Services\Gamification\StreakService::class);
+            $streak = $streakService->recordActivity($user);
+        } else {
+            $streak = \App\Models\UserStreak::firstOrCreate(['user_id' => $user->id]);
+        }
 
-        // Har 1 daqiqa uchun: 10 ta ball va 1 ta tanga beriladi!
-        $pointsToAward = $minutes * 10; // Har 1 daqiqaga 10 ball
-        $coinsToAward  = $minutes * 1;  // Har 1 daqiqaga 1 tanga
+        // Har 1 daqiqa uchun: sozlamalardagi dinamik ball va tangalar beriladi
+        $pointsPerMinute = (int) setting('reading_points_per_minute', 1);
+        $coinsPerMinute  = (int) setting('reading_coins_per_minute', 1);
+        $pointsToAward   = $minutes * $pointsPerMinute;
+        $coinsToAward    = $minutes * $coinsPerMinute;
 
         $pageTypeLabels = [
             'video'    => 'video dars tomoshasi',
@@ -310,21 +328,25 @@ Route::middleware(['auth'])->group(function () {
 
         $pointsService = app(\App\Services\Gamification\PointsService::class);
 
-        $pointsService->awardPoints(
-            $user,
-            $pointsToAward,
-            'reading',
-            "{$minutes} daqiqa faol {$typeLabel} uchun {$pointsToAward} ball",
-            $request->book_id,
-            $request->book_id ? \App\Models\Book::class : null
-        );
+        if ($pointsToAward > 0) {
+            $pointsService->awardPoints(
+                $user,
+                $pointsToAward,
+                'reading',
+                "{$minutes} daqiqa faol {$typeLabel} uchun {$pointsToAward} ball",
+                $request->book_id,
+                $request->book_id ? \App\Models\Book::class : null
+            );
+        }
 
-        $pointsService->awardCoins(
-            $user,
-            $coinsToAward,
-            'reading',
-            "{$minutes} daqiqa faol {$typeLabel} uchun {$coinsToAward} tanga 🪙"
-        );
+        if ($coinsToAward > 0) {
+            $pointsService->awardCoins(
+                $user,
+                $coinsToAward,
+                'reading',
+                "{$minutes} daqiqa faol {$typeLabel} uchun {$coinsToAward} tanga 🪙"
+            );
+        }
 
         $freshUser = $user->fresh();
 
@@ -592,7 +614,8 @@ Route::prefix('admin')
         return view('admin.books.index', compact('books'));
     })->name('books.index');
 
-    Route::put('/books/{book}/toggle', function (\App\Models\Book $book) {
+    // Forma @method('PATCH') yuboradi (musiqa toggle'i bilan izchil) — shuning uchun PATCH.
+    Route::patch('/books/{book}/toggle', function (\App\Models\Book $book) {
         $book->update(['is_active' => !$book->is_active]);
         return back()->with('success', 'Kitob holati yangilandi!');
     })->name('books.toggle');
@@ -609,31 +632,13 @@ Route::prefix('admin')
         return view('admin.stats', compact('stats'));
     })->name('stats');
 
-    // Sozlamalar
-    Route::get('/settings', function () {
-        return view('admin.settings');
-    })->name('settings');
-
-    Route::post('/settings/update', function (\Illuminate\Http\Request $req) {
-        // TODO: update .env or config table
-        return back()->with('success', 'Sozlamalar saqlandi!');
-    })->name('settings.update');
-
-    Route::post('/settings/cache', function (\Illuminate\Http\Request $req) {
-        $type = $req->input('type', 'all');
-        match($type) {
-            'config' => \Illuminate\Support\Facades\Artisan::call('config:clear'),
-            'route'  => \Illuminate\Support\Facades\Artisan::call('route:clear'),
-            'view'   => \Illuminate\Support\Facades\Artisan::call('view:clear'),
-            default  => \Illuminate\Support\Facades\Artisan::call('cache:clear'),
-        };
-        return back()->with('success', 'Cache tozalandi!');
-    })->name('settings.cache');
-
-    Route::post('/settings/maintenance', function (\Illuminate\Http\Request $req) {
-        // TODO: maintenance mode toggle
-        return back()->with('success', 'Texnik xizmat rejimi yangilandi!');
-    })->name('settings.maintenance');
+    // Sozlamalar va Tizim diagnostikasi
+    Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings');
+    Route::match(['post', 'put'], '/settings/update', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/cache', [\App\Http\Controllers\Admin\SettingsController::class, 'cache'])->name('settings.cache');
+    Route::post('/settings/maintenance', [\App\Http\Controllers\Admin\SettingsController::class, 'maintenance'])->name('settings.maintenance');
+    Route::post('/settings/storage-link', [\App\Http\Controllers\Admin\SettingsController::class, 'storageLink'])->name('settings.storage-link');
+    Route::post('/settings/test-email', [\App\Http\Controllers\Admin\SettingsController::class, 'testEmail'])->name('settings.test-email');
 
     // Admin books create/edit routes
     Route::get('/books/create', function () {
@@ -735,6 +740,12 @@ Route::prefix('admin')
         $book->delete();
         return redirect()->route('admin.books.index')->with('success', 'Kitob o\'chirildi!');
     })->name('books.destroy');
+
+    // ── Kitob Fon Musiqalari (Ambient Audio) ──
+    Route::get('/books/{book}/music', [\App\Http\Controllers\Admin\BookMusicController::class, 'index'])->name('books.music.index');
+    Route::post('/books/{book}/music', [\App\Http\Controllers\Admin\BookMusicController::class, 'store'])->name('books.music.store');
+    Route::patch('/books/{book}/music/{music}/toggle', [\App\Http\Controllers\Admin\BookMusicController::class, 'toggle'])->name('books.music.toggle');
+    Route::delete('/books/{book}/music/{music}', [\App\Http\Controllers\Admin\BookMusicController::class, 'destroy'])->name('books.music.destroy');
 
     // ── Kitob Audiolari ──
     Route::get('/audios', [\App\Http\Controllers\Admin\AudioController::class, 'index'])->name('audios.index');

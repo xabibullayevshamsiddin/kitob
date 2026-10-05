@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Groups;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
@@ -9,10 +10,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class GroupList extends Component
 {
+    use WithToast;
+    use WithFileUploads;
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
@@ -85,6 +89,7 @@ class GroupList extends Component
     public string $description = '';
     public bool $isPrivate = false;
     public string $password = '';
+    public $coverImage = null;
     public bool $showCreateModal = false;
 
     // Yopiq guruhga parol bilan qo'shilish
@@ -102,6 +107,7 @@ class GroupList extends Component
             'name'        => 'required|string|min:3|max:60',
             'description' => 'nullable|string|max:500',
             'password'    => $this->isPrivate ? 'required|string|min:3|max:50' : 'nullable|string|max:50',
+            'coverImage'  => 'nullable|image|max:5120|mimes:jpeg,png,jpg,webp,gif',
         ];
     }
 
@@ -119,10 +125,22 @@ class GroupList extends Component
      * Teacher (o'qituvchi): 2 ta
      * Admin: 3 ta
      */
+    public function getRankBonus(User $user): int
+    {
+        $rank = app(\App\Services\LeaderboardService::class)->getUserRank($user);
+
+        return match(true) {
+            $rank === null => 0,
+            $rank <= 3     => 3,   // 1-3 o'rin: +3 guruh
+            $rank <= 5     => 1,   // 4-5 o'rin: +1 guruh
+            default        => 0,
+        };
+    }
+
     /**
-     * Foydalanuvchi roliga qarab guruhlarga a'zo bo'lish limiti:
-     * - Oddiy foydalanuvchilar: max 2 ta
-     * - Teacher (o'qituvchi): max 5 ta
+     * Foydalanuvchi roliga qarab guruhlarga a'zo bo'lish limiti (Top 5 bonus bilan):
+     * - Oddiy foydalanuvchilar: max 5 ta (+ rank bonus)
+     * - Teacher (o'qituvchi): max 20 ta (+ rank bonus)
      * - Admin: cheksiz (null)
      */
     public function getMembershipLimit(User $user): ?int
@@ -131,11 +149,11 @@ class GroupList extends Component
             return null; // Cheksiz
         }
 
-        if ($user->hasRole('teacher') || $user->role === 'teacher') {
-            return 5;
-        }
+        $baseLimit = ($user->hasRole('teacher') || $user->role === 'teacher')
+            ? (int) setting('teacher_group_membership_limit', 20)
+            : (int) setting('user_group_membership_limit', 5);
 
-        return 2;
+        return $baseLimit + $this->getRankBonus($user);
     }
 
     /**
@@ -174,18 +192,18 @@ class GroupList extends Component
 
         if ($limit !== null && $currentCount >= $limit) {
             $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi';
-            session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruh yarata olasiz. Hozirda sizda {$currentCount} ta guruh mavjud. Yangi guruh ochish uchun avvalgisini o'chirishingiz lozim.");
+            $this->toast('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruh yarata olasiz. Hozirda sizda {$currentCount} ta guruh mavjud. Yangi guruh ochish uchun avvalgisini o'chirishingiz lozim.");
             return;
         }
 
         if ($membershipLimit !== null && $currentMembershipCount >= $membershipLimit) {
             $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Foydalanuvchi';
-            session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$membershipLimit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruh ochish uchun avval boshqa guruhlardan birini tark eting.");
+            $this->toast('error', "Siz {$roleLabel} sifatida ko'pi bilan {$membershipLimit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruh ochish uchun avval boshqa guruhlardan birini tark eting.");
             return;
         }
 
         $this->resetValidation();
-        $this->reset(['name', 'description', 'isPrivate', 'password']);
+        $this->reset(['name', 'description', 'isPrivate', 'password', 'coverImage']);
         $this->showCreateModal = true;
     }
 
@@ -215,11 +233,17 @@ class GroupList extends Component
 
         $this->validate();
 
-        $group = DB::transaction(function () use ($user) {
+        $coverPath = null;
+        if ($this->coverImage) {
+            $coverPath = $this->coverImage->store('groups/covers', 'public');
+        }
+
+        $group = DB::transaction(function () use ($user, $coverPath) {
             $group = Group::create([
                 'name'        => trim($this->name),
                 'slug'        => Str::slug($this->name) . '-' . Str::lower(Str::random(5)),
                 'description' => trim($this->description),
+                'cover_image' => $coverPath,
                 'created_by'  => $user->id,
                 'is_private'  => $this->isPrivate,
                 'password'    => $this->isPrivate ? trim($this->password) : null,
@@ -235,7 +259,7 @@ class GroupList extends Component
             return $group;
         });
 
-        $this->reset(['name', 'description', 'isPrivate', 'password', 'showCreateModal']);
+        $this->reset(['name', 'description', 'isPrivate', 'password', 'coverImage', 'showCreateModal']);
 
         session()->flash('success', '«' . $group->name . '» guruhi yaratildi! 🎉');
         return redirect()->route('groups.show', $group->id);
@@ -262,7 +286,7 @@ class GroupList extends Component
 
         if ($limit !== null && $currentMembershipCount >= $limit) {
             $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Oddiy foydalanuvchi';
-            session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruhga qo'shilish uchun avval a'zo bo'lgan guruhlaringizdan birini tark eting.");
+            $this->toast('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruhga qo'shilish uchun avval a'zo bo'lgan guruhlaringizdan birini tark eting.");
             return;
         }
 
@@ -344,7 +368,7 @@ class GroupList extends Component
 
         if ($limit !== null && $currentMembershipCount >= $limit) {
             $roleLabel = ($user->hasRole('teacher') || $user->role === 'teacher') ? 'O\'qituvchi' : 'Oddiy foydalanuvchi';
-            session()->flash('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruhga a'zo bo'lish uchun avval a'zo bo'lgan guruhlaringizdan birini tark eting.");
+            $this->toast('error', "Siz {$roleLabel} sifatida ko'pi bilan {$limit} ta guruhga a'zo bo'la olasiz (hozirda {$currentMembershipCount} ta guruhdasiz). Yangi guruhga a'zo bo'lish uchun avval a'zo bo'lgan guruhlaringizdan birini tark eting.");
             return;
         }
 
@@ -356,7 +380,7 @@ class GroupList extends Component
         }
 
         if ($group->max_members && $group->members()->count() >= $group->max_members) {
-            session()->flash('error', 'Guruh to\'lgan.');
+            $this->toast('error', 'Guruh to\'lgan.');
             return;
         }
 
@@ -379,7 +403,7 @@ class GroupList extends Component
             ->where('user_id', Auth::id())
             ->delete();
 
-        session()->flash('success', 'Guruhni tark etdingiz.');
+        $this->toast('success', 'Guruhni tark etdingiz.');
     }
 
     public function openDeleteModal(int $groupId): void
@@ -393,7 +417,7 @@ class GroupList extends Component
         $isAdmin = $user->hasRole('admin') || $user->role === 'admin';
 
         if ($group->created_by !== $user->id && !$isAdmin) {
-            session()->flash('error', 'Sizda bu guruhni o\'chirish huquqi yo\'q!');
+            $this->toast('error', 'Sizda bu guruhni o\'chirish huquqi yo\'q!');
             return;
         }
 
@@ -412,7 +436,7 @@ class GroupList extends Component
         $isAdmin = $user->hasRole('admin') || $user->role === 'admin';
 
         if ($group->created_by !== $user->id && !$isAdmin) {
-            session()->flash('error', 'Sizda bu guruhni o\'chirish huquqi yo\'q!');
+            $this->toast('error', 'Sizda bu guruhni o\'chirish huquqi yo\'q!');
             $this->showDeleteModal = false;
             return;
         }
@@ -428,7 +452,7 @@ class GroupList extends Component
         $this->showDeleteModal = false;
         $this->groupToDeleteId = null;
 
-        session()->flash('success', "«{$name}» guruhi muvaffaqiyatli o'chirildi.");
+        $this->toast('success', "«{$name}» guruhi muvaffaqiyatli o'chirildi.");
     }
 
     public function render()
@@ -437,8 +461,9 @@ class GroupList extends Component
         $currentUser = Auth::user();
 
         $myGroupCount = $userId ? Group::where('created_by', $userId)->count() : 0;
-        $myGroupLimit = $currentUser ? $this->getGroupLimit($currentUser) : 2;
-        $myMembershipLimit = $currentUser ? $this->getMembershipLimit($currentUser) : 2;
+        $defaultLimit = (int) setting('user_group_membership_limit', 5);
+        $myGroupLimit = $currentUser ? $this->getGroupLimit($currentUser) : $defaultLimit;
+        $myMembershipLimit = $currentUser ? $this->getMembershipLimit($currentUser) : $defaultLimit;
         $isAdmin = $currentUser ? ($currentUser->hasRole('admin') || $currentUser->role === 'admin') : false;
 
         // Hisoblagichlar

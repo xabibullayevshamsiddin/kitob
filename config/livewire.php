@@ -51,7 +51,7 @@ return [
     |
     */
 
-    'app_url' => rtrim(env('APP_URL', ''), '/'),
+    'app_url' => rtrim(env('LIVEWIRE_APP_URL', env('APP_URL', '')), '/'),
 
     /*
     |--------------------------------------------------------------------------

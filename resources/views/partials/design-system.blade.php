@@ -204,6 +204,19 @@
     ::-webkit-scrollbar-thumb { background: #1F293D; border-radius: 8px; border: 2px solid #07090E; }
     ::-webkit-scrollbar-thumb:hover { background: #2A3650; }
 
+    /* Mobile UX & Touch Optimization */
+    * { -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none !important; }
+    .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; -webkit-overflow-scrolling: touch; }
+    .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem)); }
+
+    /* iOS Safari 16px auto-zoom prevention */
+    @media (max-width: 640px) {
+        input.ks-input, select.ks-input, textarea.ks-input {
+            font-size: 16px !important;
+        }
+    }
+
     /* prefers-reduced-motion: faqat opacity qoladi */
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {

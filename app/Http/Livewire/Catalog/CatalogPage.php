@@ -84,20 +84,20 @@ class CatalogPage extends Component
 
     public function render()
     {
+        $user = Auth::user();
         $userId = Auth::id();
 
-        // Hisoblagichlar
-        $totalBooksCount = Book::where('is_active', true)->count();
-        $pdfBooksCount = Book::where('is_active', true)->whereNotNull('pdf_path')->where('pdf_path', '!=', '')->count();
-        $audioBooksCount = Book::where('is_active', true)->whereHas('audios')->count();
-        $videoBooksCount = Book::where('is_active', true)->whereHas('videos')->count();
-        $quizBooksCount = Book::where('is_active', true)->whereHas('quizzes')->count();
+        // Hisoblagichlar (Top 5 erta kirish bilan)
+        $totalBooksCount = Book::availableForUser($user)->count();
+        $pdfBooksCount = Book::availableForUser($user)->whereNotNull('pdf_path')->where('pdf_path', '!=', '')->count();
+        $audioBooksCount = Book::availableForUser($user)->whereHas('audios')->count();
+        $videoBooksCount = Book::availableForUser($user)->whereHas('videos')->count();
+        $quizBooksCount = Book::availableForUser($user)->whereHas('quizzes')->count();
 
-        $readingCount = $userId ? Book::where('is_active', true)->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '<', 90))->count() : 0;
-        $finishedCount = $userId ? Book::where('is_active', true)->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '>=', 90))->count() : 0;
+        $readingCount = $userId ? Book::availableForUser($user)->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '<', 90))->count() : 0;
+        $finishedCount = $userId ? Book::availableForUser($user)->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '>=', 90))->count() : 0;
 
-        $query = Book::query()
-            ->where('is_active', true)
+        $query = Book::availableForUser($user)
             ->withCount(['chapters', 'audios', 'videos', 'quizzes']);
 
         // Janr filtri

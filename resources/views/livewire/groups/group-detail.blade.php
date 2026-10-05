@@ -1,26 +1,92 @@
 <div class="max-w-6xl mx-auto space-y-5 pb-16">
 
+    @if (session()->has('success'))
+        <div class="p-3.5 rounded-btn bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs font-mono flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+            <button type="button" @click="$el.parentElement.remove()" class="text-mist hover:text-paper text-sm">✕</button>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="p-3.5 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+            <button type="button" @click="$el.parentElement.remove()" class="text-mist hover:text-paper text-sm">✕</button>
+        </div>
+    @endif
+
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3">
             <a href="{{ route('groups.index') }}" class="p-2 rounded-btn bg-ink-900 border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             </a>
-            <div class="w-10 h-10 rounded-btn {{ $group->is_private ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300' : 'bg-amber-500/10 border border-amber-500/25 text-amber-400' }} flex items-center justify-center shrink-0">
-                @if($group->is_private)
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <div class="relative group/avatar shrink-0">
+                @if($group->cover_image_url)
+                    <img src="{{ $group->cover_image_url }}" alt="{{ $group->name }}" class="w-12 h-12 rounded-btn object-cover border border-ink-border shadow-soft">
                 @else
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <div class="w-12 h-12 rounded-btn {{ $group->is_private ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300' : 'bg-amber-500/10 border border-amber-500/25 text-amber-400' }} flex items-center justify-center shadow-soft">
+                        @if($group->is_private)
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        @else
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        @endif
+                    </div>
+                @endif
+
+                @if($canManage)
+                    <label for="header-group-cover-file" title="Guruh rasmini o'zgartirish"
+                           class="absolute inset-0 bg-ink-950/75 opacity-0 group-hover/avatar:opacity-100 rounded-btn flex flex-col items-center justify-center cursor-pointer transition-all duration-200 text-amber-400 backdrop-blur-[2px]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="text-[8px] font-mono mt-0.5 text-paper">Rasm</span>
+                    </label>
+                    <input type="file" id="header-group-cover-file" wire:model="newCoverImage" wire:change="updateCoverImage" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
                 @endif
             </div>
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold font-serif text-paper">{{ $group->name }}</h1>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl sm:text-2xl font-bold font-serif text-paper">{{ $group->name }}</h1>
+                    <div wire:loading wire:target="newCoverImage" class="text-[10px] font-mono text-amber-400 flex items-center gap-1">
+                        <svg class="animate-spin w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        <span>Yuklanmoqda...</span>
+                    </div>
+                </div>
                 <p class="text-xs font-mono text-mist">{{ $members->count() }} {{ __('site.groups.members') }} {{ $group->book ? '• ' . $group->book->title : '' }}</p>
+                @error('newCoverImage') <span class="text-rose-400 text-[10px] font-mono block">{{ $message }}</span> @enderror
             </div>
         </div>
 
-        @if($canDelete)
-            <div>
+        <div class="flex items-center flex-wrap gap-2.5">
+            @if($canManage)
+                <button wire:click="openSettingsModal"
+                    class="px-3.5 py-2 bg-ink-900 hover:bg-ink-800 text-paper border border-ink-border hover:border-amber-500/40 text-xs font-mono font-medium rounded-btn transition-all flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Sozlamalar</span>
+                </button>
+            @endif
+
+            @if(!$isOwner)
+                <button wire:click="leaveGroup" onclick="return confirm('Rostdan ham guruhni tark etmoqchimisiz?')"
+                    class="px-3.5 py-2 bg-ink-900 hover:bg-rose-950/30 text-mist hover:text-rose-300 border border-ink-border hover:border-rose-500/30 text-xs font-mono font-medium rounded-btn transition-all flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                    </svg>
+                    <span>Tark etish</span>
+                </button>
+            @endif
+
+            @if($canDelete)
                 <button wire:click="openDeleteModal"
                     class="px-3.5 py-2 bg-[#C1392B]/15 hover:bg-[#C1392B]/25 text-rose-300 border border-rose-500/30 text-xs font-mono font-medium rounded-btn transition-all flex items-center gap-2">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,8 +94,8 @@
                     </svg>
                     <span>{{ __('site.groups.delete_group') }}</span>
                 </button>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     @if ($group->description)
@@ -105,9 +171,22 @@
                     </div>
                     <div>
                         <h2 class="text-xs sm:text-sm font-bold text-paper font-serif">{{ __('site.groups.chat_title') }}</h2>
-                        <span class="text-[10px] font-mono text-emerald-400 font-semibold flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> {{ __('site.chat.live') }}
-                        </span>
+                        <div class="flex items-center gap-2 flex-wrap mt-0.5">
+                            <span class="text-[10px] font-mono text-emerald-400 font-semibold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> {{ __('site.chat.live') }}
+                            </span>
+                            @if(!$group->chat_enabled)
+                                <span class="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[9px] flex items-center gap-1">
+                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    Yozish to'xtatilgan
+                                </span>
+                            @endif
+                            @if(!$group->voice_enabled)
+                                <span class="px-1.5 py-0.5 rounded bg-ink-800 border border-ink-border text-mist font-mono text-[9px]">
+                                    🎙️ Ovozli xabar o'chirilgan
+                                </span>
+                            @endif
+                        </div>
                     </div>
                 </div>
                 <span class="text-xs font-mono text-mist">{{ __('site.chat.msg_count', ['count' => $messages->count()]) }}</span>
@@ -123,11 +202,17 @@
                         $canDeleteMsg = $isMe || $isAdmin || $isGroupOwner;
                     @endphp
                     <div class="flex items-start gap-2.5 group {{ $isMe ? 'flex-row-reverse' : '' }}" wire:key="gm-{{ $msg->id }}">
-                        <img src="{{ $msg->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=User&background=1e293b&color=fff' }}" class="w-7 h-7 rounded-btn object-cover shrink-0 border border-ink-border mt-0.5" alt="{{ $msg->user?->name ?? __('site.chat.user') }}">
+                        <x-ui.avatar :user="$msg->user" size="sm" shape="rounded-btn" link />
 
                         <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md">
                             <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }}">
-                                <span class="text-xs font-bold text-paper font-sans">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
+                                @if($msg->user && !$isMe)
+                                    <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-bold text-paper font-sans hover:text-amber-400 hover:underline transition-colors">
+                                        {{ $msg->user->name }}
+                                    </a>
+                                @else
+                                    <span class="text-xs font-bold text-paper font-sans">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
+                                @endif
                                 @if(($msg->user?->role ?? '') === 'admin' || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('admin')))
                                     <span class="px-1.5 py-0.2 bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 font-mono text-[9px] rounded-pill uppercase">{{ __('site.leaderboard.role_admin') }}</span>
                                 @elseif($msg->user_id === $group->created_by)
@@ -139,7 +224,7 @@
                                     <button type="button"
                                         @click="confirmDelete({{ $msg->id }})"
                                         title="{{ $isMe ? __('site.chat.delete_own') : __('site.chat.delete_admin') }}"
-                                        class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-rose-300 rounded">
+                                        class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-rose-300 rounded">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -179,8 +264,8 @@
                                         'time'              => $msg->created_at->timezone('Asia/Tashkent')->format('d.m.Y H:i'),
                                     ]) }}"
                                        title="Shikoyat qilish"
-                                       class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-amber-400 rounded text-[11px] flex items-center gap-0.5">
-                                        <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                                       class="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 text-mist hover:text-amber-400 rounded text-[11px] flex items-center gap-0.5">
+                                        <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
                                     </a>
                                 @endif
                             </div>
@@ -399,36 +484,77 @@
                     <span>Ovozli xabar yuklanmoqda...</span>
                 </div>
 
-                {{-- STANDARD FORM BAR --}}
-                <form x-show="!isRecording && !isUploading" wire:submit.prevent="sendMessage" @submit="count = 0" class="flex items-center gap-2">
-                    <div class="relative flex-1">
-                        <input type="text" 
-                            wire:model.defer="message" 
-                            x-on:input="count = $event.target.value.length"
-                            placeholder="{{ __('site.chat.placeholder') }}" 
-                            maxlength="500"
-                            class="w-full pl-3.5 pr-14 py-2 bg-ink-900 border border-ink-border rounded-btn text-xs font-sans text-paper placeholder-mist focus:border-amber-400 focus:outline-none">
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-mono select-none text-mist">
-                            <span x-text="count">0</span>/500
-                        </div>
-                    </div>
+                @if($canChat || $canSendVoice)
+                    {{-- STANDARD FORM BAR --}}
+                    <form x-show="!isRecording && !isUploading" wire:submit.prevent="sendMessage" @submit="count = 0" class="flex items-center gap-2">
+                        @if($canChat)
+                            <div class="relative flex-1">
+                                <input type="text" 
+                                    wire:model.defer="message" 
+                                    x-on:input="count = $event.target.value.length"
+                                    placeholder="{{ __('site.chat.placeholder') }}" 
+                                    maxlength="500"
+                                    class="w-full pl-3.5 pr-14 py-2 bg-ink-900 border border-ink-border rounded-btn text-xs font-sans text-paper placeholder-mist focus:border-amber-400 focus:outline-none">
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-mono select-none text-mist">
+                                    <span x-text="count">0</span>/500
+                                </div>
+                            </div>
+                        @else
+                            <div class="relative flex-1">
+                                <div class="w-full px-3.5 py-2 bg-ink-950/60 border border-ink-border/60 rounded-btn text-xs font-sans text-mist flex items-center justify-between">
+                                    <span class="flex items-center gap-1.5 text-mist">
+                                        <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                        <span>Matnli xabar o'chirilgan</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono text-amber-400 font-semibold hidden sm:inline">Mikrofon orqali ovozli xabar yuboring 👉</span>
+                                </div>
+                            </div>
+                        @endif
 
-                    <!-- Voice Recording Mic Button -->
-                    <button type="button" @click="startRecord()"
-                        class="p-2 bg-ink-900 hover:bg-ink-800 text-mist hover:text-amber-400 rounded-btn transition-all border border-ink-border shrink-0"
-                        title="Ovozli xabar yozish">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                        <!-- Voice Recording Mic Button -->
+                        @if($canSendVoice)
+                            <button type="button" @click="startRecord()"
+                                class="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-btn transition-all border border-amber-500/30 shrink-0 flex items-center gap-1.5 font-mono text-xs font-semibold px-3"
+                                title="Ovozli xabar yozish">
+                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                                </svg>
+                                <span class="hidden sm:inline">Ovoz yozish</span>
+                            </button>
+                        @else
+                            <button type="button" disabled
+                                class="p-2 bg-ink-900/50 text-mist/30 cursor-not-allowed rounded-btn border border-ink-border/40 shrink-0"
+                                title="Guruhda ovozli xabarlar yuborish o'chirilgan">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                                </svg>
+                            </button>
+                        @endif
+
+                        @if($canChat)
+                            <button type="submit" 
+                                x-on:click="count = 0"
+                                class="ks-btn-primary text-xs py-2 px-3 sm:px-4 shrink-0 flex items-center gap-1.5">
+                                <span class="hidden sm:inline">{{ __('site.chat.send') }}</span>
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                        @endif
+                    </form>
+                    @if($canChat)
+                        @error('message') <p class="text-rose-300 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                    @endif
+                @else
+                    {{-- CHAT & VOICE RESTRICTED NOTICE --}}
+                    <div class="flex items-center justify-center gap-2.5 py-2.5 px-4 bg-ink-900/80 rounded-btn border border-ink-border text-center">
+                        <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                         </svg>
-                    </button>
-
-                    <button type="submit" 
-                        x-on:click="count = 0"
-                        class="ks-btn-primary text-xs py-2 px-3.5 shrink-0">
-                        <span>{{ __('site.chat.send') }}</span>
-                    </button>
-                </form>
-                @error('message') <p class="text-rose-300 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                        <span class="text-xs font-mono text-mist">
+                            Guruhda xabar va ovozli xabarlar yuborish faqat ma'murlar uchun ruxsat etilgan.
+                        </span>
+                    </div>
+                @endif
             </div>
 
             <!-- Delete Message Confirmation Modal -->
@@ -549,24 +675,263 @@
         <!-- Members Sidebar -->
         <div class="space-y-3">
             <div class="p-4 bg-ink-900 rounded-panel border border-ink-border">
-                <h3 class="text-xs font-mono uppercase tracking-wider text-mist mb-3">{{ __('site.groups.members_list') }} ({{ $members->count() }})</h3>
-                <div class="space-y-2">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-mono uppercase tracking-wider text-mist">{{ __('site.groups.members_list') }} ({{ $members->count() }})</h3>
+                    @if($group->max_members)
+                        <span class="text-[10px] font-mono text-mist">Maks: {{ $group->max_members }}</span>
+                    @endif
+                </div>
+                <div class="space-y-1.5 max-h-[30rem] overflow-y-auto pr-0.5">
                     @foreach ($members as $member)
-                        <a href="{{ route('profile.show', $member->user->username) }}" class="flex items-center justify-between gap-2 hover:bg-ink-800/50 rounded-btn p-2 transition-colors" wire:key="mem-{{ $member->id }}">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <img src="{{ $member->user->avatar_url }}" class="w-7 h-7 rounded object-cover border border-ink-border" alt="{{ $member->user->name }}">
+                        @php
+                            $isMemberCreator = $member->user_id === $group->created_by;
+                            $isThisMe = auth()->check() && auth()->id() === $member->user_id;
+                            $canKickThis = $canManage && !$isMemberCreator && !$isThisMe;
+                        @endphp
+                        <div class="flex items-center justify-between gap-2 hover:bg-ink-800/50 rounded-btn p-2 transition-colors group/item" wire:key="mem-{{ $member->id }}">
+                            <a href="{{ route('profile.show', $member->user->username) }}" class="flex items-center gap-2 min-w-0 flex-1">
+                                <x-ui.avatar :user="$member->user" size="xs" shape="rounded" />
                                 <div class="min-w-0">
-                                    <span class="text-xs font-medium text-paper truncate block font-sans">{{ $member->user->name }}</span>
-                                    <span class="text-[10px] font-mono text-mist">{{ $member->role === 'admin' ? __('site.leaderboard.role_admin') : ($member->role === 'moderator' ? __('site.groups.moderator') : __('site.groups.member')) }}</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-medium text-paper truncate block font-sans">{{ $member->user->name }}</span>
+                                        @if($isThisMe)
+                                            <span class="text-[9px] font-mono text-mist font-normal">(Siz)</span>
+                                        @endif
+                                    </div>
+                                    <span class="text-[10px] font-mono {{ $isMemberCreator ? 'text-amber-400 font-semibold' : ($member->role === 'moderator' ? 'text-emerald-400 font-semibold' : 'text-mist') }}">
+                                        {{ $isMemberCreator ? 'Asoschi' : ($member->role === 'admin' ? __('site.leaderboard.role_admin') : ($member->role === 'moderator' ? __('site.groups.moderator') : __('site.groups.member'))) }}
+                                    </span>
                                 </div>
+                            </a>
+
+                            <div class="flex items-center gap-2 shrink-0">
+                                @if($canKickThis)
+                                    <div class="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100 focus-within:opacity-100 transition-opacity">
+                                        {{-- Moderator Role Toggle --}}
+                                        <button type="button"
+                                            wire:click="toggleModerator({{ $member->user_id }})"
+                                            title="{{ $member->role === 'moderator' ? 'Moderatorlikdan tushirish' : 'Moderator etib tayinlash' }}"
+                                            class="p-1 rounded hover:bg-ink-700 text-mist {{ $member->role === 'moderator' ? 'text-emerald-400 opacity-100' : 'hover:text-amber-400' }} transition-all"
+                                            aria-label="{{ $member->role === 'moderator' ? 'Moderatorlikdan tushirish' : 'Moderator etib tayinlash' }}">
+                                            <svg class="w-3.5 h-3.5" fill="{{ $member->role === 'moderator' ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                                <polygon stroke-width="2" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                            </svg>
+                                        </button>
+
+                                        {{-- Kick Member --}}
+                                        <button type="button"
+                                            wire:click="openRemoveMemberModal({{ $member->user_id }})"
+                                            title="Guruhdan chiqarish"
+                                            class="p-1 rounded hover:bg-[#C1392B]/20 text-mist hover:text-rose-300 transition-all"
+                                            aria-label="Guruhdan chiqarish">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                @endif
+
+                                <span class="text-[11px] font-mono font-bold text-amber-400 min-w-[2.2rem] text-right">{{ number_format($member->user->total_points) }}</span>
                             </div>
-                            <span class="text-[11px] font-mono font-bold text-amber-400 shrink-0">{{ number_format($member->user->total_points) }}</span>
-                        </a>
+                        </div>
                     @endforeach
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Group Settings Modal -->
+    @if ($showSettingsModal)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showSettingsModal', false)"></div>
+            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-5 text-left max-h-[90vh] overflow-y-auto">
+
+                <div class="flex items-center justify-between border-b border-ink-border/60 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-btn bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-paper font-serif">Guruh sozlamalari</h3>
+                            <p class="text-[11px] font-mono text-mist">Guruh parametrlari va ruxsatlarini boshqarish</p>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="$set('showSettingsModal', false)" class="text-mist hover:text-paper p-1 rounded-btn hover:bg-ink-800 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form wire:submit.prevent="saveSettings" class="space-y-4">
+                    {{-- Guruh rasmi (Cover/Avatar) --}}
+                    <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[11px] font-mono text-mist uppercase tracking-wider font-semibold">Guruh rasmi</label>
+                            @if($group->cover_image)
+                                <button type="button" wire:click="removeCoverImage" class="text-[10px] font-mono text-rose-300 hover:text-rose-200 transition-colors">
+                                    Rasmni o'chirish
+                                </button>
+                            @endif
+                        </div>
+
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-14 h-14 rounded-btn border border-ink-border overflow-hidden bg-ink-900 flex items-center justify-center shrink-0 relative shadow-sm">
+                                @if($newCoverImage)
+                                    <img src="{{ $newCoverImage->temporaryUrl() }}" class="w-full h-full object-cover">
+                                @elseif($group->cover_image_url)
+                                    <img src="{{ $group->cover_image_url }}" class="w-full h-full object-cover">
+                                @else
+                                    <div class="text-amber-400">
+                                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </div>
+                                @endif
+
+                                <div wire:loading wire:target="newCoverImage" class="absolute inset-0 bg-ink-950/80 flex items-center justify-center">
+                                    <svg class="animate-spin w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 space-y-1.5">
+                                <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-btn bg-ink-800 hover:bg-ink-700 text-paper border border-ink-border text-xs font-mono cursor-pointer transition-all">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    <span>Yangi rasm tanlash</span>
+                                    <input type="file" wire:model="newCoverImage" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+                                </label>
+                                <p class="text-[10px] font-mono text-mist">Tavsiya: JPG, PNG yoki WebP, 5MB gacha</p>
+                                @error('newCoverImage') <span class="text-rose-400 text-[11px] font-mono block">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Guruh nomi --}}
+                    <div>
+                        <label class="block text-[11px] font-mono text-mist uppercase tracking-wider mb-1">Guruh nomi</label>
+                        <input type="text" wire:model.defer="editName"
+                                class="w-full px-3.5 py-2 bg-ink-950/80 border border-ink-border rounded-btn text-xs font-sans text-paper placeholder-mist focus:border-amber-400 focus:outline-none">
+                        @error('editName') <span class="text-rose-400 text-[11px] font-mono block mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    {{-- Tavsif --}}
+                    <div>
+                        <label class="block text-[11px] font-mono text-mist uppercase tracking-wider mb-1">Guruh tavsifi</label>
+                        <textarea wire:model.defer="editDescription" rows="2"
+                                  class="w-full px-3.5 py-2 bg-ink-950/80 border border-ink-border rounded-btn text-xs font-sans text-paper placeholder-mist focus:border-amber-400 focus:outline-none"></textarea>
+                        @error('editDescription') <span class="text-rose-400 text-[11px] font-mono block mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    {{-- Ruxsatlar va cheklovlar guruhi --}}
+                    <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border space-y-3">
+                        <span class="text-[11px] font-mono uppercase tracking-wider text-amber-400 font-bold block">
+                            Muloqot va Ruxsatlar
+                        </span>
+
+                        {{-- Chatda yozish ruxsati (chat_enabled) --}}
+                        <label class="flex items-start justify-between gap-3 cursor-pointer group">
+                            <div class="min-w-0">
+                                <span class="text-xs font-medium text-paper block group-hover:text-amber-400 transition-colors">Chatda xabar yozish</span>
+                                <span class="text-[10px] font-mono text-mist block">O'chirilsa, faqat siz (asoschi) va ma'murlar xabar yoza oladi</span>
+                            </div>
+                            <input type="checkbox" wire:model="editChatEnabled" class="mt-1 w-4 h-4 rounded text-amber-500 accent-amber-500 focus:ring-0">
+                        </label>
+
+                        <div class="border-t border-ink-border/40"></div>
+
+                        {{-- Ovozli xabarlar ruxsati (voice_enabled) --}}
+                        <label class="flex items-start justify-between gap-3 cursor-pointer group">
+                            <div class="min-w-0">
+                                <span class="text-xs font-medium text-paper block group-hover:text-amber-400 transition-colors">Ovozli xabarlar (Voice Notes)</span>
+                                <span class="text-[10px] font-mono text-mist block">A'zolarga mikrofondan ovozli xabar yuborishga ruxsat</span>
+                            </div>
+                            <input type="checkbox" wire:model="editVoiceEnabled" class="mt-1 w-4 h-4 rounded text-amber-500 accent-amber-500 focus:ring-0">
+                        </label>
+                    </div>
+
+                    {{-- Maxfiylik va Cheklovlar --}}
+                    <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border space-y-3">
+                        <span class="text-[11px] font-mono uppercase tracking-wider text-mist font-bold block">
+                            Maxfiylik va Hajm
+                        </span>
+
+                        <label class="flex items-start justify-between gap-3 cursor-pointer group">
+                            <div class="min-w-0">
+                                <span class="text-xs font-medium text-paper block group-hover:text-amber-400 transition-colors">Yopiq guruh (Parolli)</span>
+                                <span class="text-[10px] font-mono text-mist block">Yangi a'zolar qo'shilish uchun parol kiritishi kerak</span>
+                            </div>
+                            <input type="checkbox" wire:model="editIsPrivate" class="mt-1 w-4 h-4 rounded text-amber-500 accent-amber-500 focus:ring-0">
+                        </label>
+
+                        @if ($editIsPrivate)
+                            <div class="pt-1">
+                                <label class="block text-[10px] font-mono text-mist uppercase tracking-wider mb-1">Guruh paroli</label>
+                                <input type="text" wire:model.defer="editPassword" placeholder="Guruh parolini kiriting"
+                                       class="w-full px-3 py-1.5 bg-ink-900 border border-ink-border rounded-btn text-xs font-mono text-paper focus:border-amber-400 focus:outline-none">
+                                @error('editPassword') <span class="text-rose-400 text-[11px] font-mono block mt-1">{{ $message }}</span> @enderror
+                            </div>
+                        @endif
+
+                        <div class="border-t border-ink-border/40"></div>
+
+                        <div>
+                            <label class="block text-[10px] font-mono text-mist uppercase tracking-wider mb-1">Maksimal a'zolar soni</label>
+                            <input type="number" wire:model.defer="editMaxMembers" min="2" max="1000"
+                                   class="w-full px-3 py-1.5 bg-ink-900 border border-ink-border rounded-btn text-xs font-mono text-paper focus:border-amber-400 focus:outline-none">
+                            @error('editMaxMembers') <span class="text-rose-400 text-[11px] font-mono block mt-1">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-ink-border/60">
+                        <button type="button" wire:click="$set('showSettingsModal', false)"
+                                class="py-1.5 px-3.5 rounded-btn border border-ink-border hover:bg-ink-800 text-xs font-mono text-mist hover:text-paper transition-colors">
+                            Bekor qilish
+                        </button>
+                        <button type="submit" wire:loading.attr="disabled"
+                                class="ks-btn-primary text-xs py-1.5 px-4">
+                            <span wire:loading.remove wire:target="saveSettings">Saqlash</span>
+                            <span wire:loading wire:target="saveSettings">Saqlanmoqda...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- Remove Member Confirmation Modal -->
+    @if ($showRemoveMemberModal)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showRemoveMemberModal', false)"></div>
+            <div class="relative w-full max-w-sm p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-4 text-center">
+
+                <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                    </svg>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h3 class="text-sm font-bold text-paper font-serif">
+                        Guruhdan chiqarish
+                    </h3>
+                    <p class="text-xs text-mist font-sans leading-relaxed">
+                        Rostdan ham <strong class="text-amber-400 font-medium">«{{ $memberToRemoveName }}»</strong>ni guruhdan chiqarmoqchimisiz? U qayta a'zo bo'lmaguncha guruhga kira olmaydi.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-2">
+                    <button type="button" wire:click="$set('showRemoveMemberModal', false)"
+                        class="flex-1 py-1.5 px-3 rounded-btn border border-ink-border hover:bg-ink-800 text-xs font-mono text-mist hover:text-paper transition-colors">
+                        Bekor qilish
+                    </button>
+                    <button type="button" wire:click="confirmRemoveMember" wire:loading.attr="disabled"
+                        class="flex-1 py-1.5 px-3 rounded-btn bg-[#C1392B] hover:bg-[#a63024] text-paper text-xs font-mono font-bold transition-all">
+                        <span wire:loading.remove wire:target="confirmRemoveMember">Chiqarish</span>
+                        <span wire:loading wire:target="confirmRemoveMember">Kutilmoqda...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Delete Group Confirmation Modal -->
     @if ($showDeleteModal)

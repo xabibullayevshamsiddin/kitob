@@ -6,7 +6,6 @@
         startedAt: {{ $event->started_at ? $event->started_at->timestamp : ($event->created_at ? $event->created_at->timestamp : now()->timestamp) }},
         serverNow: {{ now()->timestamp }},
         initialLikes: {{ (int) ($event->likes_count ?? 0) }},
-        initialHasLiked: @js($hasLiked),
         permissionMode: @js($event->permission_mode),
         signalSendUrl: @js(route('live.signal.send', $event)),
         signalPollUrl: @js(route('live.signal.poll', $event)),
@@ -62,14 +61,10 @@
         <div class="flex items-center gap-2.5 shrink-0">
             <!-- Permission indicator badge -->
             <div class="px-3 py-1.5 rounded-btn bg-ink-950/80 border border-ink-border text-mist font-mono text-xs font-medium flex items-center gap-1.5">
-                @if($event->permission_mode === 'chat_only')
-                    <span>{{ __('site.live.perm_filter_chat') }}</span>
-                @elseif($event->permission_mode === 'voice_only')
-                    <span>{{ __('site.live.perm_filter_voice') }}</span>
-                @elseif($event->permission_mode === 'view_only')
+                @if(in_array($event->permission_mode, ['view_only', 'voice_only']))
                     <span>{{ __('site.live.perm_filter_view') }}</span>
                 @else
-                    <span>{{ __('site.live.perm_filter_both') }}</span>
+                    <span>{{ __('site.live.perm_filter_chat') }}</span>
                 @endif
             </div>
 
@@ -89,12 +84,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div x-init="window.toast({ type: 'success', message: @js(session('success')), title: 'Muvaffaqiyatli!' })"></div>
-    @endif
-    @if (session()->has('error'))
-        <div x-init="window.toast({ type: 'error', message: @js(session('error')), title: 'Xatolik yuz berdi' })"></div>
-    @endif
 
     <!-- ── 2. TWO-COLUMN STUDIO GRID ── -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -247,24 +236,29 @@
                         <span>Kitobxon Studio</span>
                     </div>
 
-                    <!-- Single Like Toggle Button (1 like per user) -->
+                    <!-- Like Button (Instagram/TikTok Live uslubi — istalgancha bosish mumkin) -->
+                    @auth
                     <button type="button"
-                            @click.stop="toggleLike()"
-                            class="group/like relative flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg transition-all active:scale-90 cursor-pointer border"
-                            :class="hasLiked ? 'bg-rose-500/20 border-rose-500/60 text-rose-300 ring-1 ring-rose-500/30' : 'bg-ink-950/85 hover:bg-ink-900 border-rose-500/40 hover:border-rose-400 text-paper'"
-                            :title="hasLiked ? 'Like bekor qilish' : 'Jonli efirga like bosish'">
-                        <span class="transition-transform group-hover/like:scale-125 flex items-center justify-center"
-                              :class="hasLiked ? 'text-rose-500' : 'text-mist group-hover/like:text-rose-400'">
-                            <svg class="w-4.5 h-4.5 transition-colors"
-                                 :class="hasLiked ? 'fill-rose-500 text-rose-500' : 'fill-none text-current'"
-                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            @click.stop="burstLike()"
+                            class="group/like relative flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink-950/85 hover:bg-ink-900 backdrop-blur-md shadow-lg transition-all active:scale-90 cursor-pointer border border-rose-500/40 hover:border-rose-400 text-paper"
+                            title="Jonli efirga like bosish">
+                        <span class="transition-transform group-hover/like:scale-125 flex items-center justify-center text-rose-400">
+                            <svg class="w-4.5 h-4.5 fill-current text-rose-500 transition-colors" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                             </svg>
                         </span>
-                        <span class="font-bold font-mono min-w-[18px] text-left tabular-nums text-xs"
-                              :class="hasLiked ? 'text-rose-300' : 'text-paper'"
+                        <span class="font-bold font-mono min-w-[18px] text-left tabular-nums text-xs text-paper"
                               x-text="formatNumber(likesCount)">0</span>
                     </button>
+                    @else
+                    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink-950/85 backdrop-blur-md border border-ink-border text-paper font-mono"
+                          title="Like bosish uchun tizimga kiring">
+                        <svg class="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span class="font-bold tabular-nums text-xs" x-text="formatNumber(likesCount)">0</span>
+                    </span>
+                    @endauth
                 </div>
             </div>
 
@@ -371,27 +365,15 @@
                             {{ __('site.live.audience_perms') }}
                         </label>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
-                            <button wire:click="updatePermissionMode('both')"
-                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'both' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
-                                <span class="block">{{ __('site.live.perm_both') }}</span>
-                                <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_both_sub') }}</span>
-                            </button>
-
-                            <button wire:click="updatePermissionMode('chat_only')"
-                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'chat_only' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-mono">
+                            <button type="button" wire:click="updatePermissionMode('chat_only')"
+                                class="p-2.5 rounded-btn border text-left text-xs transition-all {{ in_array($event->permission_mode, ['chat_only', 'both']) ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
                                 <span class="block">{{ __('site.live.perm_chat') }}</span>
                                 <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_chat_sub') }}</span>
                             </button>
 
-                            <button wire:click="updatePermissionMode('voice_only')"
-                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'voice_only' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
-                                <span class="block">{{ __('site.live.perm_voice') }}</span>
-                                <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_voice_sub') }}</span>
-                            </button>
-
-                            <button wire:click="updatePermissionMode('view_only')"
-                                class="p-2 rounded-btn border text-left text-xs transition-all {{ $event->permission_mode === 'view_only' ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
+                            <button type="button" wire:click="updatePermissionMode('view_only')"
+                                class="p-2.5 rounded-btn border text-left text-xs transition-all {{ in_array($event->permission_mode, ['view_only', 'voice_only']) ? 'bg-amber-500/10 border-amber-400 text-amber-400 font-bold' : 'border-ink-border text-mist hover:text-paper' }}">
                                 <span class="block">{{ __('site.live.perm_view') }}</span>
                                 <span class="text-[10px] opacity-75 font-normal block">{{ __('site.live.perm_view_sub') }}</span>
                             </button>
@@ -501,9 +483,10 @@ function liveStudioController(config) {
         isRecording: false,
         showDeviceSettings: false,
 
-        // Real-time Likes (1-like-per-user) & Viewers
+        // Real-time Likes (Instagram/TikTok uslubi — cheksiz tap, batch'langan) & Viewers
         likesCount: Number(config.initialLikes || 0),
-        hasLiked: Boolean(config.initialHasLiked),
+        pendingLikes: 0,
+        likeBatchTimer: null,
         floatingHearts: [],
         viewerCount: 0,
         animatedViewerCount: 0,
@@ -878,9 +861,13 @@ function liveStudioController(config) {
             // Universal real-time stream signals: Likes
             if (msg.type === 'like') {
                 if (payload && typeof payload.total === 'number') {
-                    this.likesCount = payload.total;
+                    // Server totali + hozirgacha yuborilmagan taplarimiz
+                    this.likesCount = payload.total + (this.pendingLikes || 0);
                 }
-                this.spawnFloatingHeart(false);
+                // O'z batch'imiz qaytganda qayta yurak chizmaymiz (tap paytida chizilgan edi)
+                if (msg.sender_id !== ('server_' + this.userId)) {
+                    this.spawnFloatingHeart(false);
+                }
                 return;
             }
 
@@ -1734,33 +1721,30 @@ function liveStudioController(config) {
             }
         },
 
-        // ── REAL-TIME LIKES (1-like-per-user toggle) & VIEWER COUNT ──
-        toggleLike() {
-            // Optimistic UI toggle
-            if (!this.hasLiked) {
-                this.hasLiked = true;
-                this.likesCount++;
-                this.spawnFloatingHeart(true);
-            } else {
-                this.hasLiked = false;
-                this.likesCount = Math.max(0, this.likesCount - 1);
-            }
+        // ── REAL-TIME LIKES (Instagram/TikTok Live uslubi: cheksiz tap) & VIEWER COUNT ──
+        burstLike() {
+            // Optimistic UI: har tap = +1 like va suzuvchi yurak (server javobini kutmasdan)
+            this.likesCount++;
+            this.pendingLikes++;
+            this.spawnFloatingHeart(true);
 
-            // Immediately invoke server toggle
-            const comp = this.$wire || (window.Livewire && this.$el ? window.Livewire.find(this.$el.closest('[wire\\:id]')?.getAttribute('wire:id')) : null);
-            if (comp) {
-                if (typeof comp.toggleStreamLike === 'function') {
-                    comp.toggleStreamLike();
-                } else if (typeof comp.call === 'function') {
-                    comp.call('toggleStreamLike');
-                } else if (typeof comp.sendLikes === 'function') {
-                    comp.sendLikes(1);
+            // Batch/debounce: taplarni 800ms to'playmiz, so'ng BITTA so'rov bilan yuboramiz,
+            // aks holda ko'p odam tez bosganda server haddan tashqari ko'p so'rov oladi.
+            if (this.likeBatchTimer) return;
+            this.likeBatchTimer = setTimeout(() => {
+                const batch = this.pendingLikes;
+                this.pendingLikes = 0;
+                this.likeBatchTimer = null;
+                if (batch < 1) return;
+                const comp = this.$wire || (window.Livewire && this.$el ? window.Livewire.find(this.$el.closest('[wire\\:id]')?.getAttribute('wire:id')) : null);
+                if (comp && typeof comp.call === 'function') {
+                    comp.call('sendLikes', batch);
                 }
-            }
+            }, 800);
         },
 
         sendLike() {
-            this.toggleLike();
+            this.burstLike();
         },
 
         broadcastViewerCount() {
@@ -1792,15 +1776,23 @@ function liveStudioController(config) {
         updateViewerCount(newCount) {
             const target = Math.max(0, Number(newCount) || 0);
             this.viewerCount = target;
-            if (window.gsap) {
-                window.gsap.to(this, {
-                    animatedViewerCount: target,
-                    duration: 0.6,
-                    ease: 'power1.out'
-                });
-            } else {
-                this.animatedViewerCount = target;
+            // Kichik count-up animatsiya: raqam keskin almashmasin.
+            // GSAP Alpine reaktiv proksisi ustida ishlamagani uchun yengil rAF tween ishlatamiz.
+            if (this._viewerTween && this._viewerTween.cancel) {
+                this._viewerTween.cancel();
             }
+            const from = Number(this.animatedViewerCount) || 0;
+            const start = performance.now();
+            const dur = 500;
+            const step = (t) => {
+                const p = Math.min(1, (t - start) / dur);
+                const eased = 1 - Math.pow(1 - p, 3);
+                this.animatedViewerCount = from + (target - from) * eased;
+                if (p < 1) {
+                    this._viewerTween = requestAnimationFrame(step);
+                }
+            };
+            this._viewerTween = requestAnimationFrame(step);
         },
 
         formatNumber(num) {

@@ -80,29 +80,29 @@
                         @endif
                     </div>
 
-                    <h1 class="hero-anim-item text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-paper font-serif leading-[1.12]">
+                    <h1 class="hero-anim-item text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-paper font-serif leading-[1.18] sm:leading-[1.12] break-words">
                         {{ __('site.home.hero_title') }} <span class="italic text-amber-400">{{ __('site.home.hero_title_bold') }}</span> {{ __('site.home.hero_title_end') }}
                     </h1>
 
-                    <p class="hero-anim-item text-base sm:text-lg text-mist max-w-[56ch] leading-relaxed font-normal">
+                    <p class="hero-anim-item text-sm sm:text-lg text-mist max-w-[56ch] leading-relaxed font-normal">
                         {{ __('site.home.hero_sub') }}
                     </p>
 
-                    <div class="hero-anim-item flex flex-wrap items-center gap-3 pt-2">
+                    <div class="hero-anim-item flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 pt-2">
                         @if(auth()->check())
                             <a href="{{ route('books.public') }}" 
-                               class="ks-btn-primary inline-flex items-center gap-2">
+                               class="ks-btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto">
                                 <span>{{ __('site.home.explore_books') }}</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </a>
                         @else
                             <a href="{{ route('register') }}" 
-                               class="ks-btn-primary inline-flex items-center gap-2">
+                               class="ks-btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto">
                                 <span>{{ __('site.home.start_now') }}</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </a>
                             <a href="{{ route('books.public') }}" 
-                               class="ks-btn-ghost inline-flex items-center gap-2">
+                               class="ks-btn-ghost inline-flex items-center justify-center gap-2 w-full sm:w-auto">
                                 <span>{{ __('site.home.books_catalog') }}</span>
                             </a>
                         @endif
@@ -146,16 +146,15 @@
 
                                 {{-- Signature 3D Book Card (2:3 nisbat) --}}
                                 <div class="w-full max-w-[260px] mx-auto py-2">
-                                    <x-ui.book-card :book="$featuredBook" ratio="2 / 3">
-                                        <div class="pt-3 mt-3 border-t border-ink-border flex items-center justify-between">
-                                            <span class="ks-eyebrow">{{ $featuredBook->genre }}</span>
-                                            <a href="{{ route('books.show', $featuredBook->slug) }}"
-                                               class="ks-btn-primary !py-1 !px-3 !text-xs inline-flex items-center gap-1.5">
-                                                <span>O'qish</span>
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                            </a>
-                                        </div>
-                                    </x-ui.book-card>
+                                    <x-ui.book-card :book="$featuredBook" ratio="2 / 3" :showMeta="false"></x-ui.book-card>
+                                    <div class="pt-3 mt-3 border-t border-ink-border flex items-center justify-between">
+                                        <span class="ks-eyebrow">{{ $featuredBook->genre }}</span>
+                                        <a href="{{ route('books.show', $featuredBook->slug) }}"
+                                           class="ks-btn-primary !py-1 !px-3 !text-xs inline-flex items-center gap-1.5">
+                                            <span>O'qish</span>
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                        </a>
+                                    </div>
                                 </div>
 
                                 @php
@@ -235,6 +234,74 @@
             </div>
         </div>
     </section>
+
+    <!-- ── FAXRIY BESHLIK (TOP 5 HALL OF FAME) ── -->
+    @php
+        $topFiveUsers = $topFiveUsers ?? app(\App\Services\LeaderboardService::class)->getTopUsers(5);
+    @endphp
+    @if(isset($topFiveUsers) && $topFiveUsers->isNotEmpty())
+    <section class="py-12 border-b border-ink-border bg-ink-900/40 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[11px] uppercase tracking-wider mb-2">
+                        <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                        <span>SHARAF ZALI</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold font-serif text-paper">
+                        Faxriy Beshlik <span class="text-amber-400 font-sans text-xl sm:text-2xl font-normal">(Top 5)</span>
+                    </h2>
+                    <p class="text-mist text-xs sm:text-sm mt-1 max-w-xl">
+                        Platformaning all-time reytingida eng yuqori natija va mutolaa intizomini ko'rsatayotgan peshqadam kitobxonlar.
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ route('leaderboard') }}" class="ks-btn-ghost text-xs py-2 px-3.5 inline-flex items-center gap-1.5 hover:border-amber-400/50">
+                        <span>To'liq reytingni ko'rish</span>
+                        <svg class="w-3.5 h-3.5 text-mist" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
+                @foreach($topFiveUsers as $topUser)
+                    @php
+                        $rank = $loop->iteration;
+                        $cardBorder = match($rank) {
+                            1 => 'border-[#F59E0B]/50 hover:border-[#F59E0B] bg-gradient-to-b from-[#F59E0B]/12 via-ink-900/80 to-ink-950 shadow-[0_4px_20px_rgba(245,158,11,0.12)]',
+                            2 => 'border-[#E2E8F0]/40 hover:border-[#E2E8F0] bg-gradient-to-b from-[#E2E8F0]/8 via-ink-900/80 to-ink-950 shadow-[0_4px_16px_rgba(226,232,240,0.08)]',
+                            3 => 'border-[#D97706]/40 hover:border-[#D97706] bg-gradient-to-b from-[#D97706]/8 via-ink-900/80 to-ink-950 shadow-[0_4px_16px_rgba(217,119,6,0.08)]',
+                            default => 'border-[#6366F1]/30 hover:border-[#6366F1] bg-gradient-to-b from-[#6366F1]/6 via-ink-900/80 to-ink-950 shadow-[0_4px_16px_rgba(99,102,241,0.08)]',
+                        };
+                    @endphp
+                    <a href="{{ route('profile.show', $topUser->username) }}"
+                       class="group p-4 rounded-panel border {{ $cardBorder }} transition-all duration-200 hover:-translate-y-1 flex flex-col items-center text-center relative overflow-hidden">
+                        
+                        <div class="mb-3">
+                            <x-ui.avatar :user="$topUser" size="xl" shape="rounded-panel" :rank="$rank" />
+                        </div>
+
+                        <div class="space-y-1 w-full min-w-0">
+                            <h3 class="text-sm font-bold text-paper truncate group-hover:text-amber-400 transition-colors">
+                                {{ $topUser->name }}
+                            </h3>
+                            <p class="text-[11px] text-mist font-mono truncate">
+                                {{ '@' . $topUser->username }}
+                            </p>
+                        </div>
+
+                        <div class="mt-3 pt-3 border-t border-ink-border/60 w-full flex items-center justify-between">
+                            <x-ui.rank-badge :rank="$rank" size="sm" />
+                            <span class="font-mono text-xs font-bold text-amber-400">
+                                {{ number_format($topUser->total_points) }} <span class="text-[10px] text-mist font-normal">ball</span>
+                            </span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
 
     <!-- ── 3. ASYMMETRICAL BENTO GRID ── -->
     <section id="features" class="py-20 md:py-28 relative">
@@ -596,5 +663,8 @@
 
     <!-- ── Universal Toast Notification Container ── -->
     <x-toast-container />
+
+    <!-- ── Mobile Bottom Navigation Bar ── -->
+    <x-nav.mobile-bottom-bar />
 </body>
 </html>

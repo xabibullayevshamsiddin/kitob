@@ -24,11 +24,15 @@ class Group extends Model
         'password',
         'invite_code',
         'max_members',
+        'chat_enabled',
+        'voice_enabled',
     ];
 
     protected $casts = [
-        'is_private'  => 'boolean',
-        'max_members' => 'integer',
+        'is_private'    => 'boolean',
+        'max_members'   => 'integer',
+        'chat_enabled'  => 'boolean',
+        'voice_enabled' => 'boolean',
     ];
 
     // -------------------------------------------------------------------------
@@ -88,12 +92,58 @@ class Group extends Model
     }
 
     /**
-     * Returns full cover image URL.
+     * Returns full cover image URL or null if not set.
      */
-    public function getCoverImageUrlAttribute(): string
+    public function getCoverImageUrlAttribute(): ?string
     {
         return $this->cover_image
             ? asset('storage/' . $this->cover_image)
-            : asset('images/group-placeholder.png');
+            : null;
+    }
+
+    /**
+     * Checks if a user has management permissions (creator or system admin).
+     */
+    public function isManagedBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $isAdmin = (method_exists($user, 'hasRole') && $user->hasRole('admin')) || ($user->role === 'admin');
+
+        return $this->created_by === $user->id || $isAdmin;
+    }
+
+    /**
+     * Checks if a user is allowed to post messages in this group.
+     */
+    public function canUserChat(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if ($this->isManagedBy($user)) {
+            return true;
+        }
+
+        return (bool) ($this->chat_enabled ?? true);
+    }
+
+    /**
+     * Checks if a user is allowed to send voice messages in this group.
+     */
+    public function canUserSendVoice(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if ($this->isManagedBy($user)) {
+            return true;
+        }
+
+        return (bool) ($this->voice_enabled ?? true);
     }
 }

@@ -83,6 +83,14 @@
                 🔊 Ovoz
             </button>
 
+            <!-- Ambient Music toggle button -->
+            <button type="button" 
+                    onclick="window.dispatchEvent(new CustomEvent('open-ambient-music'))" 
+                    title="Mutolaa fon musiqasi (M klavishi)" 
+                    class="px-3 py-1.5 rounded-xl bg-ink-900 border border-white/10 hover:border-amber-400/40 text-amber-400 hover:text-amber-300 text-xs font-medium transition-colors flex items-center gap-1.5">
+                🎵 Musiqa
+            </button>
+
             <!-- Fullscreen -->
             <button type="button" 
                     onclick="fbToggleFullscreen()" 
@@ -221,6 +229,9 @@
         'chapterId' => null,
         'pageType' => 'flipbook'
     ])
+
+    <!-- Ambient Background Music Player -->
+    <x-ambient-music-player :book="$book" />
 
 </div>
 @endsection

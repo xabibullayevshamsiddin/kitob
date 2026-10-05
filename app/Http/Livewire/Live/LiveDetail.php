@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Live;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\LiveEvent;
 use App\Models\LiveQuestion;
 use Illuminate\Support\Facades\Auth;
@@ -9,13 +10,13 @@ use Livewire\Component;
 
 class LiveDetail extends Component
 {
+    use WithToast;
+
     public LiveEvent $event;
 
     public string $question = '';
 
     public string $activeTab = 'chat'; // 'chat', 'settings', 'questions'
-
-    public bool $hasLiked = false;
 
     protected $rules = [
         'question' => 'required|string|min:2|max:300',
@@ -24,12 +25,6 @@ class LiveDetail extends Component
     public function mount(LiveEvent $event): void
     {
         $this->event = $event;
-
-        if (Auth::check()) {
-            $this->hasLiked = \App\Models\LiveEventLike::where('live_event_id', $this->event->id)
-                ->where('user_id', Auth::id())
-                ->exists();
-        }
 
         if ($this->event->status === LiveEvent::STATUS_LIVE && !$this->event->started_at) {
             $this->event->update(['started_at' => $this->event->created_at ?? now()]);
@@ -72,24 +67,30 @@ class LiveDetail extends Component
         // Admin/teacher boshqa odam efirini boshqara olmaydi — aks holda "boshqalar uchun"
         // sozlama ikkita turli xosda ikki xil qiymatga aylanadi.
         if (!$this->isHost) {
-            session()->flash('error', 'Faqat efir muallifi sozlamalarni o\'zgartirishi mumkin.');
+            $this->toast('error', 'Faqat efir muallifi sozlamalarni o\'zgartirishi mumkin.');
             return;
         }
 
-        if (!in_array($mode, ['both', 'chat_only', 'voice_only', 'view_only'], true)) {
+        if (!in_array($mode, ['chat_only', 'view_only', 'both', 'voice_only'], true)) {
             return;
         }
 
-        $this->event->update(['permission_mode' => $mode]);
+        $savedMode = match($mode) {
+            'both'       => 'chat_only',
+            'voice_only' => 'view_only',
+            default      => $mode,
+        };
+
+        $this->event->update(['permission_mode' => $savedMode]);
         $this->event->refresh();
 
-        session()->flash('success', 'Tashrif buyuruvchilar ruxsat rejimi yangilandi!');
+        $this->toast('success', 'Tashrif buyuruvchilar ruxsat rejimi yangilandi!');
     }
 
     public function endLiveStream()
     {
         if (!$this->canManage) {
-            session()->flash('error', 'Faqat efir muallifi efirni yakunlashi mumkin.');
+            $this->toast('error', 'Faqat efir muallifi efirni yakunlashi mumkin.');
             return null;
         }
 
@@ -114,43 +115,35 @@ class LiveDetail extends Component
         ]);
         $this->event->refresh();
 
-        session()->flash('success', 'Jonli efir qayta boshlandi!');
+        $this->toast('success', 'Jonli efir qayta boshlandi!');
     }
 
-    public function toggleStreamLike(): void
+    /**
+     * Instagram/TikTok Live uslubidagi like: foydalanuvchi istalgancha marta bosadi,
+     * har tap bitta "yurak" animatsiyasi chiqaradi va umumiy son ortib boradi.
+     * Frontend taplarni ~800ms client tomonda to'playdi va bitta so'rovda yuboradi.
+     */
+    public function sendLikes(int $count = 1): void
     {
         if (!Auth::check()) {
-            session()->flash('error', 'Like bosish uchun avval tizimga kiring.');
+            $this->toast('error', 'Like bosish uchun avval tizimga kiring.');
             return;
         }
 
-        $userId = Auth::id();
-        $existing = \App\Models\LiveEventLike::where('live_event_id', $this->event->id)
-            ->where('user_id', $userId)
-            ->first();
+        // Batch hajmini xavfsiz chegarada ushlab turamiz
+        $count = max(1, min(50, $count));
 
-        if ($existing) {
-            $existing->delete();
-            \App\Models\LiveEvent::where('id', $this->event->id)
-                ->where('likes_count', '>', 0)
-                ->decrement('likes_count');
-            $this->hasLiked = false;
-        } else {
-            \App\Models\LiveEventLike::firstOrCreate([
-                'live_event_id' => $this->event->id,
-                'user_id'       => $userId,
-            ]);
-            \App\Models\LiveEvent::where('id', $this->event->id)
-                ->increment('likes_count');
-            $this->hasLiked = true;
-        }
+        // Atomik increment — parallel so'rovlarda ham son yo'qolmaydi
+        \App\Models\LiveEvent::where('id', $this->event->id)
+            ->increment('likes_count', $count);
 
         $newTotal = (int) \App\Models\LiveEvent::where('id', $this->event->id)->value('likes_count');
         $this->event->likes_count = $newTotal;
 
+        // Barcha ishtirokchilarga (tomoshabinlar ham) yangi umumiy sonni signal qilib yuboramiz
         \App\Models\LiveSignal::create([
             'live_event_id' => $this->event->id,
-            'sender_id'     => 'server_' . $userId,
+            'sender_id'     => 'server_' . Auth::id(),
             'receiver_id'   => 'all',
             'type'          => 'like',
             'payload'       => json_encode(['total' => $newTotal]),
@@ -158,21 +151,16 @@ class LiveDetail extends Component
         ]);
     }
 
-    public function sendLikes(int $count = 1): void
-    {
-        $this->toggleStreamLike();
-    }
-
     public function submitQuestion(): void
     {
         if (!Auth::check()) {
-            session()->flash('error', 'Savol yozish uchun avval tizimga kiring.');
+            $this->toast('error', 'Savol yozish uchun avval tizimga kiring.');
             return;
         }
 
         // Check if chat is allowed
-        if (in_array($this->event->permission_mode, ['voice_only', 'view_only'], true) && !$this->isHost) {
-            session()->flash('error', 'Ushbu efirda yozma chat cheklangan.');
+        if (in_array($this->event->permission_mode, ['view_only', 'voice_only'], true) && !$this->isHost) {
+            $this->toast('error', 'Ushbu efirda yozma chat cheklangan.');
             return;
         }
 
@@ -193,30 +181,12 @@ class LiveDetail extends Component
 
         $this->reset('question');
 
-        session()->flash('success', 'Xabaringiz yuborildi!');
+        $this->toast('success', 'Xabaringiz yuborildi!');
     }
 
     public function requestVoiceSpeech(): void
     {
-        if (!Auth::check()) {
-            session()->flash('error', 'Ovozli savol so\'rash uchun tizimga kiring.');
-            return;
-        }
-
-        if (in_array($this->event->permission_mode, ['chat_only', 'view_only'], true) && !$this->isHost) {
-            session()->flash('error', 'Ushbu efirda ovozli savollar rejimi o\'chirilgan.');
-            return;
-        }
-
-        LiveQuestion::create([
-            'live_event_id' => $this->event->id,
-            'user_id'       => Auth::id(),
-            'question'      => '✋ [Ovozli savol]: Mikrofon orqali savol berishni so\'ramoqda',
-            'is_selected'   => true,
-            'is_answered'   => false,
-        ]);
-
-        session()->flash('success', 'Ovozli savol so\'rovingiz yuborildi! Ustoz navbatingiz kelganda mikrofon beradi. 🎙️');
+        $this->toast('error', 'Jonli efirda tashrif buyuruvchilar uchun ovozli suhbat o\'chirilgan.');
     }
 
     public function markQuestionAnswered(int $questionId): void
@@ -273,7 +243,6 @@ class LiveDetail extends Component
             'isHost'            => $this->isHost,
             'canManage'         => $this->canManage,
             'canEditSettings'   => $this->isHost,
-            'hasLiked'          => $this->hasLiked,
         ])->layout('layouts.app', ['title' => $this->event->title]);
     }
 }

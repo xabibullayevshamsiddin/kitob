@@ -49,56 +49,65 @@
 <body class="bg-ink-950 text-paper min-h-screen flex flex-col font-sans transition-colors duration-200">
 
     <!-- Fixed Reader Top Bar -->
-    <header class="sticky top-0 z-40 backdrop-blur-md border-b px-4 py-3 reader-topbar">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
+    <header class="sticky top-0 z-40 backdrop-blur-md border-b px-2 sm:px-4 py-2.5 sm:py-3 reader-topbar">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-4">
             <!-- Left: Back link & chapter info -->
-            <div class="flex items-center gap-3">
-                <a href="{{ route('books.show', $book->slug) }}" class="p-1.5 rounded-btn text-mist hover:text-paper transition-colors" title="Kitob sahifasiga qaytish">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                <a href="{{ route('books.show', $book->slug) }}" class="p-1 sm:p-1.5 rounded-btn text-mist hover:text-paper transition-colors shrink-0" title="Kitob sahifasiga qaytish">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 </a>
                 <div class="min-w-0">
-                    <h2 class="text-xs font-bold font-serif text-paper truncate max-w-xs sm:max-w-sm">{{ $chapter->title }}</h2>
-                    <span class="text-[11px] font-mono text-mist truncate block">«{{ $book->title }}»</span>
+                    <h2 class="text-xs font-bold font-serif text-paper truncate max-w-[90px] sm:max-w-xs">{{ $chapter->title }}</h2>
+                    <span class="text-[10px] sm:text-[11px] font-mono text-mist truncate hidden sm:block">«{{ $book->title }}»</span>
                 </div>
             </div>
 
             <!-- Active Reading Timer Pill -->
-            <div class="flex items-center gap-2 px-3 py-1 rounded-badge bg-ink-900 border border-ink-border text-amber-400 font-mono text-xs"
+            <div class="flex items-center gap-1 sm:gap-2 px-2 py-0.5 sm:px-3 sm:py-1 rounded-badge bg-ink-900 border border-ink-border text-amber-400 font-mono text-[11px] sm:text-xs shrink-0"
                  :class="{ 'opacity-50': isIdle }">
-                <span class="w-2 h-2 rounded-full" :class="isIdle ? 'bg-amber-500' : 'bg-emerald-400 animate-pulse'"></span>
+                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" :class="isIdle ? 'bg-amber-500' : 'bg-emerald-400 animate-pulse'"></span>
                 <span x-text="formatTime(activeSeconds)">00:00</span>
-                <span x-show="isIdle" class="text-[10px] text-amber-400 font-sans">(pauza)</span>
+                <span x-show="isIdle" class="text-[9px] sm:text-[10px] text-amber-400 font-sans hidden sm:inline">(pauza)</span>
             </div>
 
-            <!-- Right Controls: Font size, Serif/Sans, Theme -->
-            <div class="flex items-center gap-2">
+            <!-- Right Controls: Font size, Serif/Sans, Theme, Music -->
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+                <!-- Ambient Music Quick Toggle in Topbar -->
+                <button type="button" 
+                        @click="window.dispatchEvent(new CustomEvent('open-ambient-music'))" 
+                        class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-btn text-xs font-mono font-bold border reader-ctrl hover:border-amber-400/50 hover:text-amber-400 transition-colors flex items-center gap-1"
+                        title="Fon musiqasi pleyeri (M klavishi)">
+                    <span>🎵</span>
+                    <span class="hidden md:inline">Musiqa</span>
+                </button>
+
                 <!-- Font Family Toggle -->
-                <button @click="toggleFont()" class="px-2.5 py-1 rounded-btn text-xs font-mono font-bold border reader-ctrl transition-colors">
+                <button @click="toggleFont()" class="hidden sm:inline-flex px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-btn text-xs font-mono font-bold border reader-ctrl transition-colors">
                     <span x-text="fontFamily === 'serif' ? 'Serif' : 'Sans'"></span>
                 </button>
 
                 <!-- Font Size Controls -->
                 <div class="flex items-center border reader-ctrl rounded-btn overflow-hidden">
-                    <button @click="decreaseFont()" class="px-2 py-0.5 text-xs font-mono font-bold hover:bg-black/10 transition-colors">A-</button>
-                    <button @click="increaseFont()" class="px-2 py-0.5 text-xs font-mono font-bold hover:bg-black/10 transition-colors">A+</button>
+                    <button @click="decreaseFont()" class="px-1.5 sm:px-2 py-0.5 text-xs font-mono font-bold hover:bg-black/10 transition-colors">A-</button>
+                    <button @click="increaseFont()" class="px-1.5 sm:px-2 py-0.5 text-xs font-mono font-bold hover:bg-black/10 transition-colors">A+</button>
                 </div>
 
                 <!-- Theme Toggle (Light, Sepia, Dark) -->
-                <div class="flex items-center gap-1 border reader-ctrl rounded-btn p-0.5">
+                <div class="flex items-center gap-0.5 sm:gap-1 border reader-ctrl rounded-btn p-0.5">
                     <button @click="setTheme('light')" 
                             :class="{ 'ring-1 ring-amber-500': theme === 'light' }"
-                            class="w-6 h-6 rounded-badge bg-[#FAF7F2] text-xs flex items-center justify-center text-slate-800" title="Yorug' rejim">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                            class="w-5 h-5 sm:w-6 sm:h-6 rounded-badge bg-[#FAF7F2] text-xs flex items-center justify-center text-slate-800" title="Yorug' rejim">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                     </button>
                     <button @click="setTheme('sepia')" 
                             :class="{ 'ring-1 ring-amber-500': theme === 'sepia' }"
-                            class="w-6 h-6 rounded-badge bg-[#FBF0D9] text-xs flex items-center justify-center text-amber-900" title="Sepiya (ko'zga qulay)">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            class="w-5 h-5 sm:w-6 sm:h-6 rounded-badge bg-[#FBF0D9] text-xs flex items-center justify-center text-amber-900" title="Sepiya (ko'zga qulay)">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                     </button>
                     <button @click="setTheme('dark')" 
                             :class="{ 'ring-1 ring-amber-500': theme === 'dark' }"
-                            class="w-6 h-6 rounded-badge bg-[#07090E] text-xs flex items-center justify-center text-amber-400" title="Tungi rejim">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                            class="w-5 h-5 sm:w-6 sm:h-6 rounded-badge bg-[#07090E] text-xs flex items-center justify-center text-amber-400" title="Tungi rejim">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
                 </div>
             </div>
@@ -111,7 +120,7 @@
     </header>
 
     <!-- Reading Content Area -->
-    <main class="flex-1 max-w-[66ch] mx-auto px-6 py-12 w-full">
+    <main class="flex-1 max-w-[66ch] mx-auto px-4 py-8 sm:px-6 sm:py-12 w-full">
         <!-- Chapter Header -->
         <div class="mb-10 text-center border-b pb-8" style="border-color: rgba(139,155,173,0.2);">
             <span class="text-xs font-mono uppercase tracking-widest text-amber-500 block mb-2 font-bold">
@@ -212,6 +221,9 @@
             }
         }
     </script>
+
+    <!-- Ambient Background Music Player -->
+    <x-ambient-music-player :book="$book" />
 
     <!-- Reading Tracker & 5-minute AFK Inactivity Modal -->
     @include('components.reading-tracker', [

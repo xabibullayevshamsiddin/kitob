@@ -214,7 +214,7 @@
                                 <span class="font-mono text-xs font-bold w-6 text-center text-amber-400">
                                     {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}
                                 </span>
-                                <img src="{{ $topUser->avatar_url }}" class="w-7 h-7 rounded-full object-cover shrink-0 border border-ink-border">
+                                <x-ui.avatar :user="$topUser" size="xs" :rank="$index + 1" />
                                 <div class="min-w-0">
                                     <p class="text-xs font-semibold text-paper truncate">{{ $topUser->name }}</p>
                                     <p class="text-[10px] text-mist font-mono truncate">{{ '@' . $topUser->username }}</p>

@@ -93,7 +93,7 @@
     <x-toast-container />
 
     <!-- ── Page Content ── -->
-    <main class="relative pt-6 pb-20 px-4 sm:px-6 min-h-[calc(100vh-72px)]">
+    <main class="relative pt-4 sm:pt-6 pb-28 sm:pb-20 px-3 sm:px-6 min-h-[calc(100vh-72px)]">
         <div class="max-w-7xl mx-auto">
             {{ $slot ?? '' }}
             @yield('content')
@@ -102,6 +102,9 @@
 
     <!-- ── Universal Footer ── -->
     <x-nav.main-footer />
+
+    <!-- ── Mobile Bottom Navigation Bar ── -->
+    <x-nav.mobile-bottom-bar />
 
     @if(class_exists('Livewire\Livewire'))
         @livewireScripts

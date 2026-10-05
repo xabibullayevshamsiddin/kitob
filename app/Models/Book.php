@@ -46,6 +46,16 @@ class Book extends Model
         return $this->hasMany(BookAudio::class);
     }
 
+    public function musics(): HasMany
+    {
+        return $this->hasMany(BookMusic::class)->orderBy('order')->orderBy('id');
+    }
+
+    public function activeMusics(): HasMany
+    {
+        return $this->hasMany(BookMusic::class)->where('is_active', true)->orderBy('order')->orderBy('id');
+    }
+
     public function videos(): HasMany
     {
         return $this->hasMany(BookVideo::class);
@@ -96,6 +106,37 @@ class Book extends Model
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('published_at', '<=', now());
+    }
+
+    /**
+     * Foydalanuvchi huquqi va reytingiga asosan ko'rinadigan kitoblar.
+     * Top 5 foydalanuvchilarga rasmiy e'londan 24 soat oldin (erta kirish) ochiladi.
+     */
+    public function scopeAvailableForUser(Builder $query, ?\App\Models\User $user = null): Builder
+    {
+        $query->where('is_active', true);
+
+        if ($user && ($user->isAdmin() || (method_exists($user, 'hasRole') && $user->hasRole('admin')))) {
+            return $query;
+        }
+
+        $isTopFive = false;
+        if ($user) {
+            $rank = app(\App\Services\LeaderboardService::class)->getUserRank($user);
+            $isTopFive = ($rank !== null && $rank <= 5);
+        }
+
+        if ($isTopFive) {
+            return $query->where(function ($q) {
+                $q->whereNull('published_at')
+                  ->orWhere('published_at', '<=', now()->addHours(24));
+            });
+        }
+
+        return $query->where(function ($q) {
+            $q->whereNull('published_at')
+              ->orWhere('published_at', '<=', now());
+        });
     }
 
     public function scopeCurrentWeek(Builder $query): Builder

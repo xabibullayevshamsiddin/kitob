@@ -8,6 +8,16 @@
     <p class="text-xs text-mist font-sans">{{ __('site.auth.join_community') }}</p>
 </div>
 
+@if(!setting('registration_open', true))
+    <div class="mb-5 p-4 rounded-card bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-start gap-2.5">
+        <span class="text-base flex-shrink-0">⚠️</span>
+        <div>
+            <p class="font-bold">Ro'yxatdan o'tish vaqtincha to'xtatilgan</p>
+            <p class="text-mist mt-0.5">Hozirda yangi foydalanuvchilarni qabul qilish ma'muriyat tomonidan vaqtincha yopilgan. Mavjud hisobingiz bo'lsa, tizimga kiring.</p>
+        </div>
+    </div>
+@endif
+
 @if ($errors->any())
     <div class="mb-4 p-3 bg-ink-950 border border-rose-500/30 text-rose-300 rounded-card text-xs space-y-1">
         @foreach ($errors->all() as $error)
@@ -83,9 +93,12 @@
     </div>
 
     <button type="submit"
-        class="ks-btn-primary w-full py-2.5 flex items-center justify-center gap-2 mt-2">
-        <span>{{ __('site.nav.register') }}</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        {{ !setting('registration_open', true) ? 'disabled' : '' }}
+        class="{{ !setting('registration_open', true) ? 'ks-btn-ghost opacity-50 cursor-not-allowed' : 'ks-btn-primary' }} w-full py-2.5 flex items-center justify-center gap-2 mt-2">
+        <span>{{ !setting('registration_open', true) ? 'Ro\'yxatdan o\'tish yopiq' : __('site.nav.register') }}</span>
+        @if(setting('registration_open', true))
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        @endif
     </button>
 </form>
 

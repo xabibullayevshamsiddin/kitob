@@ -17,7 +17,11 @@ define('LARAVEL_START', microtime(true));
 */
 
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
-    require $maintenance;
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    $isExempt = preg_match('#/(admin|login|logout|admin-bypass)(\b|/|\?)#i', $uri) || isset($_COOKIE['laravel_maintenance']);
+    if (! $isExempt) {
+        require $maintenance;
+    }
 }
 
 /*

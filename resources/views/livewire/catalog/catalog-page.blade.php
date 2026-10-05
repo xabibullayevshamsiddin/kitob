@@ -44,11 +44,11 @@
     <div class="ks-panel p-4 sm:p-5 space-y-4">
         
         <!-- Format Tabs (Pills) -->
-        <div class="flex flex-wrap items-center gap-1.5">
-            <span class="ks-eyebrow mr-2 hidden sm:inline-block">{{ __('site.catalog.format') }}</span>
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 sm:mx-0 sm:px-0 flex-nowrap sm:flex-wrap">
+            <span class="ks-eyebrow mr-2 hidden sm:inline-block shrink-0">{{ __('site.catalog.format') }}</span>
             
             <button type="button" wire:click="setFormat('all')"
-                class="px-3.5 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer {{ ($format === 'all' && $readingStatus === 'all') ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ ($format === 'all' && $readingStatus === 'all') ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.all') }}</span>
                 <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ ($format === 'all' && $readingStatus === 'all') ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $totalBooksCount }}
@@ -56,7 +56,7 @@
             </button>
 
             <button type="button" wire:click="setFormat('pdf')"
-                class="px-3.5 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer {{ $format === 'pdf' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'pdf' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.pdf') }}</span>
                 <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'pdf' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $pdfBooksCount }}
@@ -64,7 +64,7 @@
             </button>
 
             <button type="button" wire:click="setFormat('audio')"
-                class="px-3.5 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer {{ $format === 'audio' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'audio' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.books.audio') }}</span>
                 <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'audio' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $audioBooksCount }}
@@ -72,7 +72,7 @@
             </button>
 
             <button type="button" wire:click="setFormat('video')"
-                class="px-3.5 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer {{ $format === 'video' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'video' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.video_review') }}</span>
                 <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'video' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $videoBooksCount }}
@@ -80,7 +80,7 @@
             </button>
 
             <button type="button" wire:click="setFormat('quiz')"
-                class="px-3.5 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer {{ $format === 'quiz' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'quiz' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.quiz_books') }}</span>
                 <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'quiz' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $quizBooksCount }}
@@ -88,10 +88,10 @@
             </button>
 
             @auth
-                <div class="h-5 w-px bg-ink-border mx-1 hidden sm:block"></div>
+                <div class="h-5 w-px bg-ink-border mx-1 shrink-0"></div>
 
                 <button type="button" wire:click="setReadingStatus('reading')"
-                    class="px-3.5 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer {{ $readingStatus === 'reading' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'reading' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                     <span>{{ __('site.catalog.im_reading') }}</span>
                     <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'reading' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
                         {{ $readingCount }}
@@ -99,7 +99,7 @@
                 </button>
 
                 <button type="button" wire:click="setReadingStatus('finished')"
-                    class="px-3.5 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer {{ $readingStatus === 'finished' ? 'bg-emerald-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'finished' ? 'bg-emerald-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                     <span>{{ __('site.catalog.finished') }}</span>
                     <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'finished' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
                         {{ $finishedCount }}
@@ -109,18 +109,18 @@
         </div>
 
         <!-- Genres Filter Pills Row -->
-        <div class="pt-3 border-t border-ink-border flex flex-wrap items-center justify-between gap-2.5">
-            <div class="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                <span class="ks-eyebrow mr-2 hidden sm:inline-block">{{ __('site.catalog.genre') }}</span>
+        <div class="pt-3 border-t border-ink-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 flex-nowrap sm:flex-wrap">
+                <span class="ks-eyebrow mr-2 hidden sm:inline-block shrink-0">{{ __('site.catalog.genre') }}</span>
                 
                 <button type="button" wire:click="setGenre('')"
-                    class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer {{ $genre === '' ? 'bg-paper text-ink-950 font-bold' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
+                    class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === '' ? 'bg-paper text-ink-950 font-bold' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
                     {{ __('site.catalog.all_genres') }}
                 </button>
 
                 @foreach ($genres as $g)
                     <button type="button" wire:click="setGenre('{{ $g }}')"
-                        class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer {{ $genre === $g ? 'bg-paper text-ink-950 font-bold' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
+                        class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === $g ? 'bg-paper text-ink-950 font-bold' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
                         {{ $g }}
                     </button>
                 @endforeach
@@ -128,7 +128,7 @@
 
             @if($hasActiveFilters)
                 <button type="button" wire:click="resetFilters"
-                    class="inline-flex items-center gap-1 px-3 py-1 rounded-btn bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold border border-rose-500/30 transition-colors cursor-pointer shrink-0">
+                    class="inline-flex items-center justify-center gap-1 px-3 py-1 rounded-btn bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold border border-rose-500/30 transition-colors cursor-pointer shrink-0">
                     <span>{{ __('site.catalog.clear_filters') }}</span>
                     <span>✕</span>
                 </button>
@@ -137,7 +137,7 @@
     </div>
 
     <!-- Books Grid with Signature 3D Opening Animation (MASTER §5.2) -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-x-5 sm:gap-y-10">
         @forelse ($books as $book)
             <x-ui.book-card :book="$book" wire:key="book-{{ $book->id }}" />
         @empty

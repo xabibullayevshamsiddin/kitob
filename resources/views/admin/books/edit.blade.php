@@ -165,5 +165,51 @@
             </div>
         </form>
     </div>
+
+    {{-- Fon Musiqalari (Ambient Audio) bloki --}}
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <span>🎵</span>
+                    <span>Kitob fon musiqalari (Ambient Audio)</span>
+                    <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 text-xs font-mono font-bold">{{ $book->musics()->count() }} ta</span>
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    O'quvchilar ushbu kitobni o'qiyotganda tinglashi mumkin bo'lgan fon musiqalari va ohanglari
+                </p>
+            </div>
+            <a href="{{ route('admin.books.music.index', $book->id) }}" class="px-4 py-2 bg-amber-500 text-slate-900 rounded-xl text-xs font-bold hover:bg-amber-400 transition-colors inline-flex items-center gap-1.5 shadow-md shadow-amber-500/20">
+                <span>+ Musiqalarni boshqarish / qo'shish</span>
+                <span>→</span>
+            </a>
+        </div>
+
+        @if($book->musics()->exists())
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                @foreach($book->musics as $music)
+                    <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-800 dark:text-white truncate flex items-center gap-1.5">
+                                <span>{{ $music->is_active ? '🟢' : '⚪️' }}</span>
+                                <span>{{ $music->title }}</span>
+                            </p>
+                            <p class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">{{ basename($music->file_path) }}</p>
+                        </div>
+                        <audio controls preload="none" class="h-7 w-28 shrink-0">
+                            <source src="{{ $music->file_url }}">
+                        </audio>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="py-6 text-center text-xs text-slate-400">
+                <p>Ushbu kitobga hali fon musiqasi qo'shilmagan.</p>
+                <a href="{{ route('admin.books.music.index', $book->id) }}" class="text-amber-500 font-semibold underline mt-1 inline-block">
+                    Hozir qo'shish →
+                </a>
+            </div>
+        @endif
+    </div>
 </div>
 @endsection

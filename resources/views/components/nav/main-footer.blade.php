@@ -1,16 +1,17 @@
 {{-- 
     Universal Main Footer Component — Kitobxon
     Editorial Dark Modern aesthetic with Spectral typography and Lucide SVG icons.
+    Mobile-optimized with bottom-bar clearance and responsive multi-column layout.
 --}}
 <footer class="border-t border-ink-border bg-ink-950 text-mist relative overflow-hidden z-10 selection:bg-amber-500 selection:text-ink-950">
     <!-- Main Footer Content -->
-    <div class="max-w-7xl mx-auto px-6 pt-14 pb-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 pb-12 border-b border-ink-border">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-28 sm:pb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 sm:gap-10 lg:gap-12 pb-10 sm:pb-12 border-b border-ink-border">
 
             <!-- Col 1: Brand Info & Editorial Quote (Spans 2 cols on lg) -->
             <div class="lg:col-span-2 space-y-4">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 text-paper font-serif font-bold text-xl tracking-tight group">
-                    <span class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center transition-colors">
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 text-paper font-serif font-bold text-xl tracking-tight group" aria-label="Kitobxon bosh sahifa">
+                    <span class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center transition-colors group-hover:border-amber-400/40">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                     </span>
                     <span class="text-paper group-hover:text-amber-400 transition-colors font-serif">Kitobxon</span>
@@ -21,7 +22,7 @@
                 </p>
 
                 <!-- Platform Status Badge -->
-                <div class="pt-2 flex flex-wrap items-center gap-3 text-xs">
+                <div class="pt-1 flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
                     <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-badge bg-ink-900 border border-ink-border text-emerald-400 font-mono text-[11px]">
                         <span class="relative flex h-2 w-2">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -37,123 +38,128 @@
                 </div>
             </div>
 
-            <!-- Col 2: Platforma (Asosiy xizmatlar) -->
-            <div class="space-y-3.5">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                    Platforma
-                </h4>
-                <ul class="space-y-2.5 text-xs text-mist font-sans">
-                    <li>
-                        <a href="{{ route('home') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Bosh sahifa</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('books.public') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Kitoblar katalogi</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('leaderboard') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Peshqadamlar reytingi</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('chat') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Global Kitobxon Chati</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('groups.index') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Kitobxonlar guruhlari</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('live.index') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Jonli efirlar & Darslar</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+            <!-- Links Sections: 2 columns on mobile, 3 columns on sm/lg -->
+            <div class="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8">
 
-            <!-- Col 3: Ma'lumot & Yordam -->
-            <div class="space-y-3.5">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                    Ma'lumot & Yordam
-                </h4>
-                <ul class="space-y-2.5 text-xs text-mist font-sans">
-                    <li>
-                        <a href="{{ route('about') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Biz haqimizda</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('faq') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Ko'p so'raladigan savollar</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('contact') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Bog'lanish & Aloqa</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('contact', ['report' => 1]) }}" class="hover:text-rose-300 transition-colors flex items-center gap-1.5 group">
-                            <span class="text-rose-400 font-mono text-[10px]">🚩</span>
-                            <span>Qoidabuzarlik ustidan shikoyat</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+                <!-- Col 2: Platforma (Asosiy xizmatlar) -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        Platforma
+                    </h4>
+                    <ul class="space-y-1.5 text-xs text-mist font-sans">
+                        <li>
+                            <a href="{{ route('home') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Bosh sahifa</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('books.public') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Kitoblar</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('leaderboard') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Reyting</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('chat') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Global Chat</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('groups.index') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Guruhlar</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('live.index') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Jonli efirlar</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-            <!-- Col 4: Qoidalar & Maxfiylik -->
-            <div class="space-y-3.5">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                    Huquqiy Me'yorlar
-                </h4>
-                <ul class="space-y-2.5 text-xs text-mist font-sans">
-                    <li>
-                        <a href="{{ route('terms') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Foydalanish shartlari</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('privacy') }}" class="hover:text-paper transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Maxfiylik siyosati</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('terms') }}" class="hover:text-amber-400 transition-colors flex items-center gap-1.5 group">
-                            <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                            <span>Ban me'yorlari jadvali</span>
-                        </a>
-                    </li>
-                    <li>
-                        <span class="text-[11px] text-ink-500 block pt-1 leading-relaxed">
-                            Barcha intellektual mulk va mualliflik huquqlari himoyalangan.
-                        </span>
-                    </li>
-                </ul>
+                <!-- Col 3: Ma'lumot & Yordam -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        Ma'lumot
+                    </h4>
+                    <ul class="space-y-1.5 text-xs text-mist font-sans">
+                        <li>
+                            <a href="{{ route('about') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Biz haqimizda</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('faq') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Savol-javob</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('contact') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Bog'lanish</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('contact', ['report' => 1]) }}" class="py-1 hover:text-rose-300 transition-colors flex items-center gap-1.5 group">
+                                <span class="text-rose-400 font-mono text-[10px]">🚩</span>
+                                <span>Shikoyat qilish</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Qoidalar & Maxfiylik -->
+                <div class="col-span-2 sm:col-span-1 space-y-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-ink-border/50">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        Huquqiy
+                    </h4>
+                    <ul class="space-y-1.5 text-xs text-mist font-sans">
+                        <li>
+                            <a href="{{ route('terms') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Foydalanish shartlari</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('privacy') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Maxfiylik siyosati</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('terms') }}" class="py-1 hover:text-amber-400 transition-colors flex items-center gap-1.5 group">
+                                <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
+                                <span>Qoidalar & Jazolash</span>
+                            </a>
+                        </li>
+                        <li>
+                            <span class="text-[11px] text-ink-500 block pt-1 leading-relaxed">
+                                Barcha intellektual mulk va mualliflik huquqlari himoyalangan.
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
 
         </div>
 
         <!-- Bottom Copyright Bar -->
-        <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-mist font-mono">
+        <div class="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-mist font-mono text-center sm:text-left">
             <div class="flex items-center gap-2">
                 <span class="font-semibold text-paper font-serif">Kitobxon</span>
                 <span>•</span>
@@ -168,7 +174,8 @@
             <div>
                 <button type="button" 
                         onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        class="ks-btn-ghost py-1 px-3 text-xs inline-flex items-center gap-1.5">
+                        class="ks-btn-ghost py-1.5 px-3.5 text-xs inline-flex items-center gap-1.5 cursor-pointer rounded-btn hover:border-amber-400/50 hover:text-amber-400 transition-colors"
+                        title="Sahifa boshiga qaytish">
                     <span>Yuqoriga</span>
                     <span>↑</span>
                 </button>

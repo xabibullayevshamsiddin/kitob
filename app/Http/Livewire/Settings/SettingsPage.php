@@ -2,14 +2,17 @@
 
 namespace App\Http\Livewire\Settings;
 
+use App\Http\Livewire\Concerns\WithToast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class SettingsPage extends Component
 {
     use WithFileUploads;
+    use WithToast;
 
     public string $name = '';
 
@@ -48,7 +51,12 @@ class SettingsPage extends Component
 
     public function save(): void
     {
-        $this->validate();
+        try {
+            $this->validate();
+        } catch (ValidationException $e) {
+            $this->toastError('Formada xatolik bor: ' . collect($e->validator->errors()->all())->first());
+            throw $e;
+        }
 
         $user = Auth::user();
         $data = [
@@ -58,14 +66,23 @@ class SettingsPage extends Component
         ];
 
         if ($this->avatar) {
-            $data['avatar'] = $this->avatar->store('avatars', 'public');
+            try {
+                $data['avatar'] = $this->avatar->store('avatars', 'public');
+            } catch (\Throwable $e) {
+                report($e);
+                $this->toastError('Rasmni yuklashda xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+                return;
+            }
         }
 
         $user->update($data);
 
+        $hadAvatar = (bool) $this->avatar;
         $this->reset('avatar');
 
-        session()->flash('success', __('site.settings.saved_success'));
+        $this->toastSuccess(
+            $hadAvatar ? __('site.settings.saved_success') . ' Profil rasmi yangilandi.' : __('site.settings.saved_success')
+        );
     }
 
     public function render()

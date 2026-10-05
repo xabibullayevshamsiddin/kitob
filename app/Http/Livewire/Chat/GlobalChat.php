@@ -3,12 +3,15 @@
 namespace App\Http\Livewire\Chat;
 
 use App\Events\NewGlobalChatMessage;
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\GlobalChatMessage;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class GlobalChat extends Component
 {
+    use WithToast;
+
     public string $message = '';
 
     public int $perPage = 50;
@@ -45,8 +48,20 @@ class GlobalChat extends Component
             return redirect()->route('login');
         }
 
+        $chatEnabled = (bool) setting('global_chat_enabled', true);
+        $isAdmin = Auth::check() && (Auth::user()->role === 'admin' || Auth::user()->hasRole('admin'));
+
+        if (!$chatEnabled && !$isAdmin) {
+            $err = 'Umumiy global chat ma\'muriyat tomonidan vaqtincha to\'xtatilgan.';
+            $this->addError('message', $err);
+            $this->toastError($err, 'Chat o\'chirilgan');
+            return;
+        }
+
         if (Auth::user()->isBanned()) {
-            $this->addError('message', 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik'));
+            $err = 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik');
+            $this->addError('message', $err);
+            $this->toastError($err, 'Bloklangansiz');
             return;
         }
 
@@ -77,8 +92,20 @@ class GlobalChat extends Component
             return;
         }
 
+        $chatEnabled = (bool) setting('global_chat_enabled', true);
+        $isAdmin = Auth::check() && (Auth::user()->role === 'admin' || Auth::user()->hasRole('admin'));
+
+        if (!$chatEnabled && !$isAdmin) {
+            $err = 'Umumiy global chat ma\'muriyat tomonidan vaqtincha to\'xtatilgan.';
+            $this->addError('message', $err);
+            $this->toastError($err, 'Chat o\'chirilgan');
+            return;
+        }
+
         if (Auth::user()->isBanned()) {
-            $this->addError('message', 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik'));
+            $err = 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining . '. Sabab: ' . (Auth::user()->ban_reason ?? 'Qoidabuzarlik');
+            $this->addError('message', $err);
+            $this->toastError($err, 'Bloklangansiz');
             return;
         }
 
@@ -127,6 +154,7 @@ class GlobalChat extends Component
         }
 
         $message->update(['is_deleted' => true]);
+        $this->toastInfo('Xabar o\'chirildi.');
     }
 
     public function banUser(int $userId, string $duration = '1_day', ?string $reason = null): void
@@ -156,6 +184,7 @@ class GlobalChat extends Component
         }
 
         $targetUser->ban($duration, $reason ?: 'Chatda nojo\'ya harakat / qoidabuzarlik');
+        $this->toastSuccess("«{$targetUser->name}» muvaffaqiyatli bloklandi.", 'Foydalanuvchi bloklandi');
     }
 
     public function unbanUser(int $userId): void
@@ -173,6 +202,7 @@ class GlobalChat extends Component
         $targetUser = \App\Models\User::find($userId);
         if ($targetUser) {
             $targetUser->unban();
+            $this->toastSuccess("«{$targetUser->name}» blokdan chiqarildi.", 'Blok yechildi');
         }
     }
 
@@ -188,9 +218,16 @@ class GlobalChat extends Component
             ->reverse()
             ->values();
 
+        $isChatEnabled = (bool) setting('global_chat_enabled', true);
+        $isAdmin = Auth::check() && (Auth::user()->role === 'admin' || Auth::user()->hasRole('admin'));
+        $topFiveIds = app(\App\Services\LeaderboardService::class)->getTopFiveIds();
+
         return view('livewire.chat.global-chat', [
-            'messages'   => $messages,
-            'authUser'   => Auth::user(),
+            'messages'      => $messages,
+            'authUser'      => Auth::user(),
+            'isChatEnabled' => $isChatEnabled,
+            'isAdmin'       => $isAdmin,
+            'topFiveIds'    => $topFiveIds,
         ])->layout('layouts.app', ['title' => 'Umumiy chat']);
     }
 }

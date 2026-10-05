@@ -27,12 +27,6 @@
         @endif
     </div>
 
-    @if (session()->has('success'))
-        <div x-init="window.toast({ type: 'success', message: @js(session('success')), title: 'Muvaffaqiyatli!' })"></div>
-    @endif
-    @if (session()->has('error'))
-        <div x-init="window.toast({ type: 'error', message: @js(session('error')), title: 'Xatolik yuz berdi' })"></div>
-    @endif
 
     <!-- ── EFIRNI SOZLASH VA BOSHLASH MODALI ── -->
     @if($showStudioModal)
@@ -101,18 +95,9 @@
                             </label>
                             <p class="text-xs text-mist font-mono mb-2">{{ __('site.live.perm_sub') }}</p>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono">
-                                <!-- Option 1: Both -->
-                                <label class="relative flex items-start gap-2.5 p-2.5 rounded-btn border cursor-pointer transition-all {{ $newPermissionMode === 'both' ? 'bg-amber-500/10 border-amber-400/50' : 'bg-ink-950/80 border-ink-border' }}">
-                                    <input type="radio" wire:model="newPermissionMode" value="both" class="mt-0.5 text-amber-500 focus:ring-0">
-                                    <div class="text-xs">
-                                        <span class="font-bold text-paper block">{{ __('site.live.perm_both') }}</span>
-                                        <span class="text-mist text-[10px] block mt-0.5">{{ __('site.live.perm_both_sub') }}</span>
-                                    </div>
-                                </label>
-
-                                <!-- Option 2: Chat only -->
-                                <label class="relative flex items-start gap-2.5 p-2.5 rounded-btn border cursor-pointer transition-all {{ $newPermissionMode === 'chat_only' ? 'bg-amber-500/10 border-amber-400/50' : 'bg-ink-950/80 border-ink-border' }}">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-mono">
+                                <!-- Option 1: Chat only -->
+                                <label class="relative flex items-start gap-2.5 p-3 rounded-btn border cursor-pointer transition-all {{ in_array($newPermissionMode, ['chat_only', 'both']) ? 'bg-amber-500/10 border-amber-400/50 shadow-sm' : 'bg-ink-950/80 border-ink-border' }}">
                                     <input type="radio" wire:model="newPermissionMode" value="chat_only" class="mt-0.5 text-amber-500 focus:ring-0">
                                     <div class="text-xs">
                                         <span class="font-bold text-paper block">{{ __('site.live.perm_chat') }}</span>
@@ -120,17 +105,8 @@
                                     </div>
                                 </label>
 
-                                <!-- Option 3: Voice only -->
-                                <label class="relative flex items-start gap-2.5 p-2.5 rounded-btn border cursor-pointer transition-all {{ $newPermissionMode === 'voice_only' ? 'bg-amber-500/10 border-amber-400/50' : 'bg-ink-950/80 border-ink-border' }}">
-                                    <input type="radio" wire:model="newPermissionMode" value="voice_only" class="mt-0.5 text-amber-500 focus:ring-0">
-                                    <div class="text-xs">
-                                        <span class="font-bold text-paper block">{{ __('site.live.perm_voice') }}</span>
-                                        <span class="text-mist text-[10px] block mt-0.5">{{ __('site.live.perm_voice_sub') }}</span>
-                                    </div>
-                                </label>
-
-                                <!-- Option 4: View only -->
-                                <label class="relative flex items-start gap-2.5 p-2.5 rounded-btn border cursor-pointer transition-all {{ $newPermissionMode === 'view_only' ? 'bg-amber-500/10 border-amber-400/50' : 'bg-ink-950/80 border-ink-border' }}">
+                                <!-- Option 2: View only -->
+                                <label class="relative flex items-start gap-2.5 p-3 rounded-btn border cursor-pointer transition-all {{ in_array($newPermissionMode, ['view_only', 'voice_only']) ? 'bg-amber-500/10 border-amber-400/50 shadow-sm' : 'bg-ink-950/80 border-ink-border' }}">
                                     <input type="radio" wire:model="newPermissionMode" value="view_only" class="mt-0.5 text-amber-500 focus:ring-0">
                                     <div class="text-xs">
                                         <span class="font-bold text-paper block">{{ __('site.live.perm_view') }}</span>
@@ -162,7 +138,7 @@
     <div class="ks-panel bg-ink-900 border border-ink-border p-4 sm:p-5 space-y-3.5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <!-- Status Tabs -->
-            <div class="flex items-center gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto">
+            <div class="flex items-center gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto no-scrollbar">
                 <button type="button" wire:click="setStatusFilter('all')"
                     class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $statusFilter === 'all' ? 'bg-ink-800 text-amber-400 border border-ink-border shadow-sm' : 'text-mist hover:text-paper' }}">
                     <span>{{ __('site.live.filter_all') }}</span>
@@ -221,9 +197,7 @@
                     <select wire:model="permissionFilter"
                         class="px-2.5 py-1 bg-ink-950/80 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none">
                         <option value="all">{{ __('site.live.perm_filter_all') }}</option>
-                        <option value="both">{{ __('site.live.perm_filter_both') }}</option>
                         <option value="chat_only">{{ __('site.live.perm_filter_chat') }}</option>
-                        <option value="voice_only">{{ __('site.live.perm_filter_voice') }}</option>
                         <option value="view_only">{{ __('site.live.perm_filter_view') }}</option>
                     </select>
                 </div>
@@ -292,14 +266,10 @@
 
                         <!-- Permission mode badge -->
                         <span class="text-[10px] font-mono px-2 py-0.5 rounded-pill bg-ink-800 border border-ink-border text-mist">
-                            @if($event->permission_mode === 'chat_only')
-                                {{ __('site.live.perm_filter_chat') }}
-                            @elseif($event->permission_mode === 'voice_only')
-                                {{ __('site.live.perm_filter_voice') }}
-                            @elseif($event->permission_mode === 'view_only')
+                            @if(in_array($event->permission_mode, ['view_only', 'voice_only']))
                                 {{ __('site.live.perm_filter_view') }}
                             @else
-                                {{ __('site.live.perm_filter_both') }}
+                                {{ __('site.live.perm_filter_chat') }}
                             @endif
                         </span>
                     </div>

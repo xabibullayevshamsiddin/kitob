@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Live;
 
+use App\Http\Livewire\Concerns\WithToast;
 use App\Models\LiveEvent;
 use App\Models\LiveQuestion;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +11,8 @@ use Livewire\WithPagination;
 
 class LiveIndex extends Component
 {
+    use WithToast;
+
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
@@ -21,7 +24,7 @@ class LiveIndex extends Component
     public string $search = '';
     public string $statusFilter = 'all'; // 'all', 'live', 'scheduled'
     public string $bookFilter = '';
-    public string $permissionFilter = 'all'; // 'all', 'both', 'chat_only', 'voice_only', 'view_only'
+    public string $permissionFilter = 'all'; // 'all', 'chat_only', 'view_only'
 
     protected $queryString = [
         'search'           => ['except' => ''],
@@ -79,7 +82,7 @@ class LiveIndex extends Component
     public string $newTitle = '';
     public string $newDescription = '';
     public ?int $newBookId = null;
-    public string $newPermissionMode = 'both'; // both, chat_only, voice_only, view_only
+    public string $newPermissionMode = 'chat_only'; // chat_only, view_only
 
     protected $rules = [
         'question' => 'required|string|min:5|max:300',
@@ -93,14 +96,14 @@ class LiveIndex extends Component
         }
 
         if (!Auth::user()->isAdminOrTeacher()) {
-            session()->flash('error', 'Faqat o\'qituvchilar va adminlar jonli efir boshlashi mumkin.');
+            $this->toast('error', 'Faqat o\'qituvchilar va adminlar jonli efir boshlashi mumkin.');
             return;
         }
 
         $this->newTitle = '';
         $this->newDescription = '';
         $this->newBookId = null;
-        $this->newPermissionMode = 'both';
+        $this->newPermissionMode = 'chat_only';
         $this->showStudioModal = true;
     }
 
@@ -116,7 +119,7 @@ class LiveIndex extends Component
         }
 
         if (!Auth::user()->isAdminOrTeacher()) {
-            session()->flash('error', 'Faqat o\'qituvchilar va adminlar jonli efir boshlashi mumkin.');
+            $this->toast('error', 'Faqat o\'qituvchilar va adminlar jonli efir boshlashi mumkin.');
             return;
         }
 
@@ -130,12 +133,14 @@ class LiveIndex extends Component
             'newTitle.min'      => 'Efir mavzusi kamida 3 belgidan iborat bo\'lsin.',
         ]);
 
+        $permMode = in_array($this->newPermissionMode, ['view_only', 'voice_only'], true) ? 'view_only' : 'chat_only';
+
         $event = LiveEvent::create([
             'title'           => trim($this->newTitle),
             'description'     => trim($this->newDescription),
             'book_id'         => $this->newBookId,
             'host_user_id'    => Auth::id(),
-            'permission_mode' => $this->newPermissionMode,
+            'permission_mode' => $permMode,
             'status'          => LiveEvent::STATUS_LIVE,
             'scheduled_at'    => now(),
             'started_at'      => now(),
@@ -171,14 +176,14 @@ class LiveIndex extends Component
     public function endEvent(int $eventId): void
     {
         if (!Auth::check() || !Auth::user()->isAdminOrTeacher()) {
-            session()->flash('error', "Faqat admin yoki ustoz efirni tugatishi mumkin.");
+            $this->toast('error', "Faqat admin yoki ustoz efirni tugatishi mumkin.");
             return;
         }
 
         $event = LiveEvent::find($eventId);
 
         if (!$event) {
-            session()->flash('error', 'Efir topilmadi.');
+            $this->toast('error', 'Efir topilmadi.');
             return;
         }
 
@@ -186,7 +191,7 @@ class LiveIndex extends Component
         $event->questions()->delete();
         $event->delete();
 
-        session()->flash('success', '"' . $title . '" efiri tugatildi va saytdan o\'chirildi.');
+        $this->toast('success', '"' . $title . '" efiri tugatildi va saytdan o\'chirildi.');
     }
 
     /**
@@ -195,14 +200,14 @@ class LiveIndex extends Component
     public function endAllLiveStreams(): void
     {
         if (!Auth::check() || !Auth::user()->isAdminOrTeacher()) {
-            session()->flash('error', "Faqat admin yoki ustoz efilrlarni tugatishi mumkin.");
+            $this->toast('error', "Faqat admin yoki ustoz efilrlarni tugatishi mumkin.");
             return;
         }
 
         $events = LiveEvent::whereIn('status', [LiveEvent::STATUS_LIVE, LiveEvent::STATUS_SCHEDULED])->get();
 
         if ($events->isEmpty()) {
-            session()->flash('error', 'Tugatish uchun faol efir yo\'q.');
+            $this->toast('error', 'Tugatish uchun faol efir yo\'q.');
             return;
         }
 
@@ -214,7 +219,7 @@ class LiveIndex extends Component
             $event->delete();
         }
 
-        session()->flash('success', $count . ' ta jonli efir birdan tugatildi va saytdan o\'chirildi.');
+        $this->toast('success', $count . ' ta jonli efir birdan tugatildi va saytdan o\'chirildi.');
     }
 
     public function submitQuestion(): void
@@ -232,7 +237,7 @@ class LiveIndex extends Component
             ->first();
 
         if (!$event) {
-            session()->flash('error', 'Hozircha rejalashtirilgan efir yo\'q — savol yuborib bo\'lmaydi.');
+            $this->toast('error', 'Hozircha rejalashtirilgan efir yo\'q — savol yuborib bo\'lmaydi.');
             $this->reset('question');
             return;
         }
@@ -245,7 +250,7 @@ class LiveIndex extends Component
 
         $this->reset('question');
 
-        session()->flash('success', 'Savolingiz yuborildi! Muallif efirda javob berishi mumkin. 🎤');
+        $this->toast('success', 'Savolingiz yuborildi! Muallif efirda javob berishi mumkin. 🎤');
     }
 
     public function render()
@@ -292,7 +297,13 @@ class LiveIndex extends Component
 
         // Permission filter
         if ($this->permissionFilter !== 'all') {
-            $query->where('permission_mode', $this->permissionFilter);
+            if ($this->permissionFilter === 'chat_only') {
+                $query->whereIn('permission_mode', ['chat_only', 'both']);
+            } elseif ($this->permissionFilter === 'view_only') {
+                $query->whereIn('permission_mode', ['view_only', 'voice_only']);
+            } else {
+                $query->where('permission_mode', $this->permissionFilter);
+            }
         }
 
         // Search query

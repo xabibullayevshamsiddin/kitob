@@ -22,19 +22,12 @@
         </button>
     </div>
 
-    <!-- Flash Notifications via Toast -->
-    @if (session()->has('success'))
-        <div x-init="window.toast({ type: 'success', message: @js(session('success')), title: 'Muvaffaqiyatli!' })"></div>
-    @endif
-    @if (session()->has('error'))
-        <div x-init="window.toast({ type: 'error', message: @js(session('error')), title: 'Xatolik yuz berdi' })"></div>
-    @endif
 
     <!-- ── GURUHLAR FILTERLARI VA QIDIRUV ── -->
     <div class="ks-panel bg-ink-900 border border-ink-border p-4 sm:p-5 space-y-3.5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <!-- Privacy & Membership Tabs -->
-            <div class="flex items-center gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto">
+            <div class="flex items-center gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto no-scrollbar">
                 <button type="button" wire:click="setAllFilters"
                     class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ ($privacyFilter === 'all' && $membershipFilter === 'all') ? 'bg-ink-800 text-amber-400 border border-ink-border shadow-sm' : 'text-mist hover:text-paper' }}">
                     <span>{{ __('site.groups.all') }}</span>
@@ -122,13 +115,17 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-10 h-10 rounded-btn {{ $group->is_private ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300' : 'bg-amber-500/10 border border-amber-500/25 text-amber-400' }} flex items-center justify-center shrink-0">
-                                @if($group->is_private)
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                @else
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                @endif
-                            </div>
+                            @if($group->cover_image_url)
+                                <img src="{{ $group->cover_image_url }}" alt="{{ $group->name }}" class="w-10 h-10 rounded-btn object-cover border border-ink-border shrink-0 shadow-sm">
+                            @else
+                                <div class="w-10 h-10 rounded-btn {{ $group->is_private ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300' : 'bg-amber-500/10 border border-amber-500/25 text-amber-400' }} flex items-center justify-center shrink-0">
+                                    @if($group->is_private)
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    @else
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    @endif
+                                </div>
+                            @endif
                             <div class="min-w-0">
                                 <h3 class="text-sm font-bold text-paper font-serif truncate">{{ $group->name }}</h3>
                                 <span class="text-[11px] font-mono text-mist block">{{ $group->members_count }} {{ __('site.groups.members') }}</span>
@@ -262,9 +259,31 @@
 
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.groups.desc_label') }}</label>
-                        <textarea rows="3" wire:model.defer="description" placeholder="{{ __('site.groups.desc_placeholder') }}"
+                        <textarea rows="2" wire:model.defer="description" placeholder="{{ __('site.groups.desc_placeholder') }}"
                             class="w-full px-3.5 py-2 bg-ink-950/80 border border-ink-border rounded-btn text-xs text-paper placeholder-mist focus:border-amber-400 focus:outline-none resize-none font-sans"></textarea>
                         @error('description') <p class="text-rose-300 text-xs mt-1 font-mono">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">Guruh rasmi (Ixtiyoriy)</label>
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-btn border border-ink-border bg-ink-950/80 overflow-hidden flex items-center justify-center shrink-0">
+                                @if($coverImage)
+                                    <img src="{{ $coverImage->temporaryUrl() }}" class="w-full h-full object-cover">
+                                @else
+                                    <svg class="w-5 h-5 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                @endif
+                            </div>
+                            <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-btn bg-ink-800 hover:bg-ink-700 text-paper border border-ink-border text-xs font-mono cursor-pointer transition-all">
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                <span>Rasm tanlash</span>
+                                <input type="file" wire:model="coverImage" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+                            </label>
+                            <div wire:loading wire:target="coverImage" class="text-[10px] font-mono text-amber-400">
+                                Yuklanmoqda...
+                            </div>
+                        </div>
+                        @error('coverImage') <p class="text-rose-300 text-xs mt-1 font-mono">{{ $message }}</p> @enderror
                     </div>
 
                     <!-- Private Group Checkbox -->

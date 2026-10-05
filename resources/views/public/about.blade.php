@@ -425,5 +425,8 @@
 
     <!-- ── Universal Toast Notification Container ── -->
     <x-toast-container />
+
+    <!-- ── Mobile Bottom Navigation Bar ── -->
+    <x-nav.mobile-bottom-bar />
 </body>
 </html>

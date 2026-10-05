@@ -317,27 +317,30 @@ class LiveStreamingTest extends TestCase
         $viewer = $this->makeUser('stream_like_viewer');
         $this->actingAs($viewer);
 
-        // 1st like: increments to 1
+        // Instagram/TikTok uslubi: cheksiz tap. Birinchi batch: 1 ta like
         Livewire::test(LiveDetail::class, ['event' => $event])
-            ->call('toggleStreamLike');
+            ->call('sendLikes', 1);
 
         $this->assertEquals(1, $event->fresh()->likes_count);
-        $this->assertDatabaseHas('live_event_likes', [
-            'live_event_id' => $event->id,
-            'user_id'       => $viewer->id,
-        ]);
 
-        // Check LiveSignal record
+        // Xuddi shu foydalanuvchi yana bosaveradi: 4 ta like (toggle emas — son oshadi)
+        Livewire::test(LiveDetail::class, ['event' => $event])
+            ->call('sendLikes', 4);
+
+        $this->assertEquals(5, $event->fresh()->likes_count);
+
+        // Oxirgi LiveSignal yozuvi umumiy sonni o'z ichiga oladi
         $signal = \App\Models\LiveSignal::where('live_event_id', $event->id)
             ->where('type', 'like')
+            ->orderByDesc('id')
             ->first();
 
         $this->assertNotNull($signal);
         $this->assertEquals('all', $signal->receiver_id);
         $payload = json_decode($signal->payload, true);
-        $this->assertEquals(1, $payload['total']);
+        $this->assertEquals(5, $payload['total']);
 
-        // Poll signal as another viewer
+        // Boshqa tomoshabin signalni poll qilib oladi
         $pollResponse = $this->getJson(route('live.signal.poll', [
             'event'   => $event,
             'peer_id' => 'viewer_other_456',
@@ -345,17 +348,24 @@ class LiveStreamingTest extends TestCase
 
         $pollResponse->assertOk();
         $signals = $pollResponse->json('signals');
-        $likeSignal = collect($signals)->firstWhere('type', 'like');
-        $this->assertNotNull($likeSignal);
-        $this->assertEquals(1, $likeSignal['payload']['total']);
+        $likeSignals = collect($signals)->where('type', 'like')->values();
+        $this->assertGreaterThanOrEqual(2, $likeSignals->count());
+        $this->assertEquals(5, $likeSignals->last()['payload']['total']);
+    }
 
-        // 2nd like by same user: toggles off to 0
+    public function test_guest_cannot_send_stream_likes(): void
+    {
+        $host = $this->makeUser('guest_stream_host');
+        $event = $this->makeLiveEvent($host, 'Guest Stream Like Room');
+
+        // Mehmon (login qilmagan) like yubora olmaydi
         Livewire::test(LiveDetail::class, ['event' => $event])
-            ->call('toggleStreamLike');
+            ->call('sendLikes', 3);
+
         $this->assertEquals(0, $event->fresh()->likes_count);
-        $this->assertDatabaseMissing('live_event_likes', [
+        $this->assertDatabaseMissing('live_signals', [
             'live_event_id' => $event->id,
-            'user_id'       => $viewer->id,
+            'type'          => 'like',
         ]);
     }
 

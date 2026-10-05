@@ -86,22 +86,6 @@
 
         </div>
     </main>
-
-    <!-- ── Error Switcher Bar (Tezkor o'tish paneli) ── -->
-    <div class="w-full border-t border-ink-border bg-ink-900/60 py-3 px-6 z-20">
-        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
-            <span class="text-mist">✦ {{ __('site.errors.preview_label') }}</span>
-            
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ url('/errors/404') }}" class="px-2.5 py-1 rounded-badge {{ request()->is('*404') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950 text-mist hover:text-paper border border-ink-border' }}">404 ({{ __('site.errors.not_found') }})</a>
-                <a href="{{ url('/errors/403') }}" class="px-2.5 py-1 rounded-badge {{ request()->is('*403') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950 text-mist hover:text-paper border border-ink-border' }}">403 ({{ __('site.errors.forbidden') }})</a>
-                <a href="{{ url('/errors/500') }}" class="px-2.5 py-1 rounded-badge {{ request()->is('*500') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950 text-mist hover:text-paper border border-ink-border' }}">500 ({{ __('site.errors.server') }})</a>
-                <a href="{{ url('/errors/419') }}" class="px-2.5 py-1 rounded-badge {{ request()->is('*419') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950 text-mist hover:text-paper border border-ink-border' }}">419 ({{ __('site.errors.session') }})</a>
-                <a href="{{ url('/errors/429') }}" class="px-2.5 py-1 rounded-badge {{ request()->is('*429') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950 text-mist hover:text-paper border border-ink-border' }}">429 ({{ __('site.errors.limit') }})</a>
-                <a href="{{ url('/errors/503') }}" class="px-2.5 py-1 rounded-badge {{ request()->is('*503') ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-950 text-mist hover:text-paper border border-ink-border' }}">503 ({{ __('site.errors.maintenance') }})</a>
-            </div>
-        </div>
-    </div>
     </div>
 
     <!-- ── Motion Script ── -->

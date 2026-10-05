@@ -1,14 +1,24 @@
+@php
+    $isTopFive = ($userRank !== null && $userRank >= 1 && $userRank <= 5);
+    $cardAccent = match(true) {
+        $userRank === 1 => 'border-[#F59E0B]/40 before:absolute before:inset-0 before:bg-gradient-to-r before:from-[#F59E0B]/10 before:via-transparent before:to-transparent before:pointer-events-none',
+        $userRank === 2 => 'border-[#E2E8F0]/35 before:absolute before:inset-0 before:bg-gradient-to-r before:from-[#E2E8F0]/8 before:via-transparent before:to-transparent before:pointer-events-none',
+        $userRank === 3 => 'border-[#D97706]/35 before:absolute before:inset-0 before:bg-gradient-to-r before:from-[#D97706]/8 before:via-transparent before:to-transparent before:pointer-events-none',
+        $userRank === 4 || $userRank === 5 => 'border-[#6366F1]/35 before:absolute before:inset-0 before:bg-gradient-to-r before:from-[#6366F1]/8 before:via-transparent before:to-transparent before:pointer-events-none',
+        default => 'border-ink-border',
+    };
+@endphp
+
 <div class="max-w-6xl mx-auto space-y-6 pb-16">
 
     <!-- Profile Header Card -->
-    <div class="p-6 sm:p-8 rounded-panel bg-ink-900 border border-ink-border relative overflow-hidden">
+    <div class="p-6 sm:p-8 rounded-panel bg-ink-900 border relative overflow-hidden {{ $cardAccent }}">
         <div class="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
             <!-- Avatar -->
             <div class="relative shrink-0">
-                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
-                    class="w-24 h-24 sm:w-28 sm:h-28 rounded-panel object-cover border-2 border-amber-400/40 shadow-lg">
+                <x-ui.avatar :user="$user" size="3xl" shape="rounded-panel" :rank="$userRank" />
                 @if($stats['current_streak'] > 0)
-                    <div class="absolute -bottom-2 -right-2 px-2 py-0.5 bg-amber-400 text-ink-950 font-mono font-bold text-[11px] rounded-pill shadow-md flex items-center gap-1">
+                    <div class="absolute -bottom-2 -right-2 px-2 py-0.5 bg-amber-400 text-ink-950 font-mono font-bold text-[11px] rounded-pill shadow-md flex items-center gap-1 z-20">
                         <span class="ks-flame is-lit inline-block scale-75">
                             <svg class="w-3.5 h-3.5 text-ink-950 fill-current" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-4-6-4-10z"/></svg>
                         </span>
@@ -23,6 +33,9 @@
                     <div>
                         <div class="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
                             <h1 class="text-2xl sm:text-3xl font-bold text-paper font-serif">{{ $user->name }}</h1>
+                            @if($isTopFive)
+                                <x-ui.rank-badge :rank="$userRank" size="md" />
+                            @endif
                             @if($user->role === 'admin' || $user->hasRole('admin'))
                                 <span class="px-2 py-0.5 rounded-pill bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 text-[10px] font-mono uppercase tracking-wider">{{ __('site.profile.role_admin') }}</span>
                             @elseif($user->role === 'teacher' || $user->hasRole('teacher'))
@@ -31,7 +44,30 @@
                                 <span class="px-2 py-0.5 rounded-pill bg-ink-800 border border-ink-border text-mist text-[10px] font-mono uppercase tracking-wider">{{ __('site.profile.role_reader') }}</span>
                             @endif
                         </div>
-                        <p class="text-xs text-mist font-mono mt-0.5">{{ '@' . $user->username }}</p>
+                        <div class="flex items-center justify-center sm:justify-start gap-3 mt-1 flex-wrap">
+                            <p class="text-xs text-mist font-mono">{{ '@' . $user->username }}</p>
+                            @if($isTopFive)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill text-[11px] font-mono font-bold
+                                    {{ $userRank === 1 ? 'bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : '' }}
+                                    {{ $userRank === 2 ? 'bg-[#E2E8F0]/15 text-[#E2E8F0] border border-[#E2E8F0]/40 shadow-[0_0_8px_rgba(226,232,240,0.15)]' : '' }}
+                                    {{ $userRank === 3 ? 'bg-[#D97706]/15 text-[#D97706] border border-[#D97706]/40 shadow-[0_0_8px_rgba(217,119,6,0.15)]' : '' }}
+                                    {{ ($userRank === 4 || $userRank === 5) ? 'bg-[#6366F1]/15 text-[#818CF8] border border-[#6366F1]/40 shadow-[0_0_8px_rgba(99,102,241,0.15)]' : '' }}">
+                                    @if($userRank === 1)
+                                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                                        <span>Reytingda #1 o'rin &bull; Peshqadam</span>
+                                    @elseif($userRank === 2)
+                                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="7"/><path d="M8.21 13.89L7 22l5-3 5 3-1.21-8.11"/><path d="M12 7V3"/></svg>
+                                        <span>Reytingda #2 o'rin &bull; Kumush sovrindor</span>
+                                    @elseif($userRank === 3)
+                                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="7"/><path d="M8.21 13.89L7 22l5-3 5 3-1.21-8.11"/><path d="M12 7V3"/></svg>
+                                        <span>Reytingda #3 o'rin &bull; Bronza sovrindor</span>
+                                    @else
+                                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        <span>Reytingda #{{ $userRank }} o'rin &bull; Top 5</span>
+                                    @endif
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Action Button -->
@@ -106,7 +142,7 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="flex items-center gap-2 border-b border-ink-border pb-2 overflow-x-auto">
+    <div class="flex items-center gap-2 border-b border-ink-border pb-2 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 sm:mx-0 sm:px-0">
         <button wire:click="setTab('overview')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'overview' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
             {{ __('site.profile.tab_overview') }}
         </button>
@@ -137,7 +173,7 @@
                     <span class="text-xs font-mono text-mist">Asia/Tashkent</span>
                 </div>
 
-                <div class="overflow-x-auto pb-2 pt-2">
+                <div class="overflow-x-auto no-scrollbar pb-2 pt-2">
                     <div class="flex gap-1.5 min-w-max">
                         @for ($i = 59; $i >= 0; $i--)
                             @php
