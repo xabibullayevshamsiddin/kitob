@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark scroll-smooth" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,7 +52,7 @@
         }
     </style>
 </head>
-<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden ks-grain">
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain">
 
     <!-- ── Universal Header ── -->
     <x-nav.main-header />

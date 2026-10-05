@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -61,8 +61,11 @@
         .scrolly-book-cover {
             transform-origin: left center;
             transform-style: preserve-3d;
-            backface-visibility: hidden;
             will-change: transform;
+        }
+        .scrolly-cover-face {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
         .scrolly-book-inside {
             transform-style: preserve-3d;
@@ -74,7 +77,7 @@
         }
     </style>
 </head>
-<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden ks-grain">
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain">
 
     <!-- ── Page Transition & Loader ── -->
     @include('components.page-loader')
@@ -233,9 +236,9 @@
         $scrollyCover = $scrollyBook->cover_url ?? null;
     @endphp
 
-    <section id="book-reveal-section" class="relative w-full min-h-screen bg-ink-950 border-b border-ink-border flex items-center justify-center py-16 lg:py-0 overflow-hidden">
+    <section id="book-reveal-section" class="relative w-full min-h-screen bg-ink-950 border-b border-ink-border flex items-center justify-center py-16 lg:py-0">
         <!-- Atmospheric Ambient Spotlight behind the book -->
-        <div class="scrolly-ambient-glow absolute inset-0 pointer-events-none flex items-center justify-center opacity-60" aria-hidden="true">
+        <div class="scrolly-ambient-glow absolute inset-0 pointer-events-none flex items-center justify-center opacity-60 overflow-hidden" aria-hidden="true">
             <div class="w-[500px] lg:w-[650px] h-[500px] lg:h-[650px] rounded-full bg-gradient-radial from-amber-500/15 via-vermilion/5 to-transparent blur-3xl"></div>
         </div>
 
@@ -294,26 +297,47 @@
                         </div>
 
                         <!-- The 3D Book Cover (Rotates open via GSAP scrub) -->
-                        <div class="scrolly-book-cover absolute inset-0 rounded-l-[3px] rounded-r-md bg-ink-900 border border-ink-border overflow-hidden shadow-2xl origin-left transform-gpu">
-                            @if($scrollyCover)
-                                <img src="{{ $scrollyCover }}" alt="{{ $scrollyTitle }}" class="w-full h-full object-cover">
-                            @else
-                                <div class="w-full h-full bg-gradient-to-br from-ink-900 via-ink-800 to-ink-950 p-6 flex flex-col justify-between border border-amber-500/20">
-                                    <div>
-                                        <span class="font-mono text-[10px] text-amber-400 tracking-wider uppercase block">Kitobxon Exclusive</span>
-                                        <h3 class="font-serif text-lg font-bold text-paper mt-2">{{ $scrollyTitle }}</h3>
-                                        <p class="text-xs text-mist font-sans mt-1">{{ $scrollyAuthor }}</p>
+                        <div class="scrolly-book-cover absolute inset-0 rounded-l-[3px] rounded-r-md origin-left">
+                            
+                            <!-- Front Face of Cover (Visible 0deg to -90deg) -->
+                            <div class="scrolly-cover-face scrolly-cover-front absolute inset-0 rounded-l-[3px] rounded-r-md bg-ink-900 border border-ink-border overflow-hidden shadow-2xl">
+                                @if($scrollyCover)
+                                    <img src="{{ $scrollyCover }}" alt="{{ $scrollyTitle }}" class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full bg-gradient-to-br from-ink-900 via-ink-800 to-ink-950 p-6 flex flex-col justify-between border border-amber-500/20">
+                                        <div>
+                                            <span class="font-mono text-[10px] text-amber-400 tracking-wider uppercase block">Kitobxon Exclusive</span>
+                                            <h3 class="font-serif text-lg font-bold text-paper mt-2">{{ $scrollyTitle }}</h3>
+                                            <p class="text-xs text-mist font-sans mt-1">{{ $scrollyAuthor }}</p>
+                                        </div>
+                                        <div class="pt-4 border-t border-ink-border flex justify-between items-center text-xs font-mono text-amber-400">
+                                            <span>Hafta Kitobi</span>
+                                            <span>✦</span>
+                                        </div>
                                     </div>
-                                    <div class="pt-4 border-t border-ink-border flex justify-between items-center text-xs font-mono text-amber-400">
-                                        <span>Hafta Kitobi</span>
-                                        <span>✦</span>
-                                    </div>
-                                </div>
-                            @endif
+                                @endif
 
-                            <!-- Spine Crease Shadow overlay on cover -->
-                            <div class="absolute inset-y-0 left-0 w-8 pointer-events-none bg-gradient-to-r from-black/60 via-black/20 to-transparent"></div>
-                            <div class="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-l-[3px] rounded-r-md"></div>
+                                <!-- Spine Crease Shadow overlay on cover -->
+                                <div class="absolute inset-y-0 left-0 w-8 pointer-events-none bg-gradient-to-r from-black/60 via-black/20 to-transparent"></div>
+                                <div class="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-l-[3px] rounded-r-md"></div>
+                            </div>
+
+                            <!-- Back Face of Cover (Inside Forzats, Visible -90deg to -180deg) -->
+                            <div class="scrolly-cover-face scrolly-cover-back absolute inset-0 rounded-r-[3px] rounded-l-md bg-[#FAF7F2] border border-[#E5DFD5] p-5 flex flex-col justify-between shadow-2xl text-ink-950"
+                                 style="transform: rotateY(180deg);">
+                                <div class="border-b border-[#E5DFD5] pb-2">
+                                    <span class="font-mono text-[9px] uppercase tracking-widest text-[#8B9BAD] block">Kitobxon Nashri</span>
+                                    <span class="font-serif italic text-[11px] text-[#526071]">Muqova Forzatsi</span>
+                                </div>
+                                <div class="text-center py-4">
+                                    <span class="font-serif italic text-xs text-[#1A1D24]">"Mutolaa — qalb ko'zgusi"</span>
+                                </div>
+                                <div class="border-t border-[#E5DFD5] pt-2 flex items-center justify-between font-mono text-[9px] text-[#8B9BAD]">
+                                    <span>✦ ✦ ✦</span>
+                                    <span>Kitobxon</span>
+                                </div>
+                            </div>
+
                         </div>
 
                     </div>
@@ -725,6 +749,30 @@
             if (typeof gsap !== 'undefined') {
                 gsap.registerPlugin(ScrollTrigger);
 
+                // Auto-refresh on standard events
+                ScrollTrigger.config({
+                    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize"
+                });
+
+                // Touch stability: normalize scroll on touch devices to prevent mobile browser address bar jumps
+                if (ScrollTrigger.isTouch === 1) {
+                    ScrollTrigger.normalizeScroll({ allowNestedScroll: true });
+                }
+
+                // Silliq ichki havolalar (anchor link) — global scroll-smooth o'rniga nuqtali JS smooth scroll
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        const targetId = this.getAttribute('href');
+                        if (targetId && targetId.length > 1) {
+                            const targetEl = document.querySelector(targetId);
+                            if (targetEl) {
+                                e.preventDefault();
+                                targetEl.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }
+                    });
+                });
+
                 // 1. Header Entrance
                 gsap.fromTo('#site-header',
                     { y: -20, opacity: 0 },
@@ -927,6 +975,17 @@
                         }
                     });
                 });
+
+                // Recalculate ScrollTrigger positions once all resources and web fonts are fully loaded
+                window.addEventListener('load', () => {
+                    ScrollTrigger.refresh();
+                });
+
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(() => {
+                        ScrollTrigger.refresh();
+                    });
+                }
             }
         });
     
@@ -941,6 +1000,9 @@
 
                 if (typeof gsap === 'undefined') {
                     el.style.opacity = '1'; el.style.filter = 'none'; el.style.transform = 'none';
+                    document.querySelectorAll('.scrolly-content-panel, .scrolly-stats-row').forEach(scEl => {
+                        scEl.style.opacity = '1'; scEl.style.transform = 'none';
+                    });
                     return;
                 }
 
