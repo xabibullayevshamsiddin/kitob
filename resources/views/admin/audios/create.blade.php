@@ -1,28 +1,31 @@
 @extends('admin.layouts.app')
 @section('title', 'Yangi audio yuklash')
+@section('breadcrumb', 'Audiolar')
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
-    <div class="flex items-center justify-between">
+<div class="max-w-3xl mx-auto space-y-5">
+
+    {{-- Page header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                <span>🎵</span> Yangi audio dars yuklash
-            </h2>
-            <p class="text-sm text-slate-500">Audio faylni platformaga yuklab, tegishli kitobga bog'lash</p>
+            <span class="ks-eyebrow">Audiolar</span>
+            <h1 class="text-xl font-bold font-serif text-paper mt-0.5">Yangi audio dars yuklash</h1>
+            <p class="text-xs text-mist font-mono mt-0.5">Audio faylni platformaga yuklab, tegishli kitobga bog'lash</p>
         </div>
-        <a href="{{ route('admin.audios.index') }}" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
-            ← Orqaga
+        <a href="{{ route('admin.audios.index') }}" class="ks-btn-ghost py-2 px-4 text-xs shrink-0 self-start sm:self-auto">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            Orqaga
         </a>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-sm">
+    <div class="ks-panel p-5 sm:p-6">
         <form action="{{ route('admin.audios.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
 
             {{-- 1. Bog'langan kitob --}}
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Qaysi kitobga bog'lansin? (Ixtiyoriy)</label>
-                <select name="book_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <label class="block text-xs font-semibold text-paper mb-1">Qaysi kitobga bog'lansin? <span class="text-mist font-normal font-mono text-[11px]">(ixtiyoriy)</span></label>
+                <select name="book_id" class="ks-input">
                     <option value="">-- Alohida audio (hech qaysi kitobga bog'lanmagan / Mustaqil) --</option>
                     @foreach($books as $b)
                         <option value="{{ $b->id }}" {{ (old('book_id', $selectedBookId) == $b->id) ? 'selected' : '' }}>
@@ -30,27 +33,25 @@
                         </option>
                     @endforeach
                 </select>
-                <p class="text-[11px] text-slate-500 mt-1">Agar kitob tanlamasangiz, audio mustaqil dars sifatida saqlanadi.</p>
-                @error('book_id') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <p class="text-[11px] text-mist mt-1.5">Agar kitob tanlamasangiz, audio mustaqil dars sifatida saqlanadi.</p>
+                @error('book_id') <p class="text-rose-400 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             {{-- 2. Audio sarlavhasi --}}
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Audio sarlavhasi *</label>
-                <input type="text" name="title" value="{{ old('title') }}" required placeholder="Masalan: 1-bob: Kirish va asosiy tushunchalar"
-                       class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                @error('title') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <label class="block text-xs font-semibold text-paper mb-1">Audio sarlavhasi <span class="text-rose-400">*</span></label>
+                <input type="text" name="title" value="{{ old('title') }}" required placeholder="Masalan: 1-bob: Kirish va asosiy tushunchalar" class="ks-input">
+                @error('title') <p class="text-rose-400 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             {{-- 3. Davomiyligi --}}
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Davomiyligi (daqiqa hisobida)</label>
-                <input type="number" step="0.5" name="duration" value="{{ old('duration') }}" placeholder="Masalan: 12.5"
-                       class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                <span class="text-[11px] text-slate-400 mt-1 block">O'quvchi pleerida va statistikasida ko'rsatiladigan vaqt</span>
+                <label class="block text-xs font-semibold text-paper mb-1">Davomiyligi (daqiqa hisobida)</label>
+                <input type="number" step="0.5" name="duration" value="{{ old('duration') }}" placeholder="Masalan: 12.5" class="ks-input font-mono">
+                <span class="text-[11px] text-mist mt-1.5 block">O'quvchi pleerida va statistikasida ko'rsatiladigan vaqt</span>
             </div>
 
-            {{-- 4. Audio faylni yuklash yoki havola --}}
+            {{-- 4. Audio manbasi --}}
             <div x-data="{
                 mode: 'file',
                 audioFileName: '',
@@ -60,44 +61,47 @@
                 }
             }" class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Audio manbasi *</label>
-                    <div class="flex items-center gap-2 text-xs">
-                        <button type="button" @click="mode = 'file'" :class="mode === 'file' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'" class="px-2.5 py-1 rounded-lg transition-colors">
-                            📁 Fayl yuklash
+                    <label class="block text-xs font-semibold text-paper">Audio manbasi <span class="text-rose-400">*</span></label>
+                    <div class="flex items-center gap-1.5 font-mono text-xs">
+                        <button type="button" @click="mode = 'file'"
+                                class="px-2.5 py-1 rounded-badge border transition-colors"
+                                :class="mode === 'file' ? 'bg-amber-500 text-ink-950 border-amber-500 font-bold' : 'border-ink-border text-mist hover:text-paper'">
+                            Fayl yuklash
                         </button>
-                        <button type="button" @click="mode = 'url'" :class="mode === 'url' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'" class="px-2.5 py-1 rounded-lg transition-colors">
-                            🔗 Havola (URL)
+                        <button type="button" @click="mode = 'url'"
+                                class="px-2.5 py-1 rounded-badge border transition-colors"
+                                :class="mode === 'url' ? 'bg-amber-500 text-ink-950 border-amber-500 font-bold' : 'border-ink-border text-mist hover:text-paper'">
+                            Havola (URL)
                         </button>
                     </div>
                 </div>
 
-                {{-- File upload tab --}}
+                {{-- Fayl yuklash --}}
                 <div x-show="mode === 'file'">
-                    <label for="audio_file" class="group flex flex-col items-center justify-center w-full min-h-[140px] p-6 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 hover:border-amber-500 hover:bg-amber-500/5 transition-all cursor-pointer">
-                        <span class="text-3xl mb-2 group-hover:scale-110 transition-transform">🎧</span>
-                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-500 transition-colors">
+                    <label for="audio_file" class="group flex flex-col items-center justify-center w-full min-h-[140px] p-6 rounded-panel border-2 border-dashed border-ink-border bg-ink-950/60 hover:border-amber-500 hover:bg-amber-500/5 transition-all cursor-pointer">
+                        <svg class="w-8 h-8 mb-2 text-mist group-hover:text-amber-400 group-hover:scale-110 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>
+                        <span class="text-xs font-bold text-paper group-hover:text-amber-400 transition-colors">
                             Audio faylni tanlang (MP3, WAV, M4A, OGG)
                         </span>
-                        <span class="text-[11px] text-slate-400 mt-1">100 MB gacha ruxsat berilgan</span>
-                        <span x-show="audioFileName" x-text="audioFileName" class="mt-2 text-xs font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-lg"></span>
+                        <span class="text-[11px] text-mist mt-1 font-mono">100 MB gacha ruxsat berilgan</span>
+                        <span x-show="audioFileName" x-text="audioFileName" class="mt-2 text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-badge"></span>
                         <input type="file" name="audio_file" id="audio_file" accept=".mp3,.wav,.ogg,.m4a,.aac" class="hidden" @change="handleAudio($event)">
                     </label>
                 </div>
 
-                {{-- URL input tab --}}
+                {{-- URL --}}
                 <div x-show="mode === 'url'" style="display: none;">
-                    <input type="url" name="audio_url" value="{{ old('audio_url') }}" placeholder="https://cdn.example.com/audio/dars-1.mp3"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    <span class="text-[11px] text-slate-400 mt-1 block">To'g'ridan-to'g'ri audio oqim havolasi</span>
+                    <input type="url" name="audio_url" value="{{ old('audio_url') }}" placeholder="https://cdn.example.com/audio/dars-1.mp3" class="ks-input font-mono text-sm">
+                    <span class="text-[11px] text-mist mt-1.5 block">To'g'ridan-to'g'ri audio oqim havolasi</span>
                 </div>
 
-                @error('audio_file') <p class="text-rose-500 text-xs">{{ $message }}</p> @enderror
-                @error('audio_url') <p class="text-rose-500 text-xs">{{ $message }}</p> @enderror
+                @error('audio_file') <p class="text-rose-400 text-xs">{{ $message }}</p> @enderror
+                @error('audio_url') <p class="text-rose-400 text-xs">{{ $message }}</p> @enderror
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <a href="{{ route('admin.audios.index') }}" class="px-5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-semibold text-sm hover:bg-slate-100 dark:hover:bg-slate-700">Bekor qilish</a>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/30">Saqlash va Bog'lash</button>
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-ink-border">
+                <a href="{{ route('admin.audios.index') }}" class="ks-btn-ghost py-2 px-4 text-xs">Bekor qilish</a>
+                <button type="submit" class="ks-btn-primary py-2 px-6 text-xs font-bold">Saqlash va Bog'lash</button>
             </div>
         </form>
     </div>

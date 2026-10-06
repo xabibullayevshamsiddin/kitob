@@ -55,10 +55,11 @@
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-[11px] text-mist font-mono uppercase tracking-wider mb-1">Jami foydalanuvchilar</p>
-                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">0</p>
-                <div class="flex items-center gap-1.5 mt-1 font-mono text-xs text-emerald-400">
-                    <span>↑ +12%</span>
-                    <span class="text-mist text-[10px]">bu oy</span>
+                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">{{ number_format($stats['total_users'] ?? 0) }}</p>
+                @php $uGrowth = (int) ($stats['user_growth_pct'] ?? 0); @endphp
+                <div class="flex items-center gap-1.5 mt-1 font-mono text-xs {{ $uGrowth > 0 ? 'text-emerald-400' : ($uGrowth < 0 ? 'text-rose-400' : 'text-mist') }}">
+                    <span>{{ $uGrowth > 0 ? '↑ +' : ($uGrowth < 0 ? '↓ ' : '') }}{{ $uGrowth }}%</span>
+                    <span class="text-mist text-[10px]">oylik dinamika</span>
                 </div>
             </div>
             <div class="w-9 h-9 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-amber-400 flex-shrink-0">
@@ -66,7 +67,7 @@
             </div>
         </div>
         <div class="mt-3 h-1 rounded-full bg-ink-950 overflow-hidden border border-ink-border/50">
-            <div class="h-full bg-amber-500 rounded-full" style="width: 72%"></div>
+            <div class="h-full bg-amber-500 rounded-full" style="width: 100%"></div>
         </div>
     </div>
 
@@ -76,10 +77,10 @@
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-[11px] text-mist font-mono uppercase tracking-wider mb-1">O'quvchilar</p>
-                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">0</p>
+                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">{{ number_format($stats['total_students'] ?? 0) }}</p>
                 <div class="flex items-center gap-1.5 mt-1 font-mono text-xs text-emerald-400">
-                    <span>↑ +8%</span>
-                    <span class="text-mist text-[10px]">bu oy</span>
+                    <span>{{ $stats['student_pct'] ?? 0 }}%</span>
+                    <span class="text-mist text-[10px]">jami a'zolardan</span>
                 </div>
             </div>
             <div class="w-9 h-9 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-emerald-400 flex-shrink-0">
@@ -87,7 +88,7 @@
             </div>
         </div>
         <div class="mt-3 h-1 rounded-full bg-ink-950 overflow-hidden border border-ink-border/50">
-            <div class="h-full bg-emerald-500 rounded-full" style="width: 58%"></div>
+            <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: {{ max($stats['student_pct'] ?? 0, 5) }}%"></div>
         </div>
     </div>
 
@@ -97,10 +98,10 @@
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-[11px] text-mist font-mono uppercase tracking-wider mb-1">O'qituvchilar</p>
-                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">0</p>
+                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">{{ number_format($stats['total_teachers'] ?? 0) }}</p>
                 <div class="flex items-center gap-1.5 mt-1 font-mono text-xs text-amber-400">
-                    <span>↑ +3%</span>
-                    <span class="text-mist text-[10px]">bu oy</span>
+                    <span>{{ $stats['teacher_pct'] ?? 0 }}%</span>
+                    <span class="text-mist text-[10px]">jami a'zolardan</span>
                 </div>
             </div>
             <div class="w-9 h-9 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-amber-400 flex-shrink-0">
@@ -108,7 +109,7 @@
             </div>
         </div>
         <div class="mt-3 h-1 rounded-full bg-ink-950 overflow-hidden border border-ink-border/50">
-            <div class="h-full bg-amber-400 rounded-full" style="width: 35%"></div>
+            <div class="h-full bg-amber-400 rounded-full transition-all duration-500" style="width: {{ max($stats['teacher_pct'] ?? 0, 5) }}%"></div>
         </div>
     </div>
 
@@ -118,10 +119,10 @@
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-[11px] text-mist font-mono uppercase tracking-wider mb-1">Jami kitoblar</p>
-                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">0</p>
-                <div class="flex items-center gap-1.5 mt-1 font-mono text-xs text-emerald-400">
-                    <span>↑ +21%</span>
-                    <span class="text-mist text-[10px]">bu oy</span>
+                <p class="text-2xl font-bold font-mono text-paper ks-stat" x-text="displayValue">{{ number_format($stats['total_books'] ?? 0) }}</p>
+                <div class="flex items-center gap-1.5 mt-1 font-mono text-xs text-amber-500">
+                    <span>{{ $stats['active_books'] ?? 0 }} faol</span>
+                    <span class="text-mist text-[10px]">({{ $stats['active_books_pct'] ?? 0 }}%)</span>
                 </div>
             </div>
             <div class="w-9 h-9 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-amber-500 flex-shrink-0">
@@ -129,7 +130,7 @@
             </div>
         </div>
         <div class="mt-3 h-1 rounded-full bg-ink-950 overflow-hidden border border-ink-border/50">
-            <div class="h-full bg-amber-500 rounded-full" style="width: 88%"></div>
+            <div class="h-full bg-amber-500 rounded-full transition-all duration-500" style="width: {{ max($stats['active_books_pct'] ?? 0, 5) }}%"></div>
         </div>
     </div>
 </div>
@@ -288,26 +289,27 @@
         <div class="flex items-center justify-between mb-3 border-b border-ink-border pb-3">
             <div>
                 <h2 class="text-sm font-bold font-serif text-paper">Foydalanuvchilar o'sishi</h2>
-                <p class="text-[11px] text-mist font-mono">So'nggi 30 kun</p>
+                <p class="text-[11px] text-mist font-mono">So'nggi 30 kunlik dinamika</p>
             </div>
-            <span class="text-xs font-mono px-2 py-0.5 rounded-badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                {{ $stats['user_growth_pct'] >= 0 ? '+' : '' }}{{ $stats['user_growth_pct'] }}% oyiga
+            @php $growthPct = (int) ($stats['user_growth_pct'] ?? 0); @endphp
+            <span class="text-xs font-mono px-2 py-0.5 rounded-badge border {{ $growthPct > 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : ($growthPct < 0 ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-ink-800 text-mist border-ink-border') }}">
+                {{ $growthPct > 0 ? '↑ +' : ($growthPct < 0 ? '↓ ' : '') }}{{ $growthPct }}% oyiga
             </span>
         </div>
-        <div class="h-60"><canvas id="chart-signups"></canvas></div>
+        <div class="h-60 relative"><canvas id="chart-signups"></canvas></div>
     </div>
 
     <div class="bg-ink-900 border border-ink-border rounded-panel p-4">
         <div class="flex items-center justify-between mb-3 border-b border-ink-border pb-3">
             <div>
                 <h2 class="text-sm font-bold font-serif text-paper">O'qilgan daqiqalar</h2>
-                <p class="text-[11px] text-mist font-mono">Kunlik faol mutolaa</p>
+                <p class="text-[11px] text-mist font-mono">Kunlik faol mutolaa (so'nggi 14 kun)</p>
             </div>
             <span class="text-xs font-mono text-amber-400 font-semibold">
-                Jami: {{ number_format($stats['total_reading_minutes']) }} daq
+                Jami: {{ number_format($stats['total_reading_minutes'] ?? 0) }} daq ({{ $stats['total_reading_hours'] ?? 0 }} soat)
             </span>
         </div>
-        <div class="h-60"><canvas id="chart-minutes"></canvas></div>
+        <div class="h-60 relative"><canvas id="chart-minutes"></canvas></div>
     </div>
 </div>
 
@@ -316,63 +318,62 @@
     <div class="bg-ink-900 border border-ink-border rounded-panel p-4">
         <div class="mb-3 border-b border-ink-border pb-2">
             <h2 class="text-sm font-bold font-serif text-paper">Kontent taqsimoti</h2>
-            <p class="text-[11px] text-mist font-mono">Formatlar bo'yicha</p>
+            <p class="text-[11px] text-mist font-mono">Formatlar bo'yicha materiallar</p>
         </div>
-        <div class="h-52"><canvas id="chart-formats"></canvas></div>
+        <div class="h-52 relative"><canvas id="chart-formats"></canvas></div>
     </div>
 
     <div class="xl:col-span-2 grid grid-cols-2 gap-3.5">
         <div class="bg-ink-900 border border-ink-border rounded-panel p-4">
-            <p class="text-[11px] text-mist font-mono uppercase mb-1">Bugun kirganlar</p>
-            <p class="text-2xl font-bold font-mono text-paper">{{ number_format($stats['online_today']) }}</p>
-            <p class="text-[10px] text-mist mt-1 font-mono">Kunlik faollik</p>
+            <p class="text-[11px] text-mist font-mono uppercase mb-1">Bugun faollar</p>
+            <p class="text-2xl font-bold font-mono text-paper">{{ number_format($stats['online_today'] ?? 1) }}</p>
+            <p class="text-[10px] text-mist mt-1 font-mono">Kunlik tashrif va mutolaa</p>
         </div>
         <div class="bg-ink-900 border border-ink-border rounded-panel p-4">
             <p class="text-[11px] text-mist font-mono uppercase mb-1">Jami ballar</p>
-            <p class="text-2xl font-bold font-mono text-amber-400">{{ number_format($stats['total_points']) }}</p>
-            <p class="text-[10px] text-mist mt-1 font-mono">Barcha foydalanuvchilar</p>
+            <p class="text-2xl font-bold font-mono text-amber-400">{{ number_format($stats['total_points'] ?? 0) }}</p>
+            <p class="text-[10px] text-mist mt-1 font-mono">Barcha a'zolar to'plagan</p>
         </div>
         <div class="bg-ink-900 border border-ink-border rounded-panel p-4">
             <p class="text-[11px] text-mist font-mono uppercase mb-1">Guruhlar</p>
-            <p class="text-2xl font-bold font-mono text-emerald-400">{{ number_format($stats['total_groups']) }}</p>
-            <p class="text-[10px] text-mist mt-1 font-mono">Kitobxon guruhlari</p>
+            <p class="text-2xl font-bold font-mono text-emerald-400">{{ number_format($stats['total_groups'] ?? 0) }}</p>
+            <p class="text-[10px] text-mist mt-1 font-mono">Kitobxon klublari</p>
         </div>
         <div class="bg-ink-900 border border-ink-border rounded-panel p-4">
-            <p class="text-[11px] text-mist font-mono uppercase mb-1">Testlar</p>
-            <p class="text-2xl font-bold font-mono text-amber-500">{{ number_format($stats['total_quizzes']) }}</p>
-            <p class="text-[10px] text-mist mt-1 font-mono">Yaratilgan testlar</p>
+            <p class="text-[11px] text-mist font-mono uppercase mb-1">Test topshiriqlari</p>
+            <p class="text-2xl font-bold font-mono text-amber-500">{{ number_format($stats['total_quizzes'] ?? 0) }}</p>
+            <p class="text-[10px] text-mist mt-1 font-mono">Bilimni sinash viktorinalari</p>
         </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ asset('vendor/chartjs/chart.umd.min.js') }}"></script>
 <script>
-const signupLabels = @json($signupLabels);
-const signupData   = @json($signupData);
-const minutesLabels = @json($minutesLabels);
-const minutesData   = @json($minutesData);
-const formatData    = @json($formatData);
-
-Chart.defaults.color = '#8B9BAD';
-Chart.defaults.borderColor = 'rgba(31, 41, 61, 0.6)';
-Chart.defaults.font.family = "'DM Sans', sans-serif";
-
+if (typeof Chart === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');
+}
+</script>
+<script>
+// Global counterCard definition immediately available to Alpine
 function counterCard(target) {
+    const num = Number(target) || 0;
     return {
-        displayValue: '0',
+        displayValue: num.toLocaleString('uz-UZ'),
         init() {
-            this.animateCounter(target);
+            if (num > 0) {
+                this.animateCounter(num);
+            }
         },
-        animateCounter(target) {
-            const duration = 1000;
+        animateCounter(targetVal) {
+            const duration = 800;
             const start = performance.now();
             const step = (currentTime) => {
                 const elapsed = currentTime - start;
                 const progress = Math.min(elapsed / duration, 1);
                 const eased = 1 - Math.pow(1 - progress, 3);
-                const current = Math.round(eased * target);
+                const current = Math.round(eased * targetVal);
                 this.displayValue = current.toLocaleString('uz-UZ');
                 if (progress < 1) {
                     requestAnimationFrame(step);
@@ -380,16 +381,43 @@ function counterCard(target) {
             };
             requestAnimationFrame(step);
         }
-    }
+    };
+}
+window.counterCard = counterCard;
+if (window.Alpine) {
+    window.Alpine.data('counterCard', counterCard);
+} else {
+    document.addEventListener('alpine:init', () => {
+        if (window.Alpine) window.Alpine.data('counterCard', counterCard);
+    });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+// Chart.js initialization
+const signupLabels = @json($signupLabels ?? []);
+const signupData   = @json($signupData ?? []);
+const minutesLabels = @json($minutesLabels ?? []);
+const minutesData   = @json($minutesData ?? []);
+const formatData    = {!! json_encode($formatData ?? [0, 0, 0, 0]) !!};
+
+function initDashboardCharts(attempts = 0) {
+    if (typeof Chart === 'undefined') {
+        if (attempts < 25) {
+            setTimeout(() => initDashboardCharts(attempts + 1), 100);
+        }
+        return;
+    }
+
+    Chart.defaults.color = '#8B9BAD';
+    Chart.defaults.borderColor = 'rgba(31, 41, 61, 0.6)';
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+    // 1. Line Chart: Signups
     const signupsCtx = document.getElementById('chart-signups');
-    if (signupsCtx) {
+    if (signupsCtx && !signupsCtx._chartInstance) {
         const grad = signupsCtx.getContext('2d').createLinearGradient(0, 0, 0, 240);
         grad.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
         grad.addColorStop(1, 'rgba(245, 158, 11, 0)');
-        new Chart(signupsCtx, {
+        signupsCtx._chartInstance = new Chart(signupsCtx, {
             type: 'line',
             data: {
                 labels: signupLabels,
@@ -411,22 +439,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false } },
-                    y: { beginAtZero: false }
+                    y: { beginAtZero: false, ticks: { precision: 0 } }
                 }
             }
         });
     }
 
+    // 2. Bar Chart: Minutes
     const minutesCtx = document.getElementById('chart-minutes');
-    if (minutesCtx) {
-        new Chart(minutesCtx, {
+    if (minutesCtx && !minutesCtx._chartInstance) {
+        minutesCtx._chartInstance = new Chart(minutesCtx, {
             type: 'bar',
             data: {
                 labels: minutesLabels,
                 datasets: [{
                     label: 'Daqiqalar',
                     data: minutesData,
-                    backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.75)',
                     hoverBackgroundColor: '#F59E0B',
                     borderRadius: 4,
                 }]
@@ -437,21 +466,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false } },
-                    y: { beginAtZero: true }
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });
     }
 
+    // 3. Doughnut Chart: Content Formats
     const formatsCtx = document.getElementById('chart-formats');
-    if (formatsCtx) {
-        new Chart(formatsCtx, {
+    if (formatsCtx && !formatsCtx._chartInstance) {
+        const formatsTotal = formatData.reduce((a, b) => a + b, 0);
+        formatsCtx._chartInstance = new Chart(formatsCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Matn (boblar)', 'Audio darslar', 'Video darslar'],
+                labels: ['Boblar (Matn)', 'Audio darslar', 'Video darslar', 'Testlar'],
                 datasets: [{
-                    data: formatData,
-                    backgroundColor: ['#F59E0B', '#10B981', '#C1392B'],
+                    data: formatsTotal > 0 ? formatData : [1, 0, 0, 0],
+                    backgroundColor: formatsTotal > 0
+                        ? ['#F59E0B', '#10B981', '#C1392B', '#8B5CF6']
+                        : ['#1F293D', '#1F293D', '#1F293D', '#1F293D'],
                     borderWidth: 0,
                 }]
             },
@@ -461,13 +494,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { boxWidth: 10, padding: 12, font: { size: 11 } }
+                        labels: { boxWidth: 10, padding: 10, font: { size: 11 }, color: '#8B9BAD' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (formatsTotal === 0) return ' Hozircha material yuklanmagan';
+                                return ` ${context.label}: ${context.raw} ta`;
+                            }
+                        }
                     }
                 },
                 cutout: '70%',
             }
         });
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initDashboardCharts());
+} else {
+    initDashboardCharts();
+}
 </script>
 @endpush

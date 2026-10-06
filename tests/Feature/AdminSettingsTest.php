@@ -50,6 +50,15 @@ class AdminSettingsTest extends TestCase
         UserProfile::create(['user_id' => $this->student->id]);
     }
 
+    protected function tearDown(): void
+    {
+        if (app()->isDownForMaintenance() || file_exists(storage_path('framework/down'))) {
+            Artisan::call('up');
+            @unlink(storage_path('framework/down'));
+        }
+        parent::tearDown();
+    }
+
     /** @test */
     public function guest_and_student_cannot_access_settings(): void
     {

@@ -114,11 +114,14 @@
                      }"
                      @points-awarded.window="animateAdd($event.detail.points, $event.detail.newTotal)">
 
-                    <span class="inline-flex items-center gap-1.5 px-2.5 h-8 text-amber-400 font-mono text-[12px] font-medium tabular-nums" title="{{ __('site.common.streak') }}">
-                        <svg class="ks-flame w-4 h-4 {{ auth()->user()->current_streak > 0 ? 'is-lit' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <span x-data="{ streakCount: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
+                          @streak-updated.window="streakCount = $event.detail.streak"
+                          class="inline-flex items-center gap-1.5 px-2.5 h-8 text-amber-400 font-mono text-[12px] font-medium tabular-nums"
+                          title="{{ __('site.common.streak') }}">
+                        <svg class="ks-flame w-4 h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
                         </svg>
-                        {{ auth()->user()->current_streak }}
+                        <span x-text="streakCount">{{ auth()->user()->current_streak }}</span>
                     </span>
 
                     <div class="relative">
@@ -203,9 +206,11 @@
                             <div class="mt-3 pt-3 border-t border-ink-border grid grid-cols-3 gap-2 xl:hidden"
                                  x-data="{ mobilePoints: {{ auth()->check() ? auth()->user()->total_points : 0 }} }"
                                  @points-awarded.window="mobilePoints = $event.detail.newTotal">
-                                <span class="inline-flex items-center gap-1 text-amber-400 font-mono text-[11px] font-medium tabular-nums">
-                                    <svg class="ks-flame w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-                                    {{ auth()->user()->current_streak }}
+                                <span x-data="{ mobileStreak: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
+                                      @streak-updated.window="mobileStreak = $event.detail.streak"
+                                      class="inline-flex items-center gap-1 text-amber-400 font-mono text-[11px] font-medium tabular-nums">
+                                    <svg class="ks-flame w-3.5 h-3.5" :class="mobileStreak > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                                    <span x-text="mobileStreak">{{ auth()->user()->current_streak }}</span>
                                 </span>
                                 <span class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
                                     <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>

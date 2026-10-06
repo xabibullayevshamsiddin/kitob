@@ -4,14 +4,36 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6 pb-16">
-    <div class="flex items-center gap-3">
-        <a href="{{ route('books.show', $book->slug) }}" class="p-2 rounded-btn bg-ink-900 border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        </a>
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold font-serif text-paper">Audio mutolaa</h1>
-            <p class="text-xs font-mono text-mist">{{ $book->title }} • {{ $book->author }}</p>
+    <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('books.show', $book->slug) }}" class="p-2 rounded-btn bg-ink-900 border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </a>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold font-serif text-paper">Audio mutolaa</h1>
+                <p class="text-xs font-mono text-mist">{{ $book->title }} • {{ $book->author }}</p>
+            </div>
         </div>
+
+        <button type="button"
+                onclick="window.openBookShare({
+                    title: '{{ addslashes($book->title) }}',
+                    author: '{{ addslashes($book->author) }}',
+                    url: '{{ route('books.show', $book->slug) }}',
+                    coverUrl: '{{ $book->cover_url }}',
+                    description: '{{ addslashes(\Illuminate\Support\Str::limit($book->description, 150)) }}'
+                })"
+                class="px-3 py-1.5 rounded-btn bg-ink-900 hover:bg-white/10 border border-ink-border hover:border-amber-400/40 text-mist hover:text-amber-400 text-xs font-mono flex items-center gap-2 transition-all shadow"
+                title="Kitobni ulashish">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <span>Ulashish</span>
+        </button>
     </div>
 
     @if ($book->audios->isEmpty())
@@ -128,7 +150,7 @@
         <!-- Track List -->
         <div class="bg-ink-900 rounded-panel border border-ink-border divide-y divide-ink-border overflow-hidden">
             @foreach ($book->audios as $i => $audio)
-                <button @click="play({{ $audio->id }}, '{{ $audio->file_url }}', {{ (int) ($audio->duration ?? 0) }})"
+                <button @click="play({{ $audio->id }}, '{{ $audio->file_url }}', {{ (int) ($audio->duration ?? 0) }}); if (window.playGlobalAudio) window.playGlobalAudio({ id: {{ $audio->id }}, bookId: {{ $book->id }}, title: '{{ addslashes($book->title) }}', author: '{{ addslashes($book->author) }}', coverUrl: '{{ $book->cover_url }}', audioUrl: '{{ $audio->file_url }}', chapterTitle: '{{ addslashes($audio->title ?? 'Audio ' . ($i + 1)) }}', duration: {{ (int) ($audio->duration ?? 0) }}, shareUrl: '{{ route('books.show', $book->slug) }}' })"
                         class="w-full p-3.5 sm:px-5 flex items-center justify-between hover:bg-ink-800/40 transition-colors text-left"
                         :class="currentId === {{ $audio->id }} ? 'bg-amber-500/10 border-l-2 border-amber-400' : ''">
                     <div class="flex items-center gap-3 min-w-0">

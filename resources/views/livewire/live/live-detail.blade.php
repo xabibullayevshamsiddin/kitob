@@ -185,13 +185,13 @@
 
                 <!-- Bottom Left Audio VU Meter -->
                 <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-                    <div class="flex items-center gap-2 bg-ink-950/80 backdrop-blur-md px-2.5 py-1 rounded-btn border border-ink-border">
+                    <div class="flex items-center gap-2 bg-ink-950/80 backdrop-blur-md px-2.5 py-1 rounded-btn border border-ink-border" title="Ovoz signali kuchi">
                         <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                        <div class="flex items-center gap-0.5 h-2.5">
-                            <div class="w-0.5 bg-emerald-500 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 1.5)) + '%' }"></div>
-                            <div class="w-0.5 bg-emerald-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2)) + '%' }"></div>
-                            <div class="w-0.5 bg-amber-400 rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 2.5)) + '%' }"></div>
-                            <div class="w-0.5 bg-[#C1392B] rounded-full transition-all duration-75" :style="{ height: Math.min(100, Math.max(20, audioVolume * 3)) + '%' }"></div>
+                        <div class="flex items-end gap-1 h-3.5">
+                            <div class="w-1 bg-emerald-500 rounded-full transition-all duration-75" :style="{ height: (audioVolume > 0 ? Math.min(100, Math.max(15, audioVolume * 1.4)) : 15) + '%', opacity: audioVolume > 5 ? 1 : 0.35 }"></div>
+                            <div class="w-1 bg-emerald-400 rounded-full transition-all duration-75" :style="{ height: (audioVolume > 0 ? Math.min(100, Math.max(15, audioVolume * 1.8)) : 15) + '%', opacity: audioVolume > 15 ? 1 : 0.35 }"></div>
+                            <div class="w-1 bg-amber-400 rounded-full transition-all duration-75" :style="{ height: (audioVolume > 0 ? Math.min(100, Math.max(15, audioVolume * 2.3)) : 15) + '%', opacity: audioVolume > 30 ? 1 : 0.35 }"></div>
+                            <div class="w-1 bg-[#C1392B] rounded-full transition-all duration-75" :style="{ height: (audioVolume > 0 ? Math.min(100, Math.max(15, audioVolume * 2.8)) : 15) + '%', opacity: audioVolume > 50 ? 1 : 0.35 }"></div>
                         </div>
                     </div>
 
@@ -1434,26 +1434,39 @@ function liveStudioController(config) {
                 const audioTracks = stream.getAudioTracks();
                 if (!audioTracks || audioTracks.length === 0) return;
 
+                if (this._vuAnimFrame) {
+                    cancelAnimationFrame(this._vuAnimFrame);
+                }
+
                 const source = this.audioContext.createMediaStreamSource(stream);
                 this.analyser = this.audioContext.createAnalyser();
                 this.analyser.fftSize = 64;
+                this.analyser.smoothingTimeConstant = 0.4;
                 source.connect(this.analyser);
 
                 const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
                 const updateVolume = () => {
-                    if (!this.isMicOn) {
+                    const isMuted = (this.isHost && !this.isMicOn) || (!this.isHost && (this.isViewerMuted || this.needsUnmute));
+                    if (isMuted || !this.analyser) {
                         this.audioVolume = 0;
-                        requestAnimationFrame(updateVolume);
+                        this._vuAnimFrame = requestAnimationFrame(updateVolume);
                         return;
                     }
                     this.analyser.getByteFrequencyData(dataArray);
+                    // Inson nutqi chastotalari (1-16 bin oralig'i)
+                    const vocalBins = Math.min(16, dataArray.length);
                     let sum = 0;
-                    for (let i = 0; i < dataArray.length; i++) {
+                    let peak = 0;
+                    for (let i = 0; i < vocalBins; i++) {
                         sum += dataArray[i];
+                        if (dataArray[i] > peak) peak = dataArray[i];
                     }
-                    const avg = sum / dataArray.length;
-                    this.audioVolume = Math.min(100, Math.floor(avg * 1.2));
-                    requestAnimationFrame(updateVolume);
+                    const avg = sum / vocalBins;
+                    const level = (avg * 0.6) + (peak * 0.4);
+                    const targetVol = level > 3 ? Math.min(100, Math.floor((level / 120) * 100)) : 0;
+                    // Silliq harakat (smooth lerp)
+                    this.audioVolume = Math.round(this.audioVolume * 0.25 + targetVol * 0.75);
+                    this._vuAnimFrame = requestAnimationFrame(updateVolume);
                 };
                 updateVolume();
             } catch (e) {}

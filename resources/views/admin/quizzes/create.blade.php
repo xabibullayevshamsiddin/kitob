@@ -1,23 +1,26 @@
 @extends('admin.layouts.app')
-@section('title', 'Yangi test topshirig\'i yaratish')
+@section('title', "Yangi test topshirig'i yaratish")
+@section('breadcrumb', "Test topshiriqlari")
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex items-center justify-between">
+<div class="max-w-4xl mx-auto space-y-5">
+
+    {{-- Page header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                <span>📝</span> Yangi test topshirig'i yaratish
-            </h2>
-            <p class="text-sm text-slate-500">Kitob bo'yicha interaktiv test savollari, mukofot bali va to'g'ri javoblarini tuzish</p>
+            <span class="ks-eyebrow">Test topshiriqlari</span>
+            <h1 class="text-xl font-bold font-serif text-paper mt-0.5">Yangi test topshirig'i yaratish</h1>
+            <p class="text-xs text-mist font-mono mt-0.5">Kitob bo'yicha interaktiv test savollari, mukofot bali va to'g'ri javoblarni tuzish</p>
         </div>
-        <a href="{{ route('admin.quizzes.index') }}" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
-            ← Orqaga
+        <a href="{{ route('admin.quizzes.index') }}" class="ks-btn-ghost py-2 px-4 text-xs shrink-0 self-start sm:self-auto">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            Orqaga
         </a>
     </div>
 
     @if($errors->any())
-        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold space-y-1">
-            <p class="font-bold">Iltimos, quyidagi xatoliklarni to'g'rilang:</p>
+        <div class="ks-panel p-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold space-y-1">
+            <p class="font-bold font-mono uppercase tracking-wider text-[11px]">Iltimos, quyidagi xatoliklarni to'g'rilang:</p>
             <ul class="list-disc pl-5 space-y-0.5">
                 @foreach($errors->all() as $err)
                     <li>{{ $err }}</li>
@@ -53,186 +56,159 @@
                       alert('Kamida bitta savol qolishi kerak!');
                   }
               }
-          }" class="space-y-6">
+          }" class="space-y-5">
         @csrf
 
-        {{-- 1. Asosiy ma'lumotlar kartasi --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-sm space-y-5">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-700 pb-3">
-                1. Test umumiy ma'lumotlari & Mukofot bali
+        {{-- 1. Asosiy ma'lumotlar --}}
+        <div class="ks-panel p-5 sm:p-6 space-y-5">
+            <h3 class="text-sm font-bold font-serif text-paper border-b border-ink-border pb-3">
+                <span class="ks-eyebrow mr-2">01</span>Test umumiy ma'lumotlari &amp; Mukofot bali
             </h3>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {{-- Bog'langan kitob --}}
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                        Qaysi kitobga tegishli? <span class="text-rose-500">*</span>
-                        <span class="text-slate-400 font-normal text-xs ml-2">(Har bir kitob uchun faqat bitta test biriktiriladi)</span>
+                    <label class="block text-xs font-semibold text-paper mb-1">
+                        Qaysi kitobga tegishli? <span class="text-rose-400">*</span>
+                        <span class="text-mist font-normal font-mono text-[11px] ml-2">(Har bir kitob uchun faqat bitta test biriktiriladi)</span>
                     </label>
-                    <select name="book_id" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <select name="book_id" required class="ks-input">
                         <option value="">-- Kitobni tanlang --</option>
                         @foreach($books as $b)
                             @php
                                 $hasExisting = ($b->quizzes_count > 0);
                             @endphp
-                            <option value="{{ $b->id }}" 
+                            <option value="{{ $b->id }}"
                                     {{ (old('book_id', $selectedBookId) == $b->id && !$hasExisting) ? 'selected' : '' }}
-                                    {{ $hasExisting ? 'disabled' : '' }}
-                                    class="{{ $hasExisting ? 'text-slate-400 bg-slate-100 dark:bg-slate-800' : '' }}">
-                                {{ $b->week_number ? "{$b->week_number}-Hafta: " : '' }}{{ $b->title }} ({{ $b->author }})
-                                @if($hasExisting) — ❌ (Test mavjud) @endif
+                                    {{ $hasExisting ? 'disabled' : '' }}>
+                                {{ $b->week_number ? "{$b->week_number}-Hafta: " : '' }}{{ $b->title }} ({{ $b->author }})@if($hasExisting) — test mavjud @endif
                             </option>
                         @endforeach
                     </select>
-                    @error('book_id') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error('book_id') <p class="text-rose-400 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Test nomi --}}
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Test nomi *</label>
-                    <input type="text" name="title" value="{{ old('title') }}" required placeholder="Masalan: 1-hafta kitobi bo'yicha yakuniy bilim tekshiruvi"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    @error('title') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <label class="block text-xs font-semibold text-paper mb-1">Test nomi <span class="text-rose-400">*</span></label>
+                    <input type="text" name="title" value="{{ old('title') }}" required placeholder="Masalan: 1-hafta kitobi bo'yicha yakuniy bilim tekshiruvi" class="ks-input">
+                    @error('title') <p class="text-rose-400 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Mukofot bali (Adminlar uchun maksimal 200 ball) --}}
+                {{-- Mukofot bali --}}
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1 flex items-center justify-between">
-                        <span>Mukofot bali (Maksimal: 200 ball) <span class="text-rose-500">*</span></span>
-                        <span class="text-xs text-indigo-400 font-mono font-bold">Admin: maks 200</span>
+                    <label class="flex items-center justify-between text-xs font-semibold text-paper mb-1">
+                        <span>Mukofot bali (Maksimal: 200 ball) <span class="text-rose-400">*</span></span>
+                        <span class="text-[11px] text-amber-400 font-mono font-bold">Admin: maks 200</span>
                     </label>
                     <div class="relative">
                         <input type="number" name="reward_points" value="{{ old('reward_points', 100) }}" min="5" max="200" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold">
-                        <span class="absolute right-4 top-2.5 text-xs text-slate-400 font-semibold">BALL</span>
+                               class="ks-input font-mono font-bold pr-14">
+                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-mist font-mono font-semibold pointer-events-none">BALL</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">
-                        🎯 O'quvchi testni necha foiz to'g'ri topsa, shunga mutanosib ball oladi (masalan: 100 balldan 80% to'g'ri topsa = 80 ball).
+                    <p class="text-[11px] text-mist mt-1.5">
+                        O'quvchi testni necha foiz to'g'ri topsa, shunga mutanosib ball oladi (masalan: 100 balldan 80% to'g'ri topsa = 80 ball).
                     </p>
                 </div>
 
                 {{-- Murakkablik --}}
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Murakkablik darajasi *</label>
-                    <select name="difficulty" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="easy">🟢 Oson (Boshlovchilar uchun)</option>
-                        <option value="medium" selected>🟡 O'rta (Standart daraja)</option>
-                        <option value="hard">🔴 Qiyin (Chuqur mutolaa qilganlar uchun)</option>
+                    <label class="block text-xs font-semibold text-paper mb-1">Murakkablik darajasi <span class="text-rose-400">*</span></label>
+                    <select name="difficulty" required class="ks-input">
+                        <option value="easy">Oson (Boshlovchilar uchun)</option>
+                        <option value="medium" selected>O'rta (Standart daraja)</option>
+                        <option value="hard">Qiyin (Chuqur mutolaa qilganlar uchun)</option>
                     </select>
                 </div>
 
                 {{-- Vaqt limiti --}}
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Vaqt limiti (daqiqa)</label>
-                    <input type="number" name="time_limit_minutes" value="{{ old('time_limit_minutes', 15) }}" min="1" max="180"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-xs font-semibold text-paper mb-1">Vaqt limiti (daqiqa)</label>
+                    <input type="number" name="time_limit_minutes" value="{{ old('time_limit_minutes', 15) }}" min="1" max="180" class="ks-input font-mono">
                 </div>
 
                 {{-- Tavsif --}}
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Qisqacha tavsif yoki yo'riqnoma</label>
-                    <textarea name="description" rows="2" placeholder="O'quvchiga testdan oldin ko'rinadigan qisqa tushuntirish..."
-                              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ old('description') }}</textarea>
+                    <label class="block text-xs font-semibold text-paper mb-1">Qisqacha tavsif yoki yo'riqnoma</label>
+                    <textarea name="description" rows="2" placeholder="O'quvchiga testdan oldin ko'rinadigan qisqa tushuntirish..." class="ks-input">{{ old('description') }}</textarea>
                 </div>
             </div>
         </div>
 
-        {{-- 2. Dinamik savollar va ko'p sonli savol qo'shish paneli --}}
+        {{-- 2. Savollar --}}
         <div class="space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>❓</span> Savollar va Variantlar (<span x-text="questions.length"></span> ta)
+                <h3 class="text-sm font-bold font-serif text-paper">
+                    <span class="ks-eyebrow mr-2">02</span>Savollar va Variantlar (<span x-text="questions.length" class="font-mono text-amber-400"></span> ta)
                 </h3>
-                
-                {{-- Savol qo'shish tugmalari --}}
+
                 <div class="flex items-center gap-2">
-                    <button type="button" @click="addQuestions(1)"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition-all active:scale-95">
-                        <span>+ 1 ta savol</span>
-                    </button>
-                    <button type="button" @click="addQuestions(5)"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-700 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl shadow transition-all active:scale-95">
-                        <span>+ 5 ta</span>
-                    </button>
-                    <button type="button" @click="addQuestions(10)"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition-all active:scale-95"
-                            title="Bir vaqtning o'zida 10 ta savol shablonini qo'shish">
-                        <span>⚡ + 10 ta savol qo'shish</span>
-                    </button>
+                    <button type="button" @click="addQuestions(1)" class="ks-btn-gold py-1.5 px-3 text-xs font-mono font-bold">+ 1 ta savol</button>
+                    <button type="button" @click="addQuestions(5)" class="ks-btn-ghost py-1.5 px-3 text-xs font-mono">+ 5 ta</button>
+                    <button type="button" @click="addQuestions(10)" title="Bir vaqtning o'zida 10 ta savol shablonini qo'shish" class="ks-btn-ghost py-1.5 px-3 text-xs font-mono text-amber-400 hover:text-amber-300">+ 10 ta savol</button>
                 </div>
             </div>
 
             <template x-for="(q, qIdx) in questions" :key="qIdx">
-                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-4 relative">
+                <div class="ks-panel p-5 space-y-4 relative animate-fade-in">
                     {{-- Savol sarlavhasi va o'chirish --}}
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
-                        <span class="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                            <span class="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-xs" x-text="qIdx + 1"></span>
+                    <div class="flex items-center justify-between border-b border-ink-border pb-3">
+                        <span class="inline-flex items-center gap-2 text-sm font-bold font-serif text-paper">
+                            <span class="w-6 h-6 rounded-badge bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xs font-mono text-amber-400" x-text="qIdx + 1"></span>
                             <span>-savol</span>
                         </span>
-                        <div class="flex items-center gap-3">
-                            <button type="button" @click="removeQuestion(qIdx)"
-                                    class="text-xs text-rose-500 hover:text-rose-700 p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/20 font-bold">
-                                ✕ Savolni o'chirish
-                            </button>
-                        </div>
+                        <button type="button" @click="removeQuestion(qIdx)"
+                                class="text-xs font-mono text-rose-300 hover:text-rose-200 px-2 py-1 rounded-badge hover:bg-rose-500/10 transition-colors">
+                            ✕ O'chirish
+                        </button>
                     </div>
 
                     {{-- Savol matni --}}
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Savol matni *</label>
-                        <textarea :name="'questions[' + qIdx + '][text]'" x-model="q.text" rows="2" required placeholder="Savolni kiriting..."
-                                  class="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"></textarea>
+                        <label class="block text-xs font-semibold text-paper mb-1">Savol matni <span class="text-rose-400">*</span></label>
+                        <textarea :name="'questions[' + qIdx + '][text]'" x-model="q.text" rows="2" required placeholder="Savolni kiriting..." class="ks-input text-sm"></textarea>
                     </div>
 
                     {{-- Variantlar --}}
                     <div class="space-y-2.5">
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Javob variantlari (To'g'ri javobni radio tugma orqali belgilang):
+                        <label class="block text-xs font-semibold text-paper">
+                            Javob variantlari <span class="text-mist font-normal font-mono text-[11px]">(To'g'ri javobni radio tugma orqali belgilang)</span>
                         </label>
 
                         <template x-for="(opt, oIdx) in q.options" :key="oIdx">
                             <div class="flex items-center gap-3">
                                 <label class="flex items-center gap-2 cursor-pointer shrink-0" :title="'Variant ' + (oIdx + 1) + ' ni to\'g\'ri javob deb belgilash'">
                                     <input type="radio" :name="'questions[' + qIdx + '][correct]'" :value="oIdx" x-model="q.correct"
-                                           class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
-                                    <span class="w-6 text-xs font-mono font-bold text-slate-500" x-text="['A', 'B', 'C', 'D'][oIdx] ?? (oIdx + 1)"></span>
+                                           class="w-4 h-4 accent-amber-500">
+                                    <span class="w-6 text-xs font-mono font-bold text-mist" x-text="['A', 'B', 'C', 'D'][oIdx] ?? (oIdx + 1)"></span>
                                 </label>
                                 <input type="text" :name="'questions[' + qIdx + '][options][' + oIdx + ']'" x-model="q.options[oIdx]" required
                                        :placeholder="'Javob ' + (['A', 'B', 'C', 'D'][oIdx] ?? (oIdx + 1)) + ' matni...'"
-                                       :class="q.correct == oIdx ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700'"
-                                       class="flex-1 px-4 py-2 rounded-xl border text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm transition-colors">
-                                <span x-show="q.correct == oIdx" class="text-xs font-bold text-emerald-600 shrink-0">✓ To'g'ri</span>
+                                       :class="q.correct == oIdx ? 'border-amber-500 bg-amber-500/5' : ''"
+                                       class="ks-input text-sm transition-colors">
+                                <span x-show="q.correct == oIdx" class="text-xs font-mono font-bold text-amber-400 shrink-0">✓ To'g'ri</span>
                             </div>
                         </template>
                     </div>
 
-                    {{-- Tushuntirish / Izoh (ixtiyoriy) --}}
+                    {{-- Tushuntirish --}}
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">To'g'ri javob izohi / tushuntirish (o'quvchi test yakunida ko'radi, ixtiyoriy)</label>
-                        <input type="text" :name="'questions[' + qIdx + '][explanation]'" x-model="q.explanation" placeholder="Nima uchun bu javob to'g'ri ekanligi haqida qisqa izoh..."
-                               class="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs">
+                        <label class="block text-xs font-medium text-mist mb-1">To'g'ri javob izohi / tushuntirish <span class="text-[10px]">(o'quvchi test yakunida ko'radi, ixtiyoriy)</span></label>
+                        <input type="text" :name="'questions[' + qIdx + '][explanation]'" x-model="q.explanation" placeholder="Nima uchun bu javob to'g'ri ekanligi haqida qisqa izoh..." class="ks-input text-xs">
                     </div>
                 </div>
             </template>
         </div>
 
         {{-- Pastki tugmalar --}}
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 pb-12 border-t border-slate-200 dark:border-slate-700">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 pb-12 border-t border-ink-border">
             <div class="flex items-center gap-2">
-                <button type="button" @click="addQuestions(1)"
-                        class="px-4 py-2.5 rounded-xl border border-indigo-600 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 font-bold text-xs transition-all">
-                    + 1 ta savol
-                </button>
-                <button type="button" @click="addQuestions(10)"
-                        class="px-4 py-2.5 rounded-xl border border-emerald-600 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 font-bold text-xs transition-all">
-                    ⚡ + 10 ta savol
-                </button>
+                <button type="button" @click="addQuestions(1)" class="ks-btn-ghost py-2 px-3.5 text-xs font-mono">+ 1 ta savol</button>
+                <button type="button" @click="addQuestions(10)" class="ks-btn-ghost py-2 px-3.5 text-xs font-mono">+ 10 ta savol</button>
             </div>
 
-            <button type="submit"
-                    class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-black text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all active:scale-95">
-                💾 Testni saqlash va faollashtirish
+            <button type="submit" class="ks-btn-primary py-2.5 px-8 text-sm font-bold">
+                Testni saqlash va faollashtirish
             </button>
         </div>
     </form>

@@ -61,15 +61,58 @@
                         <button @click="tab = 'reader'; readerMode = '3d'; window.scrollTo({ top: document.getElementById('online-reader').offsetTop - 90, behavior: 'smooth' })"
                            class="ks-btn-primary inline-flex items-center gap-2">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                            <span>3D Varaqlab o'qish</span>
+                            <span>Mutolaa qilish</span>
                         </button>
                     @endif
+
+                    @if($firstAudio = $book->audios->first())
+                        <button type="button"
+                                @click="window.playGlobalAudio({
+                                    id: {{ $firstAudio->id }},
+                                    bookId: {{ $book->id }},
+                                    title: '{{ addslashes($book->title) }}',
+                                    author: '{{ addslashes($book->author) }}',
+                                    coverUrl: '{{ $book->cover_url }}',
+                                    audioUrl: '{{ $firstAudio->file_url }}',
+                                    chapterTitle: '{{ addslashes($firstAudio->title ?: '1-qism') }}',
+                                    duration: {{ (int) ($firstAudio->duration ?? 0) }},
+                                    shareUrl: '{{ route('books.show', $book->slug) }}'
+                                })"
+                                class="px-4 py-2 rounded-btn bg-amber-400 hover:bg-amber-300 text-ink-950 font-bold font-sans text-xs sm:text-sm inline-flex items-center gap-2 shadow-md transition-all active:scale-95"
+                                title="Pastki audio pleyerda tinglash">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                            <span>Tinglash</span>
+                            @if($book->audios->count() > 1)
+                                <span class="px-1.5 py-0.2 rounded-badge bg-ink-950/20 text-ink-950 text-[10px] font-mono font-bold">{{ $book->audios->count() }} ta</span>
+                            @endif
+                        </button>
+                    @endif
+
+                    <!-- Share Button (Mutolaa uslubida) -->
+                    <button type="button"
+                            onclick="window.openBookShare({
+                                title: '{{ addslashes($book->title) }}',
+                                author: '{{ addslashes($book->author) }}',
+                                url: '{{ route('books.show', $book->slug) }}',
+                                coverUrl: '{{ $book->cover_url }}',
+                                description: '{{ addslashes(\Illuminate\Support\Str::limit($book->description, 150)) }}'
+                            })"
+                            class="p-2 sm:p-2.5 rounded-btn bg-ink-950 hover:bg-white/10 border border-ink-border hover:border-amber-400/40 text-mist hover:text-amber-400 transition-all flex items-center justify-center shadow"
+                            title="Kitobni ulashish">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                    </button>
 
                     @if($firstChapter = $book->chapters()->orderBy('chapter_number')->first())
                         <a href="{{ route('reader.show', ['book' => $book->id, 'chapter' => $firstChapter->id]) }}"
                            class="ks-btn-ghost inline-flex items-center gap-2">
                             <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                            <span>Boblar bo'ylab o'qish</span>
+                            <span>Boblar bo'ylab</span>
                         </a>
                     @endif
 
@@ -84,7 +127,7 @@
                     <a href="{{ route('audio.show', $book->id) }}"
                        class="ks-btn-ghost inline-flex items-center gap-2">
                         <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-                        <span>Audio</span>
+                        <span>Audio sahifasi</span>
                         @if($book->audios()->count() > 0)
                             <span class="px-1.5 py-0.2 rounded-badge bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">{{ $book->audios()->count() }}</span>
                         @endif

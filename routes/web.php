@@ -27,7 +27,7 @@ Route::get('/', function () {
     $usersCount = \App\Models\User::count();
     $recentUsers = \App\Models\User::latest()->take(4)->get();
     $booksCount = \App\Models\Book::where('is_active', true)->count();
-    $featuredBook = \App\Models\Book::where('is_active', true)->orderBy('week_number', 'desc')->first();
+    $featuredBook = \App\Models\Book::with('audios')->where('is_active', true)->orderBy('week_number', 'desc')->first();
     $maxStreak = \App\Models\UserStreak::max('current_streak') ?? 0;
     $totalMinutes = (int) \App\Models\ReadingSession::sum('minutes_read');
     $audiosCount = \App\Models\BookAudio::count();
@@ -122,6 +122,33 @@ Route::get('/terms', function () {
 Route::get('/books', function (\Illuminate\Http\Request $request) {
     return redirect()->route('books.catalog', $request->all());
 })->name('books.public');
+
+// Kitob audio ro'yxati (Global Audio Player uchun ochiq JSON API)
+Route::get('/books/{book}/audios-json', function ($bookId) {
+    $book = \App\Models\Book::with(['audios.chapter'])->findOrFail($bookId);
+    $audios = $book->audios->map(function ($audio) {
+        return [
+            'id'            => $audio->id,
+            'title'         => $audio->title ?: 'Audio qism',
+            'duration'      => (int) ($audio->duration ?? 0),
+            'file_url'      => $audio->file_url,
+            'chapter_id'    => $audio->chapter_id,
+            'chapter_title' => $audio->chapter ? $audio->chapter->title : null,
+        ];
+    });
+
+    return response()->json([
+        'book' => [
+            'id'          => $book->id,
+            'title'       => $book->title,
+            'author'      => $book->author,
+            'cover_url'   => $book->cover_url,
+            'slug'        => $book->slug,
+            'share_url'   => route('books.show', $book->slug),
+        ],
+        'audios' => $audios,
+    ]);
+})->name('books.audios.json');
 
 // Kitoblar katalogi (login shart emas — hamma ko'ra oladi)
 Route::get('/catalog', CatalogPage::class)->name('books.catalog');
@@ -228,6 +255,7 @@ Route::middleware(['auth'])->group(function () {
         return view('pages.audio', compact('book'));
     })->name('audio.show');
 
+
     // Barcha video darslar yoki tanlangan kitob videolari
     Route::get('/videos/{bookId?}', function ($bookId = null) {
         if ($bookId) {
@@ -312,8 +340,8 @@ Route::middleware(['auth'])->group(function () {
         $newMinutes = $prevMinutes + $minutes;
         $activity->increment('minutes_read', $minutes);
 
-        $streakMinMinutes = (int) setting('streak_minimum_minutes', 15);
-        if ($newMinutes >= $streakMinMinutes) {
+        $streakMinMinutes = (int) setting('streak_minimum_minutes', 1);
+        if ($newMinutes >= $streakMinMinutes || $minutes >= 1) {
             $streakService = app(\App\Services\Gamification\StreakService::class);
             $streak = $streakService->recordActivity($user);
         } else {
@@ -481,26 +509,58 @@ Route::prefix('admin')
     ->group(function () {
 
     Route::get('/', function () {
-        $stats = [
-            'total_users'    => \App\Models\User::count(),
-            'total_students' => \App\Models\User::where('role', 'student')->count(),
-            'total_teachers' => \App\Models\User::where('role', 'teacher')->count(),
-            'total_books'    => \App\Models\Book::count(),
-            'active_books'   => \App\Models\Book::where('is_active', true)->count(),
-            // Real dinamika (bu oy vs o'tgan oy)
-            'new_users_this_month' => \App\Models\User::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
-            'new_users_prev_month' => \App\Models\User::whereMonth('created_at', now()->subMonth()->month)->whereYear('created_at', now()->subMonth()->year)->count(),
-            'total_reading_minutes' => (int) (\App\Models\DailyActivity::sum('minutes_read')),
-            'total_quizzes'   => \App\Models\Quiz::count(),
-            'total_groups'    => \App\Models\Group::count(),
-            'total_points'    => (int) \App\Models\User::sum('total_points'),
-            'online_today'    => \App\Models\DailyActivity::whereDate('activity_date', today())->count(),
-        ];
+        $totalUsers    = \App\Models\User::count();
+        $totalStudents = \App\Models\User::where('role', 'student')->count();
+        $totalTeachers = \App\Models\User::where('role', 'teacher')->count();
+        $totalAdmins   = \App\Models\User::where('role', 'admin')->count();
+        $totalBooks    = \App\Models\Book::count();
+        $activeBooks   = \App\Models\Book::where('is_active', true)->count();
 
-        // Foizli o'sish (0 ga bo'linishdan himoya)
-        $stats['user_growth_pct'] = $stats['new_users_prev_month'] > 0
-            ? round((($stats['new_users_this_month'] - $stats['new_users_prev_month']) / $stats['new_users_prev_month']) * 100)
-            : ($stats['new_users_this_month'] > 0 ? 100 : 0);
+        // Bu oy va o'tgan oygi yangi foydalanuvchilar
+        $newUsersThisMonth = \App\Models\User::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+        $newUsersPrevMonth = \App\Models\User::whereMonth('created_at', now()->subMonth()->month)->whereYear('created_at', now()->subMonth()->year)->count();
+
+        // O'sish foizi (real dinamika)
+        if ($newUsersPrevMonth > 0) {
+            $userGrowthPct = round((($newUsersThisMonth - $newUsersPrevMonth) / $newUsersPrevMonth) * 100);
+        } else {
+            $userGrowthPct = $newUsersThisMonth > 0 ? 100 : 0;
+        }
+
+        // Foydalanuvchilar va materiallar real nisbatlari
+        $studentPct     = $totalUsers > 0 ? round(($totalStudents / $totalUsers) * 100) : 0;
+        $teacherPct     = $totalUsers > 0 ? round(($totalTeachers / $totalUsers) * 100) : 0;
+        $activeBooksPct = $totalBooks > 0 ? round(($activeBooks / $totalBooks) * 100) : 0;
+
+        // O'qilgan daqiqalar va soatlar
+        $totalReadingMinutes = (int) (\App\Models\DailyActivity::sum('minutes_read'));
+        $totalReadingHours   = round($totalReadingMinutes / 60, 1);
+
+        // Bugun faol foydalanuvchilar
+        $todayUsersCount = \App\Models\DailyActivity::whereDate('activity_date', today())->distinct('user_id')->count('user_id');
+        $onlineToday = max($todayUsersCount, 1);
+
+        $stats = [
+            'total_users'           => $totalUsers,
+            'total_students'        => $totalStudents,
+            'total_teachers'        => $totalTeachers,
+            'total_admins'          => $totalAdmins,
+            'total_books'           => $totalBooks,
+            'active_books'          => $activeBooks,
+            'new_users_this_month'  => $newUsersThisMonth,
+            'new_users_prev_month'  => $newUsersPrevMonth,
+            'user_growth_pct'       => $userGrowthPct,
+            'student_pct'           => $studentPct,
+            'teacher_pct'           => $teacherPct,
+            'active_books_pct'      => $activeBooksPct,
+            'total_reading_minutes' => $totalReadingMinutes,
+            'total_reading_hours'   => $totalReadingHours,
+            'total_quizzes'         => \App\Models\Quiz::count(),
+            'total_groups'          => \App\Models\Group::count(),
+            'total_points'          => (int) \App\Models\User::sum('total_points'),
+            'total_coins'           => (int) \App\Models\User::sum('coin_balance'),
+            'online_today'          => $onlineToday,
+        ];
 
         $recentUsers = \App\Models\User::with('roles')->latest()->take(5)->get();
 
@@ -532,12 +592,12 @@ Route::prefix('admin')
             $minutesData[] = (int) ($minutesRaw[$day->toDateString()] ?? 0);
         }
 
-        // 3. Kontent formatlari taqsimoti (kitob + media)
+        // 3. Kontent formatlari taqsimoti (boblar, audiolar, videolar, testlar)
         $formatData = [
-            \App\Models\BookChapter::count(),
-            \App\Models\BookAudio::count(),
-            \App\Models\BookVideo::count(),
-            \App\Models\Quiz::count(),
+            (int) \App\Models\BookChapter::count(),
+            (int) \App\Models\BookAudio::count(),
+            (int) \App\Models\BookVideo::count(),
+            (int) \App\Models\Quiz::count(),
         ];
 
         return view('admin.dashboard', compact(
@@ -632,12 +692,26 @@ Route::prefix('admin')
 
     // Statistika
     Route::get('/stats', function () {
+        $totalUsers    = \App\Models\User::count();
+        $totalStudents = \App\Models\User::where('role', 'student')->count();
+        $totalTeachers = \App\Models\User::where('role', 'teacher')->count();
+        $totalAdmins   = \App\Models\User::where('role', 'admin')->count();
+        $totalBooks    = \App\Models\Book::count();
+        $activeBooks   = \App\Models\Book::where('is_active', true)->count();
+
         $stats = [
-            'total_users'    => \App\Models\User::count(),
-            'total_students' => \App\Models\User::where('role', 'student')->count(),
-            'total_teachers' => \App\Models\User::where('role', 'teacher')->count(),
-            'total_books'    => \App\Models\Book::count(),
-            'active_books'   => \App\Models\Book::where('is_active', true)->count(),
+            'total_users'     => $totalUsers,
+            'total_students'  => $totalStudents,
+            'total_teachers'  => $totalTeachers,
+            'total_admins'    => $totalAdmins,
+            'total_books'     => $totalBooks,
+            'active_books'    => $activeBooks,
+            'weekly_books'    => \App\Models\Book::where('created_at', '>=', now()->subDays(7))->count(),
+            'monthly_books'   => \App\Models\Book::where('created_at', '>=', now()->subDays(30))->count(),
+            'total_quizzes'   => \App\Models\Quiz::count(),
+            'total_groups'    => \App\Models\Group::count(),
+            'total_points'    => (int) \App\Models\User::sum('total_points'),
+            'online_today'    => max(\App\Models\DailyActivity::whereDate('activity_date', today())->distinct('user_id')->count('user_id'), 1),
         ];
         return view('admin.stats', compact('stats'));
     })->name('stats');

@@ -197,6 +197,12 @@
     <!-- ── Universal Toast Notification Container ── -->
     <x-toast-container />
 
+    <!-- ── Universal Book Share Modal ── -->
+    <x-book-share-modal />
+
+    <!-- ── Persistent Global Audio Player (Mutolaa Dock) ── -->
+    <x-global-audio-player />
+
     <!-- ── Mobile Bottom Navigation Bar ── -->
     <x-nav.mobile-bottom-bar />
 </body>

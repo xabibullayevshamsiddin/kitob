@@ -86,9 +86,43 @@
 
 <article
     {{ $attributes->merge(['class' => 'ks-book group flex flex-col']) }}
-    x-data="{ open: false }"
+    x-data="{
+        open: false,
+        startX: 0,
+        startY: 0,
+        diffX: 0,
+        isDragging: false,
+        startDrag(e) {
+            const pt = e.touches ? e.touches[0] : e;
+            this.startX = pt.clientX;
+            this.startY = pt.clientY;
+            this.diffX = 0;
+            this.isDragging = true;
+        },
+        moveDrag(e) {
+            if (!this.isDragging) return;
+            const pt = e.touches ? e.touches[0] : e;
+            this.diffX = this.startX - pt.clientX;
+            const diffY = Math.abs(this.startY - pt.clientY);
+            if (this.diffX > 25 && diffY < 45) {
+                this.open = true;
+            } else if (this.diffX < -25 && diffY < 45) {
+                this.open = false;
+            }
+        },
+        endDrag(e) {
+            if (!this.isDragging) return;
+            this.isDragging = false;
+            if (this.diffX > 60) {
+                window.location.href = '{{ $link }}';
+            }
+        }
+    }"
     :class="{ 'is-open': open }"
     @click.outside="open = false"
+    @touchstart.passive="startDrag($event)"
+    @touchmove="moveDrag($event)"
+    @touchend="endDrag($event)"
 >
     <a href="{{ $link }}"
        class="ks-book__stage block rounded-card focus-visible:outline-offset-4"
@@ -145,7 +179,21 @@
             <h3 class="font-display text-[15px] font-semibold leading-[1.35] text-paper line-clamp-2">
                 <a href="{{ $link }}" class="hover:text-amber-400 transition-colors duration-base">{{ $book->title }}</a>
             </h3>
-            <p class="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-mist truncate">{{ $book->author }}</p>
+            <div class="mt-1 flex items-center justify-between gap-1">
+                <p class="font-mono text-[11px] uppercase tracking-[0.06em] text-mist truncate">{{ $book->author }}</p>
+                <button type="button"
+                        onclick="event.preventDefault(); event.stopPropagation(); if (window.openBookShare) window.openBookShare({ title: '{{ addslashes($book->title) }}', author: '{{ addslashes($book->author) }}', url: '{{ $link }}', coverUrl: '{{ $cover }}', description: '{{ addslashes($desc) }}' })"
+                        class="p-1 rounded-btn text-mist hover:text-amber-400 hover:bg-white/5 transition-colors shrink-0"
+                        title="Kitobni ulashish">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"/>
+                        <circle cx="6" cy="12" r="3"/>
+                        <circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                </button>
+            </div>
 
             @if(!is_null($progress))
                 <div class="mt-3" role="progressbar" aria-valuenow="{{ (int) $progress }}" aria-valuemin="0" aria-valuemax="100" aria-label="O'qish jarayoni">

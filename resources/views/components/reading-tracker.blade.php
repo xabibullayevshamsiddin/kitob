@@ -359,6 +359,16 @@ function readingTracker(config) {
                     }
                     this.lastPointsAwarded = data.points_added || 10;
                     this.lastCoinsAwarded = data.coins_added || 1;
+                    if (data.total_points) {
+                        window.dispatchEvent(new CustomEvent('points-awarded', {
+                            detail: { points: this.lastPointsAwarded, newTotal: data.total_points }
+                        }));
+                    }
+                    if (data.streak !== undefined) {
+                        window.dispatchEvent(new CustomEvent('streak-updated', {
+                            detail: { streak: data.streak }
+                        }));
+                    }
                     this.triggerToast();
                 }
             })

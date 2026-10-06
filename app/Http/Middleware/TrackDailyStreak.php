@@ -40,24 +40,28 @@ class TrackDailyStreak
 
         $user = Auth::user();
 
+        // 1. Agar foydalanuvchining bugungi streaki allaqachon hisoblangan bo'lsa:
+        if ($user->streak && $user->streak->last_active_date && $user->streak->last_active_date->toDateString() === $today) {
+            session(['streak_checked_date' => $today]);
+            return $next($request);
+        }
+
         if ($this->countAnyVisit) {
             // "Har kuni kirish" qoidasi: istalgan tashrif streak beradi.
             app(StreakService::class)->recordActivity($user);
+            session(['streak_checked_date' => $today]);
         } else {
-            // "O'qish faoliyati" qoidasi (ProfilePage::syncUserMetrics() dagi mantiq):
-            // bugungi o'qish yozuvi bo'lsa, streakni yangilaymiz. recordActivity()
-            // kuniga bir marta hisoblaydi (last_active_date === bugun bo'lsa o'tkazib yuboradi),
-            // shuning uchun qayta chaqirish xavfsiz va ketma-ket kunlar to'g'ri oshadi.
+            // "O'qish faoliyati" qoidasi:
+            // Agar bugun o'qish sessiyasi yoki minutes_read > 0 bo'lsa, streakni yangilaymiz.
             $hasTodayReading = $user->readingSessions()->where('session_date', $today)->exists()
                 || $user->dailyActivities()->where('activity_date', $today)->where('minutes_read', '>', 0)->exists();
 
             if ($hasTodayReading) {
                 app(StreakService::class)->recordActivity($user);
+                session(['streak_checked_date' => $today]);
             }
+            // Agar hali o'qimagan bo'lsa, sessionni qulflamaymiz — keyinroq o'qiganida hisoblanishi uchun
         }
-
-        // Bugun endi qayta tekshirmaymiz.
-        session(['streak_checked_date' => $today]);
 
         return $next($request);
     }

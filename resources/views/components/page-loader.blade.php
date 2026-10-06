@@ -13,8 +13,12 @@
         if (typeof gsap === 'undefined') return;
 
         if (typeof ScrollTrigger !== 'undefined') {
-            ScrollTrigger.getAll().forEach(t => t.kill());
             ScrollTrigger.refresh();
+        }
+
+        // Initialize Scrollytelling Book Reveal if present on page
+        if (typeof window.initBookRevealSection === 'function') {
+            window.initBookRevealSection();
         }
 
         // 1. Header entrance
@@ -266,7 +270,11 @@
                 return;
             }
 
-            // 3. Swap DOM content seamlessly
+            // 3. Clean up old ScrollTriggers before swapping DOM
+            if (typeof ScrollTrigger !== 'undefined') {
+                ScrollTrigger.getAll().forEach(t => t.kill());
+            }
+
             currentWrapper.innerHTML = newWrapper.innerHTML;
 
             // 4. Update title & URL
