@@ -63,10 +63,14 @@
                     </div>
 
                     {{-- Stats --}}
-                    <div class="w-full mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 gap-3">
+                    <div class="w-full mt-4 pt-4 border-t border-slate-800 grid grid-cols-3 gap-2">
                         <div class="text-center">
-                            <p class="text-lg font-bold text-white">{{ $user->points ?? 0 }}</p>
+                            <p class="text-lg font-bold text-white">{{ $user->total_points }}</p>
                             <p class="text-xs text-slate-500 mt-0.5">Ball</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-lg font-bold text-amber-400">{{ $user->coin_balance }}</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Tanga</p>
                         </div>
                         <div class="text-center">
                             <p class="text-lg font-bold text-white">{{ $user->created_at->format('d.m.y') }}</p>
@@ -267,14 +271,28 @@
 
                     {{-- Points --}}
                     <div>
-                        <label for="points" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Ball (ixtiyoriy)</label>
+                        <label for="points" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Ball (jami: {{ $user->total_points }})</label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-amber-400">
-                                ⭐
+                            <div class="absolute inset-y-0 left-3 flex items-center justify-center pointer-events-none text-amber-400">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                             </div>
-                            <input type="number" name="points" id="points" value="{{ $user->points ?? 0 }}" min="0"
+                            <input type="number" name="points" id="points" value="{{ $user->total_points }}" min="0"
                                    class="w-full pl-9 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
                         </div>
+                        <p class="mt-1.5 text-[11px] text-slate-500">Yangi umumiy balansni kiriting — farq miqdori qo'shiladi yoki ayiriladi (tarixga yoziladi).</p>
+                    </div>
+
+                    {{-- Coins --}}
+                    <div>
+                        <label for="coins" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tanga (jami: {{ $user->coin_balance }})</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-3 flex items-center justify-center pointer-events-none text-amber-400">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/></svg>
+                            </div>
+                            <input type="number" name="coins" id="coins" value="{{ $user->coin_balance }}" min="0"
+                                   class="w-full pl-9 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all">
+                        </div>
+                        <p class="mt-1.5 text-[11px] text-slate-500">Yangi tanga balansini kiriting — farq miqdori qo'shiladi yoki ayiriladi (tarixga yoziladi).</p>
                     </div>
 
                     {{-- Divider --}}

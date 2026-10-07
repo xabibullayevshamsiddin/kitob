@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Settings;
 
 use App\Http\Livewire\Concerns\WithToast;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -83,6 +84,30 @@ class SettingsPage extends Component
         $this->toastSuccess(
             $hadAvatar ? __('site.settings.saved_success') . ' Profil rasmi yangilandi.' : __('site.settings.saved_success')
         );
+    }
+
+    /**
+     * Foydalanuvchi o'z profil rasmini o'chiradi (yuklangan fayl ham o'chadi).
+     */
+    public function removeAvatar(): void
+    {
+        $user = Auth::user();
+
+        if (! $user->avatar) {
+            return;
+        }
+
+        try {
+            Storage::disk('public')->delete($user->avatar);
+        } catch (\Throwable $e) {
+            // Fayl allaqachon yo'q bo'lishi mumkin — DB tozalash baribir davom etadi.
+            report($e);
+        }
+
+        $user->update(['avatar' => null]);
+        $this->reset('avatar');
+
+        $this->toastSuccess(__('site.settings.avatar_removed'));
     }
 
     public function render()

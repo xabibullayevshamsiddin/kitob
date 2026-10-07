@@ -179,6 +179,7 @@ function readingTracker(config) {
         
         isPaused: false,
         isAfk: false,
+        isSending: false,
         showAfkModal: false,
         isWidgetVisible: true,
         showPointsNotification: false,
@@ -253,8 +254,26 @@ function readingTracker(config) {
                         this.triggerAfk();
                     }
 
-                    // Every 60 active seconds -> Send Heartbeat to server
+                    // Har 60 faol soniyada (1 daqiqa bo'lishi bilan) — SRAZU JONLI MUKOFOT!
                     if (this.unsentSeconds >= 60) {
+                        this.unsentSeconds = 0;
+                        this.totalMinutesToday++;
+                        this.totalMinutesAll++;
+                        this.lastPointsAwarded = 10;
+                        this.lastCoinsAwarded = 1;
+
+                        // 1. Shu soniyaning o'zidayoq vidjetda tabrik toasti chiqadi
+                        this.triggerToast();
+
+                        // 2. Shu soniyaning o'zidayoq navbarda jonli +10 ⭐ va +1 🪙 animatsiyasi ishga tushadi
+                        window.dispatchEvent(new CustomEvent('points-awarded', {
+                            detail: { points: 10 }
+                        }));
+                        window.dispatchEvent(new CustomEvent('coins-awarded', {
+                            detail: { coins: 1 }
+                        }));
+
+                        // 3. Shu zahoti bazada saqlash uchun serverga yuboriladi
                         this.sendHeartbeat(1);
                     }
                 } else if (this.isAfk) {
@@ -328,51 +347,74 @@ function readingTracker(config) {
                 minutes: minutesToSend
             };
 
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || this.csrfToken;
+
             if (isBeacon && navigator.sendBeacon) {
                 const formData = new FormData();
-                formData.append('_token', this.csrfToken);
+                formData.append('_token', token);
                 if (this.bookId) formData.append('book_id', this.bookId);
                 if (this.chapterId) formData.append('chapter_id', this.chapterId);
                 formData.append('page_type', this.pageType);
                 formData.append('minutes', minutesToSend);
                 navigator.sendBeacon(this.heartbeatUrl, formData);
-                this.unsentSeconds = 0;
                 return;
             }
+
+            if (this.isSending) return;
+            this.isSending = true;
 
             fetch(this.heartbeatUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.csrfToken,
+                    'X-CSRF-TOKEN': token,
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
             .then(data => {
+                this.isSending = false;
                 if (data.success) {
-                    this.unsentSeconds = 0;
                     this.totalMinutesToday = data.total_minutes_today;
                     if (data.total_minutes_all) {
                         this.totalMinutesAll = data.total_minutes_all;
                     }
-                    this.lastPointsAwarded = data.points_added || 10;
-                    this.lastCoinsAwarded = data.coins_added || 1;
-                    if (data.total_points) {
+                    if (data.points_added !== undefined) {
+                        this.lastPointsAwarded = data.points_added;
+                    }
+                    if (data.coins_added !== undefined) {
+                        this.lastCoinsAwarded = data.coins_added;
+                    }
+
+                    // Header va barcha komponentlar uchun yakuniy ball sinxronizatsiyasi
+                    if (data.total_points !== undefined) {
                         window.dispatchEvent(new CustomEvent('points-awarded', {
                             detail: { points: this.lastPointsAwarded, newTotal: data.total_points }
                         }));
                     }
+
+                    // Header va barcha komponentlar uchun yakuniy tanga sinxronizatsiyasi
+                    if (data.coin_balance !== undefined) {
+                        window.dispatchEvent(new CustomEvent('coins-awarded', {
+                            detail: { coins: this.lastCoinsAwarded, newTotal: data.coin_balance }
+                        }));
+                    }
+
                     if (data.streak !== undefined) {
                         window.dispatchEvent(new CustomEvent('streak-updated', {
                             detail: { streak: data.streak }
                         }));
                     }
-                    this.triggerToast();
                 }
             })
-            .catch(err => console.warn('Reading tracker sync error:', err));
+            .catch(err => {
+                this.isSending = false;
+                console.warn('Reading tracker sync error:', err);
+            });
         },
 
         triggerToast() {

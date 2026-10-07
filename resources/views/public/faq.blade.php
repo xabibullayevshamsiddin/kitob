@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth dark overflow-x-hidden max-w-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,17 +41,17 @@
         }
     </style>
 </head>
-<body class="bg-ink-950 text-paper-muted font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
+<body class="bg-ink-950 text-paper-muted font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden max-w-full">
 
     <!-- ── Page Transition & Loader ── -->
     @include('components.page-loader')
 
-    <div id="smooth-page-wrapper">
+    <div id="smooth-page-wrapper" class="w-full max-w-full overflow-x-clip">
     <!-- ── Header ── -->
     <x-nav.main-header />
 
     <!-- ── Main Content (Savol-Javoblar) ── -->
-    <main class="py-14 md:py-20 noise-bg"
+    <main class="py-14 md:py-20 noise-bg overflow-hidden max-w-full"
           x-data="{
               openItem: 1,
               searchQuery: '',
@@ -475,6 +475,9 @@
 
         </div>
     </main>
+
+    <!-- ── FAQ 02 Velara Section ── -->
+    <x-faq-velara />
 
     <!-- ── Universal Footer ── -->
     <x-nav.main-footer />

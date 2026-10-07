@@ -24,6 +24,17 @@
                     class="text-xs font-mono text-mist file:mr-3 file:py-1.5 file:px-3 file:rounded-btn file:border-0 file:text-xs file:font-mono file:font-semibold file:bg-amber-400 file:text-ink-950 hover:file:bg-amber-300 file:cursor-pointer">
                 <span wire:loading wire:target="avatar" class="text-[11px] font-mono text-amber-400 block mt-1">{{ __('site.settings.uploading') }}</span>
                 @error('avatar') <p class="text-rose-300 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                @if (auth()->user()->avatar)
+                    <div class="mt-2">
+                        <button type="button" wire:click="removeAvatar" wire:target="removeAvatar" wire:loading.attr="disabled"
+                            wire:confirm="{{ __('site.settings.remove_avatar_confirm') }}"
+                            class="inline-flex items-center gap-1.5 text-[11px] font-mono text-rose-300/90 hover:text-rose-200 transition-colors">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            {{ __('site.settings.remove_avatar') }}
+                        </button>
+                        <span wire:loading wire:target="removeAvatar" class="text-[11px] font-mono text-mist block mt-1">{{ __('site.settings.removing') }}</span>
+                    </div>
+                @endif
             </div>
         </div>
 

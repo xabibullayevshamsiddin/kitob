@@ -19,6 +19,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('streaks:calculate')
             ->dailyAt('00:05')
             ->timezone('Asia/Tashkent');
+
+        // Foydalanuvchilarning 20 tadan ortiq eski bildirishnomalarini tungi avtomatik tozalash
+        $schedule->command('notifications:prune')
+            ->dailyAt('03:00')
+            ->timezone('Asia/Tashkent');
     }
 
     /**

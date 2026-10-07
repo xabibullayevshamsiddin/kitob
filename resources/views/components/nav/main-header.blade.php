@@ -84,73 +84,228 @@
             <x-lang-switcher class="hidden sm:block" />
 
             @auth
-                {{-- Streak / Points / Coins — faqat keng ekranlarda --}}
-                <div class="hidden xl:flex items-center divide-x divide-ink-border border border-ink-border rounded-btn bg-ink-950"
+                {{-- Streak / Points / Coins — barcha ekranlarda chiroyli ko'rinadi va jonli o'zgaradi --}}
+                <div class="flex items-center divide-x divide-ink-border border border-ink-border rounded-btn bg-ink-950 relative"
                      x-data="{
-                         totalPoints: {{ auth()->check() ? auth()->user()->total_points : 0 }},
+                         totalPoints: {{ auth()->check() ? (int) auth()->user()->total_points : 0 }},
+                         totalCoins: {{ auth()->check() ? (int) auth()->user()->coin_balance : 0 }},
                          pointsBump: false,
+                         coinsBump: false,
                          floater: null,
+                         coinFloater: null,
+                         pointsTimer: null,
+                         coinsTimer: null,
+                         pointsAnimFrame: null,
+                         coinsAnimFrame: null,
+
                          animateAdd(pts, newTot) {
-                             if (!pts || pts <= 0) return;
-                             this.floater = '+' + pts;
-                             this.pointsBump = true;
+                             let pointsToAdd = parseInt(pts) || 0;
+                             let targetTotal = parseInt(newTot);
+
+                             if (isNaN(targetTotal)) {
+                                 if (pointsToAdd <= 0) return;
+                                 targetTotal = this.totalPoints + pointsToAdd;
+                             } else {
+                                 if (targetTotal <= this.totalPoints) {
+                                     this.totalPoints = targetTotal;
+                                     return;
+                                 }
+                                 pointsToAdd = targetTotal - this.totalPoints;
+                             }
+
+                             if (this.pointsAnimFrame) cancelAnimationFrame(this.pointsAnimFrame);
+                             if (this.pointsTimer) clearTimeout(this.pointsTimer);
+
+                             let addedAmount = pointsToAdd;
+                             this.floater = null;
+                             this.pointsBump = false;
+
+                             this.$nextTick(() => {
+                                 this.floater = '+' + addedAmount;
+                                 this.pointsBump = true;
+                             });
+
                              let start = this.totalPoints;
-                             let end = newTot;
-                             let duration = 1200;
+                             let end = targetTotal;
+                             let duration = 800;
                              let startTime = performance.now();
                              let self = this;
+
                              function step(now) {
                                  let progress = Math.min((now - startTime) / duration, 1);
-                                 self.totalPoints = Math.round(start + (end - start) * progress);
+                                 let ease = progress * (2 - progress);
+                                 self.totalPoints = Math.round(start + (end - start) * ease);
                                  if (progress < 1) {
-                                     requestAnimationFrame(step);
+                                     self.pointsAnimFrame = requestAnimationFrame(step);
                                  } else {
                                      self.totalPoints = end;
-                                     setTimeout(() => { self.pointsBump = false; self.floater = null; }, 2500);
+                                     self.pointsTimer = setTimeout(() => {
+                                         self.pointsBump = false;
+                                         self.floater = null;
+                                     }, 1800);
                                  }
                              }
-                             requestAnimationFrame(step);
+                             this.pointsAnimFrame = requestAnimationFrame(step);
+                         },
+
+                         animateAddCoins(cns, newTot) {
+                             let coinsToAdd = parseInt(cns) || 0;
+                             let targetTotal = parseInt(newTot);
+
+                             if (isNaN(targetTotal)) {
+                                 if (coinsToAdd <= 0) return;
+                                 targetTotal = this.totalCoins + coinsToAdd;
+                             } else {
+                                 if (targetTotal <= this.totalCoins) {
+                                     this.totalCoins = targetTotal;
+                                     return;
+                                 }
+                                 coinsToAdd = targetTotal - this.totalCoins;
+                             }
+
+                             if (this.coinsAnimFrame) cancelAnimationFrame(this.coinsAnimFrame);
+                             if (this.coinsTimer) clearTimeout(this.coinsTimer);
+
+                             let addedAmount = coinsToAdd;
+                             this.coinFloater = null;
+                             this.coinsBump = false;
+
+                             this.$nextTick(() => {
+                                 this.coinFloater = '+' + addedAmount;
+                                 this.coinsBump = true;
+                             });
+
+                             let start = this.totalCoins;
+                             let end = targetTotal;
+                             let duration = 800;
+                             let startTime = performance.now();
+                             let self = this;
+
+                             function step(now) {
+                                 let progress = Math.min((now - startTime) / duration, 1);
+                                 let ease = progress * (2 - progress);
+                                 self.totalCoins = Math.round(start + (end - start) * ease);
+                                 if (progress < 1) {
+                                     self.coinsAnimFrame = requestAnimationFrame(step);
+                                 } else {
+                                     self.totalCoins = end;
+                                     self.coinsTimer = setTimeout(() => {
+                                         self.coinsBump = false;
+                                         self.coinFloater = null;
+                                     }, 1800);
+                                 }
+                             }
+                             this.coinsAnimFrame = requestAnimationFrame(step);
                          }
                      }"
-                     @points-awarded.window="animateAdd($event.detail.points, $event.detail.newTotal)">
+                     @points-awarded.window="animateAdd($event.detail.points, $event.detail.newTotal)"
+                     @coins-awarded.window="animateAddCoins($event.detail.coins, $event.detail.newTotal)">
 
+                    {{-- Streak Flame --}}
                     <span x-data="{ streakCount: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                           @streak-updated.window="streakCount = $event.detail.streak"
-                          class="inline-flex items-center gap-1.5 px-2.5 h-8 text-amber-400 font-mono text-[12px] font-medium tabular-nums"
+                          class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 text-amber-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
                           title="{{ __('site.common.streak') }}">
-                        <svg class="ks-flame w-4 h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <svg class="ks-flame w-3.5 h-3.5 sm:w-4 sm:h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
                         </svg>
                         <span x-text="streakCount">{{ auth()->user()->current_streak }}</span>
                     </span>
 
+                    {{-- Points with Live Counting and Floating Badge --}}
                     <div class="relative">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 h-8 font-mono text-[12px] font-medium tabular-nums transition-colors duration-base"
-                              :class="pointsBump ? 'bg-amber-500/15 text-amber-300' : 'text-paper'"
+                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
+                              :class="pointsBump ? 'bg-amber-500/20 text-amber-300' : 'text-paper'"
                               title="{{ __('site.common.points') }}">
-                            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                            <span x-text="totalPoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span>
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 transition-transform duration-300"
+                                 :class="pointsBump ? 'scale-125 rotate-12' : ''"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <span :class="pointsBump ? 'ks-number-rolling' : ''" x-text="totalPoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span>
                         </span>
 
-                        {{-- Floating +Points Pop Animation --}}
-                        <span x-show="floater"
-                              x-transition:enter="transition ease-elastic duration-500"
-                              x-transition:enter-start="opacity-0 translate-y-2"
-                              x-transition:enter-end="opacity-100 -translate-y-5"
-                              x-transition:leave="transition ease-in duration-500"
-                              x-transition:leave-start="opacity-100 -translate-y-5"
-                              x-transition:leave-end="opacity-0 -translate-y-9"
-                              class="absolute -top-1 left-1/2 -translate-x-1/2 pointer-events-none px-1.5 py-0.5 rounded-badge bg-amber-500 text-ink-950 font-mono font-medium text-[11px] z-50 whitespace-nowrap"
-                              x-text="floater"
-                              x-cloak>
-                        </span>
+                        {{-- Floating +Points Pop Animation (Yuqoriga uchuvchi) --}}
+                        <template x-if="floater">
+                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(245,158,11,0.7)] border border-amber-200/90 flex items-center gap-1">
+                                <span>⭐</span>
+                                <span x-text="floater"></span>
+                            </span>
+                        </template>
                     </div>
 
-                    <span class="inline-flex items-center gap-1.5 px-2.5 h-8 text-paper font-mono text-[12px] font-medium tabular-nums" title="{{ __('site.common.coins') }}">
-                        <svg class="w-4 h-4 text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
-                        {{ number_format(auth()->user()->coin_balance) }}
-                    </span>
+                    {{-- Coins with Live Counting and Floating Badge --}}
+                    <div class="relative">
+                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
+                              :class="coinsBump ? 'bg-yellow-500/20 text-yellow-300' : 'text-paper'"
+                              title="{{ __('site.common.coins') }}">
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gilt transition-transform duration-300"
+                                 :class="coinsBump ? 'scale-125 -rotate-12' : ''"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>
+                            </svg>
+                            <span :class="coinsBump ? 'ks-coin-rolling' : ''" x-text="totalCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
+                        </span>
+
+                        {{-- Floating +Coins Pop Animation (Yuqoriga uchuvchi) --}}
+                        <template x-if="coinFloater">
+                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(250,204,21,0.7)] border border-yellow-200/90 flex items-center gap-1">
+                                <span>🪙</span>
+                                <span x-text="coinFloater"></span>
+                            </span>
+                        </template>
+                    </div>
                 </div>
+
+                <style>
+                @keyframes ksRewardFloat {
+                  0% {
+                    opacity: 0;
+                    transform: translate(-50%, 6px) scale(0.7);
+                  }
+                  15% {
+                    opacity: 1;
+                    transform: translate(-50%, -8px) scale(1.1);
+                  }
+                  50% {
+                    opacity: 1;
+                    transform: translate(-50%, -18px) scale(1);
+                  }
+                  100% {
+                    opacity: 0;
+                    transform: translate(-50%, -32px) scale(0.85);
+                  }
+                }
+                .ks-reward-floater {
+                  position: absolute;
+                  left: 50%;
+                  bottom: calc(100% + 4px);
+                  pointer-events: none;
+                  animation: ksRewardFloat 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                  z-index: 60;
+                  white-space: nowrap;
+                }
+                @keyframes ksNumberRoll {
+                  0% { transform: scale(1); }
+                  25% { transform: scale(1.22); color: #FBBF24; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); }
+                  60% { transform: scale(1.1); color: #FCD34D; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.5)); }
+                  100% { transform: scale(1); color: inherit; filter: none; }
+                }
+                .ks-number-rolling {
+                  display: inline-block;
+                  animation: ksNumberRoll 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                @keyframes ksCoinRoll {
+                  0% { transform: scale(1); }
+                  25% { transform: scale(1.24); color: #FACC15; filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.85)); }
+                  60% { transform: scale(1.1); color: #FEF08A; filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.5)); }
+                  100% { transform: scale(1); color: inherit; filter: none; }
+                }
+                .ks-coin-rolling {
+                  display: inline-block;
+                  animation: ksCoinRoll 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                </style>
 
                 {{-- Bildirishnomalar --}}
                 <a href="{{ route('notifications') }}" class="hidden md:inline-flex relative p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base" title="{{ __('site.nav.notifications') }}">
@@ -203,9 +358,13 @@
                             </div>
 
                             {{-- Stats for small screens --}}
-                            <div class="mt-3 pt-3 border-t border-ink-border grid grid-cols-3 gap-2 xl:hidden"
-                                 x-data="{ mobilePoints: {{ auth()->check() ? auth()->user()->total_points : 0 }} }"
-                                 @points-awarded.window="mobilePoints = $event.detail.newTotal">
+                            <div class="mt-3 pt-3 border-t border-ink-border grid grid-cols-3 gap-2 md:hidden"
+                                 x-data="{ 
+                                     mobilePoints: {{ auth()->check() ? (int) auth()->user()->total_points : 0 }},
+                                     mobileCoins: {{ auth()->check() ? (int) auth()->user()->coin_balance : 0 }}
+                                 }"
+                                 @points-awarded.window="mobilePoints = $event.detail.newTotal !== undefined ? $event.detail.newTotal : (mobilePoints + ($event.detail.points || 10))"
+                                 @coins-awarded.window="mobileCoins = $event.detail.newTotal !== undefined ? $event.detail.newTotal : (mobileCoins + ($event.detail.coins || 1))">
                                 <span x-data="{ mobileStreak: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                                       @streak-updated.window="mobileStreak = $event.detail.streak"
                                       class="inline-flex items-center gap-1 text-amber-400 font-mono text-[11px] font-medium tabular-nums">
@@ -218,7 +377,7 @@
                                 </span>
                                 <span class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
                                     <svg class="w-3.5 h-3.5 text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
-                                    {{ number_format(auth()->user()->coin_balance) }}
+                                    <span x-text="mobileCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
                                 </span>
                             </div>
                         </div>

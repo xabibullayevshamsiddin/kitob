@@ -331,10 +331,7 @@ Route::middleware(['auth'])->group(function () {
             ]);
         }
 
-        $activity = \App\Models\DailyActivity::firstOrCreate(
-            ['user_id' => $user->id, 'activity_date' => $today],
-            ['minutes_read' => 0, 'logged_in' => true, 'points_earned' => 0]
-        );
+        $activity = \App\Models\DailyActivity::getTodayActivity($user->id, $today);
 
         $prevMinutes = (int) $activity->minutes_read;
         $newMinutes = $prevMinutes + $minutes;
@@ -386,6 +383,28 @@ Route::middleware(['auth'])->group(function () {
             );
         }
 
+        // Kunlik 1 soatlik (60 daqiqa) mutolaa super bonusi haqida xabardor qilish
+        $dailyGoalReached = $newMinutes >= 60;
+        $dailyGoalClaimed = (bool) ($activity->hourly_bonus_claimed ?? false);
+
+        if ($dailyGoalReached && !$dailyGoalClaimed) {
+            $alreadyNotified = $user->notifications()
+                ->whereDate('created_at', $today)
+                ->where('data->type', 'daily_reading_goal')
+                ->exists();
+
+            if (!$alreadyNotified) {
+                \App\Services\NotifyUser::send(
+                    $user,
+                    'daily_reading_goal',
+                    'Super Bonus tayyor! 🏆',
+                    "Siz bugun 1 soat (60 daqiqa) mutolaa qildingiz! Bildirishnomalar bo'limida +200 ball va +40 tangani qabul qilib oling!",
+                    '🎁',
+                    '/notifications'
+                );
+            }
+        }
+
         $freshUser = $user->fresh();
 
         return response()->json([
@@ -398,8 +417,48 @@ Route::middleware(['auth'])->group(function () {
             'total_points'         => (int) $freshUser->total_points,
             'coin_balance'         => (int) $freshUser->coin_balance,
             'streak'               => (int) $streak->current_streak,
+            'daily_goal_reached'   => $dailyGoalReached,
+            'daily_goal_claimed'   => $dailyGoalClaimed,
         ]);
     })->name('reading.heartbeat');
+
+    // Kunlik 1 soatlik super mutolaa bonusini olish API (200 ball + 40 tanga)
+    Route::post('/api/reading/claim-hourly-bonus', function () {
+        $user = auth()->user();
+        $today = now('Asia/Tashkent')->toDateString();
+        $activity = \App\Models\DailyActivity::getTodayActivity($user->id, $today);
+
+        if ((int) $activity->minutes_read < 60) {
+            $remaining = 60 - (int) $activity->minutes_read;
+            return response()->json([
+                'success' => false,
+                'message' => "Kunlik super bonus uchun yana {$remaining} daqiqa mutolaa qilishingiz kerak!"
+            ], 422);
+        }
+
+        if ($activity->hourly_bonus_claimed) {
+            return response()->json([
+                'success' => false,
+                'message' => "Bugungi 1 soatlik super bonus allaqachon qabul qilingan!"
+            ], 422);
+        }
+
+        $pointsService = app(\App\Services\Gamification\PointsService::class);
+        $pointsService->awardPoints($user, 200, 'bonus', "Kunlik 1 soatlik mutolaa super bonusi (+200 ball)");
+        $pointsService->awardCoins($user, 40, 'bonus', "Kunlik 1 soatlik mutolaa super bonusi (+40 tanga 🪙)");
+        $activity->update(['hourly_bonus_claimed' => true]);
+
+        $freshUser = $user->fresh();
+
+        return response()->json([
+            'success'      => true,
+            'message'      => "Tabriklaymiz! +200 ball va +40 tanga hisobingizga muvaffaqiyatli qo'shildi! 🏆🪙",
+            'points_added' => 200,
+            'coins_added'  => 40,
+            'total_points' => (int) $freshUser->total_points,
+            'coin_balance' => (int) $freshUser->coin_balance,
+        ]);
+    })->name('reading.claim-hourly-bonus');
 
     Route::post('/api/reading/progress', function (\Illuminate\Http\Request $request) {
         $request->validate([
@@ -625,17 +684,80 @@ Route::prefix('admin')
     })->name('users.index');
 
     Route::get('/users/{user}/edit', function (\App\Models\User $user) {
+        // Adminlar (jumladan o'zi) tahrirlanmaydi — himoyalangan qatlam
+        if ($user->isAdmin() || $user->role === 'admin') {
+            return redirect()->route('admin.users.index')->with('error', "Admin foydalanuvchini tahrirlash mumkin emas. 🛡️");
+        }
         $roles = \Spatie\Permission\Models\Role::all();
         return view('admin.users.edit', compact('user', 'roles'));
     })->name('users.edit');
 
     Route::put('/users/{user}', function (\Illuminate\Http\Request $req, \App\Models\User $user) {
-        $req->validate(['role' => 'required|string|exists:roles,name']);
+        // Adminlar (jumladan o'zi) tahrirlanmaydi
+        if ($user->isAdmin() || $user->role === 'admin') {
+            return redirect()->route('admin.users.index')->with('error', "Admin foydalanuvchini tahrirlash mumkin emas. 🛡️");
+        }
+
+        $req->validate([
+            'role'   => 'required|string|exists:roles,name',
+            'points' => 'nullable|integer|min:0',
+            'coins'  => 'nullable|integer|min:0',
+        ]);
+
         $user->syncRoles([$req->role]);
-        return redirect()->route('admin.users.index')->with('success', 'Rol yangilandi!');
+
+        $pointsService = app(\App\Services\Gamification\PointsService::class);
+
+        // Ball (total_points): forma hozirgi balansni yuboradi — farq (delta) qo'shiladi/ayiriladi
+        $currentPoints = (int) $user->total_points;
+        $newPoints     = (int) $req->input('points', $currentPoints);
+        $pointsDelta   = $newPoints - $currentPoints;
+
+        if ($pointsDelta > 0) {
+            $pointsService->awardPoints($user, $pointsDelta, 'admin', "Admin tomonidan ball qo'shildi");
+        } elseif ($pointsDelta < 0) {
+            $user->decrement('total_points', abs($pointsDelta));
+            \App\Models\PointTransaction::create([
+                'user_id'     => $user->id,
+                'points'      => $pointsDelta,
+                'source'      => 'admin',
+                'description' => 'Admin tomonidan ball ayirildi',
+            ]);
+        }
+
+        // Tanga (coin_balance): xuddi shu delta logikasi
+        $currentCoins = (int) $user->coin_balance;
+        $newCoins     = (int) $req->input('coins', $currentCoins);
+        $coinsDelta   = $newCoins - $currentCoins;
+
+        if ($coinsDelta > 0) {
+            $pointsService->awardCoins($user, $coinsDelta, 'admin', 'Admin tomonidan tanga berildi');
+        } elseif ($coinsDelta < 0) {
+            $user->decrement('coin_balance', abs($coinsDelta));
+            \App\Models\CoinTransaction::create([
+                'user_id'     => $user->id,
+                'coins'       => $coinsDelta,
+                'source'      => 'admin',
+                'description' => 'Admin tomonidan tanga ayirildi',
+            ]);
+        }
+
+        $summary = "Ma'lumotlar saqlandi!";
+        if ($pointsDelta !== 0) {
+            $summary .= ' Ball: ' . ($pointsDelta > 0 ? '+' : '') . $pointsDelta;
+        }
+        if ($coinsDelta !== 0) {
+            $summary .= ' Tanga: ' . ($coinsDelta > 0 ? '+' : '') . $coinsDelta;
+        }
+
+        return redirect()->route('admin.users.edit', $user)->with('success', $summary);
     })->name('users.update');
 
     Route::delete('/users/{user}', function (\App\Models\User $user) {
+        // Adminlar (jumladan o'zi) o'chirilmaydi
+        if ($user->isAdmin() || $user->role === 'admin') {
+            return redirect()->route('admin.users.index')->with('error', "Admin foydalanuvchini o'chirish mumkin emas. 🛡️");
+        }
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'Foydalanuvchi o\'chirildi!');
     })->name('users.destroy');
@@ -647,8 +769,8 @@ Route::prefix('admin')
             'reason'   => 'nullable|string|max:500',
         ]);
 
-        if ($user->id === auth()->id()) {
-            return back()->with('error', 'O\'zingizni bloklab bo\'lmaydi!');
+        if ($user->isAdmin() || $user->role === 'admin' || $user->id === auth()->id()) {
+            return back()->with('error', "Admin foydalanuvchini (va o'zingizni) bloklash mumkin emas! 🛡️");
         }
 
         $user->ban($req->duration, $req->reason);

@@ -110,6 +110,7 @@
                         ];
                         $rc = $roleConfig[$role] ?? ['label' => $role, 'class' => 'bg-ink-950 text-mist border-ink-border'];
                         $isBanned = $user->isBanned();
+                        $isAdminTarget = $user->isAdmin() || $user->role === 'admin';
                     @endphp
                     <tr class="hover:bg-ink-800/40 transition-colors group">
                         <td class="py-2.5 px-3.5 text-mist font-mono text-[11px]">
@@ -117,9 +118,14 @@
                         </td>
                         <td class="py-2.5 px-3.5">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-7 h-7 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-xs font-mono font-bold text-paper flex-shrink-0">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </div>
+                                @if($user->avatar)
+                                    <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
+                                         class="w-7 h-7 rounded-btn object-cover bg-ink-950 border border-ink-border flex-shrink-0">
+                                @else
+                                    <div class="w-7 h-7 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-xs font-mono font-bold text-paper flex-shrink-0">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+                                @endif
                                 <div class="min-w-0">
                                     <p class="text-xs font-semibold text-paper group-hover:text-amber-400 transition-colors truncate">{{ $user->name }}</p>
                                     <p class="text-[10px] text-mist font-mono truncate">ID: {{ $user->id }}</p>
@@ -149,7 +155,7 @@
                             @endif
                         </td>
                         <td class="py-2.5 px-3.5 font-mono text-[11px]">
-                            <span class="text-amber-400 font-bold">{{ $user->points ?? 0 }}</span>
+                            <span class="text-amber-400 font-bold">{{ $user->total_points }}</span>
                         </td>
                         <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist">
                             {{ $user->created_at->format('d.m.Y') }}
@@ -157,37 +163,42 @@
                         <td class="py-2.5 px-3.5 text-right">
                             <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                 {{-- Ban / Unban --}}
-                                @if($user->id !== auth()->id())
-                                    @if($isBanned)
-                                        <form method="POST" action="{{ route('admin.users.unban', $user) }}" class="inline">
-                                            @csrf
-                                            <button type="submit" class="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 rounded-btn text-[10px] font-mono font-bold transition-all">
-                                                Yechish
-                                            </button>
-                                        </form>
-                                    @else
-                                        <button type="button"
-                                                @click="openBan({{ $user->id }}, '{{ addslashes($user->name) }}')"
-                                                class="px-2 py-1 bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:bg-rose-500/20 rounded-btn text-[10px] font-mono font-bold transition-all">
-                                            Ban
-                                        </button>
-                                    @endif
-                                @else
+                                @if($user->id === auth()->id())
                                     <span class="text-[10px] font-mono text-mist italic px-1.5 py-0.5 bg-ink-950 rounded-badge border border-ink-border">
                                         (Siz)
                                     </span>
+                                @elseif($isAdminTarget)
+                                    <span class="text-[10px] font-mono text-amber-400/80 px-1.5 py-0.5 bg-ink-950 rounded-badge border border-amber-500/25" title="Admin himoyalangan">
+                                        🛡️ Himoyalangan
+                                    </span>
+                                @elseif($isBanned)
+                                    <form method="POST" action="{{ route('admin.users.unban', $user) }}" class="inline">
+                                        @csrf
+                                        <button type="submit" class="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 rounded-btn text-[10px] font-mono font-bold transition-all">
+                                            Yechish
+                                        </button>
+                                    </form>
+                                @else
+                                    <button type="button"
+                                            @click="openBan({{ $user->id }}, '{{ addslashes($user->name) }}')"
+                                            class="px-2 py-1 bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:bg-rose-500/20 rounded-btn text-[10px] font-mono font-bold transition-all">
+                                        Ban
+                                    </button>
                                 @endif
 
                                 {{-- Edit --}}
-                                <a href="{{ route('admin.users.edit', $user) }}"
-                                   class="ks-btn-ghost py-1 px-2 text-[10px] font-mono inline-flex items-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                    <span>Tahrirlash</span>
-                                </a>
+                                @if(!$isAdminTarget)
+                                    <a href="{{ route('admin.users.edit', $user) }}"
+                                       class="ks-btn-ghost py-1 px-2 text-[10px] font-mono inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                        <span>Tahrirlash</span>
+                                    </a>
+                                @endif
 
                                 {{-- Delete --}}
+                                @if(!$isAdminTarget)
                                 <div x-data="{ confirm: false }">
                                     <button x-show="!confirm"
                                             @click="confirm = true"
@@ -208,6 +219,7 @@
                                         </button>
                                     </div>
                                 </div>
+                                @endif
                             </div>
                         </td>
                     </tr>

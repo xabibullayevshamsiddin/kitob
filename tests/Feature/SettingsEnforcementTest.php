@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -180,5 +181,34 @@ class SettingsEnforcementTest extends TestCase
         $this->student->refresh();
         $this->assertEquals(14, $this->student->total_points);
         $this->assertEquals(6, $this->student->coin_balance);
+    }
+
+    /** @test */
+    public function user_can_remove_their_profile_avatar(): void
+    {
+        Storage::fake('public');
+
+        $path = 'avatars/remove-me.jpg';
+        Storage::disk('public')->put($path, 'fake-image-content');
+
+        $this->student->update(['avatar' => $path]);
+        $this->assertTrue(Storage::disk('public')->exists($path));
+
+        Livewire::actingAs($this->student)
+            ->test(\App\Http\Livewire\Settings\SettingsPage::class)
+            ->call('removeAvatar')
+            ->assertHasNoErrors();
+
+        $this->assertNull($this->student->fresh()->avatar);
+        Storage::disk('public')->assertMissing($path);
+
+        // Fallback avatar (harf) qaytishi kerak
+        $this->assertStringContainsString('ui-avatars.com', $this->student->fresh()->avatar_url);
+
+        // Avatar yo'q bo'lganda qayta chaqirish xato bermasligi kerak (idempotent)
+        Livewire::actingAs($this->student)
+            ->test(\App\Http\Livewire\Settings\SettingsPage::class)
+            ->call('removeAvatar')
+            ->assertHasNoErrors();
     }
 }

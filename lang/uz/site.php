@@ -736,6 +736,10 @@ return [
         'saving'             => 'Saqlanmoqda...',
         'save'               => "O'zgarishlarni saqlash",
         'saved_success'      => 'Sozlamalar saqlandi! ✅',
+        'remove_avatar'      => "Rasmni o'chirish",
+        'remove_avatar_confirm' => "Profil rasmini o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.",
+        'removing'           => "O'chirilmoqda...",
+        'avatar_removed'     => "Profil rasmi o'chirildi. ✅",
         'attr_name'          => 'ism',
     ],
 

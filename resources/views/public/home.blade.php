@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark overflow-x-hidden max-w-full" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,11 @@
     <title>Kitobxon — @yield('title', __('site.home.hero_title') . __('site.home.hero_title_bold'))</title>
 
     @include('partials.design-system')
+
+    <!-- Google Fonts: Instrument Serif (display) & Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- GSAP & ScrollTrigger for Subtle Editorial Physics Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -16,6 +21,58 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
+        /* ── Velorah Cinematic Hero CSS Variables & Effects ── */
+        :root {
+            --font-display: 'Instrument Serif', serif;
+            --font-body: 'Inter', sans-serif;
+            --background: 201 100% 13%;
+            --foreground: 0 0% 100%;
+            --muted-foreground: 240 4% 66%;
+            --primary: 0 0% 100%;
+            --primary-foreground: 0 0% 4%;
+            --secondary: 0 0% 10%;
+            --muted: 0 0% 10%;
+            --accent: 0 0% 10%;
+            --border: 0 0% 18%;
+            --input: 0 0% 18%;
+        }
+
+        /* Liquid Glass Effect */
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.01);
+            background-blend-mode: luminosity;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: none;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1.4px;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+                rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+                rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Animations */
+        @keyframes fade-rise {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-rise { animation: fade-rise 0.8s ease-out both; }
+        .animate-fade-rise-delay { animation: fade-rise 0.8s ease-out 0.2s both; }
+        .animate-fade-rise-delay-2 { animation: fade-rise 0.8s ease-out 0.4s both; }
+
         input[type="number"] {
             -moz-appearance: textfield;
             appearance: textfield;
@@ -118,144 +175,94 @@
         }
     </style>
 </head>
-<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain">
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain overflow-x-hidden w-full max-w-full">
 
     <!-- ── Page Transition & Loader ── -->
     @include('components.page-loader')
 
-    <div id="smooth-page-wrapper">
-    <!-- ── Header Navigation ── -->
+    <div id="smooth-page-wrapper" class="w-full max-w-full overflow-x-clip">
+
+    <!-- ── Universal Platform Header ── -->
     <x-nav.main-header />
 
-    <!-- ── 1. EDITORIAL HERO SECTION ── -->
-    <section class="relative pt-14 md:pt-20 pb-16 md:pb-24 overflow-hidden border-b border-ink-border/50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-                
-                <!-- Left: Focused Copy with Staggered Entrance -->
-                <div class="lg:col-span-6 space-y-6">
-                    
-                    <div class="hero-anim-item inline-flex items-center gap-2 px-3 py-1 rounded-badge bg-ink-900 border border-ink-border text-amber-400 font-mono text-xs tracking-wider">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                        @if(isset($featuredBook) && $featuredBook)
-                            <span class="uppercase">{{ $featuredBook->week_number }}-HAFTA · {{ $featuredBook->title }}</span>
-                        @else
-                            <span class="uppercase">{{ __('site.home.badge_season') }}</span>
-                        @endif
-                    </div>
+    <!-- ── 1. KITOBXON CINEMATIC FULLSCREEN VIDEO HERO SECTION ── -->
+    <section class="relative w-full min-h-[calc(100vh-4rem)] flex flex-col justify-between overflow-hidden bg-[hsl(var(--background))] text-[hsl(var(--foreground))] select-none max-w-full">
+        
+        <!-- Fullscreen Looping Video Background -->
+        <video 
+            autoplay 
+            loop 
+            muted 
+            playsinline 
+            class="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none">
+            <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4">
+        </video>
 
-                    <h1 class="hero-anim-item text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-paper font-serif leading-[1.18] sm:leading-[1.12] break-words">
-                        {{ __('site.home.hero_title') }} <span class="italic text-amber-400">{{ __('site.home.hero_title_bold') }}</span> {{ __('site.home.hero_title_end') }}
-                    </h1>
-
-                    <p class="hero-anim-item text-sm sm:text-lg text-mist max-w-[56ch] leading-relaxed font-normal">
-                        {{ __('site.home.hero_sub') }}
-                    </p>
-
-                    <div class="hero-anim-item flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 pt-2">
-                        @if(auth()->check())
-                            <a href="{{ route('books.public') }}" 
-                               class="ks-btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <span>{{ __('site.home.explore_books') }}</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                            </a>
-                        @else
-                            <a href="{{ route('register') }}" 
-                               class="ks-btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <span>{{ __('site.home.start_now') }}</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                            </a>
-                            <a href="{{ route('books.public') }}" 
-                               class="ks-btn-ghost inline-flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <span>{{ __('site.home.books_catalog') }}</span>
-                            </a>
-                        @endif
-                    </div>
-
-                    <div class="hero-anim-item pt-4 flex items-center gap-4 text-xs text-mist border-t border-ink-border/40">
-                        <div class="flex -space-x-2">
-                            @if(isset($recentUsers) && $recentUsers->count())
-                                @foreach($recentUsers as $ru)
-                                    @if($ru->avatar)
-                                        <img src="{{ $ru->avatar_url }}" class="w-7 h-7 rounded-full border border-ink-950 object-cover" title="{{ $ru->name }}" alt="{{ $ru->name }}">
-                                    @else
-                                        <span class="w-7 h-7 rounded-full bg-ink-800 border border-ink-950 flex items-center justify-center font-mono text-[10px] text-paper" title="{{ $ru->name }}">
-                                            {{ strtoupper(mb_substr($ru->name, 0, 2)) }}
-                                        </span>
-                                    @endif
-                                @endforeach
-                            @else
-                                <span class="w-7 h-7 rounded-full bg-ink-800 border border-ink-950 flex items-center justify-center font-mono text-[10px] text-paper">KB</span>
-                            @endif
-                        </div>
-                        <p><strong class="text-paper font-mono text-sm counter-element" data-target="{{ $usersCount ?? 0 }}">{{ $usersCount ?? 0 }}</strong> {{ __('site.home.active_readers') }}</p>
-                    </div>
-
-                </div>
-
-                <!-- Right: Featured Book in Editorial Frame -->
-                <div class="lg:col-span-6 flex justify-center">
-                    <div class="hero-anim-item relative w-full max-w-lg" x-data="{ playing: false }">
-                        @if(isset($featuredBook) && $featuredBook)
-                            <div class="ks-panel p-5 bg-ink-900 border border-ink-border relative">
-                                <div class="flex items-center justify-between mb-3 text-xs">
-                                    <span class="ks-badge bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
-                                        {{ __('site.home.week_book') }}
-                                    </span>
-                                    <span class="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                        {{ __('site.home.now_reading') }}
-                                    </span>
-                                </div>
-
-                                {{-- Signature 3D Book Card (2:3 nisbat) --}}
-                                <div class="w-full max-w-[260px] mx-auto py-2">
-                                    <x-ui.book-card :book="$featuredBook" ratio="2 / 3" :showMeta="false"></x-ui.book-card>
-                                    <div class="pt-3 mt-3 border-t border-ink-border flex items-center justify-between">
-                                        <span class="ks-eyebrow">{{ $featuredBook->genre }}</span>
-                                        <a href="{{ route('books.show', $featuredBook->slug) }}"
-                                           class="ks-btn-primary !py-1 !px-3 !text-xs inline-flex items-center gap-1.5">
-                                            <span>O'qish</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                        </a>
-                                    </div>
-                                </div>
-
-                                @php
-                                    $featuredAudio = $featuredBook->audios()->first();
-                                @endphp
-                                @if($featuredAudio)
-                                    <div class="mt-3 p-3 rounded-card bg-ink-950 border border-ink-border flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <button @click="playing = !playing" class="w-8 h-8 rounded-btn bg-amber-500 hover:bg-amber-400 text-ink-950 flex items-center justify-center font-bold text-xs transition-colors cursor-pointer">
-                                                <span x-text="playing ? '⏸' : '▶'">▶</span>
-                                            </button>
-                                            <div class="min-w-0">
-                                                <p class="text-xs font-semibold text-paper truncate max-w-[140px]">{{ $featuredAudio->title ?: 'Audio dars' }}</p>
-                                                <p class="text-[10px] text-mist font-mono">{{ $featuredAudio->duration ? round($featuredAudio->duration / 60) . ' ' . __('site.common.minutes') : __('site.home.audio_format') }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-1 h-5 px-1">
-                                            <span class="w-0.5 bg-amber-400 rounded-full bar-anim"></span>
-                                            <span class="w-0.5 bg-amber-400 rounded-full bar-anim"></span>
-                                            <span class="w-0.5 bg-amber-400 rounded-full bar-anim"></span>
-                                            <span class="w-0.5 bg-amber-400 rounded-full bar-anim"></span>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        @else
-                            <div class="ks-panel p-8 bg-ink-900 border border-ink-border text-center space-y-2">
-                                <span class="ks-eyebrow">{{ __('site.home.weekly_reading') }}</span>
-                                <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.home.coming_soon') }}</h3>
-                                <p class="text-xs text-mist">{{ __('site.home.coming_soon_sub') }}</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
+        <!-- Centered Cinematic Hero Section Content -->
+        <div class="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-16 sm:pt-24 pb-20 sm:pb-28 max-w-7xl mx-auto w-full flex-1 overflow-hidden">
+            
+            <!-- Eyebrow Pill Badge -->
+            <div class="animate-fade-rise inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full liquid-glass text-[10.5px] sm:text-xs text-amber-300 font-mono tracking-wider mb-6 max-w-full">
+                <span class="relative flex h-2 w-2 shrink-0">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span class="break-words">HAR HAFTA BITTA SARA ASAR VA CHUQUR MUTOLAA</span>
             </div>
+
+            <!-- H1 Cinematic Headline -->
+            <h1 class="animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-[hsl(var(--foreground))] break-words"
+                style="font-family: 'Instrument Serif', serif;">
+                Sahifalar aro <em class="not-italic text-amber-300/90">orzular</em> va <em class="not-italic text-[hsl(var(--muted-foreground))]">teran tafakkur yuksaladi.</em>
+            </h1>
+
+            <!-- Subtext -->
+            <p class="animate-fade-rise-delay text-[hsl(var(--muted-foreground))] text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal"
+               style="font-family: var(--font-body, 'Inter', sans-serif);">
+                Chalg'ituvchi shovqinlar orasida — chuqur mutolaa, 3D interaktiv varaqlash va ilhom maskani. Sara jahon hamda o'zbek adabiyoti, audio asarlar va intellektual kitobxonlar ekotizimi.
+            </p>
+
+            <!-- Hero CTA Buttons -->
+            <div class="animate-fade-rise-delay-2 mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+                <a href="{{ auth()->check() ? route('books.catalog') : route('register') }}"
+                   class="liquid-glass rounded-full px-10 sm:px-14 py-4 sm:py-5 text-base text-[hsl(var(--foreground))] hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2.5 transition-transform duration-300 font-medium group w-full sm:w-auto"
+                   style="font-family: var(--font-body, 'Inter', sans-serif);">
+                    <span>Mutolaani boshlash</span>
+                    <svg class="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </a>
+                <a href="#book-reveal-section"
+                   class="liquid-glass rounded-full px-8 py-4 sm:py-5 text-base text-[hsl(var(--muted-foreground))] hover:text-white hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2 transition-all duration-300 font-medium w-full sm:w-auto"
+                   style="font-family: var(--font-body, 'Inter', sans-serif);">
+                    <span>📖 3D Kitobni ochish</span>
+                </a>
+            </div>
+
+            <!-- Micro-features Pill Bar -->
+            <div class="animate-fade-rise-delay-2 mt-12 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs text-[hsl(var(--muted-foreground))] font-mono">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
+                    <span>📚</span> {{ $booksCount ?? 1000 }}+ {{ __('site.home.stat_books') }}
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
+                    <span>🎧</span> Audio mutolaa
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
+                    <span>🔥</span> Kunlik streak va ballar
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
+                    <span>👥</span> {{ $usersCount ?? 1200 }}+ {{ __('site.home.active_readers') }}
+                </span>
+            </div>
+
         </div>
+
+        <!-- Bottom scroll cue -->
+        <div class="relative z-10 pb-6 w-full flex justify-center">
+            <a href="#book-reveal-section" class="inline-flex flex-col items-center gap-1.5 text-[11px] font-mono tracking-widest uppercase text-white/40 hover:text-amber-400 transition-colors cursor-pointer group">
+                <span>Varaqlab o'qish</span>
+                <svg class="w-4 h-4 animate-bounce text-amber-400/80 group-hover:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+            </a>
+        </div>
+
     </section>
 
     <!-- ── 2. SCROLLYTELLING BOOK REVEAL SECTION (APPLE-GRADE PINNED SCROLL) ── -->
@@ -295,14 +302,14 @@
         $scrollyCover = $scrollyBook->cover_url ?? null;
     @endphp
 
-    <section id="book-reveal-section" class="relative w-full min-h-screen bg-ink-950 border-b border-ink-border flex items-center justify-center py-16 lg:py-0">
+    <section id="book-reveal-section" class="relative w-full min-h-screen bg-ink-950 border-b border-ink-border flex items-center justify-center py-16 lg:py-0 overflow-hidden max-w-full">
         <!-- Atmospheric Ambient Spotlight behind the book -->
         <div class="scrolly-ambient-glow absolute inset-0 pointer-events-none flex items-center justify-center opacity-60 overflow-hidden" aria-hidden="true">
-            <div class="w-[500px] lg:w-[650px] h-[500px] lg:h-[650px] rounded-full bg-gradient-radial from-amber-500/15 via-vermilion/5 to-transparent blur-3xl"></div>
+            <div class="w-[500px] lg:w-[650px] h-[500px] lg:h-[650px] rounded-full bg-gradient-radial from-amber-500/15 via-vermilion/5 to-transparent blur-3xl max-w-full"></div>
         </div>
 
         <!-- Inner Centered Container -->
-        <div class="w-full max-w-7xl mx-auto px-6 relative z-10">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 relative z-10 overflow-hidden lg:overflow-visible">
             <!-- Eyebrow Bar: Chapter / Week Indicator -->
             <div class="scrolly-eyebrow-bar mb-6 lg:mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-ink-border/50 pb-3">
                 <div class="flex items-center gap-2">
@@ -327,12 +334,12 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                 
                 <!-- LEFT (cols 1-6): The Grand 3D Book Stage (Multi-Leaf 3D Interactive Flip) -->
-                <div class="lg:col-span-6 flex flex-col justify-center lg:justify-end lg:pr-8 items-center">
-                    <div class="scrolly-book-stage relative w-[240px] sm:w-[280px] lg:w-[320px] aspect-[2/3] select-none" id="scrolly-book-stage">
+                <div class="lg:col-span-6 flex flex-col justify-center lg:justify-end lg:pr-8 items-center max-w-full">
+                    <div class="scrolly-book-stage relative w-[205px] sm:w-[260px] lg:w-[320px] aspect-[2/3] select-none" id="scrolly-book-stage">
                         
                         <!-- Floating Drag/Swipe Gesture Hint Pill -->
                         <div id="scrolly-drag-hint"
-                             class="absolute -top-11 left-1/2 -translate-x-1/2 pointer-events-none z-50 transition-all duration-500 flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink-950/95 border border-amber-400/40 text-[10.5px] font-mono text-amber-300 shadow-2xl backdrop-blur-md whitespace-nowrap">
+                             class="absolute -top-11 left-1/2 -translate-x-1/2 pointer-events-none z-50 transition-all duration-500 flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink-950/95 border border-amber-400/40 text-[10px] sm:text-[10.5px] font-mono text-amber-300 shadow-2xl backdrop-blur-md max-w-[90vw] whitespace-nowrap overflow-hidden">
                             <span class="inline-block animate-[bounce_1.2s_infinite]">👈</span>
                             <span>Mishka yoki qo'l bilan suring (boshqa betga)</span>
                             <span class="inline-block animate-[bounce_1.2s_infinite]">👉</span>
@@ -628,7 +635,7 @@
                     </div>
 
                     <!-- 3D Book Interactive Controls & Page Flip Toolbar -->
-                    <div class="scrolly-book-controls flex items-center justify-between gap-2 mt-4 px-1 w-full max-w-[240px] sm:max-w-[280px] lg:max-w-[320px] select-none">
+                    <div class="scrolly-book-controls flex items-center justify-between gap-2 mt-4 px-1 w-full max-w-[205px] sm:max-w-[260px] lg:max-w-[320px] select-none">
                         <button type="button" id="scrolly-prev-page-btn"
                                 class="px-2.5 py-1 rounded-full bg-ink-900 border border-ink-border text-mist hover:text-paper hover:border-amber-400/50 text-xs font-mono transition-colors flex items-center gap-1 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
                                 title="Oldingi bet">
@@ -791,7 +798,7 @@
     </div>
 
     <!-- ── JONLI PLATFORMA STATISTIKASI ── -->
-    <section class="py-8 border-b border-ink-border bg-ink-950">
+    <section class="py-8 border-b border-ink-border bg-ink-950 overflow-hidden max-w-full">
         <div class="max-w-7xl mx-auto px-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="p-4 rounded-card bg-ink-900 border border-ink-border text-center">
@@ -891,7 +898,7 @@
     @endif
 
     <!-- ── 3. ASYMMETRICAL BENTO GRID ── -->
-    <section id="features" class="py-20 md:py-28 relative">
+    <section id="features" class="py-20 md:py-28 relative overflow-hidden max-w-full">
         <div class="max-w-7xl mx-auto px-6">
             
             <div class="bento-header max-w-2xl mb-12 space-y-2">
@@ -1038,7 +1045,7 @@
     </section>
 
     <!-- ── 4. HOW IT WORKS (Numbered Editorial Steps) ── -->
-    <section class="py-20 md:py-28 border-t border-ink-border bg-ink-900/30">
+    <section class="py-20 md:py-28 border-t border-ink-border bg-ink-900/30 overflow-hidden max-w-full">
         <div class="max-w-7xl mx-auto px-6">
             
             <div class="step-header text-center max-w-xl mx-auto mb-14 space-y-2">
@@ -1113,19 +1120,20 @@
 
     <!-- ── Motion Script (GSAP + Dynamic Rolling Counters) ── -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof gsap !== 'undefined') {
-                gsap.registerPlugin(ScrollTrigger);
+        function initHomePageAnimations() {
+            if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+                setTimeout(initHomePageAnimations, 50);
+                return;
+            }
 
-                // Auto-refresh on standard events
+            gsap.registerPlugin(ScrollTrigger);
+
+            try {
+                // Auto-refresh on standard events & ignore mobile browser address-bar resize jumps
                 ScrollTrigger.config({
-                    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize"
+                    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
+                    ignoreMobileResize: true
                 });
-
-                // Touch stability: normalize scroll on touch devices to prevent mobile browser address bar jumps
-                if (ScrollTrigger.isTouch === 1) {
-                    ScrollTrigger.normalizeScroll({ allowNestedScroll: true });
-                }
 
                 // Silliq ichki havolalar (anchor link) — global scroll-smooth o'rniga nuqtali JS smooth scroll
                 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -1233,8 +1241,8 @@
                     if (leaf2) gsap.set(leaf2, { rotateY: 0, transformOrigin: "left center", zIndex: 20 });
                     gsap.set(stage, { x: 0 });
                     gsap.set(shadow, { scaleX: 1, opacity: 0.6, x: 0 });
-                    gsap.set(contentPanel, { opacity: 0, x: 45 });
-                    gsap.set(statsRow, { opacity: 0, y: 25 });
+                    gsap.set(contentPanel, { opacity: isDesktop ? 0 : 1, x: isDesktop ? 45 : 0 });
+                    gsap.set(statsRow, { opacity: isDesktop ? 0 : 1, y: isDesktop ? 25 : 0 });
 
                     const statElements = document.querySelectorAll('.scrolly-stat-num');
                     const statTargets = Array.from(statElements).map(el => parseInt(el.getAttribute('data-target') || '0', 10));
@@ -1242,11 +1250,20 @@
 
                     // ── MASTER TIMELINE: SINGLE SOURCE OF TRUTH FOR ALL LEAVES ──
                     const masterTl = gsap.timeline({
-                        paused: !isDesktop || prefersReduced,
+                        paused: prefersReduced,
                         onUpdate: function() {
                             updateControlsFromProgress(this.progress());
                         }
                     });
+
+                    // Hint pill fades out as user scrolls
+                    if (dragHint) {
+                        masterTl.to(dragHint, {
+                            opacity: 0,
+                            duration: 0.08,
+                            ease: 'power1.out'
+                        }, 0.04);
+                    }
 
                     // 1. Cover opens (0.00 -> 0.28)
                     masterTl.to(cover, {
@@ -1258,28 +1275,30 @@
                     // Drop cover z-index behind right leaves as it passes -90deg
                     masterTl.set(cover, { zIndex: 12 }, 0.14);
 
-                    if (isDesktop) {
-                        masterTl.to(stage, {
-                            x: 40,
-                            ease: 'power1.inOut',
-                            duration: 0.28
-                        }, 0);
-                    }
+                    // Gentle X adjustment to keep open book centered
+                    const shiftX = isDesktop ? 40 : Math.round(Math.min(50, Math.max(25, (window.innerWidth - 205) * 0.28)));
+                    masterTl.to(stage, {
+                        x: shiftX,
+                        ease: 'power1.inOut',
+                        duration: 0.28
+                    }, 0);
 
                     masterTl.to(shadow, {
-                        scaleX: 1.25,
-                        x: -24,
+                        scaleX: isDesktop ? 1.25 : 1.15,
+                        x: isDesktop ? -24 : -15,
                         opacity: 0.9,
                         ease: 'power1.inOut',
                         duration: 0.28
                     }, 0);
 
-                    masterTl.to(contentPanel, {
-                        opacity: 1,
-                        x: 0,
-                        ease: 'power2.out',
-                        duration: 0.22
-                    }, 0.06);
+                    if (isDesktop) {
+                        masterTl.to(contentPanel, {
+                            opacity: 1,
+                            x: 0,
+                            ease: 'power2.out',
+                            duration: 0.22
+                        }, 0.06);
+                    }
 
                     // 2. Leaf 1 flips (0.28 -> 0.54)
                     if (leaf1) {
@@ -1338,21 +1357,34 @@
                         }
                     }, 0.80);
 
-                    // If Desktop: Bind masterTl to ScrollTrigger
-                    if (isDesktop && !prefersReduced && typeof ScrollTrigger !== 'undefined') {
-                        ScrollTrigger.create({
-                            id: 'book-reveal-st',
-                            animation: masterTl,
-                            trigger: '#book-reveal-section',
-                            start: 'top top',
-                            end: '+=200%',
-                            pin: true,
-                            scrub: 0.8,
-                            anticipatePin: 1,
-                            invalidateOnRefresh: true
-                        });
-                    } else {
-                        // Mobile: show content panel & stats by default, let timeline handle book flips
+                    // ── ATTACH SCROLLTRIGGER (DESKTOP PIN + MOBILE FLUID SCRUB) ──
+                    if (!prefersReduced && typeof ScrollTrigger !== 'undefined') {
+                        if (isDesktop) {
+                            ScrollTrigger.create({
+                                id: 'book-reveal-st',
+                                animation: masterTl,
+                                trigger: '#book-reveal-section',
+                                start: 'top top',
+                                end: '+=200%',
+                                pin: true,
+                                scrub: 0.8,
+                                anticipatePin: 1,
+                                invalidateOnRefresh: true
+                            });
+                        } else {
+                            // Mobile / Tablet (< 1024px): Smooth scroll scrub as book travels through viewport
+                            ScrollTrigger.create({
+                                id: 'book-reveal-st',
+                                animation: masterTl,
+                                trigger: stage || '#book-reveal-section',
+                                start: 'top 85%',
+                                end: 'bottom 15%',
+                                scrub: 0.7,
+                                invalidateOnRefresh: true
+                            });
+                        }
+                    } else if (prefersReduced) {
+                        // Reduced motion fallback
                         gsap.set(contentPanel, { opacity: 1, x: 0 });
                         gsap.set(statsRow, { opacity: 1, y: 0 });
                         statElements.forEach((el, idx) => {
@@ -1517,10 +1549,17 @@
                 // Initialize immediately
                 window.initBookRevealSection();
 
-                // Responsive listener for viewport breakpoint changes
+                // Responsive listener for viewport breakpoint changes & device orientation
                 try {
                     window.matchMedia("(min-width: 1024px)").addEventListener('change', () => {
                         window.initBookRevealSection();
+                        setTimeout(() => ScrollTrigger.refresh(), 50);
+                    });
+                    window.addEventListener('orientationchange', () => {
+                        setTimeout(() => {
+                            window.initBookRevealSection();
+                            ScrollTrigger.refresh();
+                        }, 150);
                     });
                 } catch(e) {}
 
@@ -1626,8 +1665,18 @@
                         ScrollTrigger.refresh();
                     });
                 }
+            } catch(e) {
+                console.warn('Animation init error:', e);
             }
-        });
+        }
+
+        if (document.getElementById('scrolly-book-stage') && typeof gsap !== 'undefined') {
+            initHomePageAnimations();
+        } else if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initHomePageAnimations);
+        } else {
+            initHomePageAnimations();
+        }
     
         // ── Fail-safe: GSAP yuklanmasa yoki kechiksa kontent to'liq ko'rinadi ──
         const __kitobxonSeen = new WeakMap();

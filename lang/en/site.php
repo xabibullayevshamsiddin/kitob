@@ -736,6 +736,10 @@ return [
         'saving'             => 'Saving...',
         'save'               => 'Save changes',
         'saved_success'      => 'Settings saved! ✅',
+        'remove_avatar'      => 'Remove photo',
+        'remove_avatar_confirm' => 'Remove your profile photo? This cannot be undone.',
+        'removing'           => 'Removing...',
+        'avatar_removed'     => 'Profile photo removed. ✅',
         'attr_name'          => 'name',
     ],
 
