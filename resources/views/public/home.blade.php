@@ -186,7 +186,7 @@
     <x-nav.main-header />
 
     <!-- ── 1. KITOBXON CINEMATIC FULLSCREEN VIDEO HERO SECTION ── -->
-    <section class="relative w-full min-h-[calc(100vh-4rem)] flex flex-col justify-between overflow-hidden bg-[hsl(var(--background))] text-[hsl(var(--foreground))] select-none max-w-full">
+    <section class="relative w-full min-h-screen -mt-16 flex flex-col justify-between overflow-hidden bg-[hsl(var(--background))] text-[hsl(var(--foreground))] select-none max-w-full">
         
         <!-- Fullscreen Looping Video Background -->
         <video 
@@ -198,26 +198,30 @@
             <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4">
         </video>
 
+        <!-- Subtle cinematic dark scrim and bottom gradient overlay for pristine contrast -->
+        <div class="absolute inset-0 bg-black/45 pointer-events-none z-0"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-black/30 pointer-events-none z-0"></div>
+
         <!-- Centered Cinematic Hero Section Content -->
-        <div class="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-16 sm:pt-24 pb-20 sm:pb-28 max-w-7xl mx-auto w-full flex-1 overflow-hidden">
+        <div class="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-24 sm:pt-32 pb-20 sm:pb-28 max-w-7xl mx-auto w-full flex-1 overflow-hidden">
             
             <!-- Eyebrow Pill Badge -->
-            <div class="animate-fade-rise inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full liquid-glass text-[10.5px] sm:text-xs text-amber-300 font-mono tracking-wider mb-6 max-w-full">
+            <div class="animate-fade-rise inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full bg-ink-950/80 backdrop-blur-md border border-amber-400/30 text-[10.5px] sm:text-xs text-amber-300 font-mono tracking-wider mb-6 max-w-full shadow-lg shadow-black/40">
                 <span class="relative flex h-2 w-2 shrink-0">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                 </span>
-                <span class="break-words">HAR HAFTA BITTA SARA ASAR VA CHUQUR MUTOLAA</span>
+                <span class="break-words font-semibold">HAR HAFTA BITTA SARA ASAR VA CHUQUR MUTOLAA</span>
             </div>
 
             <!-- H1 Cinematic Headline -->
-            <h1 class="animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-[hsl(var(--foreground))] break-words"
+            <h1 class="animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)] break-words"
                 style="font-family: 'Instrument Serif', serif;">
-                Sahifalar aro <em class="not-italic text-amber-300/90">orzular</em> va <em class="not-italic text-[hsl(var(--muted-foreground))]">teran tafakkur yuksaladi.</em>
+                Sahifalar aro <em class="not-italic text-amber-300/95 font-semibold">orzular</em> va <em class="not-italic text-slate-200">teran tafakkur yuksaladi.</em>
             </h1>
 
             <!-- Subtext -->
-            <p class="animate-fade-rise-delay text-[hsl(var(--muted-foreground))] text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal"
+            <p class="animate-fade-rise-delay text-slate-200/90 text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]"
                style="font-family: var(--font-body, 'Inter', sans-serif);">
                 Chalg'ituvchi shovqinlar orasida — chuqur mutolaa, 3D interaktiv varaqlash va ilhom maskani. Sara jahon hamda o'zbek adabiyoti, audio asarlar va intellektual kitobxonlar ekotizimi.
             </p>
@@ -225,31 +229,37 @@
             <!-- Hero CTA Buttons -->
             <div class="animate-fade-rise-delay-2 mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
                 <a href="{{ auth()->check() ? route('books.catalog') : route('register') }}"
-                   class="liquid-glass rounded-full px-10 sm:px-14 py-4 sm:py-5 text-base text-[hsl(var(--foreground))] hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2.5 transition-transform duration-300 font-medium group w-full sm:w-auto"
+                   class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-ink-950 font-bold rounded-full px-10 sm:px-14 py-4 sm:py-5 text-base hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2.5 transition-all duration-300 shadow-xl shadow-amber-500/20 group w-full sm:w-auto"
                    style="font-family: var(--font-body, 'Inter', sans-serif);">
                     <span>Mutolaani boshlash</span>
-                    <svg class="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    <svg class="w-4 h-4 text-ink-950 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </a>
                 <a href="#book-reveal-section"
-                   class="liquid-glass rounded-full px-8 py-4 sm:py-5 text-base text-[hsl(var(--muted-foreground))] hover:text-white hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2 transition-all duration-300 font-medium w-full sm:w-auto"
+                   class="bg-ink-950/70 hover:bg-ink-900/90 backdrop-blur-md border border-white/20 hover:border-amber-400/40 rounded-full px-8 py-4 sm:py-5 text-base text-slate-100 hover:text-amber-300 hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2 transition-all duration-300 font-medium shadow-lg shadow-black/40 w-full sm:w-auto"
                    style="font-family: var(--font-body, 'Inter', sans-serif);">
                     <span>📖 3D Kitobni ochish</span>
                 </a>
             </div>
 
             <!-- Micro-features Pill Bar -->
-            <div class="animate-fade-rise-delay-2 mt-12 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs text-[hsl(var(--muted-foreground))] font-mono">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
-                    <span>📚</span> {{ $booksCount ?? 1000 }}+ {{ __('site.home.stat_books') }}
+            <div class="animate-fade-rise-delay-2 mt-12 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-mono">
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ink-950/85 backdrop-blur-md border border-white/20 text-white shadow-xl shadow-black/60 hover:border-amber-400/40 hover:bg-ink-900 transition-all">
+                    <span class="text-sm">📚</span>
+                    <span class="font-bold text-amber-300 font-mono tracking-wide">{{ $booksCount ?? 1000 }}+</span>
+                    <span class="text-slate-100 font-medium">{{ __('site.home.stat_books') }}</span>
                 </span>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
-                    <span>🎧</span> Audio mutolaa
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ink-950/85 backdrop-blur-md border border-white/20 text-white shadow-xl shadow-black/60 hover:border-amber-400/40 hover:bg-ink-900 transition-all">
+                    <span class="text-sm">🎧</span>
+                    <span class="text-slate-100 font-medium">Audio mutolaa</span>
                 </span>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
-                    <span>🔥</span> Kunlik streak va ballar
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ink-950/85 backdrop-blur-md border border-white/20 text-white shadow-xl shadow-black/60 hover:border-amber-400/40 hover:bg-ink-900 transition-all">
+                    <span class="text-sm">🔥</span>
+                    <span class="text-slate-100 font-medium">Kunlik streak va ballar</span>
                 </span>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full liquid-glass">
-                    <span>👥</span> {{ $usersCount ?? 1200 }}+ {{ __('site.home.active_readers') }}
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ink-950/85 backdrop-blur-md border border-white/20 text-white shadow-xl shadow-black/60 hover:border-amber-400/40 hover:bg-ink-900 transition-all">
+                    <span class="text-sm">👥</span>
+                    <span class="font-bold text-amber-300 font-mono tracking-wide">{{ $usersCount ?? 1200 }}+</span>
+                    <span class="text-slate-100 font-medium">{{ __('site.home.active_readers') }}</span>
                 </span>
             </div>
 
@@ -257,9 +267,9 @@
 
         <!-- Bottom scroll cue -->
         <div class="relative z-10 pb-6 w-full flex justify-center">
-            <a href="#book-reveal-section" class="inline-flex flex-col items-center gap-1.5 text-[11px] font-mono tracking-widest uppercase text-white/40 hover:text-amber-400 transition-colors cursor-pointer group">
+            <a href="#book-reveal-section" class="inline-flex flex-col items-center gap-1.5 text-[11px] font-mono tracking-widest uppercase text-white/70 hover:text-amber-400 transition-colors cursor-pointer group bg-ink-950/60 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/10">
                 <span>Varaqlab o'qish</span>
-                <svg class="w-4 h-4 animate-bounce text-amber-400/80 group-hover:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                <svg class="w-4 h-4 animate-bounce text-amber-400 group-hover:text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
             </a>
         </div>
 

@@ -8,8 +8,21 @@
         ['route' => 'live.index',    'match' => ['live.*'],             'label' => __('site.nav.live')],
     ];
     $moreActive = request()->routeIs('about', 'faq', 'contact');
+    $isHome = request()->routeIs('home');
 @endphp
-<header id="site-header" x-data="{ mobileMenu: false, moreOpen: false }" class="sticky top-0 z-30 w-full bg-ink-900/95 border-b border-ink-border">
+<header id="site-header"
+        x-data="{ 
+            mobileMenu: false, 
+            moreOpen: false,
+            scrolled: false,
+            isHome: @js($isHome)
+        }"
+        x-init="if (isHome) { scrolled = (window.scrollY > 20); }"
+        @scroll.window.passive="if (isHome) { scrolled = (window.scrollY > 20); }"
+        class="sticky top-0 z-40 w-full transition-all duration-300 {{ $isHome ? 'bg-transparent border-b border-white/10' : 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/20' }}"
+        :class="(!isHome || scrolled || mobileMenu) 
+            ? 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/20' 
+            : 'bg-transparent border-b border-white/10 backdrop-blur-none shadow-none'">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
 
         {{-- Logo: SVG kitob belgisi + Spectral so'z belgisi --}}
