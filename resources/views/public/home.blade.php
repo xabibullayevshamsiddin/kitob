@@ -198,6 +198,22 @@
             <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4">
         </video>
 
+        <!-- Ethereal Moonlight Wash: Gullarga quyosh o'rniga sehrli oy nuri (kumush-ko'k lunar radiance) jilosini berish -->
+        <div class="absolute inset-0 pointer-events-none z-0 mix-blend-color"
+             style="background: linear-gradient(to top, 
+                rgba(56, 189, 248, 0.95) 0%, 
+                rgba(96, 165, 250, 0.85) 22%, 
+                rgba(129, 140, 248, 0.65) 45%, 
+                rgba(165, 180, 252, 0.30) 65%, 
+                transparent 85%);">
+        </div>
+        <div class="absolute inset-0 pointer-events-none z-0 mix-blend-soft-light"
+             style="background: linear-gradient(to top, 
+                rgba(224, 242, 254, 0.40) 0%, 
+                rgba(199, 210, 254, 0.25) 30%, 
+                transparent 70%);">
+        </div>
+
         <!-- Centered Cinematic Hero Section Content -->
         <div class="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-24 sm:pt-32 pb-20 sm:pb-28 max-w-7xl mx-auto w-full flex-1 overflow-hidden">
             
