@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark overflow-x-hidden max-w-full" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-hidden max-w-full" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,14 +39,29 @@
 
         /* Liquid Glass Effect */
         .liquid-glass {
-            background: rgba(255, 255, 255, 0.01);
+            background: rgba(255, 255, 255, 0.04);
             background-blend-mode: luminosity;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: none;
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 8px 24px -4px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
+        }
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1.4px;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+                rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+                rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
         }
         .liquid-glass::before {
             content: '';
@@ -72,6 +87,48 @@
         .animate-fade-rise { animation: fade-rise 0.8s ease-out both; }
         .animate-fade-rise-delay { animation: fade-rise 0.8s ease-out 0.2s both; }
         .animate-fade-rise-delay-2 { animation: fade-rise 0.8s ease-out 0.4s both; }
+
+        /* 🌠 Hardware-accelerated Shooting Star Trails (Faqat yuqori osmonda, bolalar sathidan balandda/orqada) */
+        .shooting-star-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 44%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%);
+        }
+        .shooting-star-trail {
+            position: absolute;
+            height: 2px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0) 0%, 
+                rgba(147, 197, 253, 0.45) 40%, 
+                rgba(255, 255, 255, 0.95) 88%, 
+                #ffffff 100%
+            );
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 12px rgba(56, 189, 248, 0.8));
+            transform-origin: right center;
+            pointer-events: none;
+            will-change: transform, opacity;
+            opacity: 0;
+        }
+        .shooting-star-trail::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 8px 2px #ffffff, 0 0 16px 4px #38bdf8;
+        }
 
         input[type="number"] {
             -moz-appearance: textfield;
@@ -198,27 +255,17 @@
             <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4">
         </video>
 
-        <!-- Ethereal Moonlight Wash: Gullarga quyosh o'rniga sehrli oy nuri (kumush-ko'k lunar radiance) jilosini berish -->
-        <div class="absolute inset-0 pointer-events-none z-0 mix-blend-color"
-             style="background: linear-gradient(to top, 
-                rgba(56, 189, 248, 0.95) 0%, 
-                rgba(96, 165, 250, 0.85) 22%, 
-                rgba(129, 140, 248, 0.65) 45%, 
-                rgba(165, 180, 252, 0.30) 65%, 
-                transparent 85%);">
-        </div>
-        <div class="absolute inset-0 pointer-events-none z-0 mix-blend-soft-light"
-             style="background: linear-gradient(to top, 
-                rgba(224, 242, 254, 0.40) 0%, 
-                rgba(199, 210, 254, 0.25) 30%, 
-                transparent 70%);">
+        <!-- 🌠 Cinematic Shooting Stars Layer (60FPS Silky-Smooth Physics) -->
+        <div id="shooting-stars-field" class="shooting-star-layer">
+            <div class="shooting-star-trail" id="star-meteor-1"></div>
+            <div class="shooting-star-trail" id="star-meteor-2"></div>
         </div>
 
         <!-- Centered Cinematic Hero Section Content -->
         <div class="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-24 sm:pt-32 pb-20 sm:pb-28 max-w-7xl mx-auto w-full flex-1 overflow-hidden">
             
             <!-- Eyebrow Pill Badge -->
-            <div class="animate-fade-rise inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full liquid-glass text-[10.5px] sm:text-xs text-amber-300 font-mono tracking-wider mb-6 max-w-full">
+            <div class="animate-fade-rise inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full liquid-glass text-[10.5px] sm:text-xs text-amber-300 font-mono tracking-wider mb-6 max-w-full font-semibold">
                 <span class="relative flex h-2 w-2 shrink-0">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
@@ -227,13 +274,13 @@
             </div>
 
             <!-- H1 Cinematic Headline -->
-            <h1 class="animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-[hsl(var(--foreground))] break-words"
+            <h1 class="animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-white break-words"
                 style="font-family: 'Instrument Serif', serif;">
-                Sahifalar aro <em class="not-italic text-amber-300/90">orzular</em> va <em class="not-italic text-[hsl(var(--muted-foreground))]">teran tafakkur yuksaladi.</em>
+                Sahifalar aro <em class="not-italic text-amber-300">orzular</em> va <em class="not-italic text-white/70">teran tafakkur yuksaladi.</em>
             </h1>
 
             <!-- Subtext -->
-            <p class="animate-fade-rise-delay text-[hsl(var(--muted-foreground))] text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal"
+            <p class="animate-fade-rise-delay text-white/75 text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal"
                style="font-family: var(--font-body, 'Inter', sans-serif);">
                 Chalg'ituvchi shovqinlar orasida — chuqur mutolaa, 3D interaktiv varaqlash va ilhom maskani. Sara jahon hamda o'zbek adabiyoti, audio asarlar va intellektual kitobxonlar ekotizimi.
             </p>
@@ -241,13 +288,15 @@
             <!-- Hero CTA Buttons -->
             <div class="animate-fade-rise-delay-2 mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
                 <a href="{{ auth()->check() ? route('books.catalog') : route('register') }}"
-                   class="liquid-glass rounded-full px-10 sm:px-14 py-4 sm:py-5 text-base text-[hsl(var(--foreground))] hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2.5 transition-transform duration-300 font-medium group w-full sm:w-auto"
+                   class="group relative inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-ink-950 font-bold text-sm sm:text-base shadow-[0_0_30px_rgba(245,158,11,0.45),inset_0_1px_1px_rgba(255,255,255,0.6)] border border-amber-300/80 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 w-full sm:w-auto"
                    style="font-family: var(--font-body, 'Inter', sans-serif);">
                     <span>Mutolaani boshlash</span>
-                    <svg class="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    <span class="w-7 h-7 rounded-full bg-ink-950/15 flex items-center justify-center group-hover:translate-x-1 transition-transform duration-200">
+                        <svg class="w-3.5 h-3.5 text-ink-950" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </span>
                 </a>
                 <a href="#book-reveal-section"
-                   class="liquid-glass rounded-full px-8 py-4 sm:py-5 text-base text-[hsl(var(--muted-foreground))] hover:text-white hover:scale-[1.03] cursor-pointer inline-flex items-center justify-center gap-2 transition-all duration-300 font-medium w-full sm:w-auto"
+                   class="inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-4 rounded-full bg-black/45 hover:bg-black/60 text-white/90 hover:text-white font-medium text-sm sm:text-base backdrop-blur-md border border-white/20 hover:border-amber-400/50 shadow-lg shadow-black/40 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 w-full sm:w-auto"
                    style="font-family: var(--font-body, 'Inter', sans-serif);">
                     <span>📖 3D Kitobni ochish</span>
                 </a>
@@ -255,23 +304,23 @@
 
             <!-- Micro-features Pill Bar -->
             <div class="animate-fade-rise-delay-2 mt-12 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-mono">
-                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ink-950/75 backdrop-blur-md border border-white/15 text-white shadow-lg shadow-black/50 hover:border-amber-400/40 transition-colors">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">📚</span>
                     <span class="font-bold text-amber-300 font-mono">{{ $booksCount ?? 1000 }}+</span>
-                    <span class="text-white font-medium">{{ __('site.home.stat_books') }}</span>
+                    <span class="text-white/90 font-medium">{{ __('site.home.stat_books') }}</span>
                 </span>
-                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ink-950/75 backdrop-blur-md border border-white/15 text-white shadow-lg shadow-black/50 hover:border-amber-400/40 transition-colors">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">🎧</span>
-                    <span class="text-white font-medium">Audio mutolaa</span>
+                    <span class="text-white/90 font-medium">Audio mutolaa</span>
                 </span>
-                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ink-950/75 backdrop-blur-md border border-white/15 text-white shadow-lg shadow-black/50 hover:border-amber-400/40 transition-colors">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">🔥</span>
-                    <span class="text-white font-medium">Kunlik streak va ballar</span>
+                    <span class="text-white/90 font-medium">Kunlik streak va ballar</span>
                 </span>
-                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ink-950/75 backdrop-blur-md border border-white/15 text-white shadow-lg shadow-black/50 hover:border-amber-400/40 transition-colors">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">👥</span>
                     <span class="font-bold text-amber-300 font-mono">{{ $usersCount ?? 1200 }}+</span>
-                    <span class="text-white font-medium">{{ __('site.home.active_readers') }}</span>
+                    <span class="text-white/90 font-medium">{{ __('site.home.active_readers') }}</span>
                 </span>
             </div>
 
@@ -279,7 +328,7 @@
 
         <!-- Bottom scroll cue -->
         <div class="relative z-10 pb-6 w-full flex justify-center">
-            <a href="#book-reveal-section" class="inline-flex flex-col items-center gap-1.5 text-[11px] font-mono tracking-widest uppercase text-white/40 hover:text-amber-400 transition-colors cursor-pointer group">
+            <a href="#book-reveal-section" class="inline-flex flex-col items-center gap-1.5 text-[11px] font-mono tracking-widest uppercase text-white/50 hover:text-amber-400 transition-colors cursor-pointer group">
                 <span>Varaqlab o'qish</span>
                 <svg class="w-4 h-4 animate-bounce text-amber-400/80 group-hover:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
             </a>
@@ -335,8 +384,8 @@
             <!-- Eyebrow Bar: Chapter / Week Indicator -->
             <div class="scrolly-eyebrow-bar mb-6 lg:mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-ink-border/50 pb-3">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span class="font-mono text-xs uppercase tracking-widest text-amber-400 font-bold">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse"></span>
+                    <span class="font-mono text-xs uppercase tracking-widest text-amber-600 dark:text-amber-400 font-bold">
                         {{ $scrollyBook ? ($scrollyBook->week_number . '-HAFTA MUTOLAASI') : 'HAFTANING ASOSIY KITOBI' }}
                     </span>
                     <span class="text-mist/40">|</span>
@@ -346,7 +395,7 @@
                 </div>
                 <div class="hidden lg:flex items-center gap-2 font-mono text-[11px] text-mist">
                     <span>Scroll qiling va kitob ochilishini kuzating</span>
-                    <svg class="w-3.5 h-3.5 animate-bounce text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3.5 h-3.5 animate-bounce text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
                     </svg>
                 </div>
@@ -361,7 +410,7 @@
                         
                         <!-- Floating Drag/Swipe Gesture Hint Pill -->
                         <div id="scrolly-drag-hint"
-                             class="absolute -top-11 left-1/2 -translate-x-1/2 pointer-events-none z-50 transition-all duration-500 flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink-950/95 border border-amber-400/40 text-[10px] sm:text-[10.5px] font-mono text-amber-300 shadow-2xl backdrop-blur-md max-w-[90vw] whitespace-nowrap overflow-hidden">
+                             class="absolute -top-11 left-1/2 -translate-x-1/2 pointer-events-none z-50 transition-all duration-500 flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink-950/95 border border-amber-500/40 dark:border-amber-400/40 text-[10px] sm:text-[10.5px] font-mono text-amber-700 dark:text-amber-300 shadow-2xl backdrop-blur-md max-w-[90vw] whitespace-nowrap overflow-hidden">
                             <span class="inline-block animate-[bounce_1.2s_infinite]">👈</span>
                             <span>Mishka yoki qo'l bilan suring (boshqa betga)</span>
                             <span class="inline-block animate-[bounce_1.2s_infinite]">👉</span>
@@ -666,12 +715,12 @@
                         </button>
 
                         <div class="px-2.5 py-1 rounded-full bg-ink-900/90 border border-ink-border flex items-center gap-2 shadow-sm">
-                            <span id="scrolly-page-label" class="font-mono text-[11px] text-amber-400 font-semibold tracking-wider">Muqova</span>
+                            <span id="scrolly-page-label" class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-semibold tracking-wider">Muqova</span>
                             <div class="flex items-center gap-1">
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-amber-400 transition-all cursor-pointer" data-page="0" title="Muqova"></span>
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-ink-700 transition-all cursor-pointer" data-page="1" title="1-bet"></span>
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-ink-700 transition-all cursor-pointer" data-page="2" title="2-bet"></span>
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-ink-700 transition-all cursor-pointer" data-page="3" title="3-bet (Xotima)"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 transition-all cursor-pointer" data-page="0" title="Muqova"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="1" title="1-bet"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="2" title="2-bet"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="3" title="3-bet (Xotima)"></span>
                             </div>
                         </div>
 
@@ -689,8 +738,8 @@
                 <div class="lg:col-span-6 scrolly-content-panel space-y-6">
                     
                     <!-- Badge & Week Tag -->
-                    <div class="scrolly-content-item inline-flex items-center gap-2 px-3 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-xs tracking-wider">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    <div class="scrolly-content-item inline-flex items-center gap-2 px-3 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-xs tracking-wider">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
                         <span class="uppercase">{{ $scrollyBook ? ($scrollyBook->week_number . '-HAFTA TANLOVI') : 'MAXSUS NASHR' }}</span>
                     </div>
 
@@ -699,8 +748,8 @@
                         <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-paper leading-[1.2] tracking-tight">
                             {{ $scrollyTitle }}
                         </h2>
-                        <div class="text-base sm:text-lg text-amber-400 font-sans flex flex-wrap items-center gap-2">
-                            <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="text-base sm:text-lg text-amber-600 dark:text-amber-400 font-sans flex flex-wrap items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                             </svg>
                             <span>{{ $scrollyAuthor }}</span>
@@ -780,14 +829,14 @@
                             <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Faol O'quvchilar</span>
                             <p class="font-mono text-xl sm:text-2xl font-bold text-paper mt-1">
                                 <span class="scrolly-stat-num" data-target="{{ $scrollyReaders }}">0</span>
-                                <span class="text-xs text-amber-400 font-normal">+</span>
+                                <span class="text-xs text-amber-600 dark:text-amber-400 font-normal">+</span>
                             </p>
                         </div>
 
                         <!-- Stat 2: Chapters -->
                         <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
                             <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Mundarija</span>
-                            <p class="font-mono text-xl sm:text-2xl font-bold text-amber-400 mt-1">
+                            <p class="font-mono text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
                                 <span class="scrolly-stat-num" data-target="{{ $scrollyChapters }}">0</span>
                                 <span class="text-xs text-mist font-normal">bob</span>
                             </p>
@@ -796,7 +845,7 @@
                         <!-- Stat 3: Audio Duration -->
                         <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
                             <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Audio Tahlil</span>
-                            <p class="font-mono text-xl sm:text-2xl font-bold text-emerald-400 mt-1">
+                            <p class="font-mono text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                                 <span class="scrolly-stat-num" data-target="{{ $scrollyAudio }}">0</span>
                                 <span class="text-xs text-mist font-normal">daq</span>
                             </p>
@@ -814,7 +863,7 @@
     <div class="py-3.5 border-b border-ink-border bg-ink-900/60 overflow-hidden relative">
         <div class="ticker-track font-mono text-[11px] uppercase tracking-widest text-mist flex items-center gap-8 whitespace-nowrap">
             @foreach(['ticker_1', 'ticker_2', 'ticker_3', 'ticker_4', 'ticker_5', 'ticker_6', 'ticker_1', 'ticker_2', 'ticker_3', 'ticker_4', 'ticker_5', 'ticker_6'] as $tk)
-                <span class="flex items-center gap-2"><span class="text-amber-500 font-bold">✦</span> {{ __("site.home.$tk") }}</span>
+                <span class="flex items-center gap-2"><span class="text-amber-600 dark:text-amber-500 font-bold">✦</span> {{ __("site.home.$tk") }}</span>
             @endforeach
         </div>
     </div>
@@ -830,13 +879,13 @@
                     <p class="text-[11px] text-mist mt-1 uppercase tracking-wider font-mono">{{ __('site.home.stat_readers') }}</p>
                 </div>
                 <div class="p-4 rounded-card bg-ink-900 border border-ink-border text-center">
-                    <p class="text-2xl sm:text-3xl font-bold text-amber-400 font-mono ks-stat">
+                    <p class="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400 font-mono ks-stat">
                         <span class="counter-element" data-target="{{ $booksCount ?? 0 }}">{{ $booksCount ?? 0 }}</span>
                     </p>
                     <p class="text-[11px] text-mist mt-1 uppercase tracking-wider font-mono">{{ __('site.home.stat_books') }}</p>
                 </div>
                 <div class="p-4 rounded-card bg-ink-900 border border-ink-border text-center">
-                    <p class="text-2xl sm:text-3xl font-bold text-emerald-400 font-mono ks-stat">
+                    <p class="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 font-mono ks-stat">
                         <span class="counter-element" data-target="{{ $maxStreak ?? 0 }}">{{ $maxStreak ?? 0 }}</span>
                     </p>
                     <p class="text-[11px] text-mist mt-1 uppercase tracking-wider font-mono">{{ __('site.home.stat_streak') }}</p>
@@ -884,10 +933,10 @@
                     @php
                         $rank = $loop->iteration;
                         $cardBorder = match($rank) {
-                            1 => 'border-[#F59E0B]/50 hover:border-[#F59E0B] bg-gradient-to-b from-[#F59E0B]/12 via-ink-900/80 to-ink-950 shadow-[0_4px_20px_rgba(245,158,11,0.12)]',
-                            2 => 'border-[#E2E8F0]/40 hover:border-[#E2E8F0] bg-gradient-to-b from-[#E2E8F0]/8 via-ink-900/80 to-ink-950 shadow-[0_4px_16px_rgba(226,232,240,0.08)]',
-                            3 => 'border-[#D97706]/40 hover:border-[#D97706] bg-gradient-to-b from-[#D97706]/8 via-ink-900/80 to-ink-950 shadow-[0_4px_16px_rgba(217,119,6,0.08)]',
-                            default => 'border-[#6366F1]/30 hover:border-[#6366F1] bg-gradient-to-b from-[#6366F1]/6 via-ink-900/80 to-ink-950 shadow-[0_4px_16px_rgba(99,102,241,0.08)]',
+                            1 => 'border-amber-400/60 dark:border-[#F59E0B]/50 hover:border-amber-500 dark:hover:border-[#F59E0B] bg-gradient-to-b from-amber-500/15 via-ink-900 to-ink-900 dark:from-[#F59E0B]/12 dark:via-ink-900/80 dark:to-ink-950 shadow-sm dark:shadow-[0_4px_20px_rgba(245,158,11,0.12)]',
+                            2 => 'border-slate-300 dark:border-[#E2E8F0]/40 hover:border-slate-400 dark:hover:border-[#E2E8F0] bg-gradient-to-b from-slate-200/70 via-ink-900 to-ink-900 dark:from-[#E2E8F0]/8 dark:via-ink-900/80 dark:to-ink-950 shadow-sm dark:shadow-[0_4px_16px_rgba(226,232,240,0.08)]',
+                            3 => 'border-amber-700/30 dark:border-[#D97706]/40 hover:border-amber-700 dark:hover:border-[#D97706] bg-gradient-to-b from-amber-700/10 via-ink-900 to-ink-900 dark:from-[#D97706]/8 dark:via-ink-900/80 dark:to-ink-950 shadow-sm dark:shadow-[0_4px_16px_rgba(217,119,6,0.08)]',
+                            default => 'border-indigo-300 dark:border-[#6366F1]/30 hover:border-indigo-400 dark:hover:border-[#6366F1] bg-gradient-to-b from-indigo-500/10 via-ink-900 to-ink-900 dark:from-[#6366F1]/6 dark:via-ink-900/80 dark:to-ink-950 shadow-sm dark:shadow-[0_4px_16px_rgba(99,102,241,0.08)]',
                         };
                     @endphp
                     <a href="{{ route('profile.show', $topUser->username) }}"
@@ -908,7 +957,7 @@
 
                         <div class="mt-3 pt-3 border-t border-ink-border/60 w-full flex items-center justify-between">
                             <x-ui.rank-badge :rank="$rank" size="sm" />
-                            <span class="font-mono text-xs font-bold text-amber-400">
+                            <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
                                 {{ number_format($topUser->total_points) }} <span class="text-[10px] text-mist font-normal">ball</span>
                             </span>
                         </div>
@@ -926,7 +975,7 @@
             <div class="bento-header max-w-2xl mb-12 space-y-2">
                 <span class="ks-eyebrow">{{ __('site.home.features_badge') }}</span>
                 <h2 class="text-3xl sm:text-4xl font-bold text-paper font-serif leading-tight">
-                    {{ __('site.home.features_title') }} <span class="text-amber-400 italic">{{ __('site.home.features_title_b') }}</span> {{ __('site.home.features_title_e') }}
+                    {{ __('site.home.features_title') }} <span class="text-amber-600 dark:text-amber-400 italic">{{ __('site.home.features_title_b') }}</span> {{ __('site.home.features_title_e') }}
                 </h2>
                 <p class="text-mist text-sm sm:text-base leading-relaxed">
                     {{ __('site.home.features_sub') }}
@@ -938,7 +987,7 @@
                 <!-- Bento 1 (Large - Col 7): Multi-format Reading -->
                 <div class="bento-card md:col-span-7 ks-panel p-6 sm:p-8 flex flex-col justify-between bg-ink-900 border border-ink-border">
                     <div class="space-y-3">
-                        <div class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <div class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                         </div>
                         <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.home.bento1_title') }}</h3>
@@ -949,17 +998,17 @@
 
                     <div class="grid grid-cols-3 gap-3 mt-8 pt-5 border-t border-ink-border">
                         <div class="p-3 rounded-card bg-ink-950 border border-ink-border text-center">
-                            <svg class="w-4 h-4 mx-auto text-amber-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                            <svg class="w-4 h-4 mx-auto text-amber-600 dark:text-amber-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                             <p class="text-xs font-semibold text-paper">{{ __('site.home.bento1_ebook') }}</p>
                             <p class="text-[10px] text-mist font-mono">{{ __('site.home.bento1_ebook_sub') }}</p>
                         </div>
                         <div class="p-3 rounded-card bg-ink-950 border border-ink-border text-center">
-                            <svg class="w-4 h-4 mx-auto text-amber-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                            <svg class="w-4 h-4 mx-auto text-amber-600 dark:text-amber-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
                             <p class="text-xs font-semibold text-paper">{{ __('site.home.bento1_audio') }}</p>
                             <p class="text-[10px] text-mist font-mono">{{ __('site.home.bento1_audio_sub') }}</p>
                         </div>
                         <div class="p-3 rounded-card bg-ink-950 border border-ink-border text-center">
-                            <svg class="w-4 h-4 mx-auto text-amber-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            <svg class="w-4 h-4 mx-auto text-amber-600 dark:text-amber-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                             <p class="text-xs font-semibold text-paper">{{ __('site.home.bento1_video') }}</p>
                             <p class="text-[10px] text-mist font-mono">{{ __('site.home.bento1_video_sub') }}</p>
                         </div>
@@ -970,16 +1019,16 @@
                 <div class="bento-card md:col-span-5 ks-panel p-6 sm:p-8 flex flex-col justify-between bg-ink-900 border border-ink-border">
                     <div>
                         <div class="flex items-center justify-between mb-4">
-                            <span class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
+                            <span class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 flex items-center justify-center">
                                 <svg class="w-5 h-5 ks-flame is-lit" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.5 2.5-2.5 4.5-4 6-2 2-3 4.5-3 7 0 4.4 3.6 8 8 8s8-3.6 8-8c0-3.5-2-6-4-8-.5 2-2 3.5-3 4-1-2.5 0-6.5-2-9z"/></svg>
                             </span>
-                            <span class="font-mono text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-badge border border-amber-400/20 uppercase">
+                            <span class="font-mono text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-badge border border-amber-500/20 uppercase font-semibold">
                                 {{ __('site.home.bento2_tag') }}
                             </span>
                         </div>
                         <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.home.bento2_title') }}</h3>
                         <p class="text-mist text-sm mt-2 leading-relaxed">
-                            {{ __('site.home.bento2_sub') }} <strong class="text-amber-400 font-mono">{{ $maxStreak ?? 0 }} {{ __('site.common.days') }}</strong>.
+                            {{ __('site.home.bento2_sub') }} <strong class="text-amber-600 dark:text-amber-400 font-mono">{{ $maxStreak ?? 0 }} {{ __('site.common.days') }}</strong>.
                         </p>
                     </div>
 
@@ -991,7 +1040,7 @@
                             <p class="text-[10px] text-mist uppercase font-mono tracking-wider">
                                 {{ auth()->check() ? __('site.home.your_streak') : __('site.home.platform_record') }}
                             </p>
-                            <p class="text-2xl font-bold text-amber-400 font-mono">
+                            <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 font-mono">
                                 <span class="counter-element" data-target="{{ $displayStreak }}">{{ $displayStreak }}</span> {{ __('site.common.days') }}
                             </p>
                         </div>
@@ -1003,7 +1052,7 @@
                                         $barHeights = [1 => 'h-2.5', 2 => 'h-3.5', 3 => 'h-4.5', 4 => 'h-5.5', 5 => 'h-7'];
                                         $hClass = $barHeights[$i] ?? 'h-5';
                                     @endphp
-                                    <div class="w-2 {{ $hClass }} rounded-xs transition-all duration-300 {{ $isLit ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-ink-800 border border-ink-border/50 opacity-40' }}"
+                                    <div class="w-2 {{ $hClass }} rounded-xs transition-all duration-300 {{ $isLit ? 'bg-amber-500 dark:bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-slate-300 dark:bg-ink-800 border border-ink-border/50 opacity-50' }}"
                                          title="{{ $i }}-kun"></div>
                                 @endfor
                             </div>
@@ -1017,7 +1066,7 @@
                 <!-- Bento 3 (Col 5): AI Analysis -->
                 <div class="bento-card md:col-span-5 ks-panel p-6 sm:p-8 flex flex-col justify-between bg-ink-900 border border-ink-border">
                     <div>
-                        <div class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
+                        <div class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 2v4m0 12v4M2 12h4m12 0h4m-3.17-6.83l-2.83 2.83m-8 8l-2.83 2.83m0-13.66l2.83 2.83m8 8l2.83 2.83"/></svg>
                         </div>
                         <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.home.bento3_title') }}</h3>
@@ -1031,7 +1080,7 @@
                             "{{ __('site.home.bento3_q') }}"
                         </div>
                         <div class="p-3 rounded-card bg-ink-800 border border-ink-border text-paper flex items-center gap-2">
-                            <span class="text-amber-400 font-bold">✦</span>
+                            <span class="text-amber-600 dark:text-amber-400 font-bold">✦</span>
                             <span>{{ __('site.home.bento3_a') }}</span>
                         </div>
                     </div>
@@ -1040,7 +1089,7 @@
                 <!-- Bento 4 (Col 7): Community & Debates -->
                 <div class="bento-card md:col-span-7 ks-panel p-6 sm:p-8 flex flex-col justify-between bg-ink-900 border border-ink-border">
                     <div class="space-y-3">
-                        <div class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <div class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </div>
                         <h3 class="text-xl font-bold font-serif text-paper">{{ __('site.home.bento4_title') }}</h3>
@@ -1079,7 +1128,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 <div class="step-card p-6 sm:p-8 rounded-card bg-ink-900 border border-ink-border space-y-3">
-                    <span class="font-mono text-3xl font-bold text-amber-500">01</span>
+                    <span class="font-mono text-3xl font-bold text-amber-600 dark:text-amber-500">01</span>
                     <h3 class="text-lg font-bold font-serif text-paper">{{ __('site.home.step1_title') }}</h3>
                     <p class="text-xs text-mist leading-relaxed">
                         {{ __('site.home.step1_sub') }}
@@ -1087,7 +1136,7 @@
                 </div>
 
                 <div class="step-card p-6 sm:p-8 rounded-card bg-ink-900 border border-ink-border space-y-3">
-                    <span class="font-mono text-3xl font-bold text-amber-500">02</span>
+                    <span class="font-mono text-3xl font-bold text-amber-600 dark:text-amber-500">02</span>
                     <h3 class="text-lg font-bold font-serif text-paper">{{ __('site.home.step2_title') }}</h3>
                     <p class="text-xs text-mist leading-relaxed">
                         {{ __('site.home.step2_sub') }}
@@ -1095,7 +1144,7 @@
                 </div>
 
                 <div class="step-card p-6 sm:p-8 rounded-card bg-ink-900 border border-ink-border space-y-3">
-                    <span class="font-mono text-3xl font-bold text-amber-500">03</span>
+                    <span class="font-mono text-3xl font-bold text-amber-600 dark:text-amber-500">03</span>
                     <h3 class="text-lg font-bold font-serif text-paper">{{ __('site.home.step3_title') }}</h3>
                     <p class="text-xs text-mist leading-relaxed">
                         {{ __('site.home.step3_sub') }}
@@ -1112,7 +1161,7 @@
             
             <h2 class="text-3xl sm:text-5xl font-bold font-serif text-paper tracking-tight leading-tight">
                 {{ __('site.home.cta_title_1') }}<br class="hidden sm:block">
-                <span class="text-amber-400 italic">{{ __('site.home.cta_title_2') }}</span> {{ __('site.home.cta_title_3') }}
+                <span class="text-amber-600 dark:text-amber-400 italic">{{ __('site.home.cta_title_2') }}</span> {{ __('site.home.cta_title_3') }}
             </h2>
 
             <p class="text-mist text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
@@ -1177,6 +1226,72 @@
                     { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
                 );
 
+                // 🌠 1.1 Silky-Smooth 60FPS Shooting Stars (Meteors in Night Sky)
+                function launchMeteor(el) {
+                    if (!el || typeof gsap === 'undefined') return;
+
+                    const heroSec = el.closest('section') || document.body;
+                    const w = heroSec.clientWidth || window.innerWidth;
+                    const h = heroSec.clientHeight || window.innerHeight;
+
+                    // O'ng tepa chuqur osmon koordinatalari (bolalar sathidan ancha balandda, ularga yetib bormasdan so'nadi)
+                    const startX = w * (0.68 + Math.random() * 0.26);
+                    const startY = h * (0.02 + Math.random() * 0.12);
+                    const angle = 142 + (Math.random() * 8 - 4); // 138° - 146°
+                    const length = 120 + Math.random() * 60; // 120px - 180px
+                    const distance = 360 + Math.random() * 220; // 360px - 580px
+                    const duration = 0.85 + Math.random() * 0.25; // 0.85s - 1.1s
+                    const rad = angle * (Math.PI / 180);
+                    const deltaX = Math.cos(rad) * distance;
+                    const deltaY = Math.sin(rad) * distance;
+
+                    gsap.killTweensOf(el);
+                    gsap.set(el, {
+                        left: startX,
+                        top: startY,
+                        width: length,
+                        rotation: angle,
+                        x: 0,
+                        y: 0,
+                        scaleX: 0.15,
+                        opacity: 0,
+                        force3D: true
+                    });
+
+                    const tl = gsap.timeline({
+                        onComplete: () => {
+                            // Keyingi parvoz uchun tabiiy tanaffus (3.5 - 6 soniya)
+                            const nextDelay = 3.5 + Math.random() * 3;
+                            gsap.delayedCall(nextDelay, () => launchMeteor(el));
+                        }
+                    });
+
+                    // 100% silliq, uzluksiz, bir tekis, hech qanday to'xtashlarsiz parvoz
+                    tl.to(el, {
+                        x: deltaX,
+                        y: deltaY,
+                        scaleX: 1,
+                        duration: duration,
+                        ease: "power1.inOut",
+                        force3D: true
+                    }, 0)
+                    .to(el, {
+                        opacity: 1,
+                        duration: duration * 0.18,
+                        ease: "power1.out"
+                    }, 0)
+                    .to(el, {
+                        opacity: 0,
+                        duration: duration * 0.32,
+                        ease: "power2.in"
+                    }, duration * 0.68);
+                }
+
+                const meteor1 = document.getElementById('star-meteor-1');
+                const meteor2 = document.getElementById('star-meteor-2');
+                if (meteor1) gsap.delayedCall(0.8, () => launchMeteor(meteor1));
+                if (meteor2) gsap.delayedCall(3.8, () => launchMeteor(meteor2));
+
                 // 2. Editorial Hero Staggered Entrance Reveal
                 gsap.fromTo('.hero-anim-item', 
                     { opacity: 0, y: 25 },
@@ -1231,16 +1346,16 @@
                         if (prevBtn) prevBtn.disabled = (currentPage === 0);
                         if (nextBtn) {
                             if (currentPage === maxPages) {
-                                nextBtn.innerHTML = `<span class="text-[11px] text-amber-400 font-bold">O'qish ➔</span>`;
+                                nextBtn.innerHTML = `<span class="text-[11px] text-amber-600 dark:text-amber-400 font-bold">O'qish ➔</span>`;
                             } else {
                                 nextBtn.innerHTML = `<span class="text-[11px]">Keyingi</span><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`;
                             }
                         }
                         dots.forEach((dot, idx) => {
                             if (idx === currentPage) {
-                                dot.className = 'scrolly-dot w-2 h-2 rounded-full bg-amber-400 transition-all cursor-pointer ring-2 ring-amber-400/40';
+                                dot.className = 'scrolly-dot w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 transition-all cursor-pointer ring-2 ring-amber-500/40 dark:ring-amber-400/40';
                             } else {
-                                dot.className = 'scrolly-dot w-1.5 h-1.5 rounded-full bg-ink-700 hover:bg-ink-600 transition-all cursor-pointer';
+                                dot.className = 'scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 hover:bg-slate-400 dark:hover:bg-ink-600 transition-all cursor-pointer';
                             }
                         });
                     }

@@ -20,11 +20,11 @@
     <div class="grid grid-cols-3 gap-3 sm:gap-6 pt-6 items-end max-w-2xl mx-auto">
         <!-- 2nd Place Silver -->
         @if(isset($top3[1]))
-            <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft text-center space-y-2">
+            <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 shadow-soft text-center space-y-2">
                 <span class="text-2xl block">🥈</span>
-                <img src="{{ $top3[1]->avatar_url }}" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto object-cover ring-2 ring-slate-300">
+                <img src="{{ $top3[1]->avatar_url }}" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto object-cover ring-2 ring-slate-400 dark:ring-slate-300">
                 <h3 class="text-xs sm:text-sm font-bold truncate text-slate-900 dark:text-white">{{ $top3[1]->name }}</h3>
-                <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-slate-700 dark:text-slate-300 block">
+                <span class="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 rounded-lg text-xs font-black text-slate-800 dark:text-slate-300 block">
                     {{ number_format($top3[1]->total_points) }} {{ __('site.leaderboard.points_short') }}
                 </span>
             </div>

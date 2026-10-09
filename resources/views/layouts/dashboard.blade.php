@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz" class="dark scroll-smooth" x-data="{ mobileMenu: false }">
+<html lang="uz" class="dark force-dark scroll-smooth" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

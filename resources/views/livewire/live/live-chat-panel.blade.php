@@ -76,9 +76,9 @@
                                     <x-ui.rank-badge :rank="$topFiveIds[$pin->user_id]" size="xs" />
                                 @endif
                                 @if(($pin->user?->role ?? '') === 'admin')
-                                    <span class="px-1.5 py-0.2 bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 font-bold rounded-pill uppercase">Admin</span>
+                                    <span class="px-1.5 py-0.2 bg-rose-500/10 dark:bg-[#C1392B]/15 border border-rose-500/25 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 font-bold rounded-pill uppercase">Admin</span>
                                 @elseif(($pin->user?->role ?? '') === 'teacher')
-                                    <span class="px-1.5 py-0.2 bg-amber-500/10 border border-amber-500/25 text-amber-400 font-bold rounded-pill uppercase">Ustoz</span>
+                                    <span class="px-1.5 py-0.2 bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-400 font-bold rounded-pill uppercase">Ustoz</span>
                                 @endif
                                 <span class="text-mist">{{ $pin->created_at->timezone('Asia/Tashkent')->format('H:i') }}</span>
                                 @if($isHost)
@@ -129,11 +129,11 @@
                                 <x-ui.rank-badge :rank="$senderRank" size="xs" />
                             @endif
                             @if($msg->user_id === $event->host_user_id)
-                                <span class="px-1.5 py-0.2 bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono text-[9px] rounded-pill uppercase">Ustoz</span>
+                                <span class="px-1.5 py-0.2 bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-mono text-[9px] rounded-pill uppercase">Ustoz</span>
                             @elseif($uRole === 'admin')
-                                <span class="px-1.5 py-0.2 bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 font-mono text-[9px] rounded-pill uppercase">Admin</span>
+                                <span class="px-1.5 py-0.2 bg-rose-500/10 dark:bg-[#C1392B]/15 border border-rose-500/25 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[9px] rounded-pill uppercase">Admin</span>
                             @elseif($uRole === 'teacher')
-                                <span class="px-1.5 py-0.2 bg-amber-500/10 border border-amber-500/25 text-amber-400 font-mono text-[9px] rounded-pill uppercase">Ustoz</span>
+                                <span class="px-1.5 py-0.2 bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-400 font-mono text-[9px] rounded-pill uppercase">Ustoz</span>
                             @endif
                             <span class="text-[10px] text-mist font-mono">{{ $msg->created_at->timezone('Asia/Tashkent')->format('H:i') }}</span>
                             @if($msg->is_answered)
@@ -195,11 +195,11 @@
                         @else
                             @php
                                 $tierBubble = match(true) {
-                                    $senderRank === 1 => 'border-[#F59E0B]/50 bg-gradient-to-r from-[#F59E0B]/10 to-ink-950/90 shadow-[0_0_12px_rgba(245,158,11,0.12)]',
-                                    $senderRank === 2 => 'border-[#E2E8F0]/40 bg-gradient-to-r from-[#E2E8F0]/8 to-ink-950/90 shadow-[0_0_10px_rgba(226,232,240,0.08)]',
-                                    $senderRank === 3 => 'border-[#D97706]/40 bg-gradient-to-r from-[#D97706]/8 to-ink-950/90 shadow-[0_0_10px_rgba(217,119,6,0.08)]',
-                                    $senderRank === 4 || $senderRank === 5 => 'border-[#6366F1]/35 bg-gradient-to-r from-[#6366F1]/8 to-ink-950/90 shadow-[0_0_8px_rgba(99,102,241,0.08)]',
-                                    default => 'bg-ink-950/80 border-ink-border',
+                                    $senderRank === 1 => 'border-amber-400/50 dark:border-[#F59E0B]/50 bg-gradient-to-r from-amber-500/10 via-ink-900 to-ink-900 dark:from-[#F59E0B]/10 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_12px_rgba(245,158,11,0.12)]',
+                                    $senderRank === 2 => 'border-slate-300 dark:border-[#E2E8F0]/40 bg-gradient-to-r from-slate-200/60 via-ink-900 to-ink-900 dark:from-[#E2E8F0]/8 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.08)]',
+                                    $senderRank === 3 => 'border-amber-700/30 dark:border-[#D97706]/40 bg-gradient-to-r from-amber-700/10 via-ink-900 to-ink-900 dark:from-[#D97706]/8 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.08)]',
+                                    $senderRank === 4 || $senderRank === 5 => 'border-indigo-300 dark:border-[#6366F1]/35 bg-gradient-to-r from-indigo-500/10 via-ink-900 to-ink-900 dark:from-[#6366F1]/8 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.08)]',
+                                    default => 'bg-ink-900/80 dark:bg-ink-950/80 border-ink-border',
                                 };
                             @endphp
                             <div class="px-3.5 py-2 rounded-panel text-xs sm:text-sm leading-relaxed shadow-sm break-words border {{ $tierBubble }} text-paper rounded-tl-none">

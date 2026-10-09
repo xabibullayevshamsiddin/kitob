@@ -51,10 +51,10 @@
     } : null;
 
     $ringClasses = match($tier) {
-        'gold'   => 'ring-2 ring-[#F59E0B] shadow-[0_0_12px_rgba(245,158,11,0.35)]',
-        'silver' => 'ring-2 ring-[#E2E8F0] shadow-[0_0_10px_rgba(226,232,240,0.25)]',
-        'bronze' => 'ring-2 ring-[#D97706] shadow-[0_0_10px_rgba(217,119,6,0.25)]',
-        'top5'   => 'ring-2 ring-[#6366F1]/80 shadow-[0_0_8px_rgba(99,102,241,0.25)]',
+        'gold'   => 'ring-2 ring-amber-500 dark:ring-[#F59E0B] shadow-sm dark:shadow-[0_0_12px_rgba(245,158,11,0.35)]',
+        'silver' => 'ring-2 ring-slate-400 dark:ring-[#E2E8F0] shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.25)]',
+        'bronze' => 'ring-2 ring-amber-700 dark:ring-[#D97706] shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.25)]',
+        'top5'   => 'ring-2 ring-indigo-500 dark:ring-[#6366F1]/80 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.25)]',
         default  => 'border border-ink-border',
     };
 
@@ -86,10 +86,10 @@
     {{-- Top 5 Plashka / Floating Rank Badge --}}
     @if($showRank && $tier)
         <div class="absolute {{ $badgeSizes }} rounded-full flex items-center justify-center shadow-md z-10 animate-fade-in
-            {{ $tier === 'gold'   ? 'bg-[#F59E0B] text-ink-950 ring-1 ring-white/40' : '' }}
-            {{ $tier === 'silver' ? 'bg-[#E2E8F0] text-ink-950 ring-1 ring-white/40' : '' }}
-            {{ $tier === 'bronze' ? 'bg-[#D97706] text-white ring-1 ring-white/30' : '' }}
-            {{ $tier === 'top5'   ? 'bg-[#6366F1] text-white ring-1 ring-white/30' : '' }}"
+            {{ $tier === 'gold'   ? 'bg-amber-500 text-ink-950 ring-1 ring-amber-600/40 dark:ring-white/40' : '' }}
+            {{ $tier === 'silver' ? 'bg-slate-300 dark:bg-[#E2E8F0] text-slate-800 dark:text-ink-950 ring-1 ring-slate-400/60 dark:ring-white/40' : '' }}
+            {{ $tier === 'bronze' ? 'bg-amber-700 text-white ring-1 ring-amber-800/40 dark:ring-white/30' : '' }}
+            {{ $tier === 'top5'   ? 'bg-indigo-600 text-white ring-1 ring-indigo-700/40 dark:ring-white/30' : '' }}"
             title="{{ $userRank }}-o'rin (Reyting)">
             @if($tier === 'gold')
                 <svg class="w-3/5 h-3/5" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>

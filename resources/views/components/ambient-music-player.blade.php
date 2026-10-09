@@ -216,15 +216,15 @@
                     <div @click="selectTrack(idx)"
                          class="p-2 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-colors"
                          :class="currentIndex === idx 
-                            ? 'bg-amber-500/15 border-amber-500/40 text-amber-300' 
+                            ? 'bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300' 
                             : 'bg-ink-900 border-ink-border/60 hover:border-amber-400/30 text-paper'">
                         <div class="flex items-center gap-2 min-w-0">
                             <span class="w-5 h-5 rounded-btn bg-ink-950 text-[10px] font-mono flex items-center justify-center font-bold"
-                                  :class="currentIndex === idx ? 'text-amber-400' : 'text-mist'"
+                                  :class="currentIndex === idx ? 'text-amber-600 dark:text-amber-400' : 'text-mist'"
                                   x-text="idx + 1"></span>
                             <span class="text-xs truncate font-medium" x-text="t.title"></span>
                         </div>
-                        <span x-show="currentIndex === idx && isPlaying" class="text-xs text-amber-400 animate-pulse">▶</span>
+                        <span x-show="currentIndex === idx && isPlaying" class="text-xs text-amber-600 dark:text-amber-400 animate-pulse">▶</span>
                     </div>
                 </template>
             </div>

@@ -15,14 +15,26 @@
             mobileMenu: false, 
             moreOpen: false,
             scrolled: false,
-            isHome: @js($isHome)
+            isHome: @js($isHome),
+            theme: (function() {
+                try {
+                    return localStorage.getItem('kitob_theme') || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
+                } catch(e) { return 'dark'; }
+            })(),
+            toggleTheme(evt) {
+                this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                if (window.__setKitobTheme) {
+                    window.__setKitobTheme(this.theme, evt);
+                }
+            }
         }"
         x-init="if (isHome) { scrolled = (window.scrollY > 20); }"
         @scroll.window.passive="if (isHome) { scrolled = (window.scrollY > 20); }"
-        class="sticky top-0 z-40 w-full transition-all duration-300 {{ $isHome ? 'bg-transparent border-b border-white/10' : 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/20' }}"
+        @theme-changed.window="theme = $event.detail.theme"
+        class="sticky top-0 z-40 w-full transition-all duration-300 {{ $isHome ? 'bg-transparent border-b border-white/10 is-hero-header' : 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/20' }}"
         :class="(!isHome || scrolled || mobileMenu) 
-            ? 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/20' 
-            : 'bg-transparent border-b border-white/10 backdrop-blur-none shadow-none'">
+            ? 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10' 
+            : 'bg-transparent border-b border-white/10 backdrop-blur-none shadow-none is-hero-header'">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
 
         {{-- Logo: SVG kitob belgisi + Spectral so'z belgisi --}}
@@ -70,20 +82,20 @@
                      x-transition:leave="transition ease-out duration-micro"
                      x-transition:leave-start="opacity-100"
                      x-transition:leave-end="opacity-0"
-                     class="absolute top-full left-0 mt-px w-56 py-1.5 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50">
+                     class="header-dropdown-menu absolute top-full left-0 mt-px w-56 py-1.5 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50">
                     <div class="px-3.5 pt-1.5 pb-2 ks-eyebrow border-b border-ink-border mb-1">
                         {{ __('site.nav.sections') }}
                     </div>
-                    <a href="{{ route('about') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base">
-                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <a href="{{ route('about') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
+                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                         <span>{{ __('site.nav.about') }}</span>
                     </a>
-                    <a href="{{ route('faq') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base">
-                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                    <a href="{{ route('faq') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
+                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
                         <span>{{ __('site.nav.faq') }}</span>
                     </a>
-                    <a href="{{ route('contact') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base">
-                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <a href="{{ route('contact') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
+                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                         <span>{{ __('site.nav.contact') }}</span>
                     </a>
                 </div>
@@ -96,9 +108,41 @@
             {{-- Til almashtirgich --}}
             <x-lang-switcher class="hidden sm:block" />
 
+            {{-- Mavzu almashtirgich (Light / Dark mode toggle) --}}
+            <button @click="toggleTheme($event)" 
+                    type="button"
+                    class="header-theme-btn relative inline-flex items-center justify-center w-8 h-8 rounded-btn border border-ink-border bg-ink-800 text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base select-none shrink-0 group focus:outline-none"
+                    :title="theme === 'dark' ? 'Yorug\' rejim (Light mode)' : 'Tungi rejim (Dark mode)'"
+                    :aria-label="theme === 'dark' ? 'Light mode' : 'Dark mode'">
+                {{-- Concentric Pulse Shockwave Rings (Blinkit style) --}}
+                <span class="theme-pulse-halo theme-pulse-halo-1" aria-hidden="true"></span>
+                <span class="theme-pulse-halo theme-pulse-halo-2" aria-hidden="true"></span>
+
+                {{-- Micro-Spark Particle Rays --}}
+                <span class="theme-spark theme-spark-1" aria-hidden="true"></span>
+                <span class="theme-spark theme-spark-2" aria-hidden="true"></span>
+                <span class="theme-spark theme-spark-3" aria-hidden="true"></span>
+                <span class="theme-spark theme-spark-4" aria-hidden="true"></span>
+                <span class="theme-spark theme-spark-5" aria-hidden="true"></span>
+                <span class="theme-spark theme-spark-6" aria-hidden="true"></span>
+
+                {{-- Sun icon (Dark rejimda ko'rinadi) --}}
+                <svg x-show="theme === 'dark'" x-cloak class="header-theme-sun w-4 h-4 text-amber-400 select-none transition-transform duration-base group-hover:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                </svg>
+                {{-- Moon icon (Light rejimda ko'rinadi) --}}
+                <svg x-show="theme === 'light'" x-cloak class="header-theme-moon w-4 h-4 text-amber-600 select-none transition-transform duration-base group-hover:-rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                </svg>
+            </button>
+
             @auth
                 {{-- Streak / Points / Coins — barcha ekranlarda chiroyli ko'rinadi va jonli o'zgaradi --}}
-                <div class="flex items-center divide-x divide-ink-border border border-ink-border rounded-btn bg-ink-950 relative"
+                <div class="header-stats-pill flex items-center divide-x rounded-btn relative transition-all duration-300 {{ $isHome ? 'divide-white/15 border border-white/20 bg-white/[0.08] backdrop-blur-md shadow-sm' : 'divide-ink-border border border-ink-border bg-ink-950/90' }}"
+                     :class="(!isHome || scrolled || mobileMenu) 
+                         ? 'divide-ink-border border border-ink-border bg-ink-950/90 shadow-none' 
+                         : 'divide-white/15 border border-white/20 bg-white/[0.08] backdrop-blur-md shadow-sm'"
                      x-data="{
                          totalPoints: {{ auth()->check() ? (int) auth()->user()->total_points : 0 }},
                          totalCoins: {{ auth()->check() ? (int) auth()->user()->coin_balance : 0 }},
@@ -217,7 +261,7 @@
                     {{-- Streak Flame --}}
                     <span x-data="{ streakCount: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                           @streak-updated.window="streakCount = $event.detail.streak"
-                          class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 text-amber-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
+                          class="header-streak-pill inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 text-amber-500 dark:text-amber-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
                           title="{{ __('site.common.streak') }}">
                         <svg class="ks-flame w-3.5 h-3.5 sm:w-4 sm:h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
@@ -341,7 +385,9 @@
 
                 {{-- Avatar Dropdown --}}
                 <div x-data="{ userMenuOpen: false }" x-on:click.outside="userMenuOpen = false" class="relative">
-                    <button @click="userMenuOpen = !userMenuOpen" type="button" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-btn hover:bg-ink-800 border border-ink-border transition-colors duration-base select-none">
+                    <button @click="userMenuOpen = !userMenuOpen" type="button" 
+                            class="header-avatar-btn flex items-center gap-2 pl-1 pr-2 py-1 rounded-btn transition-colors duration-base select-none {{ $isHome ? 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md' : 'hover:bg-ink-800 border border-ink-border' }}"
+                            :class="(!isHome || scrolled || mobileMenu) ? 'hover:bg-ink-800 border border-ink-border bg-transparent' : 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md'">
                         <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover" alt="{{ auth()->user()->name }}">
                         <span class="text-xs font-medium text-paper hidden lg:inline max-w-[90px] truncate">{{ auth()->user()->name }}</span>
                         <svg class="w-3.5 h-3.5 text-mist transition-transform duration-base" :class="userMenuOpen ? 'rotate-180 text-amber-400' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
@@ -353,7 +399,7 @@
                          x-transition:leave="transition ease-out duration-micro"
                          x-transition:leave-start="opacity-100"
                          x-transition:leave-end="opacity-0"
-                         class="absolute right-0 mt-2 w-64 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
+                         class="header-dropdown-menu absolute right-0 mt-2 w-64 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
 
                         {{-- User Profile Header --}}
                         <div class="px-4 py-3.5 border-b border-ink-border">
@@ -364,9 +410,9 @@
                                     <p class="text-[11px] font-mono text-mist truncate mt-0.5">{{ '@' . auth()->user()->username }}</p>
                                 </div>
                                 @if(auth()->user()->hasRole('admin'))
-                                    <span class="ks-badge bg-rose-500/10 border border-rose-500/30 text-rose-300">Admin</span>
+                                    <span class="ks-badge bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-bold">Admin</span>
                                 @elseif(auth()->user()->hasRole('teacher'))
-                                    <span class="ks-badge bg-amber-500/10 border border-amber-500/30 text-amber-400">Ustoz</span>
+                                    <span class="ks-badge bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-bold">Ustoz</span>
                                 @endif
                             </div>
 
@@ -380,16 +426,16 @@
                                  @coins-awarded.window="mobileCoins = $event.detail.newTotal !== undefined ? $event.detail.newTotal : (mobileCoins + ($event.detail.coins || 1))">
                                 <span x-data="{ mobileStreak: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                                       @streak-updated.window="mobileStreak = $event.detail.streak"
-                                      class="inline-flex items-center gap-1 text-amber-400 font-mono text-[11px] font-medium tabular-nums">
+                                      class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-medium tabular-nums">
                                     <svg class="ks-flame w-3.5 h-3.5" :class="mobileStreak > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
                                     <span x-text="mobileStreak">{{ auth()->user()->current_streak }}</span>
                                 </span>
                                 <span class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
-                                    <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                     <span x-text="mobilePoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span>
                                 </span>
                                 <span class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
-                                    <svg class="w-3.5 h-3.5 text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
+                                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
                                     <span x-text="mobileCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
                                 </span>
                             </div>
@@ -398,31 +444,43 @@
                         {{-- Menu Items --}}
                         <div class="py-1.5">
                             @if(auth()->user()->hasRole('admin'))
-                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-amber-400 hover:bg-ink-700 transition-colors duration-base">
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-amber-700 dark:text-amber-400 hover:bg-ink-700/60 transition-colors duration-base">
+                                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                                     <span>{{ __('site.nav.dashboard') }}</span>
                                 </a>
                             @elseif(auth()->user()->hasRole('teacher'))
-                                <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-amber-400 hover:bg-ink-700 transition-colors duration-base">
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-amber-700 dark:text-amber-400 hover:bg-ink-700/60 transition-colors duration-base">
+                                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                                     <span>{{ __('site.nav.teacher_panel') }}</span>
                                 </a>
                             @endif
 
-                            <a href="{{ route('profile.show', auth()->user()->username) }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <a href="{{ route('profile.show', auth()->user()->username) }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
+                                <svg class="w-4 h-4 text-amber-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 <span>{{ __('site.nav.my_profile') }}</span>
                             </a>
-                            <a href="{{ route('settings') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <a href="{{ route('settings') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
+                                <svg class="w-4 h-4 text-amber-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                                 <span>{{ __('site.nav.settings') }}</span>
                             </a>
+
+                            {{-- Mavzu almashtirgich (Profile Dropdown) --}}
+                            <button @click="toggleTheme($event); userMenuOpen = false" type="button" data-theme-toggle class="w-full flex items-center justify-between px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
+                                <span class="flex items-center gap-2.5">
+                                    <svg x-show="theme === 'dark'" x-cloak class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                                    <svg x-show="theme === 'light'" x-cloak class="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                                    <span x-text="theme === 'dark' ? 'Yorug\' rejim' : 'Tungi rejim'"></span>
+                                </span>
+                                <span class="px-1.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold"
+                                      :class="theme === 'light' ? 'bg-amber-500/15 text-amber-800 border border-amber-500/30' : 'bg-ink-950 text-amber-400 border border-ink-border'"
+                                      x-text="theme"></span>
+                            </button>
 
                             <div class="my-1.5 ks-rule"></div>
 
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-rose-300 hover:bg-rose-500/10 transition-colors duration-base">
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 hover:bg-rose-500/10 transition-colors duration-base">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                                     <span>{{ __('site.nav.logout') }}</span>
                                 </button>
@@ -460,7 +518,7 @@
         @foreach($navLinks as $link)
             @php $active = request()->routeIs(...$link['match']); @endphp
             <a href="{{ route($link['route']) }}" @click="mobileMenu = false"
-               class="flex items-center justify-between font-display text-lg py-2.5 border-b border-ink-border transition-colors duration-base {{ $active ? 'text-amber-400' : 'text-paper hover:text-amber-400' }}">
+               class="flex items-center justify-between font-display text-lg py-2.5 border-b border-ink-border transition-colors duration-base {{ $active ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-paper hover:text-amber-600 dark:hover:text-amber-400' }}">
                 <span>{{ $link['label'] }}</span>
                 @if($active)<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>@endif
             </a>
@@ -481,7 +539,7 @@
                 <a href="{{ route('settings') }}" @click="mobileMenu = false" class="block text-sm py-1.5 text-mist hover:text-paper transition-colors duration-base">{{ __('site.nav.settings') }}</a>
                 <form method="POST" action="{{ route('logout') }}" class="pt-1">
                     @csrf
-                    <button type="submit" class="text-sm text-rose-300 hover:underline">{{ __('site.nav.logout') }}</button>
+                    <button type="submit" class="text-sm text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 transition-colors">{{ __('site.nav.logout') }}</button>
                 </form>
             @else
                 <a href="{{ route('login') }}"    @click="mobileMenu = false" class="ks-btn-ghost w-full">{{ __('site.nav.login') }}</a>
@@ -498,6 +556,128 @@
                     </a>
                 @endforeach
             </div>
+
+            {{-- Mavzu almashtirgich (mobil) --}}
+            <div class="pt-3 mt-1 flex items-center justify-between border-t border-ink-border">
+                <span class="ks-eyebrow">Mavzu / Theme</span>
+                <button @click="toggleTheme($event)" type="button" data-theme-toggle class="inline-flex items-center gap-2 px-3 py-1.5 rounded-card border border-ink-border bg-ink-800 text-paper text-xs font-mono transition-colors hover:bg-ink-700">
+                    <span x-show="theme === 'dark'">☀️ Yorug' rejim</span>
+                    <span x-show="theme === 'light'">🌙 Tungi rejim</span>
+                </button>
+            </div>
         </div>
     </div>
 </header>
+
+<style>
+/* ── Velorah & Editorial Hero Header Overrides ──
+   When on Home and unscrolled, the header sits transparently over the dark cinematic video.
+   Regardless of light/dark mode, text and key indicators remain luminous white and frosted glass.
+   Once scrolled (scrolled === true), standard light/dark background and ink text smoothly resume.
+*/
+#site-header.is-hero-header {
+    --paper-rgb: 255 255 255 !important;
+    --paper-50-rgb: 255 255 255 !important;
+    --paper-100-rgb: 255 255 255 !important;
+    --paper-200-rgb: 241 245 249 !important;
+    --paper-muted-rgb: 203 213 225 !important;
+    --mist-rgb: 226 232 240 !important;
+    --mist-600-rgb: 148 163 184 !important;
+    --ink-border-rgb: 255 255 255 / 0.15 !important;
+}
+#site-header.is-hero-header .header-theme-btn {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+#site-header.is-hero-header .header-theme-btn:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+#site-header.is-hero-header .header-theme-moon {
+    color: #fde047 !important;
+}
+#site-header.is-hero-header .header-lang-btn {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+#site-header.is-hero-header .header-lang-btn:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+#site-header.is-hero-header .header-streak-pill {
+    color: #f59e0b !important;
+}
+#site-header.is-hero-header .ks-btn-primary {
+    background-color: #C1392B !important;
+    color: #ffffff !important;
+    border-color: #A82E22 !important;
+    box-shadow: 0 2px 8px rgba(193, 57, 43, 0.4) !important;
+}
+#site-header.is-hero-header .ks-btn-primary:hover {
+    background-color: #A82E22 !important;
+}
+
+/* ── Isolated Popover & Dropdown Scope ──
+   Dropdown menus and popovers inside the header must NEVER inherit the transparent video hero text colors!
+   They are solid elevated cards and must strictly follow the active theme (light or dark).
+*/
+#site-header .header-dropdown-menu,
+#site-header [class*="shadow-popover"] {
+    isolation: isolate;
+}
+
+html.light:not(.force-dark) #site-header .header-dropdown-menu,
+html.light:not(.force-dark) #site-header [class*="shadow-popover"],
+html.light:not(.force-dark) #site-header [x-show="mobileMenu"] {
+    --paper-rgb: 28 25 22 !important;
+    --paper-50-rgb: 20 18 16 !important;
+    --paper-100-rgb: 28 25 22 !important;
+    --paper-200-rgb: 46 41 36 !important;
+    --paper-muted-rgb: 92 85 75 !important;
+    --mist-rgb: 107 99 88 !important;
+    --mist-600-rgb: 78 72 63 !important;
+    --ink-border-rgb: 224 217 205 !important;
+    --ink-800-rgb: 249 246 240 !important;
+    --ink-700-rgb: 236 230 219 !important;
+}
+
+html.light:not(.force-dark) #site-header .header-dropdown-menu,
+html.light:not(.force-dark) #site-header [class*="shadow-popover"] {
+    background-color: #FAF6EF !important;
+    border-color: #DDD4C4 !important;
+    color: #1C1916 !important;
+    box-shadow: 0 16px 40px -6px rgba(28, 25, 22, 0.22), 0 2px 8px rgba(28, 25, 22, 0.08), 0 0 0 1px rgba(28, 25, 22, 0.08) !important;
+}
+
+html.light:not(.force-dark) #site-header [x-show="mobileMenu"] {
+    background-color: #FAF6EF !important;
+    border-color: #DDD4C4 !important;
+    color: #1C1916 !important;
+    box-shadow: 0 16px 36px -4px rgba(28, 25, 22, 0.16) !important;
+}
+
+html.dark #site-header .header-dropdown-menu,
+html.dark #site-header [class*="shadow-popover"],
+html:not(.light) #site-header .header-dropdown-menu,
+html:not(.light) #site-header [class*="shadow-popover"] {
+    --paper-rgb: 240 237 230 !important;
+    --paper-50-rgb: 250 247 242 !important;
+    --paper-100-rgb: 240 237 230 !important;
+    --paper-200-rgb: 229 223 213 !important;
+    --paper-muted-rgb: 201 196 184 !important;
+    --mist-rgb: 139 155 173 !important;
+    --mist-600-rgb: 82 96 113 !important;
+    --ink-border-rgb: 31 41 61 !important;
+    --ink-800-rgb: 19 25 38 !important;
+    --ink-700-rgb: 31 41 61 !important;
+    background-color: #131926 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #F0EDE6 !important;
+}
+</style>

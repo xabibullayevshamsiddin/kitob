@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz" class="h-full dark">
+<html lang="uz" class="h-full dark force-dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

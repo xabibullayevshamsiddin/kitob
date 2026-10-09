@@ -128,7 +128,7 @@
         <div class="grid grid-cols-3 gap-2 sm:gap-4 pt-2 sm:pt-4 items-end">
             <!-- 2nd Place Silver -->
             @if(isset($top3[1]))
-                <div class="ks-panel p-2.5 sm:p-5 bg-gradient-to-b from-[#E2E8F0]/10 to-ink-900 border border-[#E2E8F0]/40 text-center space-y-1.5 sm:space-y-2.5 relative shadow-lg shadow-black/30">
+                <div class="ks-panel p-2.5 sm:p-5 bg-gradient-to-b from-slate-200/70 via-ink-900 to-ink-900 dark:from-[#E2E8F0]/10 dark:via-ink-900 dark:to-ink-900 border border-slate-300 dark:border-[#E2E8F0]/40 text-center space-y-1.5 sm:space-y-2.5 relative shadow-sm dark:shadow-lg dark:shadow-black/30">
                     <div class="flex items-center justify-center">
                         <x-ui.rank-badge rank="2" size="xs" :compact="true" class="sm:hidden" />
                         <x-ui.rank-badge rank="2" size="sm" class="hidden sm:inline-flex" />
@@ -139,7 +139,7 @@
                     </a>
                     <div class="min-w-0">
                         <h3 class="text-xs sm:text-sm font-bold font-serif truncate text-paper">{{ $top3[1]->name }}</h3>
-                        <p class="text-[9px] sm:text-[10px] text-[#E2E8F0] font-mono truncate">{{ '@' . $top3[1]->username }}</p>
+                        <p class="text-[9px] sm:text-[10px] text-slate-600 dark:text-[#E2E8F0] font-mono truncate">{{ '@' . $top3[1]->username }}</p>
                     </div>
                     <div class="pt-0.5 sm:pt-1 font-mono text-[11px] sm:text-xs">
                         @if($sortBy === 'reading_time')
@@ -147,7 +147,7 @@
                         @elseif($sortBy === 'streak')
                             <span class="text-amber-500 font-bold block truncate">{{ $top3[1]->display_streak }} <span class="hidden sm:inline">{{ __('site.leaderboard.days') }}</span></span>
                         @else
-                            <span class="text-[#E2E8F0] font-bold block truncate">{{ number_format($top3[1]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
+                            <span class="text-slate-800 dark:text-[#E2E8F0] font-bold block truncate">{{ number_format($top3[1]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
                         @endif
                     </div>
                 </div>
@@ -155,7 +155,7 @@
 
             <!-- 1st Place Gold (Elevated in Center) -->
             @if(isset($top3[0]))
-                <div class="ks-panel p-3 sm:p-6 bg-gradient-to-b from-[#F59E0B]/15 via-ink-900 to-ink-900 border-2 border-[#F59E0B]/70 text-center space-y-2 sm:space-y-2.5 relative shadow-xl shadow-[#F59E0B]/10 ring-1 ring-[#F59E0B]/30 sm:-translate-y-2">
+                <div class="ks-panel p-3 sm:p-6 bg-gradient-to-b from-amber-500/15 via-ink-900 to-ink-900 dark:from-[#F59E0B]/15 dark:via-ink-900 dark:to-ink-900 border-2 border-amber-500/80 dark:border-[#F59E0B]/70 text-center space-y-2 sm:space-y-2.5 relative shadow-md dark:shadow-xl dark:shadow-[#F59E0B]/10 ring-1 ring-amber-400/30 dark:ring-[#F59E0B]/30 sm:-translate-y-2">
                     <div class="flex items-center justify-center">
                         <x-ui.rank-badge rank="1" size="xs" :compact="true" class="sm:hidden" />
                         <x-ui.rank-badge rank="1" size="md" class="hidden sm:inline-flex" />
@@ -166,15 +166,15 @@
                     </a>
                     <div class="min-w-0">
                         <h3 class="text-xs sm:text-base font-bold font-serif truncate text-paper">{{ $top3[0]->name }}</h3>
-                        <p class="text-[9px] sm:text-[11px] text-[#F59E0B] font-mono font-bold truncate">{{ '@' . $top3[0]->username }}</p>
+                        <p class="text-[9px] sm:text-[11px] text-amber-700 dark:text-[#F59E0B] font-mono font-bold truncate">{{ '@' . $top3[0]->username }}</p>
                     </div>
                     <div class="pt-0.5 sm:pt-1 font-mono text-[11px] sm:text-xs">
                         @if($sortBy === 'reading_time')
-                            <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-[#F59E0B] text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ number_format($top3[0]->display_minutes) }} <span class="hidden sm:inline">{{ __('site.leaderboard.min_short') }}</span></span>
+                            <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-gradient-to-r from-amber-500 to-amber-600 text-white dark:bg-[#F59E0B] dark:text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ number_format($top3[0]->display_minutes) }} <span class="hidden sm:inline">{{ __('site.leaderboard.min_short') }}</span></span>
                         @elseif($sortBy === 'streak')
-                            <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-[#F59E0B] text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ $top3[0]->display_streak }} <span class="hidden sm:inline">{{ __('site.leaderboard.days') }}</span></span>
+                            <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-gradient-to-r from-amber-500 to-amber-600 text-white dark:bg-[#F59E0B] dark:text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ $top3[0]->display_streak }} <span class="hidden sm:inline">{{ __('site.leaderboard.days') }}</span></span>
                         @else
-                            <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-[#F59E0B] text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ number_format($top3[0]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
+                            <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-gradient-to-r from-amber-500 to-amber-600 text-white dark:bg-[#F59E0B] dark:text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ number_format($top3[0]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
                         @endif
                     </div>
                 </div>
@@ -182,7 +182,7 @@
 
             <!-- 3rd Place Bronze -->
             @if(isset($top3[2]))
-                <div class="ks-panel p-2.5 sm:p-5 bg-gradient-to-b from-[#D97706]/10 to-ink-900 border border-[#D97706]/40 text-center space-y-1.5 sm:space-y-2.5 relative shadow-lg shadow-black/30">
+                <div class="ks-panel p-2.5 sm:p-5 bg-gradient-to-b from-amber-700/10 via-ink-900 to-ink-900 dark:from-[#D97706]/10 dark:to-ink-900 border border-amber-700/35 dark:border-[#D97706]/40 text-center space-y-1.5 sm:space-y-2.5 relative shadow-sm dark:shadow-lg dark:shadow-black/30">
                     <div class="flex items-center justify-center">
                         <x-ui.rank-badge rank="3" size="xs" :compact="true" class="sm:hidden" />
                         <x-ui.rank-badge rank="3" size="sm" class="hidden sm:inline-flex" />
@@ -193,7 +193,7 @@
                     </a>
                     <div class="min-w-0">
                         <h3 class="text-xs sm:text-sm font-bold font-serif truncate text-paper">{{ $top3[2]->name }}</h3>
-                        <p class="text-[9px] sm:text-[10px] text-[#D97706] font-mono truncate">{{ '@' . $top3[2]->username }}</p>
+                        <p class="text-[9px] sm:text-[10px] text-amber-800 dark:text-[#D97706] font-mono truncate">{{ '@' . $top3[2]->username }}</p>
                     </div>
                     <div class="pt-0.5 sm:pt-1 font-mono text-[11px] sm:text-xs">
                         @if($sortBy === 'reading_time')
@@ -201,7 +201,7 @@
                         @elseif($sortBy === 'streak')
                             <span class="text-amber-500 font-bold block truncate">{{ $top3[2]->display_streak }} <span class="hidden sm:inline">{{ __('site.leaderboard.days') }}</span></span>
                         @else
-                            <span class="text-[#D97706] font-bold block truncate">{{ number_format($top3[2]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
+                            <span class="text-amber-800 dark:text-[#D97706] font-bold block truncate">{{ number_format($top3[2]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
                         @endif
                     </div>
                 </div>
@@ -232,11 +232,11 @@
                     $rank = (int) ($u->leaderboard_rank ?? $loop->iteration);
 
                     $rowTierClass = match($rank) {
-                        1 => 'bg-[#F59E0B]/10 border-l-2 border-[#F59E0B]',
-                        2 => 'bg-[#E2E8F0]/5 border-l-2 border-[#E2E8F0]',
-                        3 => 'bg-[#D97706]/5 border-l-2 border-[#D97706]',
-                        4, 5 => 'bg-[#6366F1]/5 border-l-2 border-[#6366F1]',
-                        default => $isCurrent ? 'bg-amber-500/5 border-l-2 border-amber-400' : '',
+                        1 => 'bg-amber-500/10 border-l-2 border-amber-500',
+                        2 => 'bg-slate-300/30 dark:bg-[#E2E8F0]/5 border-l-2 border-slate-400 dark:border-[#E2E8F0]',
+                        3 => 'bg-amber-700/10 dark:bg-[#D97706]/5 border-l-2 border-amber-700 dark:border-[#D97706]',
+                        4, 5 => 'bg-indigo-500/10 dark:bg-[#6366F1]/5 border-l-2 border-indigo-500 dark:border-[#6366F1]',
+                        default => $isCurrent ? 'bg-amber-500/10 dark:bg-amber-500/5 border-l-2 border-amber-500 dark:border-amber-400' : '',
                     };
                 @endphp
                 <div class="p-2.5 sm:p-3.5 sm:px-6 flex items-center justify-between hover:bg-ink-800/40 transition-colors {{ $rowTierClass }}">
@@ -259,12 +259,12 @@
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <span class="text-xs sm:text-sm font-semibold font-sans text-paper truncate block group-hover:text-amber-400 transition-colors max-w-[110px] sm:max-w-none">{{ $u->name }}</span>
                                     @if($u->hasRole('admin') || $u->role === 'admin')
-                                        <span class="px-1.5 py-0.2 bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.role_admin') }}</span>
+                                        <span class="px-1.5 py-0.2 bg-rose-500/10 dark:bg-amber-500/15 border border-rose-500/25 dark:border-amber-500/30 text-rose-700 dark:text-amber-400 font-mono font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.role_admin') }}</span>
                                     @elseif($u->hasRole('teacher') || $u->role === 'teacher')
-                                        <span class="px-1.5 py-0.2 bg-ink-950 border border-ink-border text-mist font-mono font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.role_teacher') }}</span>
+                                        <span class="px-1.5 py-0.2 bg-amber-500/10 dark:bg-ink-950 border border-amber-500/25 dark:border-ink-border text-amber-800 dark:text-mist font-mono font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.role_teacher') }}</span>
                                     @endif
                                     @if($isCurrent)
-                                        <span class="px-1.5 py-0.2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.you') }}</span>
+                                        <span class="px-1.5 py-0.2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.you') }}</span>
                                     @endif
                                 </div>
                                 <span class="text-[10px] sm:text-[11px] text-mist font-mono truncate block max-w-[110px] sm:max-w-none">{{ '@' . $u->username }}</span>
@@ -287,7 +287,7 @@
                         @endif
 
                         <div class="text-right min-w-[56px] sm:min-w-[70px]">
-                            <span class="text-xs sm:text-sm font-bold text-amber-400 block">
+                            <span class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 block">
                                 {{ number_format($u->display_points) }}
                             </span>
                             <span class="text-[9px] sm:text-[10px] text-mist block">{{ __('site.leaderboard.points_short') }}</span>

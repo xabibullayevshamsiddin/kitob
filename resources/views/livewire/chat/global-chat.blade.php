@@ -95,10 +95,10 @@
                 } : null;
 
                 $bubbleTierClass = match($senderTier) {
-                    'gold'   => 'border-[#F59E0B]/60 bg-gradient-to-br from-[#F59E0B]/10 via-ink-950 to-ink-950 shadow-[0_0_12px_rgba(245,158,11,0.12)]',
-                    'silver' => 'border-[#E2E8F0]/40 bg-gradient-to-br from-[#E2E8F0]/5 via-ink-950 to-ink-950 shadow-[0_0_10px_rgba(226,232,240,0.08)]',
-                    'bronze' => 'border-[#D97706]/50 bg-gradient-to-br from-[#D97706]/10 via-ink-950 to-ink-950 shadow-[0_0_10px_rgba(217,119,6,0.08)]',
-                    'top5'   => 'border-[#6366F1]/40 bg-gradient-to-br from-[#6366F1]/5 via-ink-950 to-ink-950 shadow-[0_0_8px_rgba(99,102,241,0.08)]',
+                    'gold'   => 'border-amber-400/60 dark:border-[#F59E0B]/60 bg-gradient-to-br from-amber-500/10 via-ink-950 to-ink-950 dark:from-[#F59E0B]/10 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_12px_rgba(245,158,11,0.12)]',
+                    'silver' => 'border-slate-300 dark:border-[#E2E8F0]/40 bg-gradient-to-br from-slate-200/60 via-ink-950 to-ink-950 dark:from-[#E2E8F0]/5 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.08)]',
+                    'bronze' => 'border-amber-700/40 dark:border-[#D97706]/50 bg-gradient-to-br from-amber-700/10 via-ink-950 to-ink-950 dark:from-[#D97706]/10 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.08)]',
+                    'top5'   => 'border-indigo-400/40 dark:border-[#6366F1]/40 bg-gradient-to-br from-indigo-500/10 via-ink-950 to-ink-950 dark:from-[#6366F1]/5 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.08)]',
                     default  => $isMe ? 'bg-ink-800 border-amber-500/40' : 'bg-ink-950 border-ink-border',
                 };
             @endphp
@@ -117,7 +117,7 @@
                             <x-ui.rank-badge :rank="$senderRank" size="xs" :compact="true" />
                         @endif
                         @if(($msg->user?->role ?? '') === 'admin' || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('admin')))
-                            <span class="px-1.5 py-0.2 bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono font-bold text-[9px] rounded uppercase">{{ __('site.leaderboard.role_admin') }}</span>
+                            <span class="px-1.5 py-0.2 bg-rose-500/10 dark:bg-amber-500/15 border border-rose-500/25 dark:border-amber-500/30 text-rose-700 dark:text-amber-400 font-mono font-bold text-[9px] rounded uppercase">{{ __('site.leaderboard.role_admin') }}</span>
                         @endif
                         <span class="text-[10px] font-mono text-mist">{{ $msg->created_at->timezone('Asia/Tashkent')->format('H:i') }}</span>
 
