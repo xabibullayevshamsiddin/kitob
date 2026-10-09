@@ -85,7 +85,7 @@
 
 {{-- Table --}}
 <div class="bg-ink-900 border border-ink-border rounded-panel overflow-hidden shadow-sm">
-    <div class="overflow-x-auto">
+    <div class="admin-table-scroll overflow-x-auto">
         <table class="w-full text-left">
             <thead>
                 <tr class="bg-ink-950/60 border-b border-ink-border text-[11px] font-mono uppercase text-mist">

@@ -735,7 +735,7 @@
                 </div>
 
                 <!-- RIGHT (cols 7-12): Revealed Content & Scrolly Narrative Panel -->
-                <div class="lg:col-span-6 scrolly-content-panel space-y-6">
+                <div class="lg:col-span-6 scrolly-content-panel space-y-6 min-w-0">
                     
                     <!-- Badge & Week Tag -->
                     <div class="scrolly-content-item inline-flex items-center gap-2 px-3 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-xs tracking-wider">
@@ -745,10 +745,10 @@
 
                     <!-- Book Title & Author -->
                     <div class="scrolly-content-item space-y-2">
-                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-paper leading-[1.2] tracking-tight">
+                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-paper leading-[1.2] tracking-tight break-words">
                             {{ $scrollyTitle }}
                         </h2>
-                        <div class="text-base sm:text-lg text-amber-600 dark:text-amber-400 font-sans flex flex-wrap items-center gap-2">
+                        <div class="text-base sm:text-lg text-amber-600 dark:text-amber-400 font-sans flex flex-wrap items-center gap-2 break-words">
                             <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                             </svg>
@@ -762,7 +762,7 @@
                     </div>
 
                     <!-- Narrative Description -->
-                    <p class="scrolly-content-item text-sm sm:text-base text-mist leading-relaxed font-sans max-w-2xl">
+                    <p class="scrolly-content-item text-sm sm:text-base text-mist leading-relaxed font-sans max-w-2xl break-words whitespace-pre-line">
                         {{ $scrollyDesc }}
                     </p>
 

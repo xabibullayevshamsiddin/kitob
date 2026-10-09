@@ -275,10 +275,10 @@
                     </div>
                 </div>
 
-                <h2 class="text-xl sm:text-2xl font-bold font-serif text-paper leading-snug">{{ $event->title }}</h2>
+                <h2 class="text-xl sm:text-2xl font-bold font-serif text-paper leading-snug break-words">{{ $event->title }}</h2>
 
                 @if ($event->description)
-                    <p class="text-xs sm:text-sm text-mist max-w-xl leading-relaxed font-sans">{{ $event->description }}</p>
+                    <p class="text-xs sm:text-sm text-mist max-w-xl leading-relaxed font-sans break-words whitespace-pre-line">{{ $event->description }}</p>
                 @endif
 
                 <div class="flex flex-wrap items-center gap-4 text-xs font-mono text-mist">

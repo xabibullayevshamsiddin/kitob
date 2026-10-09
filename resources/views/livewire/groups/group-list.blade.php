@@ -156,7 +156,7 @@
                         </div>
                     </div>
 
-                    <p class="text-xs text-mist leading-relaxed line-clamp-2 font-sans">
+                    <p class="text-xs text-mist leading-relaxed line-clamp-2 font-sans break-words">
                         {{ $group->description ?? __('site.groups.no_desc') }}
                     </p>
 

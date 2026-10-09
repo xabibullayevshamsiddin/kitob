@@ -60,16 +60,16 @@
                     this.audioFileName = f ? f.name + ' (' + (f.size / (1024*1024)).toFixed(2) + ' MB)' : '';
                 }
             }" class="space-y-3">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <label class="block text-xs font-semibold text-paper">Audio manbasi <span class="text-rose-400">*</span></label>
-                    <div class="flex items-center gap-1.5 font-mono text-xs">
+                    <div class="flex flex-wrap items-center gap-1.5 font-mono text-xs">
                         <button type="button" @click="mode = 'file'"
-                                class="px-2.5 py-1 rounded-badge border transition-colors"
+                                class="min-h-11 px-3 py-1 rounded-badge border transition-colors"
                                 :class="mode === 'file' ? 'bg-amber-500 text-ink-950 border-amber-500 font-bold' : 'border-ink-border text-mist hover:text-paper'">
                             Fayl yuklash
                         </button>
                         <button type="button" @click="mode = 'url'"
-                                class="px-2.5 py-1 rounded-badge border transition-colors"
+                                class="min-h-11 px-3 py-1 rounded-badge border transition-colors"
                                 :class="mode === 'url' ? 'bg-amber-500 text-ink-950 border-amber-500 font-bold' : 'border-ink-border text-mist hover:text-paper'">
                             Havola (URL)
                         </button>

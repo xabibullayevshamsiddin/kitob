@@ -18,6 +18,22 @@
         .sidebar-scroll::-webkit-scrollbar-thumb { background: #1F293D; border-radius: 99px; border: 0; }
         .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #2A3650; }
 
+        .admin-shell { height: 100vh; height: 100dvh; }
+        .admin-table-scroll {
+            max-width: 100%;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-color: #475569 #0D111A;
+            scrollbar-width: thin;
+        }
+        .admin-table-scroll::-webkit-scrollbar { height: 6px; }
+        .admin-table-scroll::-webkit-scrollbar-track { background: #0D111A; }
+        .admin-table-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 99px; }
+        @media (max-width: 639px) {
+            .admin-table-scroll > table { min-width: 48rem; }
+        }
+
         /* Nav — editorial: amber 2px chap chiziq + ink-800 fon (gradient yo'q) */
         .nav-item {
             position: relative;
@@ -116,7 +132,7 @@
         ];
     @endphp
 
-    <div class="flex h-screen overflow-hidden">
+    <div class="admin-shell flex overflow-hidden">
 
         <!-- ═══════════════ SIDEBAR ═══════════════ -->
         <aside
@@ -144,7 +160,7 @@
                     @foreach($items as $item)
                         @php $active = request()->routeIs($item['match']); @endphp
                         <a href="{{ route($item['route']) }}"
-                           class="nav-item flex items-center gap-2.5 h-9 px-4 text-[13px] font-medium {{ $active ? 'nav-active' : 'text-mist hover:text-paper' }}">
+                           class="nav-item flex items-center gap-2.5 min-h-11 px-4 text-[13px] font-medium {{ $active ? 'nav-active' : 'text-mist hover:text-paper' }}">
                             {!! $navIcon($item['icon']) !!}
                             <span class="truncate">{{ $item['label'] }}</span>
                             @if(!empty($item['badge']))
@@ -170,12 +186,13 @@
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
             <!-- TOP BAR -->
-            <header class="flex-shrink-0 h-14 bg-ink-950 border-b border-ink-border flex items-center justify-between px-4 lg:px-5 z-20">
+            <header class="flex-shrink-0 h-14 bg-ink-950 border-b border-ink-border flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-5 z-20">
 
                 <!-- Left: Mobile toggle + Breadcrumb -->
-                <div class="flex items-center gap-3 min-w-0">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                     <button @click="sidebarOpen = !sidebarOpen" aria-label="Menyu"
-                            class="lg:hidden w-9 h-9 flex items-center justify-center rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base">
+                            :aria-expanded="sidebarOpen.toString()"
+                            class="lg:hidden w-11 h-11 shrink-0 flex items-center justify-center rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base">
                         <svg x-show="!sidebarOpen" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
                         <svg x-show="sidebarOpen" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
@@ -193,11 +210,11 @@
                 </div>
 
                 <!-- Right: notifications + user -->
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
                     <!-- Notification bell -->
                     <a href="{{ route('admin.reports.index') }}" aria-label="Shikoyatlar"
-                       class="relative w-9 h-9 flex items-center justify-center rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base">
+                       class="relative w-10 h-10 flex items-center justify-center rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                         @if($pendingReportsCount > 0)
                             <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
@@ -260,8 +277,8 @@
             <x-toast-container />
 
             <!-- PAGE CONTENT -->
-            <main class="flex-1 overflow-y-auto bg-ink-950">
-                <div class="p-4 lg:p-5 animate-fade-in">
+            <main class="admin-main flex-1 min-w-0 overflow-x-hidden overflow-y-auto bg-ink-950">
+                <div class="w-full min-w-0 px-3 py-4 sm:p-4 lg:p-5 animate-fade-in">
                     @yield('content')
                 </div>
             </main>

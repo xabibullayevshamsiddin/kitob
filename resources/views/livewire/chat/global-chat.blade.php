@@ -104,14 +104,14 @@
             @endphp
             <div class="flex items-start gap-2.5 group {{ $isMe ? 'flex-row-reverse' : '' }}" wire:key="msg-{{ $msg->id }}">
                 <x-ui.avatar :user="$msg->user" size="sm" :rank="$senderRank" link />
-                <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md">
+                <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md min-w-0">
                     <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }}">
                         @if($msg->user && !$isMe)
-                            <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-semibold text-paper hover:text-amber-400 hover:underline transition-colors">
+                            <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-semibold text-paper hover:text-amber-400 hover:underline transition-colors truncate max-w-[150px]">
                                 {{ $msg->user->name }}
                             </a>
                         @else
-                            <span class="text-xs font-semibold text-paper">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
+                            <span class="text-xs font-semibold text-paper truncate max-w-[150px]">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
                         @endif
                         @if($senderRank)
                             <x-ui.rank-badge :rank="$senderRank" size="xs" :compact="true" />

@@ -206,12 +206,17 @@
 
     </div>
 
-    <!-- Quick Keyboard Shortcut Hint -->
-    <div class="flex items-center justify-center gap-4 text-xs text-slate-400 pt-1">
+    <!-- Quick Gestures & Keyboard Hint -->
+    <div class="flex items-center justify-center gap-3 sm:gap-4 text-xs text-slate-400 pt-1 flex-wrap">
+        <span class="flex items-center gap-1.5 text-amber-400 font-medium">
+            <span>🖱️ / 👆</span>
+            <span>Mishka yoki barmoq bilan surib varaqlash</span>
+        </span>
+        <span class="text-white/20">•</span>
         <span class="flex items-center gap-1.5">
             <kbd class="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[11px]">←</kbd>
             <kbd class="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[11px]">→</kbd>
-            <span>Varaqlash</span>
+            <span>Klaviatura o'qlari</span>
         </span>
         <span class="text-white/20">•</span>
         <span class="flex items-center gap-1.5">
@@ -220,7 +225,7 @@
             <span>Kattalashtirish (Zoom)</span>
         </span>
         <span class="text-white/20">•</span>
-        <span>Sahifani 2 marta tez bosib yaqinlashtirish (Double-click)</span>
+        <span>Sahifani bosish yoki 2 marta tez bosib yaqinlashtirish</span>
     </div>
 
     <!-- Reading Tracker & 5-minute AFK Inactivity Modal -->

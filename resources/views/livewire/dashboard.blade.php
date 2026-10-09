@@ -140,16 +140,16 @@
                             </div>
                         </div>
 
-                        <div class="sm:col-span-8 space-y-4">
+                        <div class="sm:col-span-8 space-y-4 min-w-0">
                             <div>
                                 <span class="text-xs font-mono text-mist uppercase">{{ $featuredBook->genre }}</span>
-                                <h3 class="text-xl sm:text-2xl font-bold font-serif text-paper leading-tight mt-0.5">
+                                <h3 class="text-xl sm:text-2xl font-bold font-serif text-paper leading-tight mt-0.5 break-words">
                                     {{ $featuredBook->title }}
                                 </h3>
-                                <p class="text-xs text-mist font-mono mt-1">Muallif: <span class="text-paper">{{ $featuredBook->author }}</span></p>
+                                <p class="text-xs text-mist font-mono mt-1 break-words">Muallif: <span class="text-paper">{{ $featuredBook->author }}</span></p>
                             </div>
 
-                            <p class="text-xs sm:text-sm text-mist line-clamp-3 leading-relaxed font-sans">
+                            <p class="text-xs sm:text-sm text-mist line-clamp-3 leading-relaxed font-sans break-words whitespace-pre-line">
                                 {{ $featuredBook->description }}
                             </p>
 

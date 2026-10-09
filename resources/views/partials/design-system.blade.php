@@ -314,6 +314,12 @@
         .font-mono, code, kbd, samp { font-variant-numeric: tabular-nums; }
         p { text-wrap: pretty; }
 
+        /* Matn chegaradan chiqib ketishini oldini oluvchi global xavfsizlik qoidasi */
+        p, h1, h2, h3, h4, h5, h6, .ks-card, .ks-panel, [class*="rounded-panel"], [class*="rounded-card"] {
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
         /* Interaktivlik: cursor + ko'rinadigan fokus */
         a, button, [role="button"], label[for], select, summary,
         input[type="checkbox"], input[type="radio"], input[type="submit"], input[type="file"] { cursor: pointer; }

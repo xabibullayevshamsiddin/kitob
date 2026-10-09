@@ -41,7 +41,7 @@
             </div>
 
             <!-- Book Info & Actions -->
-            <div class="flex-1 space-y-4 text-center sm:text-left">
+            <div class="flex-1 min-w-0 space-y-4 text-center sm:text-left">
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                     <span class="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-mono font-bold rounded-badge uppercase tracking-wider">
                         {{ $book->week_number }}-Hafta kitobi
@@ -51,9 +51,9 @@
                     </span>
                 </div>
 
-                <h1 class="text-2xl sm:text-4xl font-bold font-serif text-paper tracking-tight leading-tight">{{ $book->title }}</h1>
-                <p class="text-xs sm:text-sm text-mist font-mono">Muallif: <strong class="text-paper font-sans font-semibold">{{ $book->author }}</strong></p>
-                <p class="text-xs sm:text-sm text-mist leading-relaxed max-w-2xl font-sans">{{ $book->description }}</p>
+                <h1 class="text-2xl sm:text-4xl font-bold font-serif text-paper tracking-tight leading-tight break-words">{{ $book->title }}</h1>
+                <p class="text-xs sm:text-sm text-mist font-mono break-words">Muallif: <strong class="text-paper font-sans font-semibold">{{ $book->author }}</strong></p>
+                <p class="text-xs sm:text-sm text-mist leading-relaxed max-w-2xl font-sans break-words whitespace-pre-line">{{ $book->description }}</p>
 
                 <!-- Quick Action Buttons -->
                 <div class="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
@@ -360,11 +360,16 @@
                 </div>
 
                 <!-- Quick Hint -->
-                <div class="flex items-center justify-center gap-4 text-xs text-mist font-mono">
+                <div class="flex items-center justify-center gap-4 text-xs text-mist font-mono flex-wrap">
+                    <span class="flex items-center gap-1.5 text-amber-400 font-semibold">
+                        <span>🖱️ / 👆</span>
+                        <span>Mishka yoki barmoq bilan surib varaqlash</span>
+                    </span>
+                    <span>•</span>
                     <span class="flex items-center gap-1.5">
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">←</kbd>
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">→</kbd>
-                        <span>Klaviatura o'qlari yoki sahifa burchaklariga bosib varaqlang</span>
+                        <span>Klaviatura o'qlari</span>
                     </span>
                 </div>
             </div>
@@ -410,12 +415,12 @@
     <div x-show="tab === 'chapters'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-3">
         @forelse($book->chapters()->where('is_published', true)->orderBy('chapter_number')->get() as $chapter)
             <div class="p-4 sm:p-5 rounded-card bg-ink-900 border border-ink-border flex items-center justify-between gap-4 transition-colors hover:border-ink-border/80 group">
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 min-w-0">
                     <div class="w-9 h-9 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-amber-400 font-bold font-mono text-sm shrink-0">
                         {{ $chapter->chapter_number }}
                     </div>
-                    <div>
-                        <h4 class="text-sm font-bold font-serif text-paper group-hover:text-amber-400 transition-colors">
+                    <div class="min-w-0">
+                        <h4 class="text-sm font-bold font-serif text-paper group-hover:text-amber-400 transition-colors break-words">
                             {{ $chapter->title }}
                         </h4>
                         @if($chapter->duration_minutes)
@@ -426,7 +431,7 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 shrink-0">
                     <a href="{{ route('reader.show', ['book' => $book->id, 'chapter' => $chapter->id]) }}"
                        class="ks-btn-ghost py-1.5 px-3 text-xs inline-flex items-center gap-1.5">
                         <span>O'qish</span>
@@ -443,8 +448,8 @@
 
     <!-- Tab 2: Overview -->
     <div x-show="tab === 'overview'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="p-6 rounded-card bg-ink-900 border border-ink-border space-y-4">
-        <h3 class="text-base font-bold font-serif text-paper">To'liq tavsif va mazmuni</h3>
-        <div class="text-sm text-mist leading-relaxed font-sans">
+        <h3 class="text-base font-bold font-serif text-paper break-words">To'liq tavsif va mazmuni</h3>
+        <div class="text-sm text-mist leading-relaxed font-sans break-words whitespace-pre-line">
             {{ $book->description }}
         </div>
     </div>

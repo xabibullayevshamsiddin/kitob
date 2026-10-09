@@ -135,9 +135,9 @@
         {{-- Ichki sahifa: annotatsiya --}}
         <div class="ks-book__inside" aria-hidden="true">
             <span class="font-mono text-[10px] uppercase tracking-[0.14em] text-[#526071]">{{ $book->genre }}</span>
-            <p class="font-display text-[15px] font-semibold leading-[1.3] text-[#1A1D24]">{{ $book->title }}</p>
+            <p class="font-display text-[15px] font-semibold leading-[1.3] text-[#1A1D24] break-words">{{ $book->title }}</p>
             @if($desc)
-                <p class="text-[11.5px] leading-[1.5] text-[#3A4250] line-clamp-5">{{ $desc }}</p>
+                <p class="text-[11.5px] leading-[1.5] text-[#3A4250] line-clamp-5 break-words">{{ $desc }}</p>
             @endif
             <span class="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#B83224]">
                 O'qishni boshlash
@@ -176,7 +176,7 @@
 
     @if($showMeta)
         <div class="pt-4 flex-1 flex flex-col">
-            <h3 class="font-display text-[15px] font-semibold leading-[1.35] text-paper line-clamp-2">
+            <h3 class="font-display text-[15px] font-semibold leading-[1.35] text-paper line-clamp-2 break-words">
                 <a href="{{ $link }}" class="hover:text-amber-400 transition-colors duration-base">{{ $book->title }}</a>
             </h3>
             <div class="mt-1 flex items-center justify-between gap-1">

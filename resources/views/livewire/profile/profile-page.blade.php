@@ -32,7 +32,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <div class="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
-                            <h1 class="text-2xl sm:text-3xl font-bold text-paper font-serif">{{ $user->name }}</h1>
+                            <h1 class="text-2xl sm:text-3xl font-bold text-paper font-serif break-words">{{ $user->name }}</h1>
                             @if($isTopFive)
                                 <x-ui.rank-badge :rank="$userRank" size="md" />
                             @endif
@@ -86,7 +86,7 @@
                 </div>
 
                 @if ($user->bio)
-                    <p class="text-xs sm:text-sm text-mist max-w-2xl leading-relaxed font-sans">
+                    <p class="text-xs sm:text-sm text-mist max-w-2xl leading-relaxed font-sans break-words whitespace-pre-line">
                         {{ $user->bio }}
                     </p>
                 @endif

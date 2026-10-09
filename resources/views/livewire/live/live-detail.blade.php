@@ -387,7 +387,7 @@
             @if($event->description)
                 <div class="p-4 rounded-panel bg-ink-900 border border-ink-border shadow-soft">
                     <h3 class="text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.live.about') }}</h3>
-                    <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">{{ $event->description }}</p>
+                    <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans break-words whitespace-pre-line">{{ $event->description }}</p>
                 </div>
             @endif
 

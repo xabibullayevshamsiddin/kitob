@@ -267,7 +267,7 @@
                 </div>
             </div>
 
-            <div class="mt-5 pt-4 border-t border-slate-800 grid grid-cols-3 gap-3 text-center">
+            <div class="mt-5 pt-4 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                 <div>
                     <p class="text-xs text-slate-600">Jami</p>
                     <p class="text-lg font-bold text-white">{{ number_format($totalBooks) }}</p>

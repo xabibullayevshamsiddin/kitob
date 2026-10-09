@@ -149,7 +149,7 @@
                 Barchasini ko'rish →
             </a>
         </div>
-        <div class="overflow-x-auto">
+        <div class="admin-table-scroll overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
                     <tr class="border-b border-ink-border bg-ink-950/40 text-[11px] font-mono uppercase text-mist">

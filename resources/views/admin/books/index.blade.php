@@ -71,7 +71,7 @@
 
 {{-- Table --}}
 <div class="bg-ink-900 border border-ink-border rounded-panel overflow-hidden">
-    <div class="overflow-x-auto">
+    <div class="admin-table-scroll overflow-x-auto">
         <table class="w-full text-left">
             <thead>
                 <tr class="bg-ink-950/60 border-b border-ink-border text-[11px] font-mono uppercase text-mist">
@@ -135,13 +135,15 @@
 
                         {{-- Active toggle --}}
                         <td class="py-2.5 px-3.5 text-center">
-                            <form method="POST" action="{{ route('admin.books.toggle', $book) }}" id="toggle-form-{{ $book->id }}">
+                            <form method="POST" action="{{ route('admin.books.toggle', $book) }}" id="toggle-form-{{ $book->id }}" class="flex justify-center">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit"
-                                        class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-150 {{ $book->is_active ? 'bg-amber-500' : 'bg-ink-950 border border-ink-border' }}"
+                                        class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 {{ $book->is_active ? 'bg-amber-500' : 'bg-ink-950 border border-ink-border' }}"
+                                        aria-label="{{ $book->is_active ? 'Kitobni nofaol qilish' : 'Kitobni faollashtirish' }}"
+                                        aria-pressed="{{ $book->is_active ? 'true' : 'false' }}"
                                         title="{{ $book->is_active ? 'Nofaol qilish' : 'Faollashtirish' }}">
-                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-paper shadow transition-transform duration-150 {{ $book->is_active ? 'translate-x-4.5 bg-ink-950' : 'translate-x-0.5' }}"></span>
+                                    <span class="inline-block h-4 w-4 transform rounded-full bg-paper shadow transition-transform duration-150 {{ $book->is_active ? 'translate-x-6 bg-ink-950' : 'translate-x-1' }}"></span>
                                 </button>
                             </form>
                             <p class="text-[9px] mt-0.5 font-mono {{ $book->is_active ? 'text-amber-400' : 'text-mist' }}">

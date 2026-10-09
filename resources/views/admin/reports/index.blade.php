@@ -60,7 +60,7 @@
              this.banModalOpen = true;
          }
      }">
-    <div class="overflow-x-auto">
+    <div class="admin-table-scroll overflow-x-auto">
         <table class="w-full">
             <thead>
                 <tr class="bg-slate-800/50 border-b border-slate-800">

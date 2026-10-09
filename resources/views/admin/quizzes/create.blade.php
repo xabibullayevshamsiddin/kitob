@@ -142,10 +142,10 @@
                     <span class="ks-eyebrow mr-2">02</span>Savollar va Variantlar (<span x-text="questions.length" class="font-mono text-amber-400"></span> ta)
                 </h3>
 
-                <div class="flex items-center gap-2">
-                    <button type="button" @click="addQuestions(1)" class="ks-btn-gold py-1.5 px-3 text-xs font-mono font-bold">+ 1 ta savol</button>
-                    <button type="button" @click="addQuestions(5)" class="ks-btn-ghost py-1.5 px-3 text-xs font-mono">+ 5 ta</button>
-                    <button type="button" @click="addQuestions(10)" title="Bir vaqtning o'zida 10 ta savol shablonini qo'shish" class="ks-btn-ghost py-1.5 px-3 text-xs font-mono text-amber-400 hover:text-amber-300">+ 10 ta savol</button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" @click="addQuestions(1)" class="ks-btn-gold min-h-11 py-1.5 px-3 text-xs font-mono font-bold">+ 1 ta savol</button>
+                    <button type="button" @click="addQuestions(5)" class="ks-btn-ghost min-h-11 py-1.5 px-3 text-xs font-mono">+ 5 ta</button>
+                    <button type="button" @click="addQuestions(10)" title="Bir vaqtning o'zida 10 ta savol shablonini qo'shish" class="ks-btn-ghost min-h-11 py-1.5 px-3 text-xs font-mono text-amber-400 hover:text-amber-300">+ 10 ta savol</button>
                 </div>
             </div>
 
@@ -202,9 +202,9 @@
 
         {{-- Pastki tugmalar --}}
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 pb-12 border-t border-ink-border">
-            <div class="flex items-center gap-2">
-                <button type="button" @click="addQuestions(1)" class="ks-btn-ghost py-2 px-3.5 text-xs font-mono">+ 1 ta savol</button>
-                <button type="button" @click="addQuestions(10)" class="ks-btn-ghost py-2 px-3.5 text-xs font-mono">+ 10 ta savol</button>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" @click="addQuestions(1)" class="ks-btn-ghost min-h-11 py-2 px-3.5 text-xs font-mono">+ 1 ta savol</button>
+                <button type="button" @click="addQuestions(10)" class="ks-btn-ghost min-h-11 py-2 px-3.5 text-xs font-mono">+ 10 ta savol</button>
             </div>
 
             <button type="submit" class="ks-btn-primary py-2.5 px-8 text-sm font-bold">
