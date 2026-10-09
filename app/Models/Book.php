@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Carbon;
@@ -24,6 +25,7 @@ class Book extends Model
         'week_number',
         'published_at',
         'is_active',
+        'created_by',
     ];
 
     protected $casts = [
@@ -64,6 +66,11 @@ class Book extends Model
     public function quizzes(): HasMany
     {
         return $this->hasMany(Quiz::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function dailyQuotes(): HasMany
@@ -167,4 +174,28 @@ class Book extends Model
 
         return asset('storage/' . $this->cover_image);
     }
+
+    /**
+     * Foydalanuvchi ushbu kitobga test qo'sha olishini tekshiradi:
+     * - Admin har qanday kitobga test qo'sha oladi (admin bundan mustasno)
+     * - O'qituvchi faqat o'zi saytga qo'shgan kitobga test qo'sha oladi
+     */
+    public function canUserAddQuiz(?User $user = null): bool
+    {
+        $user = $user ?? auth()->user();
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->isAdmin() || ($user->role === 'admin')) {
+            return true;
+        }
+
+        if (($user->isTeacher() || ($user->role === 'teacher')) && $this->created_by && (int) $this->created_by === (int) $user->id) {
+            return true;
+        }
+
+        return false;
+    }
 }
+

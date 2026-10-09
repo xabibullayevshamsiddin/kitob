@@ -501,7 +501,9 @@ Route::prefix('teacher')
 
     // Kitob boshqarish
     Route::get('/books', function () {
-        $books = \App\Models\Book::latest()->paginate(15);
+        $books = \App\Models\Book::when(!auth()->user()->isAdmin(), fn ($q) => $q->where('created_by', auth()->id()))
+            ->latest()
+            ->paginate(15);
         return view('teacher.books.index', compact('books'));
     })->name('books.index');
 
@@ -531,6 +533,7 @@ Route::prefix('teacher')
             'slug'         => \Illuminate\Support\Str::slug($req->title),
             'week_number'  => \App\Models\Book::max('week_number') + 1,
             'pdf_path'     => $pdfPath,
+            'created_by'   => auth()->id(),
             'published_at' => now(),
             'is_active'    => false,
         ]);
@@ -541,8 +544,13 @@ Route::prefix('teacher')
     Route::get('/quizzes', [\App\Http\Controllers\Teacher\QuizController::class, 'index'])->name('quizzes.index');
     Route::get('/quizzes/create', [\App\Http\Controllers\Teacher\QuizController::class, 'create'])->name('quizzes.create');
     Route::post('/quizzes', [\App\Http\Controllers\Teacher\QuizController::class, 'store'])->name('quizzes.store');
+    Route::get('/quizzes/{quiz}/edit', [\App\Http\Controllers\Teacher\QuizController::class, 'edit'])->name('quizzes.edit');
+    Route::put('/quizzes/{quiz}', [\App\Http\Controllers\Teacher\QuizController::class, 'update'])->name('quizzes.update');
     Route::get('/quizzes/{quiz}', [\App\Http\Controllers\Teacher\QuizController::class, 'show'])->name('quizzes.show');
     Route::delete('/quizzes/{quiz}', [\App\Http\Controllers\Teacher\QuizController::class, 'destroy'])->name('quizzes.destroy');
+    Route::get('/quiz-reviews', [\App\Http\Controllers\QuizReviewController::class, 'index'])->name('quiz-reviews.index');
+    Route::get('/quiz-reviews/{attempt}', [\App\Http\Controllers\QuizReviewController::class, 'show'])->name('quiz-reviews.show');
+    Route::post('/quiz-reviews/{attempt}', [\App\Http\Controllers\QuizReviewController::class, 'update'])->name('quiz-reviews.update');
 
     // O'quvchilar statistikasi
     Route::get('/students', function () {
@@ -885,6 +893,7 @@ Route::prefix('admin')
             'week_number'  => $req->week_number ?? ((\App\Models\Book::max('week_number') ?? 0) + 1),
             'pdf_path'     => $pdfPath,
             'cover_image'  => $coverPath,
+            'created_by'   => auth()->id(),
             'published_at' => now(),
             'is_active'    => $req->has('is_active'),
         ]);
@@ -971,8 +980,13 @@ Route::prefix('admin')
     Route::get('/quizzes', [\App\Http\Controllers\Admin\QuizController::class, 'index'])->name('quizzes.index');
     Route::get('/quizzes/create', [\App\Http\Controllers\Admin\QuizController::class, 'create'])->name('quizzes.create');
     Route::post('/quizzes', [\App\Http\Controllers\Admin\QuizController::class, 'store'])->name('quizzes.store');
+    Route::get('/quizzes/{quiz}/edit', [\App\Http\Controllers\Admin\QuizController::class, 'edit'])->name('quizzes.edit');
+    Route::put('/quizzes/{quiz}', [\App\Http\Controllers\Admin\QuizController::class, 'update'])->name('quizzes.update');
     Route::get('/quizzes/{quiz}', [\App\Http\Controllers\Admin\QuizController::class, 'show'])->name('quizzes.show');
     Route::delete('/quizzes/{quiz}', [\App\Http\Controllers\Admin\QuizController::class, 'destroy'])->name('quizzes.destroy');
+    Route::get('/quiz-reviews', [\App\Http\Controllers\QuizReviewController::class, 'index'])->name('quiz-reviews.index');
+    Route::get('/quiz-reviews/{attempt}', [\App\Http\Controllers\QuizReviewController::class, 'show'])->name('quiz-reviews.show');
+    Route::post('/quiz-reviews/{attempt}', [\App\Http\Controllers\QuizReviewController::class, 'update'])->name('quiz-reviews.update');
 });
 
 // Alias for profile.edit

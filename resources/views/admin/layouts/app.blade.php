@@ -97,6 +97,7 @@
 
     @php
         $pendingReportsCount = \App\Models\Report::pending()->count();
+        $pendingQuizReviewsCount = \App\Models\QuizAttempt::where('review_status', 'pending')->count();
         $navIcon = function (string $name) {
             $paths = [
                 'dashboard' => '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
@@ -106,6 +107,7 @@
                 'audio'     => '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
                 'video'     => '<path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>',
                 'quiz'      => '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+                'review'    => '<path d="M9 11l2 2 4-4"/><path d="M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10Z"/><path d="M12 6v1"/>',
                 'stats'     => '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
                 'settings'  => '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
             ];
@@ -122,6 +124,7 @@
                 ['route' => 'admin.audios.index',  'match' => 'admin.audios.*',  'label' => 'Audiolar',          'icon' => 'audio'],
                 ['route' => 'admin.videos.index',  'match' => 'admin.videos.*',  'label' => 'Videolar',          'icon' => 'video'],
                 ['route' => 'admin.quizzes.index', 'match' => 'admin.quizzes.*', 'label' => 'Test topshiriqlari','icon' => 'quiz'],
+                ['route' => 'admin.quiz-reviews.index', 'match' => 'admin.quiz-reviews.*', 'label' => 'Yozma javoblar', 'icon' => 'review', 'badge' => $pendingQuizReviewsCount],
             ],
             'Tahlil' => [
                 ['route' => 'admin.stats', 'match' => 'admin.stats', 'label' => 'Statistika', 'icon' => 'stats'],

@@ -3,7 +3,7 @@
 @section('title', $book->title)
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.css')) }}">
 <style>
     .preserve-3d { transform-style: preserve-3d; }
     @keyframes bookFlip {
@@ -160,7 +160,7 @@
                         </a>
                     @endif
 
-                    @if(auth()->check() && auth()->user()->isAdminOrTeacher())
+                    @if(auth()->check() && $book->canUserAddQuiz(auth()->user()))
                         @php
                             $quizCreateRoute = auth()->user()->isAdmin()
                                 ? route('admin.quizzes.create', ['book_id' => $book->id])
@@ -288,14 +288,14 @@
                         <div id="fb-spread" class="fb-book-spread">
                             <div class="fb-page-pane fb-page-pane--left">
                                 <canvas id="fb-canvas-left" class="fb-canvas"></canvas>
-                                <div class="fb-corner-curl fb-corner-curl--bottom-left" onclick="fbGoPrev()" title="Oldingi sahifa"></div>
+                                <div class="fb-corner-curl fb-corner-curl--bottom-left" title="Oldingi sahifa"></div>
                             </div>
 
                             <div class="fb-book-spine"></div>
 
                             <div class="fb-page-pane fb-page-pane--right">
                                 <canvas id="fb-canvas-right" class="fb-canvas"></canvas>
-                                <div class="fb-corner-curl fb-corner-curl--bottom-right" onclick="fbGoNext()" title="Keyingi sahifa"></div>
+                                <div class="fb-corner-curl fb-corner-curl--bottom-right" title="Keyingi sahifa"></div>
                             </div>
 
                             <div id="fb-flip-container" class="fb-flip-container">
@@ -309,8 +309,8 @@
                                 </div>
                             </div>
 
-                            <div class="fb-click-zone fb-click-zone--prev" onclick="fbGoPrev()" title="Oldingi sahifaga varaqlash"></div>
-                            <div class="fb-click-zone fb-click-zone--next" onclick="fbGoNext()" title="Keyingi sahifaga varaqlash"></div>
+                            <div class="fb-click-zone fb-click-zone--prev" title="Oldingi sahifaga varaqlash"></div>
+                            <div class="fb-click-zone fb-click-zone--next" title="Keyingi sahifaga varaqlash"></div>
                         </div>
                     </div>
 
@@ -465,6 +465,6 @@
 <!-- PDF.js CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <!-- Flipbook Core Engine -->
-<script src="{{ asset('assets/flipbook/flipbook.js') }}"></script>
+<script src="{{ asset('assets/flipbook/flipbook.js') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.js')) }}"></script>
 @endif
 @endpush

@@ -35,12 +35,15 @@ class TakeQuiz extends Component
 
     /** Selected option id for the current question */
     public $selectedOption = null;
+    public string $writtenAnswer = '';
+    public array $draftAnswers = [];
 
     /** Number of questions answered correctly */
     public int $correctCount = 0;
 
     /** Set when the whole quiz is finished */
     public bool $finished = false;
+    public bool $confirmFinishOpen = false;
 
     /** Earned score in points */
     public int $score = 0;
@@ -65,6 +68,7 @@ class TakeQuiz extends Component
 
     /** True when the attempt was auto-finished because time ran out */
     public bool $timedOut = false;
+    public bool $pendingReview = false;
 
     /** All quiz data for rendering */
     public array $questions = [];
@@ -127,6 +131,10 @@ class TakeQuiz extends Component
             return [
                 'id'          => $q->id,
                 'text'        => $q->question_text,
+                'image'       => $q->image_path ? asset('storage/' . $q->image_path) : null,
+                'image_shape' => $q->image_shape ?? 'rectangle',
+                'type'        => $q->type,
+                'points'      => (int) $q->points,
                 'explanation' => $q->explanation,
                 'options'     => $q->options->values()->map(fn ($o) => [
                     'id'   => $o->id,
@@ -140,8 +148,11 @@ class TakeQuiz extends Component
     {
         $this->currentQuestion = 0;
         $this->selectedOption = null;
+        $this->writtenAnswer = '';
+        $this->draftAnswers = [];
         $this->correctCount = 0;
         $this->finished = false;
+        $this->confirmFinishOpen = false;
         $this->score = 0;
         $this->maxScore = 0;
         $this->percent = 0;
@@ -151,6 +162,7 @@ class TakeQuiz extends Component
         $this->questions = [];
         $this->startedAt = time();
         $this->timedOut = false;
+        $this->pendingReview = false;
     }
 
     /**
@@ -165,6 +177,74 @@ class TakeQuiz extends Component
         return max(0, (int) $this->startedAt + ((int) $this->timeLimitMinutes * 60) - time());
     }
 
+    protected function saveCurrentDraft(): void
+    {
+        $question = $this->questions[$this->currentQuestion] ?? null;
+        if (!$question) {
+            return;
+        }
+
+        if (($question['type'] ?? 'single') === 'text') {
+            $this->draftAnswers[$this->currentQuestion] = [
+                'type' => 'text',
+                'written_answer' => mb_substr($this->writtenAnswer, 0, 5000),
+            ];
+            return;
+        }
+
+        if ($this->selectedOption !== null) {
+            $belongsToQuestion = DB::table('quiz_options')
+                ->where('id', $this->selectedOption)
+                ->where('question_id', $question['id'])
+                ->exists();
+
+            if ($belongsToQuestion) {
+                $this->draftAnswers[$this->currentQuestion] = [
+                    'type' => 'single',
+                    'selected_option' => (int) $this->selectedOption,
+                ];
+                return;
+            }
+        }
+
+        unset($this->draftAnswers[$this->currentQuestion]);
+    }
+
+    protected function restoreQuestionDraft(int $index): void
+    {
+        $draft = $this->draftAnswers[$index] ?? [];
+        $this->selectedOption = ($draft['type'] ?? null) === 'single'
+            ? ($draft['selected_option'] ?? null)
+            : null;
+        $this->writtenAnswer = ($draft['type'] ?? null) === 'text'
+            ? (string) ($draft['written_answer'] ?? '')
+            : '';
+        $this->resetErrorBag();
+    }
+
+    protected function gradeDraftAnswers(): void
+    {
+        foreach ($this->questions as $index => $question) {
+            if (isset($this->feedback[$index])) {
+                continue;
+            }
+
+            $draft = $this->draftAnswers[$index] ?? [];
+            if (($question['type'] ?? 'single') === 'text') {
+                $answer = trim((string) ($draft['written_answer'] ?? ''));
+                if ($answer !== '') {
+                    $this->gradeWrittenQuestion($index, $answer);
+                }
+                continue;
+            }
+
+            $selectedOption = $draft['selected_option'] ?? null;
+            if ($selectedOption !== null) {
+                $this->gradeQuestion($index, $selectedOption);
+            }
+        }
+    }
+
     /**
      * Vaqt tugaganda Alpine tomonidan chaqiriladi:
      * javoblangan savollar baholanadi, javoblanmaganlarga 0 ball,
@@ -176,14 +256,7 @@ class TakeQuiz extends Component
             return;
         }
 
-        // Joriy savolda tanlab, tasdiqlanmagan javob ham baholanadi
-        if ($this->selectedOption !== null && !isset($this->feedback[$this->currentQuestion])) {
-            $question = $this->questions[$this->currentQuestion] ?? null;
-            if ($question) {
-                $this->gradeQuestion($this->currentQuestion, $this->selectedOption);
-            }
-        }
-
+        $this->saveCurrentDraft();
         $this->timedOut = true;
         $this->finishQuiz();
     }
@@ -218,6 +291,10 @@ class TakeQuiz extends Component
         }
 
         $this->feedback[$index] = [
+            'question_id'   => $question['id'],
+            'type'          => 'single',
+            'points'        => $question['points'],
+            'earned_points' => $isCorrect ? $question['points'] : 0,
             'question_text' => $question['text'],
             'correct'       => $isCorrect,
             'selected_id'   => $selectedId,
@@ -227,6 +304,21 @@ class TakeQuiz extends Component
         ];
 
         return $this->feedback[$index];
+    }
+
+    protected function gradeWrittenQuestion(int $index, string $answer): void
+    {
+        $question = $this->questions[$index];
+        $this->feedback[$index] = [
+            'question_id' => $question['id'],
+            'type' => 'text',
+            'points' => $question['points'],
+            'earned_points' => null,
+            'question_text' => $question['text'],
+            'written_answer' => trim($answer),
+            'correct' => null,
+            'explanation' => $question['explanation'],
+        ];
     }
 
     /**
@@ -239,12 +331,15 @@ class TakeQuiz extends Component
                 continue;
             }
 
-            $correctOption = DB::table('quiz_options')
-                ->where('question_id', $question['id'])
-                ->where('is_correct', true)
-                ->first();
+            $correctOption = ($question['type'] ?? 'single') === 'single'
+                ? DB::table('quiz_options')->where('question_id', $question['id'])->where('is_correct', true)->first()
+                : null;
 
             $this->feedback[$index] = [
+                'question_id'   => $question['id'],
+                'type'          => $question['type'] ?? 'single',
+                'points'        => $question['points'],
+                'earned_points' => 0,
                 'question_text' => $question['text'],
                 'correct'       => false,
                 'selected_id'   => null,
@@ -269,24 +364,75 @@ class TakeQuiz extends Component
             return;
         }
 
-        $question = $this->questions[$this->currentQuestion] ?? null;
-        abort_if(!$question, 404);
-
-        $this->gradeQuestion($this->currentQuestion, $this->selectedOption);
-        $this->selectedOption = null;
+        abort_if(!isset($this->questions[$this->currentQuestion]), 404);
+        $this->saveCurrentDraft();
 
         if ($this->currentQuestion < count($this->questions) - 1) {
             $this->currentQuestion++;
+            $this->restoreQuestionDraft($this->currentQuestion);
         } else {
             $this->finishQuiz();
         }
+    }
+
+    public function requestFinish(): void
+    {
+        if ($this->finished) {
+            return;
+        }
+
+        if ($this->timerRemaining !== null && $this->timerRemaining <= 0) {
+            $this->timeUp();
+            return;
+        }
+
+        if ($this->currentQuestion === count($this->questions) - 1) {
+            $this->confirmFinishOpen = true;
+        }
+    }
+
+    public function cancelFinish(): void
+    {
+        $this->confirmFinishOpen = false;
+    }
+
+    public function confirmFinish(): void
+    {
+        if (!$this->confirmFinishOpen || $this->finished) {
+            return;
+        }
+
+        $this->confirmFinishOpen = false;
+        $this->nextQuestion();
+    }
+
+    public function previousQuestion(): void
+    {
+        if ($this->finished) {
+            return;
+        }
+
+        if ($this->timerRemaining !== null && $this->timerRemaining <= 0) {
+            $this->timeUp();
+            return;
+        }
+
+        if ($this->currentQuestion <= 0) {
+            return;
+        }
+
+        $this->saveCurrentDraft();
+        $this->currentQuestion--;
+        $this->restoreQuestionDraft($this->currentQuestion);
     }
 
     protected function finishQuiz(): void
     {
         $this->finished = true;
 
-        // Vaqt tugaganda javoblanmagan savollar ham tahlilda ko'rinsin (0 ball)
+        $this->gradeDraftAnswers();
+
+        // Javobsiz qoldirilgan savollar tahlilda ham ko'rinadi (0 ball)
         $this->fillUnansweredFeedback();
 
         $user = Auth::user();
@@ -299,6 +445,28 @@ class TakeQuiz extends Component
         $calculatedPoints = (int) round(($this->percent / 100) * $this->maxRewardPoints);
 
         if (!$quiz || !$user) {
+            return;
+        }
+
+        $hasWrittenQuestions = collect($this->questions)->contains(fn ($question) => ($question['type'] ?? 'single') === 'text');
+        if ($hasWrittenQuestions) {
+            QuizAttempt::create([
+                'user_id' => $user->id,
+                'quiz_id' => $quiz->id,
+                'score' => 0,
+                'max_score' => $this->maxRewardPoints,
+                'percent' => 0,
+                'answers' => $this->feedback,
+                'review_status' => 'pending',
+                'completed_at' => now(),
+            ]);
+            $this->score = 0;
+            $this->percent = 0;
+            $this->pointsAwarded = 0;
+            $this->maxScore = $this->maxRewardPoints;
+            $this->pendingReview = true;
+            $this->toastInfo('Yozma javoblar tekshirilgach natija va ball ko‘rinadi.', 'Javoblar qabul qilindi');
+
             return;
         }
 
@@ -385,6 +553,9 @@ class TakeQuiz extends Component
         $attemptCount = (Auth::check() && $this->quizId)
             ? QuizAttempt::where('user_id', Auth::id())->where('quiz_id', $this->quizId)->count()
             : 0;
+        $latestAttempt = (Auth::check() && $this->quizId)
+            ? QuizAttempt::where('user_id', Auth::id())->where('quiz_id', $this->quizId)->latest('completed_at')->first()
+            : null;
 
         return view('livewire.quiz.take-quiz', [
             'book'                 => $this->book,
@@ -395,6 +566,7 @@ class TakeQuiz extends Component
             'timeLimitMinutes'     => $this->timeLimitMinutes,
             'maxRewardPoints'      => $this->maxRewardPoints,
             'attemptCount'         => $attemptCount,
+            'latestAttempt'        => $latestAttempt,
             'questions'            => $this->questions,
             'currentQuestion'      => $this->currentQuestion,
             'correctCount'         => $this->correctCount,
@@ -408,6 +580,7 @@ class TakeQuiz extends Component
             'feedback'             => $this->feedback,
             'timerRemainingSeconds' => $this->timerRemaining,
             'timedOut'             => $this->timedOut,
+            'pendingReview'        => $this->pendingReview,
             'passingPercent'       => (int) setting('quiz_passing_percent', 70),
         ])->layout('layouts.app', ['title' => 'Test – ' . $this->book->title]);
     }

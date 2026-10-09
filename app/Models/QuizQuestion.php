@@ -14,7 +14,10 @@ class QuizQuestion extends Model
     protected $fillable = [
         'quiz_id',
         'question_text',
+        'image_path',
+        'image_shape',
         'type',
+        'expected_answer',
         'points',
         'explanation',
         'order',

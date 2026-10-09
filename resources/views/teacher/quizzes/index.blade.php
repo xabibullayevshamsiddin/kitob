@@ -14,6 +14,7 @@
             <p class="text-xs text-mist font-mono mt-0.5">Kitoblar bo'yicha bilimlarni baholovchi interaktiv testlar</p>
         </div>
         <div class="flex items-center gap-2.5">
+            <a href="{{ route('teacher.quiz-reviews.index') }}" class="ks-btn-ghost min-h-11 px-3 py-2 inline-flex items-center text-xs">Yozma javoblar</a>
             <a href="{{ route('teacher.quizzes.create') }}"
                class="ks-btn-primary text-xs py-2 px-3.5 inline-flex items-center gap-1.5 shadow-sm">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -32,30 +33,39 @@
     {{-- Quizzes Table Card --}}
     <div class="ks-panel bg-ink-900 border border-ink-border overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full min-w-[72rem] table-fixed border-collapse text-left">
+                <colgroup>
+                    <col style="width: 23%">
+                    <col style="width: 15%">
+                    <col style="width: 9%">
+                    <col style="width: 9%">
+                    <col style="width: 10%">
+                    <col style="width: 7%">
+                    <col style="width: 27%">
+                </colgroup>
                 <thead>
                     <tr class="border-b border-ink-border bg-ink-950/60 font-mono text-[11px] uppercase tracking-wider text-mist">
-                        <th class="py-2.5 px-3.5">Test nomi</th>
-                        <th class="py-2.5 px-3.5">Bog'langan kitob</th>
-                        <th class="py-2.5 px-3.5">Murakkabligi</th>
-                        <th class="py-2.5 px-3.5">Savollar</th>
-                        <th class="py-2.5 px-3.5">Topshirganlar</th>
-                        <th class="py-2.5 px-3.5">Vaqt</th>
-                        <th class="py-2.5 px-3.5 text-right">Amallar</th>
+                        <th class="whitespace-nowrap px-3 py-2.5">Test nomi</th>
+                        <th class="whitespace-nowrap px-3 py-2.5">Bog'langan kitob</th>
+                        <th class="whitespace-nowrap px-3 py-2.5">Murakkabligi</th>
+                        <th class="whitespace-nowrap px-3 py-2.5">Savollar</th>
+                        <th class="whitespace-nowrap px-3 py-2.5">Topshirganlar</th>
+                        <th class="whitespace-nowrap px-3 py-2.5">Vaqt</th>
+                        <th class="whitespace-nowrap px-3 py-2.5 text-right">Amallar</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-ink-border font-sans text-xs">
                     @forelse($quizzes as $quiz)
                         <tr class="hover:bg-ink-800/40 transition-colors">
                             <td class="py-2.5 px-3.5">
-                                <div class="flex items-center gap-2.5">
+                                <div class="flex min-w-0 items-center gap-2.5">
                                     <div class="w-7 h-7 rounded-btn bg-ink-800 border border-ink-border text-amber-400 flex items-center justify-center shrink-0">
                                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="font-semibold text-paper truncate max-w-xs">{{ $quiz->title }}</p>
+                                        <p class="max-w-full truncate font-semibold text-paper" title="{{ $quiz->title }}">{{ $quiz->title }}</p>
                                         @if($quiz->description)
-                                            <p class="text-[11px] text-mist truncate max-w-xs">{{ $quiz->description }}</p>
+                                            <p class="max-w-full truncate text-[11px] text-mist" title="{{ $quiz->description }}">{{ $quiz->description }}</p>
                                         @endif
                                     </div>
                                 </div>
@@ -63,11 +73,11 @@
 
                             <td class="py-2.5 px-3.5">
                                 @if($quiz->book)
-                                    <a href="{{ route('books.show', $quiz->book->slug) }}" target="_blank" class="flex items-center gap-2 group">
+                                    <a href="{{ route('books.show', $quiz->book->slug) }}" target="_blank" class="group flex min-w-0 items-center gap-2">
                                         <img src="{{ $quiz->book->cover_url }}" class="w-6 h-8 object-cover rounded border border-ink-border" alt="{{ $quiz->book->title }}">
                                         <div class="min-w-0">
                                             <p class="text-xs font-medium text-paper group-hover:text-amber-400 transition-colors truncate max-w-[140px]">{{ $quiz->book->title }}</p>
-                                            <span class="text-[10px] font-mono text-mist">{{ $quiz->book->week_number ? "{$quiz->book->week_number}-hafta" : 'Kitob' }}</span>
+                                            <span class="whitespace-nowrap text-[10px] font-mono text-mist">{{ $quiz->book->week_number ? "{$quiz->book->week_number}-hafta" : 'Kitob' }}</span>
                                         </div>
                                     </a>
                                 @else
@@ -84,31 +94,41 @@
                                     ];
                                     $dc = $diffConfig[$quiz->difficulty] ?? ['label' => $quiz->difficulty, 'class' => 'bg-ink-800 text-mist border border-ink-border'];
                                 @endphp
-                                <span class="px-2 py-0.5 rounded-pill text-[11px] font-mono font-medium {{ $dc['class'] }}">
+                                <span class="whitespace-nowrap rounded-pill px-2 py-0.5 text-[11px] font-mono font-medium {{ $dc['class'] }}">
                                     {{ $dc['label'] }}
                                 </span>
                             </td>
 
                             <td class="py-2.5 px-3.5">
-                                <span class="px-2 py-0.5 rounded-pill text-[11px] font-mono bg-ink-800 border border-ink-border text-mist">
+                                <span class="whitespace-nowrap rounded-pill border border-ink-border bg-ink-800 px-2 py-0.5 text-[11px] font-mono text-mist">
                                     {{ $quiz->questions_count }} ta savol
                                 </span>
                             </td>
 
-                            <td class="py-2.5 px-3.5 font-mono text-xs text-mist">
+                            <td class="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-mist">
                                 {{ $quiz->attempts_count }} marta
+                                @if($quiz->pending_attempts_count > 0)
+                                    <span class="mt-1 block font-sans text-[10px] font-bold text-amber-300">{{ $quiz->pending_attempts_count }} ta yozma javob kutilmoqda</span>
+                                @endif
                             </td>
 
-                            <td class="py-2.5 px-3.5 font-mono text-xs text-mist">
+                            <td class="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-mist">
                                 {{ $quiz->time_limit_minutes ? $quiz->time_limit_minutes . ' daqiqa' : 'Cheksiz' }}
                             </td>
 
-                            <td class="py-2.5 px-3.5 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    {{-- Savollarni ko'rish --}}
-                                    <a href="{{ route('teacher.quizzes.show', $quiz->id) }}"
-                                       class="px-2.5 py-1 rounded-btn bg-ink-800 hover:bg-ink-700/60 border border-ink-border text-xs font-mono text-paper transition-colors">
-                                        Savollar ({{ $quiz->questions_count }})
+                            <td class="px-3 py-2.5 text-right align-middle">
+                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                    <a href="{{ route('teacher.quizzes.show', ['quiz' => $quiz, 'section' => 'results']) }}"
+                                       class="inline-flex min-h-10 items-center justify-center rounded-btn border border-sky-500/25 bg-sky-500/10 px-2.5 text-[11px] font-semibold text-sky-200 transition-colors hover:bg-sky-500/20">
+                                        Natijalar <span class="ml-1 font-mono">{{ $quiz->attempts_count }}</span>
+                                    </a>
+                                    <a href="{{ route('teacher.quizzes.show', ['quiz' => $quiz, 'section' => 'questions']) }}"
+                                       class="inline-flex min-h-10 items-center justify-center rounded-btn border border-ink-border bg-ink-800 px-2.5 text-[11px] font-semibold text-paper transition-colors hover:border-amber-500/30 hover:text-amber-300">
+                                        Savollar
+                                    </a>
+                                    <a href="{{ route('teacher.quizzes.edit', $quiz) }}"
+                                       class="inline-flex min-h-10 items-center justify-center rounded-btn border border-amber-500/25 bg-amber-500/10 px-2.5 text-[11px] font-semibold text-amber-300 transition-colors hover:bg-amber-500/20">
+                                        Tahrirlash
                                     </a>
 
                                     {{-- O'chirish --}}
@@ -117,8 +137,8 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="p-1 rounded-btn text-mist hover:text-rose-300 hover:bg-ink-800 border border-transparent hover:border-ink-border transition-colors"
-                                                title="O'chirish">
+                                                class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-btn border border-ink-border text-mist transition-colors hover:bg-ink-800 hover:text-rose-300"
+                                                title="O'chirish" aria-label="Testni o'chirish">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
                                     </form>
@@ -151,41 +171,6 @@
                 {{ $quizzes->links() }}
             </div>
         @endif
-    </div>
-
-    {{-- Kitoblar bo'yicha tezkor test qo'shish paneli --}}
-    <div class="ks-panel bg-ink-900 border border-ink-border p-5 space-y-4">
-        <div class="flex items-center justify-between border-b border-ink-border pb-3">
-            <div>
-                <h3 class="font-bold text-paper text-sm flex items-center gap-2 font-serif">
-                    <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                    Kitoblarga to'g'ridan-to'g'ri test qo'shish
-                </h3>
-                <p class="text-xs text-mist font-mono mt-0.5">Istalgan kitobni tanlab, unga yangi test savollarini tezda biriktiring</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
-            @foreach($books as $book)
-                <div class="p-3.5 rounded-panel border border-ink-border bg-ink-950/60 flex flex-col justify-between hover:border-amber-500/30 transition-all">
-                    <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[10px] font-mono text-amber-400">{{ $book->week_number }}-hafta</span>
-                            <span class="text-[10px] font-mono px-2 py-0.5 rounded-pill bg-ink-800 border border-ink-border text-mist">
-                                {{ $book->quizzes_count }} test
-                            </span>
-                        </div>
-                        <h4 class="text-xs font-semibold text-paper line-clamp-1">{{ $book->title }}</h4>
-                        <p class="text-[11px] text-mist line-clamp-1 font-sans">{{ $book->author }}</p>
-                    </div>
-
-                    <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}"
-                       class="mt-3 w-full py-1.5 px-3 ks-btn-ghost text-[11px] text-center justify-center">
-                        + Test qo'shish
-                    </a>
-                </div>
-            @endforeach
-        </div>
     </div>
 
 </div>

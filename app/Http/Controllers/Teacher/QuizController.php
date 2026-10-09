@@ -5,134 +5,106 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\Quiz;
-use App\Models\QuizOption;
-use App\Models\QuizQuestion;
+use App\Services\QuizAuthoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class QuizController extends Controller
 {
     public function index()
     {
         $quizzes = Quiz::with(['book:id,title,cover_image,slug,week_number,author'])
-            ->withCount(['questions', 'attempts'])
-            ->latest()
-            ->paginate(15);
-
-        $books = Book::withCount('quizzes')->orderBy('title')->get(['id', 'title', 'week_number', 'author']);
-
-        return view('teacher.quizzes.index', compact('quizzes', 'books'));
+            ->when(!auth()->user()->isAdmin(), fn ($query) => $query->where('created_by', auth()->id()))
+            ->withCount([
+                'questions',
+                'attempts',
+                'attempts as pending_attempts_count' => fn ($query) => $query->where('review_status', 'pending'),
+            ])->latest()->paginate(15);
+        return view('teacher.quizzes.index', compact('quizzes'));
     }
 
     public function create(Request $request)
     {
-        $books = Book::withCount('quizzes')->orderBy('title')->get(['id', 'title', 'week_number', 'author']);
+        $books = Book::withCount('quizzes')
+            ->when(!auth()->user()->isAdmin(), fn ($q) => $q->where('created_by', auth()->id()))
+            ->orderBy('title')
+            ->get(['id', 'title', 'week_number', 'author']);
+
         $selectedBookId = $request->query('book_id');
+        if ($selectedBookId && !auth()->user()->isAdmin()) {
+            $selectedBook = Book::find($selectedBookId);
+            abort_unless($selectedBook && (int) $selectedBook->created_by === (int) auth()->id(), 403, "Siz faqat o'zingiz qo'shgan kitobga test qo'sha olasiz.");
+        }
 
         return view('teacher.quizzes.create', compact('books', 'selectedBookId'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, QuizAuthoringService $authoring)
     {
-        $isTeacher = !auth()->user()->isAdmin();
-        $maxAllowedPoints = $isTeacher ? 50 : 200;
-
-        $request->validate([
-            'book_id'            => 'nullable|exists:books,id',
-            'title'              => 'required|string|max:255',
-            'reward_points'      => "required|integer|min:5|max:{$maxAllowedPoints}",
-            'description'        => 'nullable|string|max:1000',
-            'difficulty'         => 'required|in:easy,medium,hard',
-            'time_limit_minutes' => 'nullable|integer|min:1|max:180',
-            'questions'          => 'required|array|min:1',
-            'questions.*.text'   => 'required|string|min:3',
-            'questions.*.options'=> 'required|array|min:2',
-            'questions.*.options.*' => 'required|string',
-            'questions.*.correct'   => 'required',
-        ], [
-            'title.required'         => 'Test topshirig\'i nomini kiriting.',
-            'reward_points.required' => 'Test uchun umumiy mukofot balini kiriting.',
-            'reward_points.max'      => "Ustozlar uchun maksimal mukofot bali: {$maxAllowedPoints} ball.",
-            'reward_points.min'      => 'Minimal mukofot bali: 5 ball.',
-            'questions.required'     => 'Kamida 1 ta savol kiritilishi shart.',
-            'questions.min'          => 'Kamida 1 ta savol kiritilishi shart.',
-        ]);
-
-        // Bir kitobga faqat 1 ta test biriktirish tekshiruvi
         if ($request->filled('book_id')) {
-            $alreadyExists = Quiz::where('book_id', $request->book_id)->exists();
-            if ($alreadyExists) {
-                return back()->withInput()->withErrors([
-                    'book_id' => 'Ushbu kitob uchun allaqachon test yaratilgan. Har bir kitob uchun faqat bitta test topshirig\'i biriktirilishi mumkin! (Mavjud testni tahrirlashingiz yoki o\'chirishingiz mumkin).'
-                ]);
+            $book = Book::findOrFail($request->book_id);
+            abort_unless(auth()->user()->isAdmin() || (int) $book->created_by === (int) auth()->id(), 403, "Siz faqat o'zingiz qo'shgan kitobga test qo'sha olasiz.");
+
+            if (Quiz::where('book_id', $request->book_id)->exists()) {
+                return back()->withInput()->withErrors(['book_id' => 'Ushbu kitob uchun test allaqachon mavjud.']);
             }
         }
 
-        $rewardPoints = (int) $request->input('reward_points', $isTeacher ? 50 : 100);
-        $totalQuestions = count($request->questions);
-        $perQuestionPoints = $totalQuestions > 0 ? max(1, (int) round($rewardPoints / $totalQuestions)) : 10;
+        $quiz = $authoring->create($request, auth()->user()->isAdmin() ? 200 : 50, (int) auth()->id());
 
-        DB::transaction(function () use ($request, $rewardPoints, $perQuestionPoints) {
-            $quiz = Quiz::create([
-                'book_id'            => $request->book_id,
-                'chapter_number'     => $request->chapter_number,
-                'title'              => trim($request->title),
-                'description'        => trim($request->description),
-                'difficulty'         => $request->difficulty,
-                'reward_points'      => $rewardPoints,
-                'time_limit_minutes' => $request->time_limit_minutes ?? 15,
-                'is_active'          => $request->has('is_active') || $request->input('is_active', 1) == 1,
-            ]);
-
-            foreach ($request->questions as $qIndex => $qData) {
-                $question = QuizQuestion::create([
-                    'quiz_id'       => $quiz->id,
-                    'question_text' => trim($qData['text']),
-                    'type'          => 'single',
-                    'points'        => $perQuestionPoints,
-                    'explanation'   => !empty($qData['explanation']) ? trim($qData['explanation']) : null,
-                    'order'         => $qIndex + 1,
-                ]);
-
-                $correctIndex = (int) ($qData['correct'] ?? 0);
-
-                foreach ($qData['options'] as $oIndex => $optText) {
-                    if (trim($optText) === '') {
-                        continue;
-                    }
-
-                    QuizOption::create([
-                        'question_id' => $question->id,
-                        'option_text' => trim($optText),
-                        'is_correct'  => ($oIndex === $correctIndex),
-                        'order'       => $oIndex + 1,
-                    ]);
-                }
-            }
-        });
-
-        return redirect()->route('teacher.quizzes.index')->with('success', 'Test topshirig\'i muvaffaqiyatli yaratildi va kitobga biriktirildi! 📝🎯 (Mukofot bali: ' . $rewardPoints . ' ball)');
+        return redirect()->route('teacher.quizzes.show', $quiz)->with('success', 'Test savollari saqlandi.');
     }
 
     public function show(Quiz $quiz)
     {
-        $quiz->load(['book', 'questions.options']);
+        abort_unless(auth()->user()->isAdmin() || (int) $quiz->created_by === (int) auth()->id(), 403);
 
-        return view('teacher.quizzes.show', compact('quiz'));
+        $quiz->load(['book', 'questions.options']);
+        $section = request()->query('section', 'results');
+        abort_unless(in_array($section, ['results', 'questions'], true), 404);
+        $attempts = $quiz->attempts()
+            ->with('user:id,name,email')
+            ->latest('completed_at')
+            ->paginate(20);
+
+        return view('teacher.quizzes.show', compact('quiz', 'attempts', 'section'));
+    }
+
+    public function edit(Quiz $quiz)
+    {
+        abort_unless(auth()->user()->isAdmin() || (int) $quiz->created_by === (int) auth()->id(), 403);
+
+        $quiz->load(['questions.options']);
+
+        return view('teacher.quizzes.edit', compact('quiz'));
+    }
+
+    public function update(Request $request, Quiz $quiz, QuizAuthoringService $authoring)
+    {
+        abort_unless(auth()->user()->isAdmin() || (int) $quiz->created_by === (int) auth()->id(), 403);
+
+        $authoring->update($request, $quiz, auth()->user()->isAdmin() ? 200 : 50);
+
+        return redirect()->route('teacher.quizzes.show', ['quiz' => $quiz, 'section' => 'questions'])
+            ->with('success', 'Test va savollar yangilandi.');
     }
 
     public function destroy(Quiz $quiz)
     {
-        DB::transaction(function () use ($quiz) {
-            foreach ($quiz->questions as $question) {
-                $question->options()->delete();
-                $question->delete();
-            }
+        abort_unless(auth()->user()->isAdmin() || (int) $quiz->created_by === (int) auth()->id(), 403);
 
+        DB::transaction(function () use ($quiz) {
+            $quiz->questions()->each(function ($question) {
+                if ($question->image_path) {
+                    Storage::disk('public')->delete($question->image_path);
+                }
+                $question->delete();
+            });
             $quiz->attempts()->delete();
             $quiz->delete();
         });
 
-        return redirect()->route('teacher.quizzes.index')->with('success', 'Test topshirig\'i va uning barcha savollari butunlay o\'chirildi. 🗑');
+        return redirect()->route('teacher.quizzes.index')->with('success', 'Test o‘chirildi.');
     }
 }

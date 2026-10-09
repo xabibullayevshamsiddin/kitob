@@ -29,12 +29,14 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.quizzes.store') }}" method="POST"
+    <form action="{{ route('admin.quizzes.store') }}" method="POST" enctype="multipart/form-data"
           x-data="{
               questions: [
                   {
                       text: '',
                       explanation: '',
+                      expected_answer: '',
+                      type: 'single',
                       options: ['', '', '', ''],
                       correct: 0
                   }
@@ -44,6 +46,8 @@
                       this.questions.push({
                           text: '',
                           explanation: '',
+                          expected_answer: '',
+                          type: 'single',
                           options: ['', '', '', ''],
                           correct: 0
                       });
@@ -169,8 +173,33 @@
                         <textarea :name="'questions[' + qIdx + '][text]'" x-model="q.text" rows="2" required placeholder="Savolni kiriting..." class="ks-input text-sm"></textarea>
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-paper mb-1">Javob turi</label>
+                            <select :name="'questions[' + qIdx + '][type]'" x-model="q.type" class="ks-input">
+                                <option value="single">Variantlardan tanlash</option>
+                                <option value="text">Yozma javob (ustoz tekshiradi)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-paper mb-1">Savolga rasm qo‘shish (ixtiyoriy)</label>
+                            <input type="file" :name="'questions[' + qIdx + '][image]'" accept="image/jpeg,image/png,image/webp" class="ks-input text-xs">
+                            <p class="text-[10px] text-mist mt-1">JPG, PNG yoki WEBP; 5 MB gacha</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-paper mb-1">Rasm shakli</label>
+                            <select :name="'questions[' + qIdx + '][image_shape]'" class="ks-input">
+                                <option value="rectangle">To‘rtburchak — to‘liq rasm</option>
+                                <option value="square">Kvadrat</option>
+                                <option value="circle">Doira</option>
+                                <option value="rounded">Yumaloq burchak</option>
+                            </select>
+                            <p class="text-[10px] text-mist mt-1">Rasm qirqilmaydi, shakl ichiga sig‘diriladi.</p>
+                        </div>
+                    </div>
+
                     {{-- Variantlar --}}
-                    <div class="space-y-2.5">
+                    <div x-show="q.type === 'single'" x-cloak class="space-y-2.5">
                         <label class="block text-xs font-semibold text-paper">
                             Javob variantlari <span class="text-mist font-normal font-mono text-[11px]">(To'g'ri javobni radio tugma orqali belgilang)</span>
                         </label>
@@ -178,17 +207,23 @@
                         <template x-for="(opt, oIdx) in q.options" :key="oIdx">
                             <div class="flex items-center gap-3">
                                 <label class="flex items-center gap-2 cursor-pointer shrink-0" :title="'Variant ' + (oIdx + 1) + ' ni to\'g\'ri javob deb belgilash'">
-                                    <input type="radio" :name="'questions[' + qIdx + '][correct]'" :value="oIdx" x-model="q.correct"
+                                    <input type="radio" :name="'questions[' + qIdx + '][correct]'" :value="oIdx" x-model="q.correct" :disabled="q.type !== 'single'"
                                            class="w-4 h-4 accent-amber-500">
                                     <span class="w-6 text-xs font-mono font-bold text-mist" x-text="['A', 'B', 'C', 'D'][oIdx] ?? (oIdx + 1)"></span>
                                 </label>
-                                <input type="text" :name="'questions[' + qIdx + '][options][' + oIdx + ']'" x-model="q.options[oIdx]" required
+                                <input type="text" :name="'questions[' + qIdx + '][options][' + oIdx + ']'" x-model="q.options[oIdx]" :required="q.type === 'single'" :disabled="q.type !== 'single'"
                                        :placeholder="'Javob ' + (['A', 'B', 'C', 'D'][oIdx] ?? (oIdx + 1)) + ' matni...'"
                                        :class="q.correct == oIdx ? 'border-amber-500 bg-amber-500/5' : ''"
                                        class="ks-input text-sm transition-colors">
                                 <span x-show="q.correct == oIdx" class="text-xs font-mono font-bold text-amber-400 shrink-0">✓ To'g'ri</span>
                             </div>
                         </template>
+                    </div>
+
+                    <div x-show="q.type === 'text'" x-cloak>
+                        <label :for="'expected-answer-' + qIdx" class="mb-1 block text-xs font-semibold text-paper">Namunaviy to‘g‘ri javob yoki baholash mezoni <span class="font-normal text-mist">(ixtiyoriy, faqat ustoz/admin ko‘radi)</span></label>
+                        <textarea :id="'expected-answer-' + qIdx" :name="'questions[' + qIdx + '][expected_answer]'" x-model="q.expected_answer" :disabled="q.type !== 'text'" rows="3" maxlength="10000" placeholder="Kutiladigan javob, asosiy fikrlar yoki ball qo‘yish mezonini yozing..." class="ks-input text-sm"></textarea>
+                        <p class="mt-1 text-[10px] text-mist">Bu matn o‘quvchiga ko‘rsatilmaydi; javob varag‘ini tekshirayotganda yordam beradi.</p>
                     </div>
 
                     {{-- Tushuntirish --}}

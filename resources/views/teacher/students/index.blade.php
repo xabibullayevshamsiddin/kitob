@@ -1,60 +1,55 @@
 @extends('teacher.layouts.app')
-@section('title', 'O\'quvchilar')
+@section('title', 'O‘quvchilar')
 
 @section('content')
-<div class="space-y-6">
-
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-xl font-black text-slate-800 dark:text-white">🎓 O'quvchilar</h2>
-            <p class="text-sm text-slate-500">{{ $students->total() }} ta o'quvchi ro'yxatda</p>
-        </div>
+<div class="space-y-5">
+    <div>
+        <p class="font-mono text-[11px] uppercase tracking-widest text-amber-400">O‘quvchilar</p>
+        <h1 class="mt-1 font-serif text-2xl font-bold text-paper">O‘quvchilar ro‘yxati</h1>
+        <p class="mt-1 text-sm text-mist">{{ $students->total() }} nafar o‘quvchi ro‘yxatda</p>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <section class="ks-panel overflow-hidden" aria-label="O‘quvchilar jadvali">
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
-                        <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">O'quvchi</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ballar</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Ketma-ketlik</th>
-                        <th class="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Qo'shilgan</th>
+            <table class="w-full min-w-[42rem] text-left">
+                <thead class="bg-ink-950/60 font-mono text-[11px] uppercase tracking-wider text-mist">
+                    <tr>
+                        <th class="px-4 py-3 font-semibold sm:px-5">O‘quvchi</th>
+                        <th class="px-3 py-3 font-semibold">Ballar</th>
+                        <th class="px-3 py-3 font-semibold">Ketma-ketlik</th>
+                        <th class="px-4 py-3 font-semibold sm:px-5">Qo‘shilgan</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                <tbody class="divide-y divide-ink-border">
                     @forelse($students as $student)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td class="px-6 py-4">
+                        <tr class="transition-colors hover:bg-ink-800/40">
+                            <td class="px-4 py-3 sm:px-5">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $student->avatar_url }}" class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700">
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ $student->name }}</p>
-                                        <p class="text-xs text-slate-400">{{ '@' . $student->username }}</p>
+                                    <img src="{{ $student->avatar_url }}" alt="{{ $student->name }} profil rasmi" class="h-10 w-10 shrink-0 rounded-full border border-ink-border object-cover">
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-semibold text-paper">{{ $student->name }}</p>
+                                        <p class="truncate text-xs text-mist">{{ '@' . $student->username }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">{{ number_format($student->total_points) }}</span>
+                            <td class="whitespace-nowrap px-3 py-3 font-mono text-sm font-bold text-amber-300">{{ number_format($student->total_points) }}</td>
+                            <td class="whitespace-nowrap px-3 py-3">
+                                <span class="inline-flex items-center gap-1.5 rounded-badge border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-300">
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg>
+                                    {{ $student->current_streak }} kun
+                                </span>
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm font-bold text-amber-500">🔥 {{ $student->current_streak }} kun</span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-slate-500">{{ $student->created_at->diffForHumans() }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-xs text-mist sm:px-5">{{ $student->created_at->diffForHumans() }}</td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-slate-400 text-sm">Hali o'quvchilar yo'q</td>
-                        </tr>
+                        <tr><td colspan="4" class="px-4 py-12 text-center text-sm text-mist">Hozircha o‘quvchilar yo‘q.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         @if($students->hasPages())
-            <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700">
-                {{ $students->links() }}
-            </div>
+            <div class="border-t border-ink-border px-4 py-3 sm:px-5">{{ $students->links() }}</div>
         @endif
-    </div>
+    </section>
 </div>
 @endsection

@@ -18,6 +18,9 @@ class QuizAttempt extends Model
         'max_score',
         'percent',
         'answers',
+        'review_status',
+        'reviewed_by',
+        'reviewed_at',
         'is_full_points_awarded',
         'completed_at',
     ];
@@ -29,6 +32,7 @@ class QuizAttempt extends Model
         'percent'               => 'decimal:2',
         'score'                 => 'integer',
         'max_score'             => 'integer',
+        'reviewed_at'            => 'datetime',
     ];
 
     // -------------------------------------------------------------------------
@@ -43,6 +47,11 @@ class QuizAttempt extends Model
     public function quiz(): BelongsTo
     {
         return $this->belongsTo(Quiz::class);
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     // -------------------------------------------------------------------------

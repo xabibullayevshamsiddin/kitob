@@ -1,87 +1,88 @@
 @extends('teacher.layouts.app')
-@section('title', 'Kitob qo\'shish')
+@section('title', 'Kitob qo‘shish')
 
 @section('content')
-<div class="max-w-2xl">
-    <div class="mb-6">
-        <a href="{{ route('teacher.books.index') }}" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            Orqaga
+<div class="mx-auto max-w-3xl space-y-5">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-amber-400">Kutubxona</p>
+            <h1 class="mt-1 font-serif text-2xl font-bold text-paper">Yangi kitob qo‘shish</h1>
+            <p class="mt-1 text-sm text-mist">Kitob ma’lumotlarini kiriting va xohlasangiz PDF faylini yuklang.</p>
+        </div>
+        <a href="{{ route('teacher.books.index') }}" class="ks-btn-ghost inline-flex min-h-11 items-center gap-2 px-4 py-2 text-sm font-semibold">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"/></svg>
+            Kitoblar ro‘yxati
         </a>
-        <h2 class="text-xl font-black text-slate-800 dark:text-white mt-2">📖 Yangi kitob qo'shish</h2>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+    @if($errors->any())
+        <div role="alert" class="rounded-panel border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300">
+            <p class="font-bold">Kitobni saqlashda xatolar bor:</p>
+            <ul class="mt-2 list-inside list-disc space-y-1">
+                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+            </ul>
+        </div>
+    @endif
+
+    <section class="ks-panel p-4 sm:p-6">
         <form method="POST" action="{{ route('teacher.books.store') }}" enctype="multipart/form-data" class="space-y-5">
             @csrf
 
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Kitob nomi *</label>
-                <input type="text" name="title" value="{{ old('title') }}" required
-                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all @error('title') border-rose-400 @enderror"
-                       placeholder="Masalan: Atom Odatlar">
-                @error('title') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
+                <label for="book-title" class="mb-1.5 block text-sm font-semibold text-paper">Kitob nomi <span class="text-rose-300">*</span></label>
+                <input id="book-title" type="text" name="title" value="{{ old('title') }}" required maxlength="255" autocomplete="off" placeholder="Masalan: Atom odatlar" class="ks-input min-h-11 text-sm @error('title') border-rose-400 @enderror">
+                @error('title')<p class="mt-1 text-xs text-rose-300">{{ $message }}</p>@enderror
             </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Muallif *</label>
-                <input type="text" name="author" value="{{ old('author') }}" required
-                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                       placeholder="Masalan: James Clear">
-                @error('author') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Janr *</label>
-                <select name="genre" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
-                    <option value="">Janrni tanlang</option>
-                    @foreach(['Shaxsiy rivojlanish','Roman','Ilmiy','Tarix','Biznes','Psixologiya','Fantastika','Bolalar adabiyoti','Falsafa','Biografiya'] as $genre)
-                        <option value="{{ $genre }}" {{ old('genre') == $genre ? 'selected' : '' }}>{{ $genre }}</option>
-                    @endforeach
-                </select>
-                @error('genre') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Tavsif *</label>
-                <textarea name="description" rows="4" required
-                          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none"
-                          placeholder="Kitob haqida qisqacha ma'lumot...">{{ old('description') }}</textarea>
-                @error('description') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- PDF fayl yuklash (ixtiyoriy) --}}
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Kitob PDF fayli (ixtiyoriy)</label>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Yuklangan taqdir o'quvchilar aynan shu faylni yuklab oladi. Yuklanmasa, boblar matnidan avtomatik yaratiladi.</p>
-                <label for="pdf_file" class="group flex flex-col items-center justify-center w-full px-6 py-7 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-all cursor-pointer">
-                    <svg class="w-9 h-9 text-slate-400 group-hover:text-indigo-500 transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11v6m0 0l-2.5-2.5M12 17l2.5-2.5"/>
-                    </svg>
-                    <span class="text-sm font-semibold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 transition-colors">PDF faylni tanlash</span>
-                    <span class="text-xs text-slate-400 mt-1">Faqat .pdf · Maksimal 20 MB</span>
-                    <input type="file" name="pdf_file" id="pdf_file" accept=".pdf,application/pdf" class="hidden"
-                           onchange="document.getElementById('pdf-file-name').textContent = this.files[0] ? this.files[0].name : ''; document.getElementById('pdf-file-selected').style.display = this.files[0] ? 'flex' : 'none';">
-                </label>
-                <div id="pdf-file-selected" style="display:none" class="hidden sm:flex items-center gap-2 mt-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span id="pdf-file-name" class="text-xs font-semibold truncate"></span>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="book-author" class="mb-1.5 block text-sm font-semibold text-paper">Muallif <span class="text-rose-300">*</span></label>
+                    <input id="book-author" type="text" name="author" value="{{ old('author') }}" required maxlength="255" placeholder="Masalan: James Clear" class="ks-input min-h-11 text-sm">
+                    @error('author')<p class="mt-1 text-xs text-rose-300">{{ $message }}</p>@enderror
                 </div>
-                @error('pdf_file') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
+                <div>
+                    <label for="book-genre" class="mb-1.5 block text-sm font-semibold text-paper">Janr <span class="text-rose-300">*</span></label>
+                    <select id="book-genre" name="genre" required class="ks-input min-h-11 text-sm">
+                        <option value="">Janrni tanlang</option>
+                        @foreach(['Shaxsiy rivojlanish','Roman','Ilmiy','Tarix','Biznes','Psixologiya','Fantastika','Bolalar adabiyoti','Falsafa','Biografiya'] as $genre)
+                            <option value="{{ $genre }}" {{ old('genre') == $genre ? 'selected' : '' }}>{{ $genre }}</option>
+                        @endforeach
+                    </select>
+                    @error('genre')<p class="mt-1 text-xs text-rose-300">{{ $message }}</p>@enderror
+                </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-2">
-                <button type="submit"
-                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-lg shadow-indigo-500/25">
-                    Saqlash
+            <div>
+                <label for="book-description" class="mb-1.5 block text-sm font-semibold text-paper">Tavsif <span class="text-rose-300">*</span></label>
+                <textarea id="book-description" name="description" rows="4" required maxlength="10000" placeholder="Kitob haqida qisqacha ma’lumot..." class="ks-input resize-y text-sm">{{ old('description') }}</textarea>
+                @error('description')<p class="mt-1 text-xs text-rose-300">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label for="pdf_file" class="mb-1.5 block text-sm font-semibold text-paper">Kitob PDF fayli <span class="font-normal text-mist">(ixtiyoriy)</span></label>
+                <p class="mb-2 text-xs leading-relaxed text-mist">PDF yuklanmasa, kitob boblari matnidan fayl avtomatik yaratiladi.</p>
+                <label for="pdf_file" class="group flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-panel border border-dashed border-ink-border bg-ink-950/60 px-5 py-6 text-center transition hover:border-amber-500/50 hover:bg-ink-800/60 focus-within:ring-2 focus-within:ring-amber-400">
+                    <svg class="mb-2 h-8 w-8 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v6h5M12 12v6m0 0-2.5-2.5M12 18l2.5-2.5"/></svg>
+                    <span id="pdf-prompt" class="text-sm font-semibold text-paper">PDF faylni tanlash</span>
+                    <span class="mt-1 text-xs text-mist">PDF format · Maksimal 20 MB</span>
+                    <input type="file" name="pdf_file" id="pdf_file" accept=".pdf,application/pdf" class="sr-only" aria-describedby="pdf-help" onchange="document.getElementById('pdf-file-name').textContent = this.files[0] ? this.files[0].name : ''; document.getElementById('pdf-file-selected').classList.toggle('hidden', !this.files[0]); document.getElementById('pdf-prompt').textContent = this.files[0] ? 'Fayl tanlandi' : 'PDF faylni tanlash';">
+                </label>
+                <p id="pdf-help" class="sr-only">PDF formatdagi fayl tanlang, hajmi 20 megabaytdan oshmasin.</p>
+                <div id="pdf-file-selected" class="mt-2 hidden items-center gap-2 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-emerald-300">
+                    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"/></svg>
+                    <span id="pdf-file-name" class="truncate text-xs font-semibold"></span>
+                </div>
+                @error('pdf_file')<p class="mt-1 text-xs text-rose-300">{{ $message }}</p>@enderror
+            </div>
+
+            <div class="flex flex-wrap justify-end gap-2 border-t border-ink-border pt-4">
+                <a href="{{ route('teacher.books.index') }}" class="ks-btn-ghost inline-flex min-h-11 items-center justify-center px-4 py-2 text-sm">Bekor qilish</a>
+                <button type="submit" class="ks-btn-primary inline-flex min-h-11 items-center justify-center gap-2 px-5 py-2 text-sm font-bold">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"/></svg>
+                    Kitobni saqlash
                 </button>
-                <a href="{{ route('teacher.books.index') }}"
-                   class="px-6 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm rounded-xl transition-all">
-                    Bekor qilish
-                </a>
             </div>
         </form>
-    </div>
+    </section>
 </div>
 @endsection

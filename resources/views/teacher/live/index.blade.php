@@ -2,151 +2,144 @@
 @section('title', 'Jonli efirlar')
 
 @section('content')
-<div class="space-y-6">
-
-    {{-- Top header bar --}}
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="space-y-5">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h2 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                <span class="relative flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-600"></span>
+            <h2 class="flex items-center gap-2 font-serif text-xl font-bold text-paper sm:text-2xl">
+                <span class="relative flex h-3 w-3" aria-hidden="true">
+                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70"></span>
+                    <span class="relative inline-flex h-3 w-3 rounded-full bg-rose-500"></span>
                 </span>
-                <span>🔴 Jonli Efirlar & Onlayn Darslar</span>
+                Jonli efirlar va onlayn darslar
             </h2>
-            <p class="text-sm text-slate-500">Real vaqtda kitobxonlar bilan video, audio va chat orqali jonli muloqot</p>
+            <p class="mt-1 text-xs font-mono text-mist">Kitobxonlar bilan video, audio va chat orqali jonli muloqot</p>
         </div>
 
-        <div class="flex items-center gap-3">
-            <a href="{{ route('live.index', ['start' => 1]) }}"
-               class="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-sm shadow-lg shadow-rose-600/30 active:scale-95 transition-all">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-                </span>
-                <span>🎙️ Yangi Jonli Efir Boshlash</span>
-            </a>
-        </div>
+        <a href="{{ route('live.index', ['start' => 1]) }}" class="ks-btn-primary inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-xs font-bold">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M19 5 15 9"/></svg>
+            Yangi jonli efir boshlash
+        </a>
     </div>
 
     @if(session('success'))
-        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2">
-            <span>✓</span>
+        <div role="status" class="flex items-start gap-2 rounded-panel border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm font-semibold text-emerald-300">
+            <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"/></svg>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
-    {{-- Stats Row --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-900/30 text-rose-600 flex items-center justify-center text-xl shrink-0">
-                🔴
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="ks-panel flex items-center gap-3 p-4 sm:p-5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border border-rose-500/25 bg-rose-500/10 text-rose-300">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M19 5 15 9"/></svg>
             </div>
             <div>
-                <p class="text-xs font-semibold text-slate-400">Faol efirlar</p>
-                <p class="text-xl font-black text-slate-800 dark:text-white mt-0.5">
-                    {{ \App\Models\LiveEvent::where('status', 'live')->count() }} ta
-                </p>
+                <p class="text-[11px] font-mono uppercase tracking-wider text-mist">Faol efirlar</p>
+                <p class="mt-0.5 text-lg font-bold text-paper">{{ \App\Models\LiveEvent::where('status', 'live')->count() }} ta</p>
             </div>
         </div>
 
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center text-xl shrink-0">
-                📅
+        <div class="ks-panel flex items-center gap-3 p-4 sm:p-5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border border-amber-500/25 bg-amber-500/10 text-amber-300">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18"/></svg>
             </div>
             <div>
-                <p class="text-xs font-semibold text-slate-400">Rejalashtirilgan</p>
-                <p class="text-xl font-black text-slate-800 dark:text-white mt-0.5">
-                    {{ \App\Models\LiveEvent::where('status', 'scheduled')->count() }} ta
-                </p>
+                <p class="text-[11px] font-mono uppercase tracking-wider text-mist">Rejalashtirilgan</p>
+                <p class="mt-0.5 text-lg font-bold text-paper">{{ \App\Models\LiveEvent::where('status', 'scheduled')->count() }} ta</p>
             </div>
         </div>
 
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center text-xl shrink-0">
-                ❓
+        <div class="ks-panel flex items-center gap-3 p-4 sm:p-5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border border-sky-500/25 bg-sky-500/10 text-sky-300">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5m-8 6 1.7-3.4A8 8 0 1 1 20 16.5L21 20l-4-1a8 8 0 0 1-12-5v-1"/></svg>
             </div>
             <div>
-                <p class="text-xs font-semibold text-slate-400">O'quvchilar savollari</p>
-                <p class="text-xl font-black text-slate-800 dark:text-white mt-0.5">
-                    {{ \App\Models\LiveQuestion::count() }} ta
-                </p>
+                <p class="text-[11px] font-mono uppercase tracking-wider text-mist">O‘quvchilar savollari</p>
+                <p class="mt-0.5 text-lg font-bold text-paper">{{ \App\Models\LiveQuestion::count() }} ta</p>
             </div>
         </div>
     </div>
 
-    {{-- Live Events List --}}
-    <div class="space-y-4">
+    <div class="space-y-3">
         @forelse($events as $event)
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 transition-all hover:border-slate-300 dark:hover:border-slate-600">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr {{ $event->status === 'live' ? 'from-rose-500 to-amber-500 animate-pulse' : 'from-slate-600 to-slate-700' }} flex items-center justify-center text-white text-xl shrink-0 shadow-md">
-                            {{ $event->status === 'live' ? '🔴' : '📺' }}
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="font-bold text-base text-slate-900 dark:text-white">{{ $event->title }}</h3>
+            <article class="ks-panel p-4 sm:p-5">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 items-start gap-3">
+                        <div @class([
+                            'flex h-11 w-11 shrink-0 items-center justify-center rounded-btn border',
+                            'border-rose-500/30 bg-rose-500/10 text-rose-300' => $event->status === 'live',
+                            'border-ink-border bg-ink-800 text-mist' => $event->status !== 'live',
+                        ])>
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 @if($event->status === 'live')
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500 text-white animate-pulse">
-                                        Efirda
-                                    </span>
+                                    <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M19 5 15 9"/>
                                 @else
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                                        Rejalashtirilgan
-                                    </span>
+                                    <rect x="3" y="6" width="13" height="12" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m16 10 5-3v10l-5-3"/>
                                 @endif
+                            </svg>
+                        </div>
 
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="break-words text-sm font-bold text-paper">{{ $event->title }}</h3>
+                                @if($event->status === 'live')
+                                    <span class="rounded-pill border border-rose-500/25 bg-rose-500/10 px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wide text-rose-300">Efirda</span>
+                                @else
+                                    <span class="rounded-pill border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300">Rejalashtirilgan</span>
+                                @endif
                                 @if($event->book)
-                                    <span class="px-2 py-0.5 rounded-lg text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                                        📖 {{ $event->book->title }}
-                                    </span>
+                                    <span class="max-w-full truncate rounded-pill border border-ink-border bg-ink-800 px-2 py-0.5 text-[10px] font-mono text-mist">{{ $event->book->title }}</span>
                                 @endif
                             </div>
 
                             @if($event->description)
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{{ $event->description }}</p>
+                                <p class="mt-1 break-words text-xs leading-relaxed text-mist">{{ $event->description }}</p>
                             @endif
 
-                            <div class="flex items-center gap-4 mt-2 text-xs text-slate-400">
-                                <span>📅 {{ $event->scheduled_at?->timezone('Asia/Tashkent')->format('d.m.Y H:i') ?? $event->created_at->format('d.m.Y H:i') }}</span>
-                                <span>👤 Host: {{ $event->hostUser?->name ?? 'Ustoz' }}</span>
-                                <span>❓ {{ $event->questions()->count() }} savol</span>
+                            <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-mono text-mist">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18"/></svg>
+                                    {{ $event->scheduled_at?->timezone('Asia/Tashkent')->format('d.m.Y H:i') ?? $event->created_at->format('d.m.Y H:i') }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M5 21a7 7 0 0 1 14 0"/></svg>
+                                    {{ $event->hostUser?->name ?? 'Ustoz' }}
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5m-8 6 1.7-3.4A8 8 0 1 1 20 16.5L21 20l-4-1a8 8 0 0 1-12-5v-1"/></svg>
+                                    {{ $event->questions()->count() }} savol
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                        <a href="{{ route('live.show', $event->id) }}"
-                           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl {{ $event->status === 'live' ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30' : 'bg-indigo-600 hover:bg-indigo-500 text-white' }} font-bold text-xs transition-all active:scale-95">
-                            <span>{{ $event->status === 'live' ? '🎥 Efirga kirish (Studio)' : '▶ Efirni boshlash' }}</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        @empty
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center shadow-sm">
-                <div class="max-w-md mx-auto space-y-4">
-                    <div class="w-16 h-16 rounded-3xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center text-3xl mx-auto">
-                        🎙️
-                    </div>
-                    <h3 class="text-lg font-black text-slate-800 dark:text-white">Hozircha jonli efirlar yo'q</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed">
-                        O'quvchilar bilan yangi kitob muhokamasi yoki onlayn dars o'tkazish uchun yangi jonli efir boshlang.
-                    </p>
-                    <a href="{{ route('live.index', ['start' => 1]) }}"
-                       class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-rose-500/25 active:scale-95 transition-all">
-                        <span>🎙️ Birinchi efirni boshlash</span>
+                    <a href="{{ route('live.show', $event->id) }}" class="ks-btn-ghost inline-flex min-h-11 shrink-0 items-center justify-center gap-2 px-4 py-2 text-xs font-bold {{ $event->status === 'live' ? 'border-rose-500/30 text-rose-300 hover:bg-rose-500/10' : 'text-amber-300 hover:border-amber-500/30 hover:bg-amber-500/10' }}">
+                        @if($event->status === 'live')
+                            Efirga kirish
+                        @else
+                            Efirni boshlash
+                        @endif
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </a>
                 </div>
+            </article>
+        @empty
+            <div class="ks-panel px-5 py-10 text-center sm:py-14">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-panel border border-amber-500/20 bg-amber-500/10 text-amber-300">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="m16 10 5-3v10l-5-3"/></svg>
+                </div>
+                <h3 class="mt-4 font-serif text-lg font-bold text-paper">Hozircha jonli efirlar yo‘q</h3>
+                <p class="mx-auto mt-1 max-w-md text-xs leading-relaxed text-mist">O‘quvchilar bilan kitob muhokamasi yoki onlayn dars o‘tkazish uchun yangi jonli efir boshlang.</p>
+                <a href="{{ route('live.index', ['start' => 1]) }}" class="ks-btn-primary mt-5 inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-xs font-bold">
+                    Birinchi efirni boshlash
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5"/></svg>
+                </a>
             </div>
         @endforelse
 
         @if($events->hasPages())
-            <div class="pt-4">{{ $events->links() }}</div>
+            <div class="pt-2 font-mono text-xs">{{ $events->links() }}</div>
         @endif
     </div>
-
 </div>
 @endsection

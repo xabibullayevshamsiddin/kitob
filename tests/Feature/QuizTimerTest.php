@@ -141,7 +141,8 @@ class QuizTimerTest extends TestCase
 
         // 1-savolga to'g'ri javob berilgan (keyingi savolga o'tgan — ya'ni tasdiqlangan)
         $component->set('selectedOption', $correctIds[0])->call('nextQuestion');
-        $this->assertSame(1, $component->get('correctCount'));
+        $this->assertSame(1, $component->get('currentQuestion'));
+        $this->assertSame(0, $component->get('correctCount'), 'Javoblar faqat test yakunlanganda baholanishi kerak');
 
         // 2-savolda javob tanlangan, lekin tasdiqlanmagan — vaqt tugaydi
         $component->set('selectedOption', $correctIds[1]);
@@ -162,6 +163,57 @@ class QuizTimerTest extends TestCase
         $this->assertFalse($feedback[2]['correct']);
         $this->assertFalse($feedback[3]['correct']);
         $this->assertFalse($feedback[4]['correct']);
+    }
+
+    public function test_student_can_skip_navigate_back_and_change_an_answer_before_finishing(): void
+    {
+        [$book, $quiz, $correctIds] = $this->setupQuiz(3, 15);
+        $this->actingAs($this->makeUser());
+        $wrongOptionId = QuizOption::where('question_id', $quiz->questions()->first()->id)
+            ->where('is_correct', false)
+            ->value('id');
+
+        $component = Livewire::test(TakeQuiz::class, ['book' => $book])
+            ->set('selectedOption', $correctIds[0])
+            ->call('nextQuestion')
+            ->assertSet('currentQuestion', 1)
+            ->assertSet('correctCount', 0)
+            ->call('nextQuestion')
+            ->assertSet('currentQuestion', 2)
+            ->call('previousQuestion')
+            ->assertSet('currentQuestion', 1)
+            ->call('previousQuestion')
+            ->assertSet('currentQuestion', 0)
+            ->assertSet('selectedOption', $correctIds[0])
+            ->set('selectedOption', $wrongOptionId)
+            ->call('nextQuestion')
+            ->call('nextQuestion')
+            ->call('nextQuestion')
+            ->assertSet('finished', true);
+
+        $this->assertSame(0, $component->get('correctCount'));
+        $feedback = $component->get('feedback');
+        $this->assertFalse($feedback[0]['correct'], 'Qaytib o‘zgartirilgan javob yangicha baholanishi kerak');
+        $this->assertFalse($feedback[1]['correct'], 'Javobsiz savol xato deb saqlanishi kerak');
+        $this->assertFalse($feedback[2]['correct'], 'Javobsiz savol xato deb saqlanishi kerak');
+    }
+
+    public function test_finish_requires_confirmation_before_submitting_quiz(): void
+    {
+        [$book] = $this->setupQuiz(1, 15);
+        $this->actingAs($this->makeUser());
+
+        Livewire::test(TakeQuiz::class, ['book' => $book])
+            ->call('requestFinish')
+            ->assertSet('confirmFinishOpen', true)
+            ->assertSet('finished', false)
+            ->call('cancelFinish')
+            ->assertSet('confirmFinishOpen', false)
+            ->assertSet('finished', false)
+            ->call('requestFinish')
+            ->call('confirmFinish')
+            ->assertSet('confirmFinishOpen', false)
+            ->assertSet('finished', true);
     }
 
     public function test_second_time_up_call_is_ignored(): void

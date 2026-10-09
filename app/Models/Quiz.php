@@ -14,6 +14,7 @@ class Quiz extends Model
 
     protected $fillable = [
         'book_id',
+        'created_by',
         'chapter_number',
         'title',
         'description',
@@ -40,6 +41,11 @@ class Quiz extends Model
             'title' => 'Mustaqil test',
             'slug'  => '',
         ]);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function questions(): HasMany

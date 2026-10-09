@@ -3,7 +3,7 @@
 @section('title', 'Varaqlab o\'qish — ' . $book->title)
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.css')) }}">
 @endpush
 
 @section('content')
@@ -152,7 +152,7 @@
                 <!-- Left Page Canvas with Thickness Shadows -->
                 <div class="fb-page-pane fb-page-pane--left">
                     <canvas id="fb-canvas-left" class="fb-canvas"></canvas>
-                    <div class="fb-corner-curl fb-corner-curl--bottom-left" onclick="fbGoPrev()" title="Oldingi sahifa"></div>
+                    <div class="fb-corner-curl fb-corner-curl--bottom-left" title="Oldingi sahifa"></div>
                 </div>
 
                 <!-- Realistic Book Spine / Seam -->
@@ -161,7 +161,7 @@
                 <!-- Right Page Canvas with Thickness Shadows -->
                 <div class="fb-page-pane fb-page-pane--right">
                     <canvas id="fb-canvas-right" class="fb-canvas"></canvas>
-                    <div class="fb-corner-curl fb-corner-curl--bottom-right" onclick="fbGoNext()" title="Keyingi sahifa"></div>
+                    <div class="fb-corner-curl fb-corner-curl--bottom-right" title="Keyingi sahifa"></div>
                 </div>
 
                 <!-- 3D Flipping Leaf Overlay with Realistic Shadows -->
@@ -177,8 +177,8 @@
                 </div>
 
                 <!-- Edge Click Zones for Fast Page Turn -->
-                <div class="fb-click-zone fb-click-zone--prev" onclick="fbGoPrev()" title="Oldingi sahifaga varaqlash (yoki chap o'q tugmasi)"></div>
-                <div class="fb-click-zone fb-click-zone--next" onclick="fbGoNext()" title="Keyingi sahifaga varaqlash (yoki o'ng o'q tugmasi)"></div>
+                <div class="fb-click-zone fb-click-zone--prev" title="Oldingi sahifaga varaqlash (yoki chap o'q tugmasi)"></div>
+                <div class="fb-click-zone fb-click-zone--next" title="Keyingi sahifaga varaqlash (yoki o'ng o'q tugmasi)"></div>
 
             </div>
         </div>
@@ -245,5 +245,5 @@
 <!-- PDF.js CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <!-- Flipbook Core Engine -->
-<script src="{{ asset('assets/flipbook/flipbook.js') }}"></script>
+<script src="{{ asset('assets/flipbook/flipbook.js') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.js')) }}"></script>
 @endpush

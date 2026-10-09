@@ -106,13 +106,18 @@
   max-width: 100%;
   cursor: grab;
   touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
+  user-select: none !important;
+  -webkit-user-select: none !important;
   -webkit-touch-callout: none;
 }
 
-.fb-book-spread.is-dragging {
+.fb-book-spread.is-dragging,
+.fb-book-spread.is-dragging *,
+body.fb-cursor-grabbing,
+body.fb-cursor-grabbing * {
   cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 /* ── Left and Right Book Pages ── */
@@ -125,6 +130,7 @@
   justify-content: center;
   transition: box-shadow 0.25s ease;
   cursor: grab;
+  touch-action: none;
 }
 
 .fb-book-spread.is-dragging .fb-page-pane,
@@ -160,6 +166,9 @@
   display: block;
   object-fit: contain;
   background: var(--fb-paper-tone);
+  pointer-events: none;
+  -webkit-user-drag: none !important;
+  user-select: none !important;
 }
 
 /* ── Book Spine (Realistic Center Seam & Curvature) ── */
@@ -357,7 +366,7 @@
   bottom: 0;
   width: 14%;
   z-index: 22;
-  cursor: pointer;
+  pointer-events: none;
   transition: background 0.2s ease;
 }
 .fb-click-zone--prev {

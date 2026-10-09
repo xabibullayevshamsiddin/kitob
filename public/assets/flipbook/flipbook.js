@@ -1,18 +1,16 @@
 /**
  * Kitobxon Ultra-Realistic 3D Flipbook Engine
  * Features:
- * - Interactive Mouse Drag & Touch Gesture Engine (real-time 3D page curl following cursor/finger)
+ * - Full Interactive Mouse Drag & Touch Swipe 3D Turning Engine
  * - Single-click / tap on page to turn (right side -> next, left side -> prev)
- * - Spring-loaded physics snap completion and cancel
- * - In-memory High-DPI Page Canvas Cache for 60fps instant transitions
+ * - Real-time 3D page curl following cursor/finger with dynamic lighting & depth shadow
+ * - Spring physics completion to next/prev spread with authentic paper audio
+ * - High-DPI PDF.js rendering with offscreen canvas cache for 60fps instant transitions
  * - Dynamic viewport calculation (fits comfortably large and close to reader)
- * - Sharp high-DPI PDF.js canvas rendering
- * - High-quality authentic page-turn sound using oxidvideos-page-flip-1-178322.mp3
- * - Audio pool for rapid responsive page flipping
+ * - Authentic page-turn sound using oxidvideos-page-flip-1-178322.mp3 audio pool
  * - Interactive Page Selector & Direct Jumper (Input + Dropdown)
  * - Zoom in/out/reset (+/-) with double-click zoom toggle
- * - Page scrubber slider & jump to page
- * - Touch swipe & keyboard arrow navigation
+ * - Page scrubber slider & keyboard arrow navigation
  */
 
 (function () {
@@ -49,10 +47,13 @@
   let sliderEl = null;
   let zoomLevelEl = null;
 
-  // Real Audio Pool using /sounds/oxidvideos-page-flip-1-178322.mp3
-  let soundAudioPool = [];
-  const AUDIO_POOL_SIZE = 4;
-  let audioPoolIdx = 0;
+  // ── Ultra-Fast Zero-Latency Web Audio API Engine ──
+  let webAudioCtx = null;
+  let cachedAudioBuffer = null;
+  let htmlAudioFallbackPool = [];
+  const HTML_AUDIO_POOL_SIZE = 6;
+  let htmlAudioPoolIdx = 0;
+  let audioUnlocked = false;
 
   // ── High Performance Offscreen Page Canvas Cache ──
   const pageCanvasCache = new Map();
@@ -82,42 +83,172 @@
     pageCanvasCache.clear();
   }
 
+  /**
+   * Pre-warm AudioContext on earliest user touch/click/key for 0ms response
+   */
+  function unlockAudioContext() {
+    if (audioUnlocked) return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+
+    if (!webAudioCtx) {
+      webAudioCtx = new AudioCtx();
+    }
+    if (webAudioCtx.state === 'suspended') {
+      webAudioCtx.resume().catch(() => {});
+    }
+    audioUnlocked = true;
+  }
+
+  /**
+   * Initialize and pre-decode page turn sound into RAM with auto-trimmed leading silence
+   */
   function initAudio(soundUrl) {
-    soundAudioPool = [];
-    for (let i = 0; i < AUDIO_POOL_SIZE; i++) {
+    // 1. Setup HTML5 Audio fallback pool with eager preload
+    htmlAudioFallbackPool = [];
+    for (let i = 0; i < HTML_AUDIO_POOL_SIZE; i++) {
       const a = new Audio(soundUrl);
       a.preload = 'auto';
-      soundAudioPool.push(a);
+      htmlAudioFallbackPool.push(a);
     }
+
+    // 2. Setup Web Audio API with zero latency
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+
+    if (!webAudioCtx) {
+      webAudioCtx = new AudioCtx();
+    }
+
+    // Fetch and decode MP3 into PCM in memory once
+    fetch(soundUrl)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.arrayBuffer();
+      })
+      .then(arrayBuffer => webAudioCtx.decodeAudioData(arrayBuffer))
+      .then(decodedBuffer => {
+        cachedAudioBuffer = processCrispAudioBuffer(decodedBuffer);
+      })
+      .catch(err => {
+        console.warn('Flipbook: Web Audio API dekodlashda xatolik, HTML5 Audio ishlatiladi:', err);
+      });
   }
 
-  function playPaperTurnSound() {
-    if (!soundEnabled || soundAudioPool.length === 0) return;
-    try {
-      const audio = soundAudioPool[audioPoolIdx];
-      audioPoolIdx = (audioPoolIdx + 1) % AUDIO_POOL_SIZE;
-      audio.currentTime = 0;
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {});
+  /**
+   * Trim leading silence and dead intro time so sound starts with 0ms delay
+   */
+  function processCrispAudioBuffer(buffer) {
+    if (!webAudioCtx) return buffer;
+    const pcm = buffer.getChannelData(0);
+    const sampleRate = buffer.sampleRate;
+
+    // Scan for peak amplitude
+    let maxAmp = 0;
+    for (let i = 0; i < pcm.length; i++) {
+      const a = Math.abs(pcm[i]);
+      if (a > maxAmp) maxAmp = a;
+    }
+    if (maxAmp < 0.01) return buffer;
+
+    // Detect where audible paper rustle actually begins (5% of peak)
+    const threshold = maxAmp * 0.05;
+    let startSample = 0;
+    for (let i = 0; i < pcm.length; i++) {
+      if (Math.abs(pcm[i]) >= threshold) {
+        // Step back 4ms (approx 176 samples at 44.1kHz) for natural transient attack
+        startSample = Math.max(0, i - Math.round(sampleRate * 0.004));
+        break;
       }
-    } catch (e) {
-      // Audio playback blocked or unavailable
+    }
+
+    // A real book page flip is crisp and snappy: 0.5s - 0.7s duration
+    const maxDurationSamples = Math.min(pcm.length - startSample, Math.round(sampleRate * 0.7));
+    if (maxDurationSamples <= 0) return buffer;
+
+    const trimmed = webAudioCtx.createBuffer(buffer.numberOfChannels, maxDurationSamples, sampleRate);
+    for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+      const src = buffer.getChannelData(ch);
+      const dst = trimmed.getChannelData(ch);
+
+      for (let j = 0; j < maxDurationSamples; j++) {
+        dst[j] = src[startSample + j];
+      }
+
+      // Micro fade-in (2ms) to prevent any click/pop
+      const fadeInSamples = Math.round(sampleRate * 0.002);
+      for (let j = 0; j < fadeInSamples; j++) {
+        dst[j] *= (j / fadeInSamples);
+      }
+
+      // Micro fade-out (35ms) for a silky smooth finish
+      const fadeOutSamples = Math.round(sampleRate * 0.035);
+      for (let j = 0; j < fadeOutSamples; j++) {
+        const idx = maxDurationSamples - 1 - j;
+        if (idx >= 0) {
+          dst[idx] *= (j / fadeOutSamples);
+        }
+      }
+    }
+
+    return trimmed;
+  }
+
+  /**
+   * Play page turn sound with 0ms latency
+   */
+  function playPaperTurnSound() {
+    if (!soundEnabled) return;
+
+    // Fast-path: Web Audio API (0ms instant hardware playback!)
+    if (webAudioCtx && cachedAudioBuffer) {
+      try {
+        if (webAudioCtx.state === 'suspended') {
+          webAudioCtx.resume().catch(() => {});
+        }
+        const source = webAudioCtx.createBufferSource();
+        source.buffer = cachedAudioBuffer;
+        
+        // Add subtle natural pitch variation (0.98x to 1.03x) so repeated flips sound organic
+        source.playbackRate.value = 0.98 + (Math.random() * 0.05);
+
+        const gainNode = webAudioCtx.createGain();
+        gainNode.gain.value = 0.95;
+
+        source.connect(gainNode);
+        gainNode.connect(webAudioCtx.destination);
+        source.start(0);
+        return;
+      } catch (err) {
+        // Fallback to HTML5 audio below
+      }
+    }
+
+    // Fallback: HTML5 Audio Pool (skip leading silence with 0.12s start offset)
+    if (htmlAudioFallbackPool.length > 0) {
+      try {
+        const audio = htmlAudioFallbackPool[htmlAudioPoolIdx];
+        htmlAudioPoolIdx = (htmlAudioPoolIdx + 1) % HTML_AUDIO_POOL_SIZE;
+        audio.currentTime = 0.12;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {});
+        }
+      } catch (e) {
+        // Audio playback blocked
+      }
     }
   }
 
-  // ── Drag & Touch Gesture State ──
-  let isPointerDown = false;
-  let activePointerId = null;
-  let dragStartX = 0;
-  let dragStartY = 0;
-  let dragStartTime = 0;
+  // ── Drag & Touch State ──
+  let isMouseDown = false;
   let isDragging = false;
-  let activeDragDirection = null; // 'next' | 'prev' | null
-  let currentDragProgress = 0;
-  let dragPageWidth = 0;
-  let dragLeafInitialized = false;
+  let startX = 0;
+  let startY = 0;
+  let dragStartTime = 0;
   let lastClickTime = 0;
+  let dragDirection = null; // 'next' or 'prev'
+  let dragSoundPlayed = false;
 
   function init() {
     const candidateRoot = document.getElementById('fb-root');
@@ -227,7 +358,12 @@
       });
     }
 
-    // Initialize Interactive 3D Drag & Touch Gesture System
+    // Pre-warm Web Audio API on first user interaction for 0ms response
+    ['pointerdown', 'mousedown', 'touchstart', 'keydown'].forEach((evt) => {
+      window.addEventListener(evt, unlockAudioContext, { passive: true });
+    });
+
+    // Initialize Interactive Mouse Drag & Touch Gestures
     initDragAndTouchGestures();
 
     // Load PDF Document
@@ -235,282 +371,330 @@
   }
 
   /**
-   * ── Interactive 3D Drag & Touch Gestures Engine ──
-   * Allows reader to turn pages using mouse drag or finger swipe with realistic physical 3D leaf curl
+   * ── Interactive Mouse Drag & Touch Swipe Gestures Engine ──
    */
   function initDragAndTouchGestures() {
-    if (!spreadEl) return;
+    if (!rootEl) return;
 
-    // Unified Pointer Events (Mouse, Touch, Pen)
-    spreadEl.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove, { passive: false });
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerCancel);
+    const targets = [rootEl, spreadEl].filter(Boolean);
+
+    targets.forEach((target) => {
+      // Prevent default browser drag-and-drop on book elements
+      target.addEventListener('dragstart', (e) => {
+        e.preventDefault();
+        return false;
+      });
+
+      // Mouse drag start
+      target.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // Only primary mouse button
+        if (isFlipping || !pdfDoc) return;
+        if (e.target.closest('button, input, select, a, .fb-nav-arrow')) return;
+
+        e.preventDefault(); // Stop text selection & native HTML5 canvas drag
+        handleDragStart(e.clientX, e.clientY, e.target);
+      });
+
+      // Touch drag start
+      target.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        if (isFlipping || !pdfDoc) return;
+        if (e.target.closest('button, input, select, a, .fb-nav-arrow')) return;
+
+        const touch = e.touches[0];
+        handleDragStart(touch.clientX, touch.clientY, e.target);
+      }, { passive: true });
+    });
+
+    // Window-level tracking for smooth movement even outside the book boundary
+    window.addEventListener('mousemove', (e) => {
+      handleDragMove(e.clientX, e.clientY, e);
+    }, { passive: false });
+
+    window.addEventListener('mouseup', (e) => {
+      handleDragEnd(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isMouseDown || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      handleDragMove(touch.clientX, touch.clientY, e);
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+      const touch = e.changedTouches ? e.changedTouches[0] : null;
+      if (touch) {
+        handleDragEnd(touch.clientX, touch.clientY);
+      } else {
+        cancelDragState();
+      }
+    });
+
+    window.addEventListener('touchcancel', () => {
+      cancelDragState();
+    });
   }
 
-  function onPointerDown(e) {
+  function handleDragStart(clientX, clientY, target) {
     if (isFlipping || !pdfDoc) return;
-    if (e.button && e.button !== 0) return; // Only primary mouse button or touch
-    if (e.target.closest('button, input, select, a, .fb-nav-arrow, [role="button"]')) return;
+    if (target && target.closest && target.closest('button, input, select, a, .fb-nav-arrow')) return;
 
-    isPointerDown = true;
-    activePointerId = e.pointerId;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    dragStartTime = performance.now();
+    unlockAudioContext();
+    isMouseDown = true;
     isDragging = false;
-    activeDragDirection = null;
-    currentDragProgress = 0;
-    dragLeafInitialized = false;
-    dragPageWidth = isMobile ? spreadEl.clientWidth : (spreadEl.clientWidth / 2);
-
-    try {
-      if (spreadEl.setPointerCapture) spreadEl.setPointerCapture(e.pointerId);
-    } catch (err) {}
+    dragDirection = null;
+    dragSoundPlayed = false;
+    startX = clientX;
+    startY = clientY;
+    dragStartTime = performance.now();
   }
 
-  function onPointerMove(e) {
-    if (!isPointerDown || (activePointerId !== null && e.pointerId !== activePointerId)) return;
-    if (isFlipping) return;
+  function handleDragMove(clientX, clientY, e) {
+    if (!isMouseDown || isFlipping || !pdfDoc) return;
 
-    const deltaX = e.clientX - dragStartX;
-    const deltaY = e.clientY - dragStartY;
+    const deltaX = clientX - startX;
+    const deltaY = clientY - startY;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
 
-    if (!isDragging) {
-      // If user is scrolling vertically on mobile page, do not hijack
-      if (absY > absX * 1.5 && absY > 12) {
-        isPointerDown = false;
-        return;
-      }
-      // Horizontal threshold to initiate drag
-      if (absX > 8) {
-        isDragging = true;
-        spreadEl.classList.add('is-dragging');
-      }
+    // If threshold crossed (>8px), activate dragging state
+    if (!isDragging && absX > 8) {
+      isDragging = true;
+      if (spreadEl) spreadEl.classList.add('is-dragging');
+      document.body.classList.add('fb-cursor-grabbing');
     }
 
     if (isDragging) {
-      if (e.cancelable) e.preventDefault();
+      if (e && e.cancelable) e.preventDefault();
 
+      const spreadWidth = spreadEl ? spreadEl.clientWidth : (window.innerWidth * 0.85);
+      const pageWidth = isMobile ? spreadWidth : (spreadWidth / 2);
+
+      // Dragging LEFT -> NEXT PAGE
       if (deltaX < 0) {
-        // Dragging left -> Next Page
-        const canNext = isMobile ? (currentSpread < totalPages) : ((currentSpread === 1 ? 2 : currentSpread + 2) <= totalPages);
+        const canNext = isMobile 
+          ? (currentSpread < totalPages) 
+          : ((currentSpread === 1 ? 2 : currentSpread + 2) <= totalPages);
+
         if (!canNext) {
-          // Boundary rubber-band feedback
-          const rubber = Math.min(18, -deltaX * 0.12);
-          spreadEl.style.transform = `translateX(${-rubber}px)`;
+          // Subtle elastic bounce resistance when at the last page
+          const bounce = Math.min(10, absX * 0.08);
+          if (flipLeaf) flipLeaf.style.transform = `rotateY(${-bounce}deg)`;
           return;
         }
 
-        if (activeDragDirection !== 'next') {
-          activeDragDirection = 'next';
-          setupDragLeaf('next');
+        // Initialize flip leaf once upon entering 'next' direction
+        if (dragDirection !== 'next') {
+          dragDirection = 'next';
+          if (!dragSoundPlayed) {
+            playPaperTurnSound();
+            dragSoundPlayed = true;
+          }
+          flipLeaf.className = isMobile 
+            ? 'fb-flip-leaf fb-flip-leaf--right fb-flip-leaf--mobile' 
+            : 'fb-flip-leaf fb-flip-leaf--right';
+          flipLeaf.style.transition = 'none';
+
+          // Fast 1ms offscreen canvas snapshot
+          prepareFlipCanvas(canvasRight, flipFront);
+
+          const nextNum = isMobile ? (currentSpread + 1) : (currentSpread === 1 ? 2 : currentSpread + 2);
+          const cached = getCachedPageCanvas(nextNum, canvasRight.width, canvasRight.height);
+          if (cached) {
+            ctxFlipBack.drawImage(cached, 0, 0);
+          } else {
+            ctxFlipBack.fillStyle = '#f8f5ee';
+            ctxFlipBack.fillRect(0, 0, flipBack.width, flipBack.height);
+            renderPageToCanvas(nextNum, flipBack, ctxFlipBack).catch(() => {});
+          }
+
+          flipContainer.classList.add('is-active');
         }
 
-        const pw = Math.max(100, dragPageWidth);
-        currentDragProgress = Math.min(1, Math.max(0, -deltaX / pw));
-        const angle = -currentDragProgress * 180;
-        const depth = Math.sin(currentDragProgress * Math.PI);
-
-        flipLeaf.style.transition = 'none';
+        const progress = Math.min(1, Math.max(0, absX / (pageWidth * 1.05)));
+        const angle = - (progress * 165);
+        const depth = Math.sin(progress * Math.PI);
         flipLeaf.style.transform = `rotateY(${angle}deg)`;
-        flipLeaf.style.boxShadow = `${-18 * depth}px 15px ${25 + 35 * depth}px rgba(0, 0, 0, ${0.2 + 0.35 * depth})`;
+        flipLeaf.style.boxShadow = `${-22 * depth}px 14px 34px rgba(0,0,0,0.48)`;
 
+      // Dragging RIGHT -> PREVIOUS PAGE
       } else if (deltaX > 0) {
-        // Dragging right -> Prev Page
         const canPrev = currentSpread > 1;
+
         if (!canPrev) {
-          // Boundary rubber-band feedback
-          const rubber = Math.min(18, deltaX * 0.12);
-          spreadEl.style.transform = `translateX(${rubber}px)`;
+          // Subtle elastic bounce resistance when at the first page
+          const bounce = Math.min(10, absX * 0.08);
+          if (flipLeaf) flipLeaf.style.transform = `rotateY(${bounce}deg)`;
           return;
         }
 
-        if (activeDragDirection !== 'prev') {
-          activeDragDirection = 'prev';
-          setupDragLeaf('prev');
+        // Initialize flip leaf once upon entering 'prev' direction
+        if (dragDirection !== 'prev') {
+          dragDirection = 'prev';
+          if (!dragSoundPlayed) {
+            playPaperTurnSound();
+            dragSoundPlayed = true;
+          }
+          flipLeaf.className = isMobile 
+            ? 'fb-flip-leaf fb-flip-leaf--left fb-flip-leaf--mobile' 
+            : 'fb-flip-leaf fb-flip-leaf--left';
+          flipLeaf.style.transition = 'none';
+
+          prepareFlipCanvas(isMobile ? canvasRight : canvasLeft, flipFront);
+
+          const prevNum = isMobile ? (currentSpread - 1) : (currentSpread <= 2 ? 1 : currentSpread - 1);
+          const cached = getCachedPageCanvas(prevNum, (isMobile ? canvasRight : canvasLeft).width, (isMobile ? canvasRight : canvasLeft).height);
+          if (cached) {
+            ctxFlipBack.drawImage(cached, 0, 0);
+          } else {
+            ctxFlipBack.fillStyle = '#f8f5ee';
+            ctxFlipBack.fillRect(0, 0, flipBack.width, flipBack.height);
+            renderPageToCanvas(prevNum, flipBack, ctxFlipBack).catch(() => {});
+          }
+
+          flipContainer.classList.add('is-active');
         }
 
-        const pw = Math.max(100, dragPageWidth);
-        currentDragProgress = Math.min(1, Math.max(0, deltaX / pw));
-        const angle = -180 + (currentDragProgress * 180);
-        const depth = Math.sin(currentDragProgress * Math.PI);
-
-        flipLeaf.style.transition = 'none';
+        const progress = Math.min(1, Math.max(0, absX / (pageWidth * 1.05)));
+        const angle = -180 + (progress * 165);
+        const depth = Math.sin(progress * Math.PI);
         flipLeaf.style.transform = `rotateY(${angle}deg)`;
-        flipLeaf.style.boxShadow = `${18 * depth}px 15px ${25 + 35 * depth}px rgba(0, 0, 0, ${0.2 + 0.35 * depth})`;
+        flipLeaf.style.boxShadow = `${22 * depth}px 14px 34px rgba(0,0,0,0.48)`;
       }
     }
   }
 
-  async function setupDragLeaf(dir) {
-    if (dragLeafInitialized) return;
-    dragLeafInitialized = true;
+  function handleDragEnd(clientX, clientY) {
+    if (!isMouseDown) return;
+    isMouseDown = false;
+    document.body.classList.remove('fb-cursor-grabbing');
+    if (spreadEl) spreadEl.classList.remove('is-dragging');
 
-    if (dir === 'next') {
-      if (isMobile) {
-        prepareFlipCanvas(canvasRight, flipFront);
-        flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--right';
-        flipContainer.classList.add('is-active');
-        const nextNum = currentSpread + 1;
-        renderPageToCanvas(nextNum, flipBack, ctxFlipBack);
-      } else {
-        prepareFlipCanvas(canvasRight, flipFront);
-        flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--right';
-        flipContainer.classList.add('is-active');
-        const turnedBack = currentSpread === 1 ? 2 : currentSpread + 2;
-        renderPageToCanvas(turnedBack, flipBack, ctxFlipBack);
-        // Pre-render underlying right page on canvasRight
-        const underRight = currentSpread === 1 ? 3 : currentSpread + 3;
-        if (underRight <= totalPages) {
-          renderPageToCanvas(underRight, canvasRight, ctxRight);
-        } else {
-          renderPageToCanvas(0, canvasRight, ctxRight);
-        }
-      }
-    } else if (dir === 'prev') {
-      if (isMobile) {
-        prepareFlipCanvas(canvasRight, flipBack);
-        flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--left';
-        flipContainer.classList.add('is-active');
-        const prevNum = currentSpread - 1;
-        renderPageToCanvas(prevNum, flipFront, ctxFlipFront);
-      } else {
-        prepareFlipCanvas(canvasLeft, flipFront);
-        flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--left';
-        flipContainer.classList.add('is-active');
-        const turnedBack = currentSpread <= 2 ? 1 : currentSpread - 1;
-        renderPageToCanvas(turnedBack, flipBack, ctxFlipBack);
-        // Pre-render underlying left page on canvasLeft
-        const underLeft = currentSpread <= 2 ? 0 : currentSpread - 2;
-        renderPageToCanvas(underLeft, canvasLeft, ctxLeft);
-      }
-    }
-  }
-
-  async function onPointerUp(e) {
-    if (!isPointerDown) return;
-    isPointerDown = false;
-    spreadEl.classList.remove('is-dragging');
-    spreadEl.style.transform = '';
-
-    try {
-      if (activePointerId !== null && spreadEl.releasePointerCapture) {
-        spreadEl.releasePointerCapture(activePointerId);
-      }
-    } catch (err) {}
-    activePointerId = null;
-
-    const deltaX = e.clientX - dragStartX;
-    const deltaY = e.clientY - dragStartY;
+    const deltaX = clientX - startX;
+    const deltaY = clientY - startY;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
     const elapsed = performance.now() - dragStartTime;
     const velocity = absX / Math.max(1, elapsed);
 
-    if (isDragging) {
+    // If an active 3D drag occurred with page peeling
+    if (isDragging && dragDirection) {
       isDragging = false;
-      const shouldCommit = (currentDragProgress >= 0.22) || (velocity > 0.32 && absX > 25);
+      const shouldTurn = absX > 30 || (velocity > 0.22 && absX > 15);
 
-      if (shouldCommit && activeDragDirection) {
-        // Complete the 3D flip smoothly
-        isFlipping = true;
-        playPaperTurnSound();
-        const duration = Math.max(180, Math.min(380, Math.round((1 - currentDragProgress) * 360)));
-        flipLeaf.style.transition = `transform ${duration}ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow ${duration}ms ease`;
-
-        if (activeDragDirection === 'next') {
-          flipLeaf.style.transform = 'rotateY(-180deg)';
-          flipLeaf.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-        } else {
-          flipLeaf.style.transform = 'rotateY(0deg)';
-          flipLeaf.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-        }
-
-        setTimeout(async () => {
-          if (activeDragDirection === 'next') {
-            if (isMobile) {
-              currentSpread = Math.min(totalPages, currentSpread + 1);
-              updateIndicator(`${currentSpread} / ${totalPages}`, currentSpread);
-              if (sliderEl) sliderEl.value = currentSpread;
-            } else {
-              const nextSpread = currentSpread === 1 ? 2 : currentSpread + 2;
-              await renderSpread(nextSpread);
-            }
-          } else {
-            if (isMobile) {
-              currentSpread = Math.max(1, currentSpread - 1);
-              updateIndicator(`${currentSpread} / ${totalPages}`, currentSpread);
-              if (sliderEl) sliderEl.value = currentSpread;
-            } else {
-              const prevSpread = currentSpread <= 2 ? 1 : currentSpread - 2;
-              await renderSpread(prevSpread);
-            }
+      if (dragDirection === 'next') {
+        if (shouldTurn) {
+          // Smooth spring physics commit to -180deg
+          isFlipping = true;
+          if (!dragSoundPlayed) {
+            playPaperTurnSound();
           }
-          finishFlip();
-        }, duration);
-
-      } else if (activeDragDirection) {
-        // Cancel and snap back to origin
-        isFlipping = true;
-        const duration = Math.max(160, Math.min(320, Math.round(currentDragProgress * 320)));
-        flipLeaf.style.transition = `transform ${duration}ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow ${duration}ms ease`;
-
-        if (activeDragDirection === 'next') {
-          flipLeaf.style.transform = 'rotateY(0deg)';
-        } else {
+          flipLeaf.style.transition = 'transform 260ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 260ms ease';
           flipLeaf.style.transform = 'rotateY(-180deg)';
-        }
+          flipLeaf.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2)';
 
-        setTimeout(async () => {
-          await renderSpread(currentSpread);
-          finishFlip();
-        }, duration);
+          const nextSpread = isMobile ? (currentSpread + 1) : (currentSpread === 1 ? 2 : currentSpread + 2);
+          renderSpread(nextSpread).catch(() => {});
 
-      } else {
-        finishFlip();
-      }
-
-    } else {
-      // ── Single Click / Tap to Turn ──
-      if (absX < 14 && absY < 14 && elapsed < 400) {
-        const now = performance.now();
-        if (now - lastClickTime < 280) {
-          // Double-click detected (allow zoom handler)
-          lastClickTime = now;
+          setTimeout(() => {
+            dragDirection = null;
+            dragSoundPlayed = false;
+            finishFlip();
+          }, 260);
+          return;
+        } else {
+          // Snap back to 0deg
+          flipLeaf.style.transition = 'transform 200ms ease-out, box-shadow 200ms ease-out';
+          flipLeaf.style.transform = 'rotateY(0deg)';
+          flipLeaf.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
+          setTimeout(() => {
+            dragDirection = null;
+            dragSoundPlayed = false;
+            finishFlip();
+          }, 200);
           return;
         }
-        lastClickTime = now;
-
-        const rect = spreadEl.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const spreadW = rect.width;
-
-        if (isMobile) {
-          if (clickX > spreadW * 0.45) {
-            fbGoNext();
-          } else {
-            fbGoPrev();
+      } else if (dragDirection === 'prev') {
+        if (shouldTurn) {
+          // Smooth spring physics commit to 0deg
+          isFlipping = true;
+          if (!dragSoundPlayed) {
+            playPaperTurnSound();
           }
+          flipLeaf.style.transition = 'transform 260ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 260ms ease';
+          flipLeaf.style.transform = 'rotateY(0deg)';
+          flipLeaf.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2)';
+
+          const prevSpread = isMobile ? (currentSpread - 1) : (currentSpread <= 2 ? 1 : currentSpread - 2);
+          renderSpread(prevSpread).catch(() => {});
+
+          setTimeout(() => {
+            dragDirection = null;
+            dragSoundPlayed = false;
+            finishFlip();
+          }, 260);
+          return;
         } else {
-          if (clickX >= spreadW / 2) {
-            fbGoNext();
-          } else {
-            fbGoPrev();
-          }
+          // Snap back to -180deg
+          flipLeaf.style.transition = 'transform 200ms ease-out, box-shadow 200ms ease-out';
+          flipLeaf.style.transform = 'rotateY(-180deg)';
+          flipLeaf.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
+          setTimeout(() => {
+            dragDirection = null;
+            dragSoundPlayed = false;
+            finishFlip();
+          }, 200);
+          return;
+        }
+      }
+    }
+
+    cancelDragState();
+
+    // ── Single Click / Tap to Turn ──
+    if (absX < 12 && absY < 12 && elapsed < 350) {
+      const now = performance.now();
+      if (now - lastClickTime < 280) {
+        lastClickTime = now;
+        return; // Allow double-click zoom
+      }
+      lastClickTime = now;
+
+      const rect = (spreadEl || rootEl).getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const totalW = rect.width;
+
+      if (isMobile) {
+        if (clickX > totalW * 0.45) {
+          fbGoNext();
+        } else {
+          fbGoPrev();
+        }
+      } else {
+        if (clickX >= totalW / 2) {
+          fbGoNext();
+        } else {
+          fbGoPrev();
         }
       }
     }
   }
 
-  function onPointerCancel() {
-    isPointerDown = false;
+  function cancelDragState() {
+    isMouseDown = false;
     isDragging = false;
-    spreadEl.classList.remove('is-dragging');
-    spreadEl.style.transform = '';
-    finishFlip();
+    dragDirection = null;
+    dragSoundPlayed = false;
+    document.body.classList.remove('fb-cursor-grabbing');
+    if (spreadEl) spreadEl.classList.remove('is-dragging');
+    if (flipLeaf) {
+      flipLeaf.style.transition = '';
+      flipLeaf.style.transform = '';
+      flipLeaf.style.boxShadow = '';
+    }
+    if (flipContainer && !isFlipping) {
+      flipContainer.classList.remove('is-active');
+    }
   }
 
   function loadDocument(url) {
@@ -842,9 +1026,6 @@
       flipLeaf.style.boxShadow = '';
     }
     isFlipping = false;
-    dragLeafInitialized = false;
-    activeDragDirection = null;
-    currentDragProgress = 0;
   }
 
   /**
@@ -860,7 +1041,7 @@
   }
 
   /**
-   * Flip to next page with 3D animation (Button / Arrow / Click trigger)
+   * Flip to next page with 3D animation (Button / Arrow / Click / Drag trigger)
    */
   async function fbGoNext() {
     if (isFlipping || !pdfDoc) return;
@@ -868,7 +1049,7 @@
     if (isMobile) {
       if (currentSpread >= totalPages) return;
       if (prefersReducedMotion()) {
-        await renderSpread(currentSpread + 1);
+        renderSpread(currentSpread + 1);
         return;
       }
       isFlipping = true;
@@ -876,29 +1057,24 @@
 
       prepareFlipCanvas(canvasRight, flipFront);
       const nextNum = currentSpread + 1;
-      try {
-        await renderPageToCanvas(nextNum, flipBack, ctxFlipBack);
-      } catch (error) {
-        finishFlip();
-        throw error;
+      const cached = getCachedPageCanvas(nextNum, canvasRight.width, canvasRight.height);
+      if (cached) {
+        ctxFlipBack.drawImage(cached, 0, 0);
+      } else {
+        ctxFlipBack.fillStyle = '#f8f5ee';
+        ctxFlipBack.fillRect(0, 0, flipBack.width, flipBack.height);
+        renderPageToCanvas(nextNum, flipBack, ctxFlipBack).catch(() => {});
       }
 
-      flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--right fb-flipping-next';
+      flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--right fb-flip-leaf--mobile fb-flipping-next';
       flipContainer.classList.add('is-active');
 
-      try {
-        await renderPageToCanvas(nextNum, canvasRight, ctxRight);
-      } catch (error) {
-        finishFlip();
-        throw error;
-      }
+      const flipDuration = getFlipDuration();
+      renderSpread(nextNum).catch(() => {});
 
       setTimeout(() => {
-        currentSpread = nextNum;
-        updateIndicator(`${currentSpread} / ${totalPages}`, currentSpread);
-        if (sliderEl) sliderEl.value = currentSpread;
         finishFlip();
-      }, getFlipDuration());
+      }, flipDuration);
       return;
     }
 
@@ -906,7 +1082,7 @@
     const nextSpread = currentSpread === 1 ? 2 : currentSpread + 2;
     if (nextSpread > totalPages) return;
     if (prefersReducedMotion()) {
-      await renderSpread(nextSpread);
+      renderSpread(nextSpread);
       return;
     }
 
@@ -915,27 +1091,28 @@
 
     prepareFlipCanvas(canvasRight, flipFront);
     const turnedBackPage = currentSpread === 1 ? 2 : currentSpread + 2;
-    try {
-      await renderPageToCanvas(turnedBackPage, flipBack, ctxFlipBack);
-    } catch (error) {
-      finishFlip();
-      throw error;
+    const cached = getCachedPageCanvas(turnedBackPage, canvasRight.width, canvasRight.height);
+    if (cached) {
+      ctxFlipBack.drawImage(cached, 0, 0);
+    } else {
+      ctxFlipBack.fillStyle = '#f8f5ee';
+      ctxFlipBack.fillRect(0, 0, flipBack.width, flipBack.height);
+      renderPageToCanvas(turnedBackPage, flipBack, ctxFlipBack).catch(() => {});
     }
 
     flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--right fb-flipping-next';
     flipContainer.classList.add('is-active');
 
-    try {
-      await renderSpread(nextSpread);
-      setTimeout(finishFlip, getFlipDuration());
-    } catch (error) {
+    const flipDuration = getFlipDuration();
+    renderSpread(nextSpread).catch(() => {});
+
+    setTimeout(() => {
       finishFlip();
-      throw error;
-    }
+    }, flipDuration);
   }
 
   /**
-   * Flip to previous page with 3D animation (Button / Arrow / Click trigger)
+   * Flip to previous page with 3D animation (Button / Arrow / Click / Drag trigger)
    */
   async function fbGoPrev() {
     if (isFlipping || !pdfDoc) return;
@@ -943,37 +1120,32 @@
     if (isMobile) {
       if (currentSpread <= 1) return;
       if (prefersReducedMotion()) {
-        await renderSpread(currentSpread - 1);
+        renderSpread(currentSpread - 1);
         return;
       }
       isFlipping = true;
       playPaperTurnSound();
 
-      prepareFlipCanvas(canvasRight, flipBack);
+      prepareFlipCanvas(canvasRight, flipFront);
       const prevNum = currentSpread - 1;
-      try {
-        await renderPageToCanvas(prevNum, flipFront, ctxFlipFront);
-      } catch (error) {
-        finishFlip();
-        throw error;
+      const cached = getCachedPageCanvas(prevNum, canvasRight.width, canvasRight.height);
+      if (cached) {
+        ctxFlipBack.drawImage(cached, 0, 0);
+      } else {
+        ctxFlipBack.fillStyle = '#f8f5ee';
+        ctxFlipBack.fillRect(0, 0, flipBack.width, flipBack.height);
+        renderPageToCanvas(prevNum, flipBack, ctxFlipBack).catch(() => {});
       }
 
-      flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--left fb-flipping-prev';
+      flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--left fb-flip-leaf--mobile fb-flipping-prev';
       flipContainer.classList.add('is-active');
 
-      try {
-        await renderPageToCanvas(prevNum, canvasRight, ctxRight);
-      } catch (error) {
-        finishFlip();
-        throw error;
-      }
+      const flipDuration = getFlipDuration();
+      renderSpread(prevNum).catch(() => {});
 
       setTimeout(() => {
-        currentSpread = prevNum;
-        updateIndicator(`${currentSpread} / ${totalPages}`, currentSpread);
-        if (sliderEl) sliderEl.value = currentSpread;
         finishFlip();
-      }, getFlipDuration());
+      }, flipDuration);
       return;
     }
 
@@ -981,7 +1153,7 @@
     if (currentSpread <= 1) return;
     const prevSpread = currentSpread <= 2 ? 1 : currentSpread - 2;
     if (prefersReducedMotion()) {
-      await renderSpread(prevSpread);
+      renderSpread(prevSpread);
       return;
     }
 
@@ -990,23 +1162,24 @@
 
     prepareFlipCanvas(canvasLeft, flipFront);
     const turnedBackPage = currentSpread <= 2 ? 1 : currentSpread - 1;
-    try {
-      await renderPageToCanvas(turnedBackPage, flipBack, ctxFlipBack);
-    } catch (error) {
-      finishFlip();
-      throw error;
+    const cached = getCachedPageCanvas(turnedBackPage, canvasLeft.width, canvasLeft.height);
+    if (cached) {
+      ctxFlipBack.drawImage(cached, 0, 0);
+    } else {
+      ctxFlipBack.fillStyle = '#f8f5ee';
+      ctxFlipBack.fillRect(0, 0, flipBack.width, flipBack.height);
+      renderPageToCanvas(turnedBackPage, flipBack, ctxFlipBack).catch(() => {});
     }
 
     flipLeaf.className = 'fb-flip-leaf fb-flip-leaf--left fb-flipping-prev';
     flipContainer.classList.add('is-active');
 
-    try {
-      await renderSpread(prevSpread);
-      setTimeout(finishFlip, getFlipDuration());
-    } catch (error) {
+    const flipDuration = getFlipDuration();
+    renderSpread(prevSpread).catch(() => {});
+
+    setTimeout(() => {
       finishFlip();
-      throw error;
-    }
+    }, flipDuration);
   }
 
   function goToPage(targetPage) {

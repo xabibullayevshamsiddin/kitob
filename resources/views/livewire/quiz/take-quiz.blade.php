@@ -46,6 +46,16 @@
         </div>
     </div>
 
+    @if($latestAttempt)
+        <div class="rounded-2xl border {{ $latestAttempt->review_status === 'pending' ? 'border-amber-500/25 bg-amber-500/10 text-amber-200' : 'border-emerald-500/20 bg-emerald-500/5 text-slate-200' }} p-4 text-sm">
+            @if($latestAttempt->review_status === 'pending')
+                Yozma javoblaringiz ustoz/admin tekshiruvida. Natija tayyor bo‘lgach shu sahifada ko‘rasiz.
+            @elseif($latestAttempt->review_status === 'reviewed')
+                Oxirgi test natijasi: <strong>{{ (float) $latestAttempt->percent }}%</strong> · {{ $latestAttempt->score }} / {{ $latestAttempt->max_score }} ball.
+            @endif
+        </div>
+    @endif
+
     {{-- ── Bo'sh holat: Test savollari mavjud emas ── --}}
     @if (count($questions) === 0)
         <div class="p-12 sm:p-16 rounded-3xl bg-slate-900/80 border border-white/10 text-center space-y-4 shadow-2xl backdrop-blur-md">
@@ -60,7 +70,7 @@
             </p>
 
             <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
-                @if(auth()->check() && auth()->user()->isAdminOrTeacher())
+                @if(auth()->check() && $book->canUserAddQuiz(auth()->user()))
                     @php
                         $quizCreateRoute = auth()->user()->isAdmin()
                             ? route('admin.quizzes.create', ['book_id' => $book->id])
@@ -147,9 +157,29 @@
                     <h2 class="text-lg sm:text-xl font-bold text-white leading-relaxed">
                         {{ $questions[$currentQuestion]['text'] }}
                     </h2>
+                    @if(!empty($questions[$currentQuestion]['image']))
+                        @php
+                            $imageShape = $questions[$currentQuestion]['image_shape'] ?? 'rectangle';
+                            $imageShapeClass = match ($imageShape) {
+                                'square' => 'mx-auto mt-4 h-56 w-56 sm:h-72 sm:w-72 rounded-md',
+                                'circle' => 'mx-auto mt-4 h-56 w-56 sm:h-72 sm:w-72 rounded-full',
+                                'rounded' => 'mt-4 max-h-[28rem] w-auto max-w-full rounded-2xl',
+                                default => 'mt-4 max-h-[28rem] w-auto max-w-full rounded-md',
+                            };
+                        @endphp
+                        <img src="{{ $questions[$currentQuestion]['image'] }}" alt="Savolga biriktirilgan rasm" class="{{ $imageShapeClass }} border border-white/10 object-contain">
+                    @endif
                 </div>
 
                 {{-- Variantlar ro'yxati --}}
+                @if(($questions[$currentQuestion]['type'] ?? 'single') === 'text')
+                    <div class="space-y-2 pt-2">
+                        <label for="writtenAnswer" class="block text-sm font-semibold text-slate-200">Javobingiz</label>
+                        <textarea id="writtenAnswer" wire:model.defer="writtenAnswer" rows="6" maxlength="5000" placeholder="Javobingizni shu yerga yozing..." class="w-full rounded-2xl border border-white/10 bg-slate-800/70 p-4 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"></textarea>
+                        @error('writtenAnswer') <p class="text-xs text-rose-400">{{ $message }}</p> @enderror
+                        <p class="text-xs text-slate-500">Yozma javob test tugagach ustoz yoki admin tomonidan tekshiriladi.</p>
+                    </div>
+                @else
                 <div class="space-y-3 pt-2">
                     @php
                         $optionLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -178,26 +208,69 @@
                         </button>
                     @endforeach
                 </div>
+                @endif
 
                 {{-- Navigation Buttons --}}
-                <div class="pt-6 flex items-center justify-between border-t border-white/[0.06]">
-                    <div class="text-xs text-slate-500">
-                        @if($selectedOption === null)
-                            <span class="text-amber-400/80">Javob variantini tanlang</span>
+                <div class="grid grid-cols-2 items-center gap-3 border-t border-white/[0.06] pt-5">
+                    <div class="col-span-2 text-center text-xs text-slate-400">
+                        @if(($questions[$currentQuestion]['type'] ?? 'single') === 'text')
+                            {{ trim($writtenAnswer) !== '' ? 'Yozgan javobingiz saqlanadi; keyin qaytib tahrirlashingiz mumkin.' : 'Javob bermasdan o‘tishingiz va keyin qaytishingiz mumkin.' }}
+                        @elseif($selectedOption === null)
+                            Javob bermasdan keyingi savolga o‘tishingiz mumkin.
                         @else
                             <span class="text-emerald-400 font-semibold">Variant tanlandi ✓</span>
                         @endif
                     </div>
 
-                    <button type="button" 
-                            wire:click="nextQuestion" 
-                            @if($selectedOption === null) disabled @endif
-                            class="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-ink-950 font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 flex items-center gap-2">
+                    <button type="button" wire:click="previousQuestion" @if($currentQuestion === 0) disabled @endif
+                            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-xs font-bold text-slate-200 transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-40">
+                        <span aria-hidden="true">←</span> Oldingi
+                    </button>
+
+                    <button type="button"
+                            @if($currentQuestion === count($questions) - 1)
+                                wire:click="requestFinish"
+                            @else
+                                wire:click="nextQuestion"
+                            @endif
+                            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-ink-950 shadow-lg shadow-amber-500/20 transition hover:from-amber-400 hover:to-amber-500 active:scale-95">
                         <span>{{ $currentQuestion === count($questions) - 1 ? 'Testni yakunlash' : 'Keyingi savol' }}</span>
                         <span>→</span>
                     </button>
                 </div>
+
             </div>
+            @if($confirmFinishOpen && !$finished)
+                <div
+                     wire:click.self="cancelFinish"
+                     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+                     role="presentation">
+                    <section role="dialog"
+                             aria-modal="true"
+                             aria-labelledby="quiz-finish-title"
+                             class="w-full max-w-md space-y-5 rounded-2xl border border-amber-400/20 bg-slate-900 p-6 shadow-2xl shadow-black/50">
+                        <div class="flex items-start gap-4">
+                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-xl text-amber-400" aria-hidden="true">!</span>
+                            <div class="space-y-2">
+                                <h2 id="quiz-finish-title" class="text-lg font-bold text-white">Testni yakunlashga ishonchingiz komilmi?</h2>
+                                <p class="text-sm leading-relaxed text-slate-400">Javoblaringiz tekshiriladi va test natijasi saqlanadi. Javobsiz savollar 0 ball bilan qayd etiladi.</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <button type="button"
+                                    wire:click="cancelFinish"
+                                    class="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]">
+                                Testga qaytish
+                            </button>
+                            <button type="button"
+                                    wire:click="confirmFinish"
+                                    class="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-ink-950 transition hover:bg-amber-400">
+                                Ha, yakunlash
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            @endif
         @endif
 
         {{-- ── 2. QUIZ RESULT CARD (NATIJALAR VA TAHLIL) ── --}}
@@ -210,8 +283,11 @@
                         {{ $percent >= 80 ? '🎉' : ($percent >= 50 ? '👏' : '💪') }}
                     </span>
                     <h2 class="text-2xl sm:text-3xl font-black text-white">
-                        {{ $percent >= 80 ? 'Ajoyib natija! Barakalla!' : ($percent >= 50 ? 'Yaxshi natija!' : 'Yana harakat qiling!') }}
+                        {{ $pendingReview ? 'Yozma javoblar tekshiruvda' : ($percent >= 80 ? 'Ajoyib natija! Barakalla!' : ($percent >= 50 ? 'Yaxshi natija!' : 'Yana harakat qiling!')) }}
                     </h2>
+                    @if($pendingReview)
+                        <p class="max-w-xl mx-auto rounded-2xl border border-amber-400/20 bg-amber-400/10 px-5 py-3 text-sm text-amber-200">Javoblaringiz saqlandi. Ustoz yoki admin tekshirganidan keyin yakuniy natija va ball hisobingizga qo‘shiladi.</p>
+                    @endif
                     @if($timedOut)
                         <p class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold">
                             <span>⏱</span>
@@ -224,6 +300,7 @@
                 </div>
 
                 {{-- Ballar bloki --}}
+                @if(!$pendingReview)
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
                     <div class="p-4 rounded-2xl bg-slate-800/80 border border-white/[0.08] text-center">
                         <span class="text-xs text-slate-400 block mb-1">To'g'ri javoblar</span>
@@ -248,10 +325,13 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
                 {{-- Ball statusi xabari --}}
                 <div class="text-center">
-                    @if ($pointsAwarded > 0)
+                    @if($pendingReview)
+                        <div class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs font-semibold">Yakuniy ball ustoz tekshiruvidan keyin beriladi.</div>
+                    @elseif ($pointsAwarded > 0)
                         <div class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold shadow-lg shadow-emerald-500/10">
                             <span class="text-lg">⭐️</span>
                             <span>+{{ $pointsAwarded }} ball hisobingizga qo'shildi va tepadagi reytingingizda animatsiya bilan yangilandi!</span>
@@ -278,21 +358,23 @@
 
                         <div class="space-y-3">
                             @foreach($feedback as $idx => $fb)
-                                <div class="p-4 rounded-2xl border {{ $fb['correct'] ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20' }} space-y-2">
+                                <div class="p-4 rounded-2xl border {{ ($fb['correct'] ?? null) === true ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-slate-500/5 border-white/10' }} space-y-2">
                                     <div class="flex items-start justify-between gap-3">
                                         <p class="text-xs sm:text-sm font-bold text-white">
                                             {{ $idx + 1 }}. {{ $fb['question_text'] ?? "Savol #".($idx+1) }}
                                         </p>
-                                        <span class="px-2 py-0.5 rounded text-[11px] font-bold shrink-0 {{ $fb['correct'] ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400' }}">
-                                            {{ $fb['correct'] ? '✓ To\'g\'ri' : '✗ Xato' }}
+                                        <span class="px-2 py-0.5 rounded text-[11px] font-bold shrink-0 {{ ($fb['correct'] ?? null) === true ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-300' }}">
+                                            {{ ($fb['type'] ?? '') === 'text' ? 'Tekshiruv kutilmoqda' : (($fb['correct'] ?? false) ? '✓ To\'g\'ri' : '✗ Xato') }}
                                         </span>
                                     </div>
 
                                     <div class="text-xs space-y-1 text-slate-400">
-                                        @if($fb['selected_text'])
+                                        @if(($fb['type'] ?? '') === 'text')
+                                            <p class="text-slate-300 whitespace-pre-wrap">Javobingiz: {{ $fb['written_answer'] ?? 'Javob berilmadi' }}</p>
+                                        @elseif(!empty($fb['selected_text']))
                                             <p>Sizning javobingiz: <strong class="{{ $fb['correct'] ? 'text-emerald-400' : 'text-rose-400' }}">{{ $fb['selected_text'] }}</strong></p>
                                         @endif
-                                        @if(!$fb['correct'] && $fb['correct_text'])
+                                        @if(!($fb['correct'] ?? false) && !empty($fb['correct_text']))
                                             <p>To'g'ri javob: <strong class="text-emerald-400">{{ $fb['correct_text'] }}</strong></p>
                                         @endif
                                         @if(!empty($fb['explanation']))

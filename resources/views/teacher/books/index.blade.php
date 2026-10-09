@@ -70,12 +70,14 @@
                             </td>
                             <td class="py-2.5 px-3.5 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}"
-                                       class="ks-btn-primary py-1 px-2.5 text-[11px] inline-flex items-center gap-1"
-                                       title="Ushbu kitobga test qo'shish">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                                        <span>Test qo'shish</span>
-                                    </a>
+                                    @if($book->canUserAddQuiz(auth()->user()))
+                                        <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}"
+                                           class="ks-btn-primary py-1 px-2.5 text-[11px] inline-flex items-center gap-1"
+                                           title="Ushbu kitobga test qo'shish">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                            <span>Test qo'shish</span>
+                                        </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
