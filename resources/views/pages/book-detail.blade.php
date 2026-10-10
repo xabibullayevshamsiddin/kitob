@@ -24,7 +24,6 @@
 
 @section('content')
 <div class="max-w-6xl mx-auto space-y-8 pb-16" x-data="{
-        tab: 'reader',
         readerMode: '3d',
         pdfLoading: true,
         init() { setTimeout(() => { this.pdfLoading = false }, 1200) }
@@ -58,7 +57,7 @@
                 <!-- Quick Action Buttons -->
                 <div class="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
                     @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
-                        <button @click="tab = 'reader'; readerMode = '3d'; window.scrollTo({ top: document.getElementById('online-reader').offsetTop - 90, behavior: 'smooth' })"
+                        <button @click="readerMode = '3d'; window.scrollTo({ top: document.getElementById('online-reader').offsetTop - 90, behavior: 'smooth' })"
                            class="ks-btn-primary inline-flex items-center gap-2">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                             <span>Mutolaa qilish</span>
@@ -88,6 +87,33 @@
                         </button>
                     @endif
 
+                    @if($book->quizzes()->count() > 0)
+                        <a href="{{ route('quiz.show', $book->id) }}"
+                           class="ks-btn-ghost inline-flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Test topshirish</span>
+                            <span class="px-1.5 py-0.2 rounded-badge bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">Faol</span>
+                        </a>
+                    @endif
+
+                    @if($book->videos()->count() > 0)
+                        <a href="{{ route('videos.index', $book->id) }}"
+                           class="ks-btn-ghost inline-flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            <span>Videolar</span>
+                            <span class="px-1.5 py-0.2 rounded-badge bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">{{ $book->videos()->count() }}</span>
+                        </a>
+                    @endif
+
+                    @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
+                        <a href="{{ route('books.pdf', $book->id) }}"
+                           class="ks-btn-ghost inline-flex items-center gap-2 text-rose-300 border-rose-500/30 hover:border-rose-500/50"
+                           title="Butun kitobni PDF sifatida yuklab olish">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span>PDF yuklab olish</span>
+                        </a>
+                    @endif
+
                     <!-- Share Button (Mutolaa uslubida) -->
                     <button type="button"
                             onclick="window.openBookShare({
@@ -108,58 +134,6 @@
                         </svg>
                     </button>
 
-                    @if($firstChapter = $book->chapters()->orderBy('chapter_number')->first())
-                        <a href="{{ route('reader.show', ['book' => $book->id, 'chapter' => $firstChapter->id]) }}"
-                           class="ks-btn-ghost inline-flex items-center gap-2">
-                            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                            <span>Boblar bo'ylab</span>
-                        </a>
-                    @endif
-
-                    @if($book->pdf_path)
-                        <a href="{{ route('books.flipbook', $book->id) }}"
-                           class="ks-btn-ghost inline-flex items-center gap-2"
-                           title="To'liq ekranda 3D kitob o'qish">
-                            <span>⛶ To'liq ekran</span>
-                        </a>
-                    @endif
-
-                    <a href="{{ route('audio.show', $book->id) }}"
-                       class="ks-btn-ghost inline-flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-                        <span>Audio sahifasi</span>
-                        @if($book->audios()->count() > 0)
-                            <span class="px-1.5 py-0.2 rounded-badge bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">{{ $book->audios()->count() }}</span>
-                        @endif
-                    </a>
-
-                    <a href="{{ route('videos.index', $book->id) }}"
-                       class="ks-btn-ghost inline-flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                        <span>Videolar</span>
-                        @if($book->videos()->count() > 0)
-                            <span class="px-1.5 py-0.2 rounded-badge bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">{{ $book->videos()->count() }}</span>
-                        @endif
-                    </a>
-
-                    <a href="{{ route('quiz.show', $book->id) }}"
-                       class="ks-btn-ghost inline-flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        <span>Test topshirish</span>
-                        @if($book->quizzes()->count() > 0)
-                            <span class="px-1.5 py-0.2 rounded-badge bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">Faol</span>
-                        @endif
-                    </a>
-
-                    @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
-                        <a href="{{ route('books.pdf', $book->id) }}"
-                           class="ks-btn-ghost inline-flex items-center gap-2 text-rose-300 border-rose-500/30 hover:border-rose-500/50"
-                           title="Butun kitobni PDF sifatida yuklab olish">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <span>PDF yuklab olish</span>
-                        </a>
-                    @endif
-
                     @if(auth()->check() && $book->canUserAddQuiz(auth()->user()))
                         @php
                             $quizCreateRoute = auth()->user()->isAdmin()
@@ -169,7 +143,7 @@
                         <a href="{{ $quizCreateRoute }}"
                            class="ks-btn-gold inline-flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span>Ushbu kitobga test qo'shish</span>
+                            <span>{{ "Ushbu kitobga test qo'shish" }}</span>
                         </a>
                     @endif
                 </div>
@@ -399,56 +373,14 @@
         @endif
     </div>
 
-    <!-- Tabs Navigation -->
-    <div class="flex items-center gap-2 border-b border-ink-border pb-2 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 sm:mx-0 sm:px-0">
-        <button @click="tab = 'chapters'" :class="{ 'bg-ink-800 text-paper border-b-2 border-amber-400': tab === 'chapters', 'text-mist hover:text-paper': tab !== 'chapters' }"
-                class="px-4 py-2 rounded-btn text-xs font-mono font-bold transition-all whitespace-nowrap">
-            Boblar ro'yxati ({{ $book->chapters()->count() }})
-        </button>
-        <button @click="tab = 'overview'" :class="{ 'bg-ink-800 text-paper border-b-2 border-amber-400': tab === 'overview', 'text-mist hover:text-paper': tab !== 'overview' }"
-                class="px-4 py-2 rounded-btn text-xs font-mono font-bold transition-all whitespace-nowrap">
-            Kitob haqida umumiy
-        </button>
-    </div>
-
-    <!-- Tab 1: Chapters -->
-    <div x-show="tab === 'chapters'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-3">
-        @forelse($book->chapters()->where('is_published', true)->orderBy('chapter_number')->get() as $chapter)
-            <div class="p-4 sm:p-5 rounded-card bg-ink-900 border border-ink-border flex items-center justify-between gap-4 transition-colors hover:border-ink-border/80 group">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-9 h-9 rounded-btn bg-ink-950 border border-ink-border flex items-center justify-center text-amber-400 font-bold font-mono text-sm shrink-0">
-                        {{ $chapter->chapter_number }}
-                    </div>
-                    <div class="min-w-0">
-                        <h4 class="text-sm font-bold font-serif text-paper group-hover:text-amber-400 transition-colors break-words">
-                            {{ $chapter->title }}
-                        </h4>
-                        @if($chapter->duration_minutes)
-                            <span class="text-xs text-mist flex items-center gap-1 mt-0.5 font-mono">
-                                ⏱ {{ $chapter->duration_minutes }} daqiqa mutolaa
-                            </span>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 shrink-0">
-                    <a href="{{ route('reader.show', ['book' => $book->id, 'chapter' => $chapter->id]) }}"
-                       class="ks-btn-ghost py-1.5 px-3 text-xs inline-flex items-center gap-1.5">
-                        <span>O'qish</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </a>
-                </div>
-            </div>
-        @empty
-            <div class="p-8 rounded-card bg-ink-900 border border-ink-border text-center text-mist text-xs font-mono">
-                Bu kitob uchun hozircha alohida boblar kiritilmagan. Yuqoridagi onlayn o'qish orqali to'liq kitobni mutolaa qilishingiz mumkin.
-            </div>
-        @endforelse
-    </div>
-
-    <!-- Tab 2: Overview -->
-    <div x-show="tab === 'overview'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="p-6 rounded-card bg-ink-900 border border-ink-border space-y-4">
-        <h3 class="text-base font-bold font-serif text-paper break-words">To'liq tavsif va mazmuni</h3>
+    <!-- Kitob haqida to'liq tavsif -->
+    <div class="p-6 sm:p-8 rounded-card bg-ink-900 border border-ink-border space-y-4">
+        <div class="flex items-center gap-3 border-b border-ink-border/60 pb-3">
+            <span class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </span>
+            <h3 class="text-base sm:text-lg font-bold font-serif text-paper">Kitob haqida to'liq tavsif va mazmuni</h3>
+        </div>
         <div class="text-sm text-mist leading-relaxed font-sans break-words whitespace-pre-line">
             {{ $book->description }}
         </div>
