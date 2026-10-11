@@ -261,7 +261,7 @@ class GroupList extends Component
 
         $this->reset(['name', 'description', 'isPrivate', 'password', 'coverImage', 'showCreateModal']);
 
-        session()->flash('success', '«' . $group->name . '» guruhi yaratildi! 🎉');
+        session()->flash('success', '«' . $group->name . '» guruhi yaratildi!');
         return redirect()->route('groups.show', $group->id);
     }
 
@@ -347,7 +347,7 @@ class GroupList extends Component
 
         $this->reset(['showJoinModal', 'targetGroupId', 'joinPassword']);
 
-        session()->flash('success', '«' . $group->name . '» guruhiga muvaffaqiyatli qo\'shildingiz! 🎉');
+        session()->flash('success', '«' . $group->name . '» guruhiga muvaffaqiyatli qo\'shildingiz!');
         return redirect()->route('groups.show', $group->id);
     }
 

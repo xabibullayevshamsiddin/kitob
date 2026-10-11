@@ -199,12 +199,22 @@ export default function NotFound({
       >
         {/* Semantic Full-Page Background Video */}
         <video
-          src="https://motionsites.org/assets/prompt-media/6fb049e38e9593f9699c.mp4"
           autoPlay
           loop
           muted
           playsInline
+          preload="metadata"
+          poster="/media/errors/poster-404.webp"
           aria-hidden="true"
+          ref={(el) => {
+            if (el && typeof window !== 'undefined') {
+              const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              const saveData = navigator.connection && (navigator.connection.saveData === true);
+              if (prefersReduced || saveData) {
+                el.pause();
+              }
+            }
+          }}
           style={{
             position: 'absolute',
             inset: 0,
@@ -217,7 +227,12 @@ export default function NotFound({
             transition: 'filter 0.4s ease',
             pointerEvents: 'none',
           }}
-        />
+        >
+          <source src="/media/errors/bg-404.webm" type="video/webm" />
+          <source src="/media/errors/bg-404.mp4" type="video/mp4" />
+          <source src="/media/error-bg.webm" type="video/webm" />
+          <source src="/media/error-bg.mp4" type="video/mp4" />
+        </video>
 
         {/* Subtle Black Overlay / Blend Layer */}
         <div

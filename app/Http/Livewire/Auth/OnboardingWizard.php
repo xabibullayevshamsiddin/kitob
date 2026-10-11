@@ -101,7 +101,7 @@ class OnboardingWizard extends Component
             ]
         );
 
-        session()->flash('success', 'Xush kelibsiz! Onboarding muvaffaqiyatli yakunlandi va 50 ball hisobingizga qo\'shildi! 🎉');
+        session()->flash('success', 'Xush kelibsiz! Onboarding muvaffaqiyatli yakunlandi va 50 ball hisobingizga qo\'shildi!');
         return redirect()->route('home');
     }
 

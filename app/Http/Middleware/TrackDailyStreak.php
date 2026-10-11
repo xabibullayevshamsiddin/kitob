@@ -51,6 +51,16 @@ class TrackDailyStreak
             app(StreakService::class)->recordActivity($user);
             session(['streak_checked_date' => $today]);
         } else {
+            $noReadingCache = session('streak_no_reading_until');
+            if (
+                is_array($noReadingCache)
+                && ($noReadingCache['user_id'] ?? null) === $user->id
+                && ($noReadingCache['date'] ?? null) === $today
+                && ($noReadingCache['expires_at'] ?? 0) > Carbon::now('Asia/Tashkent')->timestamp
+            ) {
+                return $next($request);
+            }
+
             // "O'qish faoliyati" qoidasi:
             // Agar bugun o'qish sessiyasi yoki minutes_read > 0 bo'lsa, streakni yangilaymiz.
             $hasTodayReading = $user->readingSessions()->where('session_date', $today)->exists()
@@ -59,8 +69,14 @@ class TrackDailyStreak
             if ($hasTodayReading) {
                 app(StreakService::class)->recordActivity($user);
                 session(['streak_checked_date' => $today]);
+                session()->forget('streak_no_reading_until');
+            } else {
+                session(['streak_no_reading_until' => [
+                    'user_id' => $user->id,
+                    'date' => $today,
+                    'expires_at' => Carbon::now('Asia/Tashkent')->addSeconds(60)->timestamp,
+                ]]);
             }
-            // Agar hali o'qimagan bo'lsa, sessionni qulflamaymiz — keyinroq o'qiganida hisoblanishi uchun
         }
 
         return $next($request);

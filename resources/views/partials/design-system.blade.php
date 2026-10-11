@@ -379,7 +379,15 @@
         background-color: #07090E; color: #F0EDE6; border-color: #1F293D;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238B9BAD' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
         background-position: right .65rem center; background-repeat: no-repeat; background-size: 1.25em 1.25em;
-        padding-right: 2.25rem; -webkit-appearance: none; appearance: none;
+        -webkit-appearance: none; appearance: none;
+    }
+    /* Keep long selected labels clear of the custom dropdown chevron. */
+    select:not([multiple]) {
+        box-sizing: border-box;
+        padding-right: 2.75rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     select option { background-color: #0D111A; color: #F0EDE6; }
 

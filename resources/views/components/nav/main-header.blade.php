@@ -31,22 +31,23 @@
         x-init="if (isHome) { scrolled = (window.scrollY > 20); }"
         @scroll.window.passive="if (isHome) { scrolled = (window.scrollY > 20); }"
         @theme-changed.window="theme = $event.detail.theme"
-        class="sticky top-0 z-40 w-full transition-all duration-300 {{ $isHome ? 'bg-transparent border-b border-white/10 is-hero-header' : 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/20' }}"
-        :class="(!isHome || scrolled || mobileMenu) 
-            ? 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10' 
-            : 'bg-transparent border-b border-white/10 backdrop-blur-none shadow-none is-hero-header'">
+        class="sticky top-0 z-40 w-full transition-all duration-300 bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10"
+        :class="{
+            'is-hero-header !bg-transparent !border-b !border-white/10 !backdrop-blur-none !shadow-none': (isHome && !scrolled && !mobileMenu && theme === 'dark'),
+            'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10': (!isHome || scrolled || mobileMenu || theme === 'light')
+        }">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
 
         {{-- Logo: SVG kitob belgisi + Spectral so'z belgisi --}}
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 group shrink-0" aria-label="Kitobxon">
-            <span class="w-9 h-9 rounded-btn bg-vermilion text-paper flex items-center justify-center transition-colors duration-base group-hover:bg-vermilion-700">
+            <span class="header-logo-badge w-9 h-9 rounded-btn flex items-center justify-center transition-all duration-base shadow-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
                     <path d="M9 7h6"/>
                 </svg>
             </span>
             <span class="hidden sm:flex flex-col leading-none">
-                <span class="font-display font-semibold text-paper text-[1.15rem] tracking-[-0.01em] transition-colors duration-base group-hover:text-amber-400">Kitobxon</span>
+                <span class="font-display font-semibold text-paper text-[1.15rem] tracking-[-0.01em] transition-colors duration-base group-hover:text-amber-500 dark:group-hover:text-amber-400">Kitobxon</span>
                 <span class="font-mono text-[9px] text-mist uppercase tracking-[0.18em] mt-1">{{ __('site.common.platform') }}</span>
             </span>
         </a>
@@ -570,12 +571,39 @@
 </header>
 
 <style>
-/* ── Velorah & Editorial Hero Header Overrides ──
-   When on Home and unscrolled, the header sits transparently over the dark cinematic video.
-   Regardless of light/dark mode, text and key indicators remain luminous white and frosted glass.
-   Once scrolled (scrolled === true), standard light/dark background and ink text smoothly resume.
-*/
-#site-header.is-hero-header {
+/* ── Logo Book Icon Badge ── */
+.header-logo-badge {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35) !important;
+}
+.group:hover .header-logo-badge {
+    background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
+}
+
+html.dark .header-logo-badge,
+html:not(.light) .header-logo-badge {
+    background: #C1392B !important;
+    color: #F0EDE6 !important;
+    box-shadow: 0 2px 10px rgba(193, 57, 43, 0.35) !important;
+}
+html.dark .group:hover .header-logo-badge,
+html:not(.light) .group:hover .header-logo-badge {
+    background: #A82E22 !important;
+}
+
+html.light:not(.force-dark) .header-logo-badge {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35) !important;
+}
+html.light:not(.force-dark) .group:hover .header-logo-badge {
+    background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
+}
+
+/* ── Velorah & Editorial Hero Header Overrides (Dark Mode Home Hero Only) ── */
+html.dark #site-header.is-hero-header,
+html:not(.light) #site-header.is-hero-header {
     --paper-rgb: 255 255 255 !important;
     --paper-50-rgb: 255 255 255 !important;
     --paper-100-rgb: 255 255 255 !important;
@@ -585,48 +613,191 @@
     --mist-600-rgb: 148 163 184 !important;
     --ink-border-rgb: 255 255 255 / 0.15 !important;
 }
-#site-header.is-hero-header .header-theme-btn {
+html.dark #site-header.is-hero-header .header-theme-btn,
+html:not(.light) #site-header.is-hero-header .header-theme-btn {
     background-color: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     color: #ffffff !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
-#site-header.is-hero-header .header-theme-btn:hover {
+html.dark #site-header.is-hero-header .header-theme-btn:hover,
+html:not(.light) #site-header.is-hero-header .header-theme-btn:hover {
     background-color: rgba(255, 255, 255, 0.16) !important;
     border-color: rgba(255, 255, 255, 0.35) !important;
 }
-#site-header.is-hero-header .header-theme-moon {
+html.dark #site-header.is-hero-header .header-theme-moon,
+html:not(.light) #site-header.is-hero-header .header-theme-moon {
     color: #fde047 !important;
 }
-#site-header.is-hero-header .header-lang-btn {
+html.dark #site-header.is-hero-header .header-lang-btn,
+html:not(.light) #site-header.is-hero-header .header-lang-btn {
     background-color: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     color: #ffffff !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
-#site-header.is-hero-header .header-lang-btn:hover {
+html.dark #site-header.is-hero-header .header-lang-btn:hover,
+html:not(.light) #site-header.is-hero-header .header-lang-btn:hover {
     background-color: rgba(255, 255, 255, 0.16) !important;
     border-color: rgba(255, 255, 255, 0.35) !important;
 }
-#site-header.is-hero-header .header-streak-pill {
+html.dark #site-header.is-hero-header .header-streak-pill,
+html:not(.light) #site-header.is-hero-header .header-streak-pill {
     color: #f59e0b !important;
 }
-#site-header.is-hero-header .ks-btn-primary {
+html.dark #site-header.is-hero-header .ks-btn-primary,
+html:not(.light) #site-header.is-hero-header .ks-btn-primary {
     background-color: #C1392B !important;
     color: #ffffff !important;
     border-color: #A82E22 !important;
     box-shadow: 0 2px 8px rgba(193, 57, 43, 0.4) !important;
 }
-#site-header.is-hero-header .ks-btn-primary:hover {
+html.dark #site-header.is-hero-header .ks-btn-primary:hover,
+html:not(.light) #site-header.is-hero-header .ks-btn-primary:hover {
     background-color: #A82E22 !important;
 }
 
-/* ── Isolated Popover & Dropdown Scope ──
-   Dropdown menus and popovers inside the header must NEVER inherit the transparent video hero text colors!
-   They are solid elevated cards and must strictly follow the active theme (light or dark).
-*/
+/* ── High-Contrast Literary Light Mode Header ── */
+html.light:not(.force-dark) #site-header {
+    background-color: rgba(249, 246, 240, 0.96) !important;
+    border-bottom: 1px solid #E0D9CD !important;
+    box-shadow: 0 4px 20px -2px rgba(28, 25, 22, 0.06) !important;
+    --paper-rgb: 28 25 22 !important;
+    --paper-50-rgb: 20 18 16 !important;
+    --paper-100-rgb: 28 25 22 !important;
+    --paper-200-rgb: 46 41 36 !important;
+    --paper-muted-rgb: 92 85 75 !important;
+    --mist-rgb: 107 99 88 !important;
+    --mist-600-rgb: 78 72 63 !important;
+    --ink-border-rgb: 224 217 205 !important;
+    --ink-900-rgb: 249 246 240 !important;
+    --ink-800-rgb: 238 233 223 !important;
+    --ink-700-rgb: 228 221 209 !important;
+    color: #1C1916 !important;
+}
+
+/* Nav links in Light Mode */
+html.light:not(.force-dark) #site-header nav a,
+html.light:not(.force-dark) #site-header nav button {
+    color: #5C554B !important;
+}
+html.light:not(.force-dark) #site-header nav a:hover,
+html.light:not(.force-dark) #site-header nav button:hover {
+    color: #1C1916 !important;
+}
+html.light:not(.force-dark) #site-header nav a[aria-current="page"] {
+    color: #1C1916 !important;
+    font-weight: 600 !important;
+}
+
+/* Logo in Light Mode */
+html.light:not(.force-dark) #site-header a[aria-label="Kitobxon"] span.font-display {
+    color: #1C1916 !important;
+}
+html.light:not(.force-dark) #site-header a[aria-label="Kitobxon"] span.font-mono {
+    color: #6B6358 !important;
+}
+html.light:not(.force-dark) #site-header a[aria-label="Kitobxon"]:hover span.font-display {
+    color: #D97706 !important;
+}
+
+/* Buttons and Controls in Light Mode */
+html.light:not(.force-dark) #site-header .header-theme-btn {
+    background-color: #EEE9DF !important;
+    border-color: #E0D9CD !important;
+    color: #4E483F !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+html.light:not(.force-dark) #site-header .header-theme-btn:hover {
+    background-color: #E4DDD1 !important;
+    color: #1C1916 !important;
+}
+html.light:not(.force-dark) #site-header .header-theme-btn svg {
+    color: #D97706 !important;
+}
+
+html.light:not(.force-dark) #site-header .header-lang-btn {
+    background-color: #EEE9DF !important;
+    border-color: #E0D9CD !important;
+    color: #1C1916 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+html.light:not(.force-dark) #site-header .header-lang-btn:hover {
+    background-color: #E4DDD1 !important;
+    color: #1C1916 !important;
+}
+html.light:not(.force-dark) #site-header .header-lang-btn svg {
+    color: #6B6358 !important;
+}
+
+/* Streak, Points, Coins in Light Mode */
+html.light:not(.force-dark) #site-header .header-streak-pill {
+    color: #D97706 !important;
+}
+html.light:not(.force-dark) #site-header [title*="streak"],
+html.light:not(.force-dark) #site-header [title*="Streak"],
+html.light:not(.force-dark) #site-header [title*="kunlik"],
+html.light:not(.force-dark) #site-header [title*="Kunlik"] {
+    color: #D97706 !important;
+}
+html.light:not(.force-dark) #site-header [title*="ball"],
+html.light:not(.force-dark) #site-header [title*="Ball"],
+html.light:not(.force-dark) #site-header [title*="ochko"],
+html.light:not(.force-dark) #site-header [title*="Ochko"],
+html.light:not(.force-dark) #site-header [title*="point"],
+html.light:not(.force-dark) #site-header [title*="Point"] {
+    color: #1C1916 !important;
+}
+html.light:not(.force-dark) #site-header [title*="tanga"],
+html.light:not(.force-dark) #site-header [title*="Tanga"],
+html.light:not(.force-dark) #site-header [title*="coin"],
+html.light:not(.force-dark) #site-header [title*="Coin"] {
+    color: #1C1916 !important;
+}
+
+/* Notifications in Light Mode */
+html.light:not(.force-dark) #site-header a[title*="Bildirishnoma"],
+html.light:not(.force-dark) #site-header a[title*="Уведомления"],
+html.light:not(.force-dark) #site-header a[title*="Notification"] {
+    color: #5C554B !important;
+}
+html.light:not(.force-dark) #site-header a[title*="Bildirishnoma"]:hover,
+html.light:not(.force-dark) #site-header a[title*="Уведомления"]:hover,
+html.light:not(.force-dark) #site-header a[title*="Notification"]:hover {
+    color: #1C1916 !important;
+    background-color: #EEE9DF !important;
+}
+
+/* Avatar button in Light Mode */
+html.light:not(.force-dark) #site-header .header-avatar-btn {
+    background-color: #EEE9DF !important;
+    border-color: #E0D9CD !important;
+    color: #1C1916 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+html.light:not(.force-dark) #site-header .header-avatar-btn:hover {
+    background-color: #E4DDD1 !important;
+}
+html.light:not(.force-dark) #site-header .header-avatar-btn span {
+    color: #1C1916 !important;
+}
+html.light:not(.force-dark) #site-header .header-avatar-btn svg {
+    color: #6B6358 !important;
+}
+
+/* Mobile Hamburger button in Light Mode */
+html.light:not(.force-dark) #site-header button[aria-label*="Menyu"],
+html.light:not(.force-dark) #site-header button[aria-label*="menu"],
+html.light:not(.force-dark) #site-header button[aria-label*="Menu"] {
+    color: #1C1916 !important;
+}
+
+/* ── Isolated Popover & Dropdown Scope ── */
 #site-header .header-dropdown-menu,
 #site-header [class*="shadow-popover"] {
     isolation: isolate;

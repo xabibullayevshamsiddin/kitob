@@ -28,23 +28,19 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
-            session()->flash('success', 'Xush kelibsiz, ' . ($event->user->name ?? 'foydalanuvchi') . '! 👋');
-        });
-
-        Event::listen(\Illuminate\Auth\Events\Logout::class, function () {
-            session()->flash('info', 'Tizimdan muvaffaqiyatli chiqdingiz.');
+            session()->flash('success', 'Xush kelibsiz, ' . ($event->user->name ?? 'foydalanuvchi') . '!');
         });
 
         Event::listen(\Illuminate\Auth\Events\Registered::class, function () {
-            session()->flash('success', 'Ro\'yxatdan muvaffaqiyatli o\'tdingiz! Xush kelibsiz. 🎉');
+            session()->flash('success', 'Ro\'yxatdan muvaffaqiyatli o\'tdingiz! Xush kelibsiz.');
         });
 
         Event::listen(\Illuminate\Auth\Events\Verified::class, function () {
-            session()->flash('success', 'Email manzilingiz muvaffaqiyatli tasdiqlandi! ✅');
+            session()->flash('success', 'Email manzilingiz muvaffaqiyatli tasdiqlandi!');
         });
 
         Event::listen(\Illuminate\Auth\Events\PasswordReset::class, function () {
-            session()->flash('success', 'Parolingiz muvaffaqiyatli yangilandi! 🔐');
+            session()->flash('success', 'Parolingiz muvaffaqiyatli yangilandi!');
         });
     }
 }

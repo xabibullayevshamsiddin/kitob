@@ -97,7 +97,10 @@
                 
                 <!-- Live Video Element (Webcam / Stream) -->
                 <video id="liveVideoPlayer" autoplay playsinline class="w-full h-full object-cover transition-opacity duration-300"
-                       :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }">
+                       :style="videoFilterStyle"
+                       :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }"
+                       @loadedmetadata="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null)"
+                       @playing="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null)">
                 </video>
 
                 <!-- Dedicated Audio Element for WebRTC audio stream playback -->
@@ -172,6 +175,14 @@
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
                         <span class="font-bold tabular-nums" x-text="formatNumber(Math.round(animatedViewerCount))">0</span>
+                    </div>
+
+                    <!-- Camera Resolution Badge (Host only) -->
+                    <div x-show="isHost && isVideoOn && currentCamResolution" x-cloak
+                         class="px-2.5 py-0.5 rounded-pill bg-ink-950/80 backdrop-blur-md text-amber-300 font-mono text-[11px] border border-amber-500/30 flex items-center gap-1 shadow-md"
+                         :title="'Kameraning haqiqiy faol aniqligi: ' + currentCamResolution">
+                        <svg class="w-3 h-3 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                        <span x-text="currentCamResolution"></span>
                     </div>
                 </div>
 
@@ -348,6 +359,57 @@
                                 </select>
                                 <p class="text-[10px] text-mist mt-1 font-sans">{{ __('site.live.cam_select_hint') }}</p>
                             </div>
+
+                            {{-- Video Quality (Resolution) Selector --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[11px] uppercase tracking-wider text-mist">
+                                        Video Sifati (Aniqlik)
+                                    </label>
+                                    <span class="text-[10px] font-mono text-amber-300 font-bold" x-text="currentCamResolution || 'Faol'"></span>
+                                </div>
+                                <select id="videoQualitySelect" x-model="videoQuality" @change="changeVideoQuality($event.target.value)"
+                                    class="w-full px-2.5 py-1.5 bg-ink-900 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none font-mono">
+                                    <option value="1080p">Full HD (1080p) — Yuqori tiniqlik 🌟</option>
+                                    <option value="720p">HD (720p) — Standart tiniq</option>
+                                    <option value="480p">SD (480p) — Yengil / Trafik tejash</option>
+                                </select>
+                                <p class="text-[10px] text-mist mt-1 font-sans">Kamerangiz apparat imkoniyatiga qarab maksimal aniqlikda ishlaydi</p>
+                            </div>
+
+                            {{-- Studio HD Enhancer Selector --}}
+                            <div class="p-2.5 rounded-btn bg-ink-900/60 border border-ink-border space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs text-paper font-medium">Studio HD Enhancer</span>
+                                        <span class="text-[9px] px-1 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono">PRO</span>
+                                    </div>
+                                    <span class="text-[10px] font-mono text-amber-300" x-text="videoEnhance === 'bright' ? 'Yorqin' : (videoEnhance === 'sharp' ? 'Ultra Tiniq' : (videoEnhance === 'hd' ? 'Tiniq HD' : 'O‘chirilgan'))"></span>
+                                </div>
+                                <p class="text-[10px] text-mist">Veb-kamera xiraligini yo'qotib, kontrast va tabiiy ranglarni kuchaytiradi</p>
+                                <div class="grid grid-cols-4 gap-1.5 pt-1 font-mono text-[11px]">
+                                    <button type="button" @click="setVideoEnhance('hd')"
+                                        :class="videoEnhance === 'hd' ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-800 text-mist hover:text-paper'"
+                                        class="py-1 px-1 rounded text-center transition-all">
+                                        Tiniq HD
+                                    </button>
+                                    <button type="button" @click="setVideoEnhance('sharp')"
+                                        :class="videoEnhance === 'sharp' ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-800 text-mist hover:text-paper'"
+                                        class="py-1 px-1 rounded text-center transition-all">
+                                        Ultra Tiniq
+                                    </button>
+                                    <button type="button" @click="setVideoEnhance('bright')"
+                                        :class="videoEnhance === 'bright' ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-800 text-mist hover:text-paper'"
+                                        class="py-1 px-1 rounded text-center transition-all">
+                                        Yorqin
+                                    </button>
+                                    <button type="button" @click="setVideoEnhance('off')"
+                                        :class="videoEnhance === 'off' ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-800 text-mist hover:text-paper'"
+                                        class="py-1 px-1 rounded text-center transition-all">
+                                        O‘chiq
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-between pt-2 border-t border-ink-border text-xs">
@@ -498,6 +560,9 @@ function liveStudioController(config) {
         videoDevices: [],
         selectedAudioDevice: '',
         selectedVideoDevice: '',
+        videoQuality: localStorage.getItem('kitob_video_quality') || '1080p',
+        videoEnhance: localStorage.getItem('kitob_video_enhance') || 'hd',
+        currentCamResolution: '',
 
         // Media streams
         localStream: null,
@@ -545,21 +610,15 @@ function liveStudioController(config) {
 
         // WebRTC ICE serverlari: STUN (ochiq tarmoqlar) + TURN (qattiq NAT/firewall uchun majburiy).
         // TURN'siz turli tarmoqlarda (Wi-Fi <-> mobil) P2P ulanish o'rnatilmaydi — video/audio yetmaydi.
+        // TURN sozlamalari WEBRTC_TURN_* orqali beriladi; OpenRelay defaultlari faqat sinov/zaxira uchun.
         rtcConfig: {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun.cloudflare.com:3478' },
-                // Open Relay Project (metrturn) — bepul TURN, test uchun. Production uchun o'z TURN serveringizni qo'ying.
-                {
-                    urls: [
-                        'turn:openrelay.metered.ca:80',
-                        'turn:openrelay.metered.ca:443',
-                        'turn:openrelay.metered.ca:443?transport=tcp',
-                    ],
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject',
-                },
+                @if (!empty(config('webrtc.turn.urls')))
+                @json(config('webrtc.turn')),
+                @endif
             ],
             iceCandidatePoolSize: 10,
         },
@@ -924,6 +983,7 @@ function liveStudioController(config) {
                             sdp: normalizeSdp(msg.payload.sdp)
                         };
                         await pc.setRemoteDescription(new RTCSessionDescription(cleanAnswer));
+                        this.applyVideoSenderQuality(pc);
 
                         // Drain queued ICE candidates if any arrived early
                         if (this.hostIceQueues && this.hostIceQueues[viewerId] && this.hostIceQueues[viewerId].length > 0) {
@@ -1006,6 +1066,9 @@ function liveStudioController(config) {
             console.log('[HOST → ' + viewerId + '] Local audio tracks:', activeStream.getAudioTracks().map(t => t.label + ' enabled=' + t.enabled));
             console.log('[HOST → ' + viewerId + '] Local video tracks:', activeStream.getVideoTracks().map(t => t.label + ' enabled=' + t.enabled));
             console.log('[HOST → ' + viewerId + '] RTCPeerConnection senders:', pc.getSenders().map(s => s.track?.kind ?? 'no-track'));
+
+            // Eslatma: bitreyt sozlamasi (applyVideoSenderQuality) answer qabul qilingandan
+            // keyin qo'llanadi — negotiationdan oldin encodings bo'sh bo'ladi va setParameters rad etiladi.
 
             pc.onicecandidate = (event) => {
                 if (event.candidate) {
@@ -1318,40 +1381,263 @@ function liveStudioController(config) {
             }
         },
 
+        get videoFilterStyle() {
+            if (this.videoEnhance === 'bright') {
+                return 'filter: contrast(1.18) saturate(1.22) brightness(1.12);';
+            }
+            if (this.videoEnhance === 'sharp') {
+                return 'filter: contrast(1.25) saturate(1.10) brightness(1.02);';
+            }
+            if (this.videoEnhance === 'hd' || this.videoEnhance === true || this.videoEnhance === 'true') {
+                return 'filter: contrast(1.12) saturate(1.15) brightness(1.04);';
+            }
+            return '';
+        },
+
+        setVideoEnhance(mode) {
+            this.videoEnhance = mode;
+            try { localStorage.setItem('kitob_video_enhance', mode); } catch (e) {}
+        },
+
+        updateCameraStatus(track) {
+            const videoEl = document.getElementById('liveVideoPlayer');
+            let w = 0;
+            let h = 0;
+            let fps = 30;
+
+            if (track) {
+                const settings = track.getSettings ? track.getSettings() : {};
+                w = settings.width || 0;
+                h = settings.height || 0;
+                fps = Math.round(settings.frameRate || 30);
+            }
+
+            if ((!w || !h) && videoEl && videoEl.videoWidth && videoEl.videoHeight) {
+                w = videoEl.videoWidth;
+                h = videoEl.videoHeight;
+            }
+
+            if (!track || (!w && !h && !this.isVideoOn)) {
+                this.currentCamResolution = '';
+                return;
+            }
+
+            if (w && h) {
+                let tag = 'SD';
+                if (w >= 1920 || h >= 1080) tag = 'FHD';
+                else if (w >= 1280 || h >= 720) tag = 'HD';
+                this.currentCamResolution = `${tag} ${w}×${h} (${fps}fps)`;
+            } else {
+                this.currentCamResolution = this.isVideoOn ? 'Faol' : '';
+            }
+            console.log('[CAMERA STATUS]', this.currentCamResolution);
+        },
+
+        getVideoConstraints(quality = this.videoQuality || '1080p') {
+            const deviceIdConstraint = this.selectedVideoDevice ? { ideal: this.selectedVideoDevice } : undefined;
+
+            if (quality === '1080p') {
+                return {
+                    deviceId: deviceIdConstraint,
+                    width: { ideal: 1920, min: 1280 },
+                    height: { ideal: 1080, min: 720 },
+                    aspectRatio: { ideal: 1.7777777778 }
+                };
+            } else if (quality === '720p') {
+                return {
+                    deviceId: deviceIdConstraint,
+                    width: { ideal: 1280, min: 960, max: 1280 },
+                    height: { ideal: 720, min: 540, max: 720 },
+                    aspectRatio: { ideal: 1.7777777778 }
+                };
+            } else {
+                // 480p SD
+                return {
+                    deviceId: deviceIdConstraint,
+                    width: { ideal: 640, max: 854 },
+                    height: { ideal: 480, max: 480 },
+                    aspectRatio: { ideal: 1.3333333333 }
+                };
+            }
+        },
+
+        async acquireVideoStream(constraints) {
+            const deviceIdConstraint = this.selectedVideoDevice ? { ideal: this.selectedVideoDevice } : undefined;
+
+            // 1-urinish: So'ralgan aniqlik bo'yicha
+            try {
+                return await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: constraints
+                });
+            } catch (err1) {
+                console.warn('[CAMERA] 1-urinish olinmadi:', err1);
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            // 2-urinish: Keng imkoniyatli HD (qattiq min/max cheklovlarsiz)
+            try {
+                return await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        deviceId: deviceIdConstraint,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        aspectRatio: { ideal: 1.7777777778 }
+                    }
+                });
+            } catch (err2) {
+                console.warn('[CAMERA] 2-urinish (720p ideal) olinmadi:', err2);
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            // 3-urinish: Standart kamera
+            return await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: deviceIdConstraint ? { deviceId: deviceIdConstraint } : true
+            });
+        },
+
+        async changeVideoQuality(quality) {
+            this.videoQuality = quality;
+            try { localStorage.setItem('kitob_video_quality', quality); } catch (e) {}
+
+            if (!this.localStream || this.isScreenSharing) return;
+
+            const constraints = this.getVideoConstraints(quality);
+
+            // 1-bosqich: applyConstraints orqali tezkor urinish
+            const currentTrack = this.localStream.getVideoTracks()[0];
+            if (currentTrack && currentTrack.applyConstraints) {
+                try {
+                    await currentTrack.applyConstraints(constraints);
+                    const s = currentTrack.getSettings ? currentTrack.getSettings() : {};
+                    if (s.height && (quality === '480p' ? s.height <= 500 : (quality === '720p' ? s.height <= 750 : true))) {
+                        this.updateCameraStatus(currentTrack);
+                        this.replaceTracksOnAllPeers(this.localStream);
+                        return;
+                    }
+                } catch (applyErr) {
+                    console.warn('[CAMERA] applyConstraints orqali olinmadi, apparat oqimi qayta ulanmoqda:', applyErr);
+                }
+            }
+
+            // 2-bosqich: Windows DirectShow/MediaFoundation apparat oqimini to'liq qayta ulash
+            const oldTracks = this.localStream.getVideoTracks();
+            oldTracks.forEach(t => {
+                this.localStream.removeTrack(t);
+                try { t.stop(); } catch (e) {}
+            });
+
+            // Windows drayveri kamerani bo'shatishi uchun 180ms kutish
+            await new Promise(resolve => setTimeout(resolve, 180));
+
+            try {
+                const newVideoStream = await this.acquireVideoStream(constraints);
+                const newVideoTrack = newVideoStream.getVideoTracks()[0];
+                if (newVideoTrack) {
+                    newVideoTrack.enabled = this.isVideoOn;
+
+                    const audioTracks = this.localStream.getAudioTracks();
+                    this.localStream = new MediaStream([...audioTracks, newVideoTrack]);
+
+                    const videoEl = document.getElementById('liveVideoPlayer');
+                    if (videoEl) {
+                        videoEl.srcObject = null;
+                        videoEl.srcObject = this.localStream;
+                        videoEl.play().catch(() => {});
+                    }
+
+                    this.updateCameraStatus(newVideoTrack);
+                    this.replaceTracksOnAllPeers(this.localStream);
+                }
+            } catch (err) {
+                console.error('Kamera sifatini almashtirishda xatolik:', err);
+                try {
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: false
+                    });
+                    const fbTrack = fallbackStream.getVideoTracks()[0];
+                    if (fbTrack) {
+                        fbTrack.enabled = this.isVideoOn;
+                        this.localStream.addTrack(fbTrack);
+                        const videoEl = document.getElementById('liveVideoPlayer');
+                        if (videoEl) {
+                            videoEl.srcObject = null;
+                            videoEl.srcObject = this.localStream;
+                            videoEl.play().catch(() => {});
+                        }
+                        this.updateCameraStatus(fbTrack);
+                        this.replaceTracksOnAllPeers(this.localStream);
+                    }
+                } catch (e2) {}
+            }
+        },
+
+        // Tomoshabinga ketayotgan video oqim bitreytini oshirish.
+        // Faqat negotiationdan KEYIN ishlaydi (undan oldin encodings bo'sh).
+        applyVideoSenderQuality(pc) {
+            if (!pc || !pc.getSenders) return;
+            const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+            if (!sender || !sender.getParameters) return;
+            try {
+                const params = sender.getParameters();
+                if (!params.encodings || params.encodings.length === 0) return;
+                params.encodings[0].maxBitrate = 3500000; // 3.5 Mbps — Full HD / HD yuz-kadr uchun tiniq
+                params.encodings[0].maxFramerate = 30;
+                params.degradationPreference = 'maintain-resolution'; // tarmoq sekinlashsa — xiralashmasin, FPS kamaysin
+                sender.setParameters(params).catch(err => console.warn('[RTC] setParameters:', err));
+            } catch (e) {}
+        },
+
+        toggleVideoEnhance() {
+            this.videoEnhance = !this.videoEnhance;
+            try { localStorage.setItem('kitob_video_enhance', this.videoEnhance); } catch (e) {}
+        },
+
         async startMediaStream() {
             try {
                 if (this.localStream) {
                     this.localStream.getTracks().forEach(t => t.stop());
                 }
 
-                const audioConstraints = this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true;
-                const videoConstraints = this.selectedVideoDevice ? { deviceId: { exact: this.selectedVideoDevice }, width: { ideal: 1280 }, height: { ideal: 720 } } : { width: { ideal: 1280 }, height: { ideal: 720 } };
-
+                const audioConstraints = this.selectedAudioDevice ? { deviceId: { ideal: this.selectedAudioDevice } } : true;
                 let stream = null;
+
                 try {
+                    // 1. Audio va Full HD / HD video birgalikda so'raladi
                     stream = await navigator.mediaDevices.getUserMedia({
                         audio: audioConstraints,
-                        video: videoConstraints
+                        video: this.getVideoConstraints()
                     });
                 } catch (e1) {
-                    console.warn('Audio va video birga olinmadi, faqat audio sinab ko\'rilmoqda:', e1);
+                    console.warn('Audio va video birgalikda olinmadi, alohida olinmoqda:', e1);
+                    await new Promise(r => setTimeout(r, 100));
+
+                    let audioStream = null;
                     try {
-                        stream = await navigator.mediaDevices.getUserMedia({
-                            audio: audioConstraints,
-                            video: false
-                        });
+                        audioStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+                    } catch (ea) {
+                        console.warn('Audio olinmadi:', ea);
+                        this.isMicOn = false;
+                    }
+
+                    let videoStream = null;
+                    try {
+                        videoStream = await this.acquireVideoStream(this.getVideoConstraints());
+                    } catch (ev) {
+                        console.warn('Video olinmadi:', ev);
                         this.isVideoOn = false;
-                    } catch (e2) {
-                        console.warn('Audio olinmadi, faqat video sinab ko\'rilmoqda:', e2);
-                        try {
-                            stream = await navigator.mediaDevices.getUserMedia({
-                                audio: false,
-                                video: videoConstraints
-                            });
-                            this.isMicOn = false;
-                        } catch (e3) {
-                            console.error('Audio ham, video ham olinmadi:', e3);
-                        }
+                    }
+
+                    if (audioStream && videoStream) {
+                        stream = new MediaStream([
+                            ...audioStream.getAudioTracks(),
+                            ...videoStream.getVideoTracks()
+                        ]);
+                    } else {
+                        stream = audioStream || videoStream;
                     }
                 }
 
@@ -1362,6 +1648,12 @@ function liveStudioController(config) {
 
                 this.localStream = stream;
 
+                // Haqiqiy olingan kamera aniqligi va kadr tezligini konsolga chiqarish
+                const vTrack = this.localStream.getVideoTracks()[0];
+                if (vTrack) {
+                    this.updateCameraStatus(vTrack);
+                }
+
                 // Sync track enabled state with UI toggles
                 this.localStream.getAudioTracks().forEach(t => t.enabled = this.isMicOn);
                 this.localStream.getVideoTracks().forEach(t => t.enabled = this.isVideoOn);
@@ -1369,6 +1661,7 @@ function liveStudioController(config) {
                 const videoEl = document.getElementById('liveVideoPlayer');
                 if (videoEl) {
                     videoEl.muted = true; // Host local preview is muted to prevent acoustic feedback loop
+                    videoEl.srcObject = null;
                     videoEl.srcObject = stream;
                     videoEl.play().catch(() => {});
                 }
@@ -1406,6 +1699,7 @@ function liveStudioController(config) {
                         const sender = senders.find(s => s.track && s.track.kind === newTrack.kind);
                         if (sender) {
                             sender.replaceTrack(newTrack).catch(()=>{});
+                            if (newTrack.kind === 'video') this.applyVideoSenderQuality(pc);
                         } else {
                             try { pc.addTrack(newTrack, newStream); } catch(e){}
                         }
@@ -1501,22 +1795,31 @@ function liveStudioController(config) {
             this.selectedVideoDevice = deviceId;
             if (this.localStream) {
                 const oldTracks = this.localStream.getVideoTracks();
-                oldTracks.forEach(t => t.stop());
+                oldTracks.forEach(t => {
+                    try { t.stop(); } catch (e) {}
+                });
+
+                await new Promise(r => setTimeout(r, 150));
 
                 try {
-                    const newVideoStream = await navigator.mediaDevices.getUserMedia({
-                        video: { deviceId: { exact: deviceId } }
-                    });
+                    const newVideoStream = await this.acquireVideoStream(this.getVideoConstraints());
                     const newVideoTrack = newVideoStream.getVideoTracks()[0];
-                    newVideoTrack.enabled = this.isVideoOn;
+                    if (newVideoTrack) {
+                        newVideoTrack.enabled = this.isVideoOn;
 
-                    if (oldTracks[0]) this.localStream.removeTrack(oldTracks[0]);
-                    this.localStream.addTrack(newVideoTrack);
+                        const audioTracks = this.localStream.getAudioTracks();
+                        this.localStream = new MediaStream([...audioTracks, newVideoTrack]);
 
-                    const videoEl = document.getElementById('liveVideoPlayer');
-                    if (videoEl) videoEl.srcObject = this.localStream;
+                        const videoEl = document.getElementById('liveVideoPlayer');
+                        if (videoEl) {
+                            videoEl.srcObject = null;
+                            videoEl.srcObject = this.localStream;
+                            videoEl.play().catch(() => {});
+                        }
 
-                    this.replaceTracksOnAllPeers(this.localStream);
+                        this.updateCameraStatus(newVideoTrack);
+                        this.replaceTracksOnAllPeers(this.localStream);
+                    }
                 } catch (e) {
                     console.error('Kamera almashtirishda xatolik:', e);
                 }
@@ -1556,7 +1859,7 @@ function liveStudioController(config) {
                 // — endi mikrofonni foydalanuvchidan so'rab olamiz
                 try {
                     const audioStream = await navigator.mediaDevices.getUserMedia({
-                        audio: this.selectedAudioDevice ? { deviceId: { exact: this.selectedAudioDevice } } : true
+                        audio: this.selectedAudioDevice ? { deviceId: { ideal: this.selectedAudioDevice } } : true
                     });
                     const newTrack = audioStream.getAudioTracks()[0];
                     if (newTrack) {
@@ -1591,15 +1894,16 @@ function liveStudioController(config) {
             if (videoTracks.length > 0) {
                 // Track mavjud — faqat yoqish/o'chirish
                 videoTracks.forEach(t => t.enabled = this.isVideoOn);
+                if (this.isVideoOn) {
+                    this.updateCameraStatus(videoTracks[0]);
+                } else {
+                    this.currentCamResolution = '';
+                }
             } else if (this.isVideoOn && !sharing) {
                 // Video track UMUMAN YO'Q (start paytida kamera band/ruhsatsiz bo'lgan,
                 // yoki audio-only fallback ishlagan) — ENDI KAMERANI SO'RAMIZ
                 try {
-                    const videoStream = await navigator.mediaDevices.getUserMedia({
-                        video: this.selectedVideoDevice
-                            ? { deviceId: { exact: this.selectedVideoDevice } }
-                            : { width: { ideal: 1280 }, height: { ideal: 720 } }
-                    });
+                    const videoStream = await this.acquireVideoStream(this.getVideoConstraints());
                     const newTrack = videoStream.getVideoTracks()[0];
                     if (newTrack) {
                         newTrack.enabled = true;
@@ -1613,11 +1917,13 @@ function liveStudioController(config) {
                             const videoEl = document.getElementById('liveVideoPlayer');
                             if (videoEl) {
                                 videoEl.muted = true; // echo oldini olish
+                                videoEl.srcObject = null;
                                 videoEl.srcObject = this.localStream;
                                 videoEl.play().catch(() => {});
                             }
                         }
 
+                        this.updateCameraStatus(newTrack);
                         // Tomoshabinlarga yangi video track yetkazish
                         this.attachTrackToPeers('video', newTrack);
                         this.scanMediaDevices();
@@ -1626,7 +1932,10 @@ function liveStudioController(config) {
                     console.warn('Kamerani yoqib bo\'lmadi:', err);
                     // Kamera olinmadi — tugma holatini qaytarish (aldovchi "yoqilgan" bo'lmasin)
                     this.isVideoOn = false;
+                    this.currentCamResolution = '';
                 }
+            } else {
+                this.currentCamResolution = '';
             }
 
             this.sendSignal('stream-status', 'all', {
@@ -1694,11 +2003,21 @@ function liveStudioController(config) {
 
                 try {
                     this.recordedChunks = [];
-                    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-                        ? 'video/webm;codecs=vp9,opus'
-                        : (MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4');
+                    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=h264,opus')
+                        ? 'video/webm;codecs=h264,opus'
+                        : (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2')
+                            ? 'video/mp4;codecs=avc1,mp4a.40.2'
+                            : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+                                ? 'video/webm;codecs=vp9,opus'
+                                : (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+                                    ? 'video/webm;codecs=vp8,opus'
+                                    : 'video/webm')));
 
-                    this.mediaRecorder = new MediaRecorder(streamToRecord, { mimeType });
+                    this.mediaRecorder = new MediaRecorder(streamToRecord, {
+                        mimeType,
+                        videoBitsPerSecond: 6000000, // 6.0 Mbps yuqori tiniqlikda yozib olish
+                        audioBitsPerSecond: 160000   // 160 kbps toza audio
+                    });
 
                     this.mediaRecorder.ondataavailable = (event) => {
                         if (event.data && event.data.size > 0) {

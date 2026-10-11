@@ -7,6 +7,7 @@ use App\Models\BookChapter;
 use App\Models\User;
 use App\Services\Gamification\StreakService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -102,5 +103,35 @@ class ReadingAndStreakTest extends TestCase
 
         $this->assertNotNull($streak);
         $this->assertGreaterThanOrEqual(1, $streak->current_streak);
+    }
+
+    /** @test */
+    public function no_reading_result_is_cached_for_one_minute_per_user_and_day()
+    {
+        $user = $this->getStudentUser();
+        $readingQueries = 0;
+        DB::listen(function ($query) use (&$readingQueries) {
+            $sql = strtolower($query->sql);
+            if (
+                (str_contains($sql, 'reading_sessions') && str_contains($sql, 'session_date'))
+                || (str_contains($sql, 'daily_activities') && str_contains($sql, 'activity_date'))
+            ) {
+                $readingQueries++;
+            }
+        });
+
+        $this->actingAs($user)->get('/')->assertOk();
+        $this->assertSame(2, $readingQueries);
+
+        $this->get('/')->assertOk();
+        $this->assertSame(2, $readingQueries);
+
+        \Carbon\Carbon::setTestNow(now()->addSeconds(61));
+        try {
+            $this->get('/')->assertOk();
+            $this->assertSame(4, $readingQueries);
+        } finally {
+            \Carbon\Carbon::setTestNow();
+        }
     }
 }

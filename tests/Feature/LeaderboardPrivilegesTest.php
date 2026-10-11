@@ -66,6 +66,27 @@ class LeaderboardPrivilegesTest extends TestCase
         $this->assertArrayNotHasKey($user6->id, $topFive);
     }
 
+    public function test_equal_point_ranks_follow_the_top_five_id_tiebreaker(): void
+    {
+        Cache::flush();
+        $users = collect(range(1, 6))->map(function ($index) {
+            return User::factory()->create([
+                'username' => 'tie_' . $index . '_' . uniqid(),
+                'total_points' => 250,
+            ]);
+        });
+        $service = app(LeaderboardService::class);
+
+        foreach ($users as $index => $user) {
+            $this->assertSame($index + 1, $service->getUserRank($user));
+        }
+
+        $topFive = $service->getTopFiveIds();
+        $this->assertSame(1, $topFive[$users[0]->id]);
+        $this->assertSame(5, $topFive[$users[4]->id]);
+        $this->assertArrayNotHasKey($users[5]->id, $topFive);
+    }
+
     public function test_group_limits_grant_rank_bonus_to_top_five(): void
     {
         Cache::flush();

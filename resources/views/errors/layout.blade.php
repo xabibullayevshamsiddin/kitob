@@ -193,16 +193,29 @@
 </head>
 <body>
 
-    <!-- Semantic Full-Page Background Video -->
+    @php
+        $errCode = trim($__env->yieldContent('code', '404'));
+        $validErrorCodes = ['403', '404', '419', '429', '500', '503'];
+        $bgCode = in_array($errCode, $validErrorCodes) ? $errCode : '404';
+    @endphp
+
+    <!-- Semantic Full-Page Background Video (Code-Specific Literary Stone Engraving) -->
     <video
-        src="https://motionsites.org/assets/prompt-media/6fb049e38e9593f9699c.mp4"
         autoplay
         loop
         muted
         playsinline
+        preload="metadata"
+        poster="{{ asset('media/errors/poster-' . $bgCode . '.webp') }}"
         aria-hidden="true"
         class="bg-error-video"
-    ></video>
+        id="error-bg-video"
+    >
+        <source src="{{ asset('media/errors/bg-' . $bgCode . '.webm') }}" type="video/webm">
+        <source src="{{ asset('media/errors/bg-' . $bgCode . '.mp4') }}" type="video/mp4">
+        <source src="{{ asset('media/error-bg.webm') }}" type="video/webm">
+        <source src="{{ asset('media/error-bg.mp4') }}" type="video/mp4">
+    </video>
 
     <!-- Subtle Black Overlay / Blend Layer -->
     <div class="bg-error-overlay" aria-hidden="true"></div>
@@ -275,6 +288,18 @@
                     } catch(err) {}
                 }
             });
+
+            // Respect prefers-reduced-motion and Save-Data
+            (function() {
+                var video = document.getElementById('error-bg-video');
+                if (!video) return;
+                var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                var saveData = navigator.connection && (navigator.connection.saveData === true);
+                if (prefersReduced || saveData) {
+                    video.pause();
+                    video.removeAttribute('autoplay');
+                }
+            })();
         })();
     </script>
 </body>

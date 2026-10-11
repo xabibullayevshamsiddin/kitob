@@ -1,6 +1,6 @@
 <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 <meta name="theme-color" content="#07090E">
-<link rel="apple-touch-icon" href="{{ asset('icons/kitobxon-192.svg') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
 <script>
 (() => {
     const enabled = @json((bool) config('pwa.enabled', true));

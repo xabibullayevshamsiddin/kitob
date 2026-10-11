@@ -18,8 +18,14 @@ class LeaderboardService
             return null;
         }
 
-        // $user'dan ko'proq ballga ega foydalanuvchilar soni + 1
-        return User::where('total_points', '>', $user->total_points)->count() + 1;
+        // Top-five ro'yxatidagi kabi teng ballarda ID kichigi oldin turadi.
+        return User::where(function ($query) use ($user) {
+            $query->where('total_points', '>', $user->total_points)
+                ->orWhere(function ($tie) use ($user) {
+                    $tie->where('total_points', $user->total_points)
+                        ->where('id', '<', $user->id);
+                });
+        })->count() + 1;
     }
 
     /**
