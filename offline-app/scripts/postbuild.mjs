@@ -15,7 +15,10 @@ async function walk(dir) {
 }
 await walk(output);
 const relativeAssets = files
-  .filter((file) => !relative(output, file).replaceAll('\\', '/').startsWith('.vite/'))
+  .filter((file) => {
+    const path = relative(output, file).replaceAll('\\', '/');
+    return !path.startsWith('.vite/') && !path.toLowerCase().endsWith('.woff');
+  })
   .map((file) => `./${relative(publicRoot, file).replaceAll('\\', '/')}`);
 for (const icon of ['icons/kitobxon-192.svg', 'icons/kitobxon-512.svg', 'icons/kitobxon-maskable.svg']) relativeAssets.push(`./${icon}`);
 const manifest = await readFile(join(output, '.vite/manifest.json'), 'utf8');

@@ -1,11 +1,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import '@fontsource/spectral/400.css';
-import '@fontsource/spectral/700.css';
-import '@fontsource/dm-sans/400.css';
-import '@fontsource/dm-sans/500.css';
-import '@fontsource/dm-sans/700.css';
-import '@fontsource/dm-mono/400.css';
+import '@fontsource/spectral/latin-400.css';
+import '@fontsource/spectral/latin-700.css';
+import '@fontsource/dm-sans/latin-400.css';
+import '@fontsource/dm-sans/latin-500.css';
+import '@fontsource/dm-sans/latin-700.css';
+import '@fontsource/dm-mono/latin-400.css';
 import './style.css';
 
 const quotes = [
