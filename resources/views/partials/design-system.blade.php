@@ -286,7 +286,7 @@
 
         html {
             -webkit-text-size-adjust: 100%;
-            overflow-x: hidden;
+            overflow-x: clip;
             max-width: 100%;
         }
         body {
@@ -294,7 +294,7 @@
             font-size: 1rem; line-height: 1.65;
             font-feature-settings: "ss01";
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
+            overflow-x: clip;
             max-width: 100%;
             position: relative;
         }

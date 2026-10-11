@@ -43,6 +43,7 @@
             opacity: 1;
         }
     </style>
+@include('components.pwa-head')
 </head>
 <body class="bg-ink-950 text-slate-200 font-sans antialiased min-h-screen noise-bg selection:bg-amber-500 selection:text-ink-950">
     @include('components.page-loader')

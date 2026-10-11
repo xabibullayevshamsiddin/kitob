@@ -1,11 +1,25 @@
 {
+  "node_modules/gsap/ScrollTrigger.js": {
+    "file": "assets/ScrollTrigger-7d0ec5a0.js",
+    "isDynamicEntry": true,
+    "src": "node_modules/gsap/ScrollTrigger.js"
+  },
+  "node_modules/gsap/index.js": {
+    "file": "assets/index-7b167cc0.js",
+    "isDynamicEntry": true,
+    "src": "node_modules/gsap/index.js"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-ebb6814b.css",
+    "file": "assets/app-31fad1b5.css",
     "isEntry": true,
     "src": "resources/css/app.css"
   },
   "resources/js/app.js": {
-    "file": "assets/app-c44c06c6.js",
+    "dynamicImports": [
+      "node_modules/gsap/index.js",
+      "node_modules/gsap/ScrollTrigger.js"
+    ],
+    "file": "assets/app-deb0ed77.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   }

@@ -63,6 +63,7 @@
         .orb-animate-1 { animation: orbDrift 15s ease-in-out infinite; }
         .orb-animate-2 { animation: orbDrift 20s ease-in-out infinite reverse; }
     </style>
+@include('components.pwa-head')
 </head>
 <body class="bg-ink-950 text-slate-200 font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
 

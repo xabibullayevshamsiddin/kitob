@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="uz" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07090E" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Kitobxon — Aloqa yo‘q</title>
+    <style>
+      html{background:#07090e;color:#f0ede6;font-family:system-ui,sans-serif}html.light{background:#f3efe7;color:#1c1916}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 25%,#24150f 0,#0d111a 48%,#07090e 100%)}html.light body{background:radial-gradient(ellipse at 50% 24%,#f4dfbd 0,#f3efe7 58%,#ece4d5 100%)}#root{width:100%}.boot{max-width:39rem;margin:auto;padding:2rem;text-align:center;color:#f0ede6}.light .boot{color:#1c1916}.boot h1{font:700 clamp(2.25rem,8vw,4rem)/1.1 Georgia,serif;letter-spacing:-.04em}.boot p{color:#8b9bad;line-height:1.65}.light .boot p{color:#6b6358}.boot-mark{margin:0 auto 20px;width:46px;height:46px;display:grid;place-items:center;border:1px solid #f59e0b66;border-radius:8px;color:#f59e0b}.light .boot-mark{color:#92400e;border-color:#92400e66}.boot-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:24px}.boot-actions a,.boot-actions button{padding:13px 16px;border:1px solid #1f293d;border-radius:6px;background:#131926;color:#f0ede6;text-decoration:none;font:600 14px system-ui;cursor:pointer}.boot-actions button{background:#c1392b;border-color:#c1392b}.light .boot-actions a{background:#f9f6f0;border-color:#e0d9cd;color:#1c1916}.light .boot-actions button{color:white}.boot-note{font-size:12px}
+    </style>
+    <script>
+      (() => { try { const t=localStorage.getItem('kitob_theme'); document.documentElement.classList.toggle('light',t==='light'); document.documentElement.classList.toggle('dark',t!=='light'); const c=document.querySelector('meta[name="theme-color"]'); if(c)c.content=t==='light'?'#F3EFE7':'#07090E'; } catch (_) {} })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-CQyj53gI.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/style-B8lzDbHa.css">
+  </head>
+  <body>
+    <div id="root">
+      <main class="boot" aria-labelledby="boot-title">
+        <div class="boot-mark" aria-hidden="true">✦</div>
+        <p>KITOBXON · OFLAYN HOLAT</p>
+        <h1 id="boot-title">Kitobxon biroz sukunatda.</h1>
+        <p>Internet aloqasi uzildi yoki sahifa to‘liq yuklanmadi. Tarmoq tiklangach qayta urinib ko‘ring.</p>
+        <div class="boot-actions"><button type="button" onclick="location.reload()">Qayta urinish</button><a id="boot-return" href="../">Oldingi sahifaga qaytish</a></div>
+        <p class="boot-note">Bu oddiy ko‘rinish ilova skriptlari ishlamagan holat uchun.</p>
+      </main>
+    </div>
+    <script>
+      (() => { try { const raw=new URLSearchParams(location.search).get('from')||'../'; const target=new URL(raw,location.origin); const root=new URL('../',location.href); document.getElementById('boot-return').href=target.origin===location.origin?target.href:root.href; } catch (_) {} })();
+    </script>
+  </body>
+</html>

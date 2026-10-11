@@ -51,6 +51,7 @@
             transition: background-color 9999s ease-in-out 0s !important;
         }
     </style>
+    @include('components.pwa-head')
 </head>
 <body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain">
 

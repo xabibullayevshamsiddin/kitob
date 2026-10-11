@@ -16,6 +16,21 @@ use App\Http\Livewire\Notifications\NotificationList;
 use App\Http\Livewire\Settings\SettingsPage;
 use Illuminate\Support\Facades\Route;
 
+// Lightweight connectivity probe; deliberately excludes the web session and its middleware.
+Route::get('/ping', function () {
+    return response('', 204)->header('Cache-Control', 'no-store, max-age=0');
+})->withoutMiddleware([
+    \App\Http\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \App\Http\Middleware\VerifyCsrfToken::class,
+    \Illuminate\Routing\Middleware\SubstituteBindings::class,
+    \App\Http\Middleware\SetLocale::class,
+    \App\Http\Middleware\TrackDailyStreak::class,
+    \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+])->name('pwa.ping');
+
 /*
 |--------------------------------------------------------------------------
 | PUBLIC ROUTES — hech kim login bo'lmasdan kira oladi

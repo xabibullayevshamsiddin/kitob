@@ -45,6 +45,7 @@
         .reader-serif { font-family: 'Spectral', Georgia, serif !important; }
         .reader-sans { font-family: 'DM Sans', system-ui, sans-serif !important; }
     </style>
+@include('components.pwa-head')
 </head>
 <body class="bg-ink-950 text-paper min-h-screen flex flex-col font-sans transition-colors duration-200">
 

@@ -78,6 +78,7 @@
     </style>
 
     @stack('styles')
+    @include('components.pwa-head')
 </head>
 <body class="bg-ink-950 text-paper antialiased" x-data="adminLayout()">
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="overflow-x-hidden max-w-full" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="max-w-full" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,18 +7,12 @@
     <title>Kitobxon — @yield('title', __('site.home.hero_title') . __('site.home.hero_title_bold'))</title>
 
     @include('partials.design-system')
+    @vite(['resources/js/app.js'])
 
     <!-- Google Fonts: Instrument Serif (display) & Inter (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <!-- GSAP & ScrollTrigger for Subtle Editorial Physics Animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-
-    <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
         /* ── Velorah Cinematic Hero CSS Variables & Effects ── */
@@ -227,12 +221,16 @@
         @media (prefers-reduced-motion: reduce) {
             .scrolly-book-cover,
             .scrolly-book-leaf {
-                transform: none !important;
+                transition: none !important;
             }
         }
+        #book-reveal-section.book-is-static-open .scrolly-book-cover { transform: rotateY(-152deg) !important; z-index: 12 !important; }
+        #book-reveal-section.book-is-static-open .scrolly-leaf-1 { transform: rotateY(-158deg) !important; z-index: 14 !important; }
+        #book-reveal-section.book-is-static-open .scrolly-leaf-2 { transform: rotateY(-148deg) !important; z-index: 16 !important; }
     </style>
+@include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain overflow-x-hidden w-full max-w-full">
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain w-full max-w-full">
 
     <!-- ── Page Transition & Loader ── -->
     @include('components.page-loader')
@@ -1191,11 +1189,25 @@
 
     <!-- ── Motion Script (GSAP + Dynamic Rolling Counters) ── -->
     <script>
+        let homeAnimationInitAttempts = 0;
         function initHomePageAnimations() {
             if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-                setTimeout(initHomePageAnimations, 50);
+                if (homeAnimationInitAttempts++ < 100) {
+                    setTimeout(initHomePageAnimations, 50);
+                } else {
+                    const section = document.getElementById('book-reveal-section');
+                    if (section) section.classList.add('book-is-static-open');
+                    document.querySelectorAll('.scrolly-content-panel, .scrolly-content-item, .scrolly-stats-row').forEach((el) => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'none';
+                    });
+                    document.querySelectorAll('.scrolly-stat-num').forEach((el) => {
+                        el.textContent = Number(el.dataset.target || 0).toLocaleString('en-US');
+                    });
+                }
                 return;
             }
+            homeAnimationInitAttempts = 0;
 
             gsap.registerPlugin(ScrollTrigger);
 
@@ -1311,13 +1323,17 @@
                     if (!bookRevealSection || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
 
                     // Clean up existing trigger if already present (e.g. on resize or PJAX)
+                    if (window.bookRevealMedia) {
+                        window.bookRevealMedia.revert();
+                        window.bookRevealMedia = null;
+                    }
                     const existing = ScrollTrigger.getById('book-reveal-st');
                     if (existing) {
                         existing.kill();
                     }
 
-                    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
-                    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                    const isDesktop = () => window.matchMedia("(min-width: 1024px)").matches;
+                    const prefersReduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
                     const cover = document.querySelector('.scrolly-book-cover');
                     const leaf1 = document.querySelector('.scrolly-leaf-1');
@@ -1325,6 +1341,7 @@
                     const stage = document.getElementById('scrolly-book-stage');
                     const shadow = document.querySelector('.scrolly-book-shadow');
                     const contentPanel = document.querySelector('.scrolly-content-panel');
+                    const contentItems = document.querySelectorAll('.scrolly-content-item');
                     const statsRow = document.querySelector('.scrolly-stats-row');
 
                     const dragHint = document.getElementById('scrolly-drag-hint');
@@ -1336,7 +1353,7 @@
                     const maxPages = 3;
                     const pageLabels = ['Muqova', '1 / 3-bet', '2 / 3-bet', '3 / 3-bet (Xotima)'];
                     // Progress checkpoints for each page along the 0.0 -> 1.0 timeline
-                    const pageProgressTargets = [0.0, 0.28, 0.54, 0.80];
+                    const pageProgressTargets = [0.0, 0.30, 0.50, 0.70];
                     let currentPage = 0;
                     let isNavigatingByCode = false;
 
@@ -1363,8 +1380,8 @@
                     function updateControlsFromProgress(p) {
                         let page = 0;
                         if (p >= 0.70) page = 3;
-                        else if (p >= 0.44) page = 2;
-                        else if (p >= 0.16) page = 1;
+                        else if (p >= 0.50) page = 2;
+                        else if (p >= 0.30) page = 1;
                         else page = 0;
 
                         if (page !== currentPage) {
@@ -1378,8 +1395,9 @@
                     if (leaf2) gsap.set(leaf2, { rotateY: 0, transformOrigin: "left center", zIndex: 20 });
                     gsap.set(stage, { x: 0 });
                     gsap.set(shadow, { scaleX: 1, opacity: 0.6, x: 0 });
-                    gsap.set(contentPanel, { opacity: isDesktop ? 0 : 1, x: isDesktop ? 45 : 0 });
-                    gsap.set(statsRow, { opacity: isDesktop ? 0 : 1, y: isDesktop ? 25 : 0 });
+                    gsap.set(contentPanel, { opacity: 0, x: 45 });
+                    gsap.set(contentItems, { opacity: 0, y: 16 });
+                    gsap.set(statsRow, { opacity: 0, y: 24 });
 
                     const statElements = document.querySelectorAll('.scrolly-stat-num');
                     const statTargets = Array.from(statElements).map(el => parseInt(el.getAttribute('data-target') || '0', 10));
@@ -1387,7 +1405,7 @@
 
                     // ── MASTER TIMELINE: SINGLE SOURCE OF TRUTH FOR ALL LEAVES ──
                     const masterTl = gsap.timeline({
-                        paused: prefersReduced,
+                        paused: true,
                         onUpdate: function() {
                             updateControlsFromProgress(this.progress());
                         }
@@ -1402,89 +1420,95 @@
                         }, 0.04);
                     }
 
-                    // 1. Cover opens (0.00 -> 0.28)
+                    // 0–30%: muqova ochiladi.
                     masterTl.to(cover, {
                         rotateY: -142,
                         ease: 'power1.inOut',
-                        duration: 0.28,
+                        duration: 0.30,
                     }, 0);
 
                     // Drop cover z-index behind right leaves as it passes -90deg
-                    masterTl.set(cover, { zIndex: 12 }, 0.14);
+                    masterTl.set(cover, { zIndex: 12 }, 0.16);
 
                     // Gentle X adjustment to keep open book centered
-                    const shiftX = isDesktop ? 40 : Math.round(Math.min(50, Math.max(25, (window.innerWidth - 205) * 0.28)));
+                    const shiftX = isDesktop() ? 40 : Math.round(Math.min(50, Math.max(25, (window.innerWidth - 205) * 0.28)));
                     masterTl.to(stage, {
                         x: shiftX,
                         ease: 'power1.inOut',
-                        duration: 0.28
+                        duration: 0.30
                     }, 0);
 
                     masterTl.to(shadow, {
-                        scaleX: isDesktop ? 1.25 : 1.15,
-                        x: isDesktop ? -24 : -15,
+                        scaleX: isDesktop() ? 1.25 : 1.15,
+                        x: isDesktop() ? -24 : -15,
                         opacity: 0.9,
                         ease: 'power1.inOut',
-                        duration: 0.28
+                        duration: 0.30
                     }, 0);
 
-                    if (isDesktop) {
-                        masterTl.to(contentPanel, {
-                            opacity: 1,
-                            x: 0,
-                            ease: 'power2.out',
-                            duration: 0.22
-                        }, 0.06);
-                    }
+                    // 30–70%: sarlavha, muallif va tavsif navbat bilan ko'rinadi.
+                    masterTl.to(contentPanel, {
+                        opacity: 1,
+                        x: 0,
+                        ease: 'power2.out',
+                        duration: 0.18
+                    }, 0.30);
+                    masterTl.to(contentItems, {
+                        opacity: 1,
+                        y: 0,
+                        ease: 'power2.out',
+                        duration: 0.12,
+                        stagger: 0.055
+                    }, 0.38);
 
-                    // 2. Leaf 1 flips (0.28 -> 0.54)
+                    // Kitob varaqlari 30–70% oralig'ida ochiladi.
                     if (leaf1) {
                         masterTl.to(leaf1, {
                             rotateY: -148,
                             ease: 'power1.inOut',
-                            duration: 0.26
-                        }, 0.28);
+                            duration: 0.20
+                        }, 0.30);
 
                         masterTl.set(leaf1, { zIndex: 14 }, 0.41);
 
                         masterTl.to(cover, {
                             rotateY: -152,
                             ease: 'power1.inOut',
-                            duration: 0.26
-                        }, 0.28);
+                            duration: 0.20
+                        }, 0.30);
                     }
 
-                    // 3. Leaf 2 flips (0.54 -> 0.80)
+                    // Ikkinchi varaq 50–70%: ochiq kitob holatini yakunlaydi.
                     if (leaf2) {
                         masterTl.to(leaf2, {
                             rotateY: -148,
                             ease: 'power1.inOut',
-                            duration: 0.26
-                        }, 0.54);
+                            duration: 0.20
+                        }, 0.50);
 
-                        masterTl.set(leaf2, { zIndex: 16 }, 0.67);
+                        masterTl.set(leaf2, { zIndex: 16 }, 0.63);
 
                         if (leaf1) {
                             masterTl.to(leaf1, {
                                 rotateY: -158,
                                 ease: 'power1.inOut',
-                                duration: 0.26
-                            }, 0.54);
+                                duration: 0.20
+                            }, 0.50);
                         }
                     }
 
-                    // 4. Stats row count up (0.80 -> 1.00)
+                    // 70–100%: statistika chiqadi va sonlar scroll bilan sanaladi.
                     masterTl.to(statsRow, {
                         opacity: 1,
                         y: 0,
                         ease: 'power2.out',
-                        duration: 0.20
-                    }, 0.80);
+                        duration: 0.30
+                    }, 0.70);
 
                     masterTl.to(statProgressObj, {
                         progress: 1,
                         ease: 'none',
-                        duration: 0.20,
+                        duration: 0.30,
                         onUpdate: () => {
                             statElements.forEach((el, idx) => {
                                 const targetVal = statTargets[idx] || 0;
@@ -1492,43 +1516,67 @@
                                 el.textContent = currentVal.toLocaleString('en-US');
                             });
                         }
-                    }, 0.80);
+                    }, 0.70);
 
                     // ── ATTACH SCROLLTRIGGER (DESKTOP PIN + MOBILE FLUID SCRUB) ──
-                    if (!prefersReduced && typeof ScrollTrigger !== 'undefined') {
-                        if (isDesktop) {
+                    window.bookRevealMedia = ScrollTrigger.matchMedia({
+                        "(min-width: 1024px) and (prefers-reduced-motion: no-preference)": function() {
+                            updateUI(0);
                             ScrollTrigger.create({
                                 id: 'book-reveal-st',
                                 animation: masterTl,
-                                trigger: '#book-reveal-section',
+                                trigger: bookRevealSection,
                                 start: 'top top',
-                                end: '+=200%',
+                                end: '+=150%',
                                 pin: true,
                                 scrub: 0.8,
                                 anticipatePin: 1,
                                 invalidateOnRefresh: true
                             });
-                        } else {
-                            // Mobile / Tablet (< 1024px): Smooth scroll scrub as book travels through viewport
-                            ScrollTrigger.create({
-                                id: 'book-reveal-st',
-                                animation: masterTl,
-                                trigger: stage || '#book-reveal-section',
-                                start: 'top 85%',
-                                end: 'bottom 15%',
-                                scrub: 0.7,
-                                invalidateOnRefresh: true
+                        },
+                        "(max-width: 1023px) and (prefers-reduced-motion: no-preference)": function() {
+                            gsap.set(cover, { rotateY: -152, zIndex: 12 });
+                            if (leaf1) gsap.set(leaf1, { rotateY: -158, zIndex: 14 });
+                            if (leaf2) gsap.set(leaf2, { rotateY: -148, zIndex: 16 });
+                            gsap.set(stage, { x: 0 });
+                            gsap.set(contentPanel, { opacity: 1, x: 0 });
+                            gsap.set(contentItems, { opacity: 0, y: 16 });
+                            gsap.set(statsRow, { opacity: 1, y: 0 });
+                            updateUI(maxPages);
+                            statElements.forEach((el, idx) => {
+                                el.textContent = (statTargets[idx] || 0).toLocaleString('en-US');
                             });
+
+                            const mobileReveal = gsap.timeline({
+                                scrollTrigger: {
+                                    trigger: bookRevealSection,
+                                    start: 'top 76%',
+                                    toggleActions: 'play none none reverse'
+                                }
+                            });
+                            mobileReveal.to(contentItems, {
+                                opacity: 1,
+                                y: 0,
+                                duration: 0.45,
+                                stagger: 0.08,
+                                ease: 'power2.out'
+                            });
+                            return () => mobileReveal.kill();
+                        },
+                        "(prefers-reduced-motion: reduce)": function() {
+                            gsap.set(cover, { rotateY: -152, zIndex: 12 });
+                            if (leaf1) gsap.set(leaf1, { rotateY: -158, zIndex: 14 });
+                            if (leaf2) gsap.set(leaf2, { rotateY: -148, zIndex: 16 });
+                            gsap.set(dragHint, { autoAlpha: 0 });
+                            gsap.set(contentPanel, { opacity: 1, x: 0 });
+                            gsap.set(contentItems, { opacity: 1, y: 0 });
+                            gsap.set(statsRow, { opacity: 1, y: 0 });
+                            statElements.forEach((el, idx) => {
+                                el.textContent = (statTargets[idx] || 0).toLocaleString('en-US');
+                            });
+                            updateUI(maxPages);
                         }
-                    } else if (prefersReduced) {
-                        // Reduced motion fallback
-                        gsap.set(contentPanel, { opacity: 1, x: 0 });
-                        gsap.set(statsRow, { opacity: 1, y: 0 });
-                        statElements.forEach((el, idx) => {
-                            const targetVal = statTargets[idx] || 0;
-                            el.textContent = targetVal.toLocaleString('en-US');
-                        });
-                    }
+                    });
 
                     // ── PROGRAMMATIC NAVIGATION (BUTTONS, DOTS, DOGEAR) ──
                     function goToPage(targetPage, duration = 0.65) {
@@ -1547,7 +1595,7 @@
                         const targetProg = pageProgressTargets[targetPage] ?? 0;
                         const st = (typeof ScrollTrigger !== 'undefined') ? ScrollTrigger.getById('book-reveal-st') : null;
 
-                        if (st && isDesktop) {
+                        if (st && isDesktop() && !prefersReduced()) {
                             isNavigatingByCode = true;
                             const targetScroll = st.start + targetProg * (st.end - st.start);
                             const scrollObj = { y: window.scrollY };
@@ -1562,6 +1610,8 @@
                                     setTimeout(() => { isNavigatingByCode = false; }, 100);
                                 }
                             });
+                        } else if (prefersReduced()) {
+                            masterTl.progress(targetProg);
                         } else {
                             gsap.to(masterTl, {
                                 progress: targetProg,
@@ -1680,25 +1730,10 @@
                         window.addEventListener('pointercancel', onPointerRelease);
                     }
 
-                    updateUI(0);
                 };
 
                 // Initialize immediately
                 window.initBookRevealSection();
-
-                // Responsive listener for viewport breakpoint changes & device orientation
-                try {
-                    window.matchMedia("(min-width: 1024px)").addEventListener('change', () => {
-                        window.initBookRevealSection();
-                        setTimeout(() => ScrollTrigger.refresh(), 50);
-                    });
-                    window.addEventListener('orientationchange', () => {
-                        setTimeout(() => {
-                            window.initBookRevealSection();
-                            ScrollTrigger.refresh();
-                        }, 150);
-                    });
-                } catch(e) {}
 
                 // 3. Bento Grid Reveal
                 gsap.fromTo('.bento-header',

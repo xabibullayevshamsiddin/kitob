@@ -3,113 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('code') — @yield('title') | Kitobxon</title>
+    <title>@yield('code', '404') — @yield('title', 'Kitobxon') | Kitobxon</title>
 
-    @include('partials.design-system')
-
-    <!-- GSAP for Subtle Entrance Animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-
-    <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{-- Theme initialization (FOUC prevention) --}}
+    <script>
+        (function() {
+            try {
+                var el = document.documentElement;
+                var saved = localStorage.getItem('kitob_theme');
+                if (saved === 'light') {
+                    el.classList.remove('dark');
+                    el.classList.add('light');
+                } else if (saved === 'dark') {
+                    el.classList.remove('light');
+                    el.classList.add('dark');
+                } else {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                        el.classList.remove('dark');
+                        el.classList.add('light');
+                    } else {
+                        el.classList.remove('light');
+                        el.classList.add('dark');
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
 
     <style>
-        [x-cloak] { display: none !important; }
+        @font-face {
+            font-family: "Geist Mono:SemiBold";
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            src: url("https://static.figma.com/font/GeistMono_wght__1") format("woff2");
+        }
 
-        .code-watermark {
-            font-size: clamp(5rem, 14vw, 10rem);
-            line-height: 0.9;
-            color: rgba(240, 237, 230, 0.04);
+        :root,
+        html {
+            --bg-fallback: #000000;
+            --text-color: #ffffff;
+            --divider-color: #ffffff;
+            --gradient-start: rgb(255, 255, 255);
+            --gradient-end: rgba(255, 255, 255, 0.4);
+            --bg-overlay: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.48) 0%, rgba(0, 0, 0, 0.78) 100%);
+            --video-brightness: 0.82;
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+
+        html.light {
+            --bg-overlay: rgba(0, 0, 0, 0.28);
+            --video-brightness: 0.95;
+        }
+
+        html.dark {
+            --bg-overlay: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.48) 0%, rgba(0, 0, 0, 0.78) 100%);
+            --video-brightness: 0.82;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-fallback);
+            color: var(--text-color);
+            min-height: 100svh;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            font-family: "Geist Mono:SemiBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-weight: 600;
             user-select: none;
+            -webkit-user-select: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .bg-error-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 1;
+            z-index: 0;
+            filter: brightness(var(--video-brightness, 0.82));
+            transition: filter 0.4s ease;
+            pointer-events: none;
+        }
+
+        .bg-error-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-overlay);
+            z-index: 1;
+            pointer-events: none;
+            transition: background 0.4s ease;
+        }
+
+        /* ── Centered Content Group ── */
+        .error-center-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 483px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 44px;
+        }
+
+        /* ── Heading ── */
+        .error-heading {
+            font-family: "Geist Mono:SemiBold", ui-monospace, monospace;
+            font-weight: 600;
+            font-size: 295.751px;
+            line-height: 1.1;
+            letter-spacing: -24.6459px;
+            text-align: center;
+            padding-bottom: 0.08em;
+            height: auto;
+            min-height: 0;
+            background-image: linear-gradient(
+                247.3282658084845deg,
+                var(--gradient-start) 2.5334%,
+                var(--gradient-end) 93.612%
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+
+        /* ── Divider ── */
+        .error-divider {
+            width: 425px;
+            height: 1px;
+            background-color: var(--divider-color);
+            transition: background-color 0.3s ease;
+        }
+
+        /* ── Message ── */
+        .error-message {
+            font-family: "Geist Mono:SemiBold", ui-monospace, monospace;
+            font-weight: 600;
+            font-size: 24px;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            text-align: center;
+            color: var(--text-color);
+            width: 100%;
+            transition: color 0.3s ease;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* ── Mobile Behavior (max-width: 640px) ── */
+        @media (max-width: 640px) {
+            .error-center-content {
+                width: min(calc(100% - 40px), 360px);
+                gap: 28px;
+            }
+
+            .error-heading {
+                font-size: clamp(140px, 52vw, 200px);
+                letter-spacing: -0.09em;
+                padding-bottom: 0.05em;
+            }
+
+            .error-divider {
+                width: 100%;
+            }
+
+            .error-message {
+                font-size: clamp(16px, 4.5vw, 20px);
+                letter-spacing: -1.3px;
+            }
         }
     </style>
+    @include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen flex flex-col justify-between relative overflow-x-hidden ks-grain">
+<body>
 
-    <!-- ── Page Transition & Loader ── -->
-    @include('components.page-loader')
+    <!-- Semantic Full-Page Background Video -->
+    <video
+        src="https://motionsites.org/assets/prompt-media/6fb049e38e9593f9699c.mp4"
+        autoplay
+        loop
+        muted
+        playsinline
+        aria-hidden="true"
+        class="bg-error-video"
+    ></video>
 
-    <div id="smooth-page-wrapper" class="flex-1 flex flex-col justify-between">
-    <!-- ── Minimal Top Header ── -->
-    <header id="site-header" class="w-full bg-ink-950/80 border-b border-ink-border z-40">
-        <div class="max-w-7xl mx-auto px-6 h-[64px] flex items-center justify-between">
-            <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-                <span class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                </span>
-                <span class="font-bold text-paper font-serif text-lg tracking-tight group-hover:text-amber-400 transition-colors">Kitobxon</span>
+    <!-- Subtle Black Overlay / Blend Layer -->
+    <div class="bg-error-overlay" aria-hidden="true"></div>
+
+    <main>
+        <!-- Centered Error Content -->
+        <section class="error-center-content">
+            <!-- 1. Heading -->
+            <h1 class="error-heading">@yield('code', '404')</h1>
+
+            <!-- 2. Thin Horizontal Divider -->
+            <div class="error-divider"></div>
+
+            <!-- 3. Message -->
+            <a href="{{ route('home') }}" class="error-message" id="error-message-text" title="{{ __('site.common.back_home') }}">
+                @yield('message', "Bu sahifa kitob javonimizda topilmadi. Keling, sizni mutolaaga qaytaramiz.")
             </a>
-
-            <a href="{{ route('home') }}" 
-               class="ks-btn-ghost py-1.5 px-3 text-xs font-mono inline-flex items-center gap-1.5">
-                <span>← {{ __('site.errors.back_home') }}</span>
-            </a>
-        </div>
-    </header>
-
-    <!-- ── Center Hero Error Card ── -->
-    <main class="flex-1 flex items-center justify-center p-6 md:p-12 z-10">
-        <div class="ks-panel max-w-xl w-full p-8 sm:p-12 text-center bg-ink-900 border border-ink-border relative">
-            
-            <!-- Large Numeric Watermark & Floating Icon -->
-            <div class="relative flex items-center justify-center mb-6">
-                <div class="code-watermark font-mono font-bold tracking-tighter absolute">
-                    @yield('code')
-                </div>
-                
-                <div class="error-anim-item relative z-10 w-20 h-20 rounded-panel bg-ink-950 border border-amber-500/30 flex items-center justify-center text-3xl shadow-lg">
-                    @yield('icon')
-                </div>
-            </div>
-
-            <!-- Error Content -->
-            <div class="space-y-4 relative z-10 mt-4">
-                
-                <div class="error-anim-item inline-flex items-center gap-2 px-3 py-1 rounded-badge bg-amber-500/10 border border-amber-500/25 text-amber-400 font-mono text-xs tracking-wider uppercase">
-                    <span>@yield('badge')</span>
-                </div>
-
-                <h1 class="error-anim-item text-2xl sm:text-3xl lg:text-4xl font-bold font-serif text-paper tracking-tight leading-tight">
-                    @yield('title')
-                </h1>
-
-                <p class="error-anim-item text-mist text-sm sm:text-base max-w-md mx-auto leading-relaxed font-sans">
-                    @yield('message')
-                </p>
-
-                <!-- Actions Button Row -->
-                <div class="error-anim-item pt-4 flex flex-wrap items-center justify-center gap-3">
-                    @yield('actions')
-                </div>
-
-            </div>
-
-        </div>
+        </section>
     </main>
-    </div>
 
-    <!-- ── Motion Script ── -->
+    {{-- Seamless Theme ('T') & Language ('L') Keyboard Toggles --}}
+    @php
+        $errCode = trim($__env->yieldContent('code', '404'));
+        $messagesData = [
+            'uz' => __('site.errors.e' . $errCode . '_msg', [], 'uz'),
+            'ru' => __('site.errors.e' . $errCode . '_msg', [], 'ru'),
+            'en' => __('site.errors.e' . $errCode . '_msg', [], 'en'),
+        ];
+    @endphp
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof gsap !== 'undefined') {
-                gsap.fromTo('#site-header',
-                    { y: -20, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
-                );
+        (function() {
+            var errorMessages = @json($messagesData);
+            var currentLocale = "{{ app()->getLocale() }}";
+            var languages = ['uz', 'ru', 'en'];
 
-                gsap.fromTo('.error-anim-item',
-                    { opacity: 0, y: 20 },
-                    {
-                        opacity: 1,
-                        y: 0,
-                        duration: 0.6,
-                        stagger: 0.08,
-                        ease: "power2.out",
-                        clearProps: "all"
-                    }
-                );
+            function updateUIForLocale(lang) {
+                var msgEl = document.getElementById('error-message-text');
+                if (msgEl && errorMessages[lang]) {
+                    msgEl.textContent = errorMessages[lang];
+                }
             }
-        });
+
+            document.addEventListener('keydown', function(e) {
+                // Key 'T': Toggle Light / Dark mode
+                if ((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    var el = document.documentElement;
+                    var isDark = el.classList.contains('dark');
+                    if (isDark) {
+                        el.classList.remove('dark');
+                        el.classList.add('light');
+                        try { localStorage.setItem('kitob_theme', 'light'); } catch(err) {}
+                    } else {
+                        el.classList.remove('light');
+                        el.classList.add('dark');
+                        try { localStorage.setItem('kitob_theme', 'dark'); } catch(err) {}
+                    }
+                }
+
+                // Key 'L': Cycle Language (uz -> ru -> en -> uz)
+                if ((e.key === 'l' || e.key === 'L') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    var nextIdx = (languages.indexOf(currentLocale) + 1) % languages.length;
+                    currentLocale = languages[nextIdx];
+                    updateUIForLocale(currentLocale);
+
+                    // Persist selected language via background request
+                    try {
+                        var url = new URL(window.location.href);
+                        url.searchParams.set('lang', currentLocale);
+                        fetch(url.toString(), { method: 'GET', credentials: 'same-origin' }).catch(function(){});
+                    } catch(err) {}
+                }
+            });
+        })();
     </script>
 </body>
 </html>

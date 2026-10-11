@@ -14,6 +14,7 @@
         .sidebar-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
         .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
+    @include('components.pwa-head')
 </head>
 <body class="h-full bg-ink-950 text-paper antialiased font-sans" x-data="{ sidebarOpen: false }">
 
