@@ -8,3 +8,9 @@ html.light{--canvas:#f3efe7;--card:#f9f6f0;--raised:#eee9df;--line:#e0d9cd;--ink
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.book{transform:none!important}}@media(max-width:800px) and (max-height:780px){.content{padding:22px 0}.book-stage{height:230px;min-height:230px}.book{height:190px}.cover-art{height:56px;margin-top:3px}.cover-art:before{width:48px;height:48px}.cover-art:after{width:34px;height:34px}.cover-art span{height:58px}.cover-art span:nth-child(3){width:58px}.cover-title{font-size:14px;margin-top:4px}.cover-rule{margin:5px 0}.copy h1{font-size:39px}.copy blockquote{margin:10px auto}}
 .is-hidden .particle-field i{animation-play-state:paused}.low-power .particle-field{display:none}.low-power .book{filter:none}
 .light .particle-field i{background:#5b4636;opacity:.24}.light .glow{background:radial-gradient(circle,#d977061e,transparent 68%)}
+
+.connection.is-restored i{background:#10b981;box-shadow:0 0 14px #10b981bf}
+.book-stage .cover{transition:transform .85s var(--ease),background .55s var(--ease),border-color .55s var(--ease)}
+.book-stage.is-restored .book{transform:rotateX(0) rotateY(0) scale(.96)}
+.book-stage.is-restored .cover{transform:translateZ(3px) rotateY(0);background:linear-gradient(140deg,#c7e7d5,#eff8f1 48%,#a9d7bc);border-color:#75b794}
+.book-stage.is-restored .cover-stamp,.book-stage.is-restored .cover-rule{border-color:#3b8b63;color:#28704d}

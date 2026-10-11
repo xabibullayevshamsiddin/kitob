@@ -24,7 +24,8 @@ const quotes = [
 const appBase = new URL('../', window.location.href);
 const pingUrl = new URL('ping', appBase);
 const safeReturnUrl = () => {
-  const raw = new URLSearchParams(location.search).get('from') || '/';
+  const raw = new URLSearchParams(location.search).get('from');
+  if (!raw) return new URL('./', appBase).href;
   try {
     const candidate = new URL(raw, location.origin);
     if (candidate.origin !== location.origin) return new URL('./', appBase).href;
@@ -35,8 +36,8 @@ const safeReturnUrl = () => {
 function App() {
   const params = new URLSearchParams(location.search);
   const slow = params.get('reason') === 'slow';
-  const [online, setOnline] = React.useState(navigator.onLine);
   const [checking, setChecking] = React.useState(false);
+  const [connectionState, setConnectionState] = React.useState(navigator.onLine ? 'checking' : (slow ? 'slow' : 'offline'));
   const [quote] = React.useState(() => quotes[Math.floor(Math.random() * quotes.length)]);
   const [tilt, setTilt] = React.useState({ x: 0, y: 0 });
   const lowPower = (navigator.hardwareConcurrency || 4) < 4 || (navigator.deviceMemory && navigator.deviceMemory < 4);
@@ -44,39 +45,61 @@ function App() {
     left: `${(i * 43 + 7) % 100}%`, delay: `${(i * 0.71) % 12}s`, duration: `${12 + (i % 9)}s`, size: `${2 + (i % 3)}px`,
   })));
   const retryTimer = React.useRef(null);
+  const returnTimer = React.useRef(null);
   const attempt = React.useRef(0);
+  const onlineRef = React.useRef(navigator.onLine);
+  const wasOfflineRef = React.useRef(!navigator.onLine);
 
   const ping = React.useCallback(async (manual = false) => {
     setChecking(true);
+    setConnectionState('checking');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);
     try {
       const response = await fetch(pingUrl, { method: 'GET', cache: 'no-store', signal: controller.signal, credentials: 'omit' });
       if (!response.ok) throw new Error('ping failed');
-      const wasOffline = !online;
-      setOnline(true); attempt.current = 0;
+      const wasOffline = wasOfflineRef.current || !onlineRef.current;
+      onlineRef.current = true;
+      wasOfflineRef.current = false;
+      attempt.current = 0;
       if (retryTimer.current) clearTimeout(retryTimer.current);
-      if (wasOffline && window.toast) window.toast({ type: 'success', message: 'Internet aloqasi tiklandi.' });
-      if (manual) window.location.replace(safeReturnUrl());
+      if (wasOffline) {
+        setConnectionState('restored');
+        if (window.toast) window.toast({ type: 'success', message: 'Internet aloqasi tiklandi.' });
+        if (manual) {
+          window.location.replace(safeReturnUrl());
+        } else {
+          const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          returnTimer.current = setTimeout(() => window.location.replace(safeReturnUrl()), reducedMotion ? 0 : 1200);
+        }
+      } else {
+        setConnectionState('online');
+        if (manual) window.location.replace(safeReturnUrl());
+      }
     } catch {
-      setOnline(false);
+      onlineRef.current = false;
+      wasOfflineRef.current = true;
+      clearTimeout(returnTimer.current);
+      setConnectionState(slow || navigator.onLine ? 'slow' : 'offline');
       const delays = [3000, 6000, 12000, 30000];
       const wait = delays[Math.min(attempt.current, delays.length - 1)];
       attempt.current += 1;
       clearTimeout(retryTimer.current);
       retryTimer.current = setTimeout(() => ping(false), wait);
     } finally { clearTimeout(timeout); setChecking(false); }
-  }, [online]);
+  }, [slow]);
 
   React.useEffect(() => {
-    const onOnline = () => ping(false);
-    const onOffline = () => setOnline(false);
+    const onOnline = () => { setConnectionState('checking'); ping(false); };
+    const onOffline = () => {
+      onlineRef.current = false;
+      wasOfflineRef.current = true;
+      clearTimeout(returnTimer.current);
+      setConnectionState(slow ? 'slow' : 'offline');
+    };
     const onVisibility = () => { if (!document.hidden) ping(false); };
     window.addEventListener('online', onOnline); window.addEventListener('offline', onOffline);
     document.addEventListener('visibilitychange', onVisibility);
-    const livewire = () => { setOnline(false); ping(false); };
-    document.addEventListener('livewire:load', () => {});
-    document.addEventListener('message.failed', livewire);
     const syncTheme = (event) => {
       try {
         const theme = event?.detail?.theme || localStorage.getItem('kitob_theme');
@@ -95,12 +118,13 @@ function App() {
     ping(false);
     return () => {
       window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline);
-      document.removeEventListener('visibilitychange', onVisibility); document.removeEventListener('message.failed', livewire);
+      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('theme-changed', syncTheme); window.removeEventListener('storage', syncTheme);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearTimeout(retryTimer.current);
+      clearTimeout(returnTimer.current);
     };
-  }, [ping]);
+  }, [ping, slow]);
 
   const onPointer = (event) => {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator.hardwareConcurrency || 4) < 4) return;
@@ -110,9 +134,9 @@ function App() {
 
   return <main className="screen" onPointerMove={onPointer} onPointerLeave={() => setTilt({ x: 0, y: 0 })}>
     <div className="glow" aria-hidden="true"/><div className="particle-field" aria-hidden="true">{particles.map((p,i)=><i key={i} style={{left:p.left,animationDelay:p.delay,animationDuration:p.duration,width:p.size,height:p.size}}/>)}</div>
-      <header className="topline"><a href={new URL('./', appBase)} className="brand"><span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5.5c3.2-1.2 6.2-.7 9 1.2v13c-2.8-1.9-5.8-2.4-9-1.2zM21 5.5c-3.2-1.2-6.2-.7-9 1.2v13c2.8-1.9 5.8-2.4 9-1.2z"/></svg></span><span>KITOBXON</span></a><span className={`connection ${online ? 'is-online' : ''}`}><i/>{online ? 'Aloqa mavjud' : slow ? 'Aloqa sekinlashdi' : 'Oflayn rejim'}</span></header>
+      <header className="topline"><a href={new URL('./', appBase)} className="brand"><span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5.5c3.2-1.2 6.2-.7 9 1.2v13c-2.8-1.9-5.8-2.4-9-1.2zM21 5.5c-3.2-1.2-6.2-.7-9 1.2v13c2.8-1.9 5.8-2.4 9-1.2z"/></svg></span><span>KITOBXON</span></a><span className={`connection ${connectionState === 'online' ? 'is-online' : ''} ${connectionState === 'restored' ? 'is-restored' : ''}`} role="status" aria-live="polite"><i/>{connectionState === 'restored' ? 'Aloqa tiklandi' : connectionState === 'checking' ? 'Qayta ulanmoqda' : connectionState === 'slow' ? 'Aloqa sekin' : connectionState === 'online' ? 'Aloqa mavjud' : 'Oflayn rejim'}</span></header>
     <section className="content" aria-labelledby="title">
-      <div className="book-stage" style={{'--tilt-x':`${tilt.x}deg`,'--tilt-y':`${tilt.y}deg`}} aria-label="Kitob maketi">
+      <div className={`book-stage ${connectionState === 'restored' ? 'is-restored' : ''}`} style={{'--tilt-x':`${tilt.x}deg`,'--tilt-y':`${tilt.y}deg`}} aria-label="Kitob maketi">
         <div className="book-shadow"/><div className="book" aria-hidden="true"><div className="page page-back"/><div className="page page-middle"/><div className="page page-front"><div className="page-rule"/><div className="page-eyebrow">KITOBXON KUTUBXONASI</div><div className="page-title">Mutolaa<br/>sokinlikdan<br/>boshlanadi</div><div className="page-mark">✦</div><div className="page-foot">BIR SAHIFA • BIR OLAM</div></div><div className="cover"><div className="cover-stamp">KITOBXON<br/>2026</div><div className="cover-art"><span/><span/><span/></div><div className="cover-title">KITOB<br/>VA TAFAKKUR</div><div className="cover-rule"/><div className="cover-subtitle">mutolaa kundaligi</div></div><div className="spine"/></div>
       </div>
       <div className="copy"><p className="eyebrow">KITOBXON · OFLAYN HOLAT</p><h1 id="title">Kitobxon biroz <em>sukutda.</em></h1><p className="lead">{slow ? 'Aloqa kutilganidan sekinroq. Sahifani yuklashga yana urinib ko‘ring.' : 'Internet aloqasi uzildi. Tarmoq tiklangach, o‘qiyotgan sahifangizga qaytasiz.'}</p><blockquote>“{quote}”</blockquote><div className="actions"><button className="primary" onClick={()=>ping(true)} disabled={checking}>{checking ? <><span className="spinner"/>Tekshirilmoqda…</> : 'Qayta urinish'}</button><a className="secondary" href={safeReturnUrl()}>Oldingi sahifaga qaytish <span aria-hidden="true">↗</span></a></div><p className="hint">Javoblaringiz va o‘qish holatingiz saqlangan bo‘lishi mumkin. Aloqa tiklangach, sahifani yangilang.</p></div>
