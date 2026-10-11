@@ -1,5 +1,8 @@
 /node_modules
 /offline-app/node_modules/
+/cookie.txt
+/.freebuff/
+/.osp/
 /public/hot
 /public/storage
 /storage/*.key
