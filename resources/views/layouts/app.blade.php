@@ -9,10 +9,7 @@
 
     @include('partials.design-system')
 
-    <!-- Alpine.js + Plugins (Collapse must load before Alpine starts) -->
-    <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- Vite Bundled Scripts (Pusher, Echo, Axios) -->
+    <!-- Vite Bundled Scripts (Alpine.js + Collapse, Pusher, Echo, Axios) -->
     @vite(['resources/js/app.js'])
 
     @if(class_exists('Livewire\Livewire'))

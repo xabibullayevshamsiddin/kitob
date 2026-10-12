@@ -65,7 +65,7 @@
             @endforeach
 
             {{-- "Ko'proq" dropdown --}}
-            <div class="relative flex items-stretch" x-data @click.outside="moreOpen = false">
+            <div class="relative flex items-stretch" @click.outside="moreOpen = false">
                 <button @click="moreOpen = !moreOpen" type="button"
                         class="relative inline-flex items-center gap-1.5 px-3 whitespace-nowrap font-medium select-none transition-colors duration-base {{ $moreActive ? 'text-paper' : 'text-mist hover:text-paper' }}"
                         :aria-expanded="moreOpen.toString()">
@@ -128,12 +128,12 @@
                 <span class="theme-spark theme-spark-6" aria-hidden="true"></span>
 
                 {{-- Sun icon (Dark rejimda ko'rinadi) --}}
-                <svg x-show="theme === 'dark'" x-cloak class="header-theme-sun w-4 h-4 text-amber-400 select-none transition-transform duration-base group-hover:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg x-show="theme === 'dark'" class="header-theme-sun w-4 h-4 text-amber-400 select-none transition-transform duration-base group-hover:rotate-45 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="4"/>
                     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
                 </svg>
                 {{-- Moon icon (Light rejimda ko'rinadi) --}}
-                <svg x-show="theme === 'light'" x-cloak class="header-theme-moon w-4 h-4 text-amber-600 select-none transition-transform duration-base group-hover:-rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg x-show="theme === 'light'" class="header-theme-moon w-4 h-4 text-amber-600 select-none transition-transform duration-base group-hover:-rotate-12 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
                 </svg>
             </button>
@@ -468,8 +468,8 @@
                             {{-- Mavzu almashtirgich (Profile Dropdown) --}}
                             <button @click="toggleTheme($event); userMenuOpen = false" type="button" data-theme-toggle class="w-full flex items-center justify-between px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
                                 <span class="flex items-center gap-2.5">
-                                    <svg x-show="theme === 'dark'" x-cloak class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                                    <svg x-show="theme === 'light'" x-cloak class="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                                    <svg x-show="theme === 'dark'" class="w-4 h-4 text-amber-400 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                                    <svg x-show="theme === 'light'" class="w-4 h-4 text-amber-600 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                                     <span x-text="theme === 'dark' ? 'Yorug\' rejim' : 'Tungi rejim'"></span>
                                 </span>
                                 <span class="px-1.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold"

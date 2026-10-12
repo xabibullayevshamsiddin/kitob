@@ -328,8 +328,10 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('globalAudioPlayer', () => ({
+(function() {
+    function registerGlobalAudioPlayer() {
+        if (!window.Alpine) return;
+        Alpine.data('globalAudioPlayer', () => ({
         isVisible: false,
         isMinimized: false,
         isPlaying: false,
@@ -707,8 +709,15 @@ document.addEventListener('alpine:init', () => {
                 }
             } catch(e) {}
         }
-    }));
-});
+        }));
+    }
+
+    if (window.Alpine) {
+        registerGlobalAudioPlayer();
+    } else {
+        document.addEventListener('alpine:init', registerGlobalAudioPlayer, { once: true });
+    }
+})();
 
 // Global API available from anywhere on the platform
 window.playGlobalAudio = function(trackData) {

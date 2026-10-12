@@ -1190,7 +1190,9 @@
     <!-- ── Motion Script (GSAP + Dynamic Rolling Counters) ── -->
     <script>
         let homeAnimationInitAttempts = 0;
+        let homeAnimationsInitialized = false;
         function initHomePageAnimations() {
+            if (homeAnimationsInitialized) return;
             if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
                 if (homeAnimationInitAttempts++ < 100) {
                     setTimeout(initHomePageAnimations, 50);
@@ -1207,6 +1209,7 @@
                 }
                 return;
             }
+            homeAnimationsInitialized = true;
             homeAnimationInitAttempts = 0;
 
             gsap.registerPlugin(ScrollTrigger);
@@ -1841,6 +1844,11 @@
                 console.warn('Animation init error:', e);
             }
         }
+
+        window.initHomePageAnimations = initHomePageAnimations;
+        window.addEventListener('kitobxon:gsap-ready', () => {
+            initHomePageAnimations();
+        });
 
         if (document.getElementById('scrolly-book-stage') && typeof gsap !== 'undefined') {
             initHomePageAnimations();

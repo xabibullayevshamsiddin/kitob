@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Catalog;
 
 use App\Models\Book;
+use App\Services\BookRecommendationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -149,8 +150,6 @@ class CatalogPage extends Component
             $query->orderBy('week_number', 'desc');
         }
 
-        $books = $query->paginate(12);
-
         $genres = Book::query()
             ->where('is_active', true)
             ->select('genre')
@@ -167,8 +166,24 @@ class CatalogPage extends Component
             $this->sortBy !== 'week_desc'
         );
 
+        $showRecommendations = $userId !== null
+            && $this->search === ''
+            && $this->genre === ''
+            && $this->format === 'all'
+            && $this->readingStatus === 'all';
+        $recommendations = $showRecommendations
+            ? app(BookRecommendationService::class)->forUser($user, 4)
+            : collect();
+
+        if ($showRecommendations && $recommendations->isNotEmpty()) {
+            $query->whereNotIn('id', $recommendations->pluck('id'));
+        }
+        $books = $query->paginate(12);
+
         return view('livewire.catalog.catalog-page', [
             'books'             => $books,
+            'recommendations'   => $recommendations,
+            'showRecommendations' => $showRecommendations,
             'genres'            => $genres,
             'totalBooksCount'   => $totalBooksCount,
             'pdfBooksCount'     => $pdfBooksCount,

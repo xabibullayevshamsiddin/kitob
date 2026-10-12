@@ -144,8 +144,10 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('bookShareModal', () => ({
+(function() {
+    function registerBookShareModal() {
+        if (!window.Alpine) return;
+        Alpine.data('bookShareModal', () => ({
         isOpen: false,
         copied: false,
         book: {
@@ -235,8 +237,15 @@ document.addEventListener('alpine:init', () => {
             }
             setTimeout(() => { this.copied = false; }, 2500);
         }
-    }));
-});
+        }));
+    }
+
+    if (window.Alpine) {
+        registerBookShareModal();
+    } else {
+        document.addEventListener('alpine:init', registerBookShareModal, { once: true });
+    }
+})();
 
 // Helper available anywhere globally
 window.openBookShare = function(bookData = {}) {

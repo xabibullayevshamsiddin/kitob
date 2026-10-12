@@ -248,8 +248,34 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/books/{book}/read/{chapter}', function ($book, $chapter) {
         $book    = \App\Models\Book::findOrFail($book);
         $chapter = \App\Models\BookChapter::where('book_id', $book->id)->findOrFail($chapter);
-        return view('pages.reader', compact('book', 'chapter'));
+        $user = request()->user();
+        $bookmarks = $user->bookmarks()
+            ->where('book_id', $book->id)
+            ->where('chapter_id', $chapter->id)
+            ->orderBy('position')
+            ->get(['id', 'position', 'note']);
+        $notes = $user->notes()
+            ->where('book_id', $book->id)
+            ->where('chapter_id', $chapter->id)
+            ->latest()
+            ->take(20)
+            ->get(['id', 'selected_text', 'note_text', 'created_at'])
+            ->map(fn ($note) => [
+                'id' => $note->id,
+                'selected_text' => $note->selected_text,
+                'note_text' => $note->note_text,
+                'created_at' => $note->created_at?->format('d.m.Y H:i'),
+            ]);
+
+        return view('pages.reader', compact('book', 'chapter', 'bookmarks', 'notes'));
     })->name('reader.show');
+
+    Route::post('/reader/bookmarks', [\App\Http\Controllers\ReaderAnnotationController::class, 'storeBookmark'])
+        ->name('reader.bookmarks.store');
+    Route::delete('/reader/bookmarks/{bookmark}', [\App\Http\Controllers\ReaderAnnotationController::class, 'destroyBookmark'])
+        ->name('reader.bookmarks.destroy');
+    Route::post('/reader/notes', [\App\Http\Controllers\ReaderAnnotationController::class, 'storeNote'])
+        ->name('reader.notes.store');
 
     // reader alias route
     Route::get('/reader/{book}', function ($bookId) {

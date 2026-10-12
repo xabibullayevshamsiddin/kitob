@@ -40,6 +40,23 @@
         </div>
     </div>
 
+    @if($showRecommendations && $recommendations->isNotEmpty())
+        <section class="space-y-4" aria-labelledby="catalog-recommendations-title">
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <span class="ks-eyebrow">Sizning mutolaangiz asosida</span>
+                    <h2 id="catalog-recommendations-title" class="mt-1 font-display text-xl font-bold text-paper sm:text-2xl">Sizga mos kitoblar</h2>
+                </div>
+                <p class="text-xs text-mist">O‘qigan kitoblaringiz janrlariga qarab tanlandi.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4">
+                @foreach($recommendations as $recommendedBook)
+                    <x-ui.book-card :book="$recommendedBook" wire:key="recommended-book-{{ $recommendedBook->id }}" />
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <!-- Filter Bar Card -->
     <div class="ks-panel p-4 sm:p-5 space-y-4">
         

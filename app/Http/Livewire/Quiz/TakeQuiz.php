@@ -7,6 +7,7 @@ use App\Models\Book;
 use App\Models\PointTransaction;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
+use App\Models\QuizAttemptDraft;
 use App\Services\Gamification\PointsService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -69,6 +70,7 @@ class TakeQuiz extends Component
     /** True when the attempt was auto-finished because time ran out */
     public bool $timedOut = false;
     public bool $pendingReview = false;
+    public bool $resumedSavedDraft = false;
 
     /** All quiz data for rendering */
     public array $questions = [];
@@ -87,6 +89,7 @@ class TakeQuiz extends Component
 
     public function restartQuiz(): void
     {
+        $this->forgetAttemptDraft();
         $this->loadQuiz($this->quizId);
     }
 
@@ -142,6 +145,11 @@ class TakeQuiz extends Component
                 ])->all(),
             ];
         })->all();
+
+        $this->restoreSavedAttemptDraft();
+        if (!$this->resumedSavedDraft) {
+            $this->persistAttemptDraft();
+        }
     }
 
     protected function resetQuizState(): void
@@ -163,6 +171,7 @@ class TakeQuiz extends Component
         $this->startedAt = time();
         $this->timedOut = false;
         $this->pendingReview = false;
+        $this->resumedSavedDraft = false;
     }
 
     /**
@@ -220,6 +229,163 @@ class TakeQuiz extends Component
             ? (string) ($draft['written_answer'] ?? '')
             : '';
         $this->resetErrorBag();
+    }
+
+    public function updatedWrittenAnswer(): void
+    {
+        if (($this->questions[$this->currentQuestion]['type'] ?? null) !== 'text') {
+            return;
+        }
+
+        $this->writtenAnswer = mb_substr($this->writtenAnswer, 0, 5000);
+        $this->saveCurrentDraft();
+        $this->persistAttemptDraft();
+    }
+
+    public function chooseOption(int $optionId): void
+    {
+        $question = $this->questions[$this->currentQuestion] ?? null;
+        if (!$question || ($question['type'] ?? 'single') !== 'single' || $this->finished) {
+            return;
+        }
+
+        $belongsToQuestion = DB::table('quiz_options')
+            ->where('id', $optionId)
+            ->where('question_id', $question['id'])
+            ->exists();
+        if (!$belongsToQuestion) {
+            return;
+        }
+
+        $this->selectedOption = $optionId;
+        $this->saveCurrentDraft();
+        $this->persistAttemptDraft();
+    }
+
+    protected function sanitizeDraftAnswers(array $answers): array
+    {
+        $safeAnswers = [];
+
+        foreach ($answers as $index => $answer) {
+            $index = filter_var($index, FILTER_VALIDATE_INT);
+            if ($index === false || !isset($this->questions[$index]) || !is_array($answer)) {
+                continue;
+            }
+
+            $question = $this->questions[$index];
+            if (($question['type'] ?? 'single') === 'text') {
+                if (($answer['type'] ?? null) === 'text') {
+                    $safeAnswers[$index] = [
+                        'type' => 'text',
+                        'written_answer' => mb_substr((string) ($answer['written_answer'] ?? ''), 0, 5000),
+                    ];
+                }
+                continue;
+            }
+
+            $optionId = filter_var($answer['selected_option'] ?? null, FILTER_VALIDATE_INT);
+            if (($answer['type'] ?? null) !== 'single' || $optionId === false || $optionId === null) {
+                continue;
+            }
+
+            $belongsToQuestion = DB::table('quiz_options')
+                ->where('id', $optionId)
+                ->where('question_id', $question['id'])
+                ->exists();
+            if ($belongsToQuestion) {
+                $safeAnswers[$index] = ['type' => 'single', 'selected_option' => $optionId];
+            }
+        }
+
+        return $safeAnswers;
+    }
+
+    protected function restoreSavedAttemptDraft(): void
+    {
+        if (!Auth::check() || !$this->quizId || empty($this->questions)) {
+            return;
+        }
+
+        $draft = QuizAttemptDraft::query()
+            ->where('user_id', Auth::id())
+            ->where('quiz_id', $this->quizId)
+            ->first();
+        if (!$draft) {
+            return;
+        }
+
+        $this->draftAnswers = $this->sanitizeDraftAnswers($draft->answers ?? []);
+        $this->currentQuestion = min(max(0, $draft->current_question), count($this->questions) - 1);
+        $this->startedAt = $draft->started_at?->timestamp ?? time();
+        $this->resumedSavedDraft = true;
+        $this->restoreQuestionDraft($this->currentQuestion);
+    }
+
+    public function restoreClientDraft(array $answers, int $currentQuestion, int $savedAt): void
+    {
+        if (!Auth::check() || !$this->quizId || $this->finished || empty($this->questions)) {
+            return;
+        }
+
+        $draft = QuizAttemptDraft::query()
+            ->where('user_id', Auth::id())
+            ->where('quiz_id', $this->quizId)
+            ->first();
+
+        $latestCompletedAt = QuizAttempt::query()
+            ->where('user_id', Auth::id())
+            ->where('quiz_id', $this->quizId)
+            ->whereNotNull('completed_at')
+            ->max('completed_at');
+        if ($latestCompletedAt && (int) (strtotime($latestCompletedAt) * 1000) >= $savedAt) {
+            $this->dispatchBrowserEvent('quiz-draft-cleared', ['quizId' => $this->quizId]);
+            return;
+        }
+
+        if ($draft && $draft->updated_at && $draft->updated_at->valueOf() >= $savedAt) {
+            return;
+        }
+
+        $this->draftAnswers = $this->sanitizeDraftAnswers($answers);
+        $this->currentQuestion = min(max(0, $currentQuestion), count($this->questions) - 1);
+        $this->restoreQuestionDraft($this->currentQuestion);
+        $this->resumedSavedDraft = true;
+        $this->persistAttemptDraft();
+    }
+
+    protected function persistAttemptDraft(): void
+    {
+        if (!Auth::check() || !$this->quizId || $this->finished) {
+            return;
+        }
+
+        QuizAttemptDraft::updateOrCreate(
+            ['user_id' => Auth::id(), 'quiz_id' => $this->quizId],
+            [
+                'current_question' => $this->currentQuestion,
+                'answers' => $this->draftAnswers,
+                'started_at' => $this->startedAt ? date('Y-m-d H:i:s', $this->startedAt) : now(),
+            ]
+        );
+    }
+
+    protected function forgetAttemptDraft(): void
+    {
+        if (!Auth::check() || !$this->quizId) {
+            return;
+        }
+
+        QuizAttemptDraft::query()
+            ->where('user_id', Auth::id())
+            ->where('quiz_id', $this->quizId)
+            ->delete();
+        $this->dispatchBrowserEvent('quiz-draft-cleared', ['quizId' => $this->quizId]);
+    }
+
+    public function discardDraftAndRestart(): void
+    {
+        $this->forgetAttemptDraft();
+        $this->loadQuiz($this->quizId);
     }
 
     protected function gradeDraftAnswers(): void
@@ -370,6 +536,7 @@ class TakeQuiz extends Component
         if ($this->currentQuestion < count($this->questions) - 1) {
             $this->currentQuestion++;
             $this->restoreQuestionDraft($this->currentQuestion);
+            $this->persistAttemptDraft();
         } else {
             $this->finishQuiz();
         }
@@ -424,6 +591,7 @@ class TakeQuiz extends Component
         $this->saveCurrentDraft();
         $this->currentQuestion--;
         $this->restoreQuestionDraft($this->currentQuestion);
+        $this->persistAttemptDraft();
     }
 
     protected function finishQuiz(): void
@@ -465,6 +633,7 @@ class TakeQuiz extends Component
             $this->pointsAwarded = 0;
             $this->maxScore = $this->maxRewardPoints;
             $this->pendingReview = true;
+            $this->forgetAttemptDraft();
             $this->toastInfo('Yozma javoblar tekshirilgach natija va ball ko‘rinadi.', 'Javoblar qabul qilindi');
 
             return;
@@ -514,6 +683,7 @@ class TakeQuiz extends Component
                 );
             }
         });
+        $this->forgetAttemptDraft();
 
         // Tepadagi navbar ball hisoblagichiga jonli animatsiya yuborish
         if ($pointsToAward > 0) {

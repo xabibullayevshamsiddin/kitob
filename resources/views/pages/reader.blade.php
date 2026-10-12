@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
-      x-data="readerApp()" 
+      x-data="readerApp(@js($bookmarks->toArray()), @js($notes->toArray()))" 
       :class="{ 'dark': theme === 'dark', 'reader-sepia': theme === 'sepia', 'reader-light': theme === 'light' }">
 <head>
     <meta charset="utf-8">
@@ -130,6 +130,67 @@
             <h1 class="text-3xl sm:text-4xl font-bold font-serif tracking-tight reader-text leading-tight">{{ $chapter->title }}</h1>
         </div>
 
+        <section class="mb-8 rounded-panel border border-ink-border bg-ink-900/60 p-4 sm:p-5 reader-ctrl" aria-labelledby="reader-notes-title">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 id="reader-notes-title" class="text-sm font-bold">Xatcho‘p va qaydlar</h2>
+                    <p class="mt-1 text-xs opacity-70">O‘qiyotgan joyingizni belgilang yoki fikringizni yozib qoldiring.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" @click="addBookmark()" :disabled="savingBookmark"
+                            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-btn border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-500 transition hover:bg-amber-500/20 disabled:opacity-50">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4z"/></svg>
+                        <span x-text="savingBookmark ? 'Saqlanmoqda…' : 'Shu joyni belgilash'"></span>
+                    </button>
+                    <button type="button" @click="openNoteForm()"
+                            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-btn border border-ink-border px-3.5 py-2 text-xs font-semibold transition hover:border-amber-500/40 hover:text-amber-500">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                        Qayd yozish
+                    </button>
+                </div>
+            </div>
+
+            <div x-show="noteFormOpen" x-cloak class="mt-4 space-y-3 border-t border-ink-border pt-4">
+                <label for="reader-note-text" class="block text-xs font-semibold">Shaxsiy qaydingiz</label>
+                <textarea id="reader-note-text" x-model="noteDraft" rows="3" maxlength="5000"
+                          class="ks-input resize-y" placeholder="Ushbu bobdan eslab qolmoqchi bo‘lgan fikringiz…"></textarea>
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <button type="button" @click="noteFormOpen = false" class="min-h-11 rounded-btn px-4 py-2 text-xs font-semibold opacity-75 hover:opacity-100">Bekor qilish</button>
+                    <button type="button" @click="saveNote()" :disabled="savingNote || !noteDraft.trim()"
+                            class="min-h-11 rounded-btn bg-amber-500 px-4 py-2 text-xs font-bold text-ink-950 transition hover:bg-amber-400 disabled:opacity-50"
+                            x-text="savingNote ? 'Saqlanmoqda…' : 'Qaydni saqlash'"></button>
+                </div>
+            </div>
+
+            <div class="mt-4 grid gap-4 border-t border-ink-border pt-4 md:grid-cols-2">
+                <div>
+                    <h3 class="mb-2 text-[11px] font-bold uppercase tracking-wider opacity-70">Xatcho‘plar (<span x-text="bookmarks.length"></span>)</h3>
+                    <template x-if="bookmarks.length === 0"><p class="text-xs opacity-60">Hozircha xatcho‘p yo‘q.</p></template>
+                    <ul class="space-y-2">
+                        <template x-for="bookmark in bookmarks" :key="bookmark.id">
+                            <li class="flex items-center justify-between gap-2 rounded-btn border border-ink-border/70 px-3 py-2">
+                                <button type="button" @click="jumpToBookmark(bookmark)" class="min-h-9 min-w-0 flex-1 truncate text-left text-xs font-medium hover:text-amber-500" x-text="'Belgilangan joy ' + formatPosition(bookmark.position)"></button>
+                                <button type="button" @click="removeBookmark(bookmark.id)" class="min-h-9 min-w-9 rounded-btn text-xs text-rose-400 hover:bg-rose-500/10" :aria-label="'Xatcho‘pni o‘chirish'">×</button>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="mb-2 text-[11px] font-bold uppercase tracking-wider opacity-70">Qaydlar (<span x-text="notes.length"></span>)</h3>
+                    <template x-if="notes.length === 0"><p class="text-xs opacity-60">Hozircha qayd yo‘q.</p></template>
+                    <ul class="max-h-52 space-y-2 overflow-y-auto">
+                        <template x-for="note in notes" :key="note.id">
+                            <li class="rounded-btn border border-ink-border/70 px-3 py-2">
+                                <p class="whitespace-pre-wrap break-words text-xs" x-text="note.note_text"></p>
+                                <p class="mt-1 text-[10px] opacity-60" x-text="note.created_at"></p>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+            <p x-show="annotationMessage" x-text="annotationMessage" role="status" aria-live="polite" class="mt-3 text-xs text-emerald-500"></p>
+        </section>
+
         <!-- Main Chapter Text -->
         <article class="reader-content leading-[1.75] transition-all reader-text text-justify"
                  :class="{ 'reader-serif': fontFamily === 'serif', 'reader-sans': fontFamily === 'sans' }"
@@ -150,7 +211,7 @@
     </main>
 
     <script>
-        function readerApp() {
+        function readerApp(initialBookmarks = [], initialNotes = []) {
             return {
                 theme: localStorage.getItem('reader_theme') || 'dark',
                 fontFamily: localStorage.getItem('reader_font') || 'serif',
@@ -160,6 +221,98 @@
                 isIdle: false,
                 idleTimer: null,
                 heartbeatInterval: null,
+                bookmarks: initialBookmarks,
+                notes: initialNotes,
+                noteFormOpen: false,
+                noteDraft: '',
+                savingBookmark: false,
+                savingNote: false,
+                annotationMessage: '',
+                annotationTimer: null,
+                selectedText: '',
+
+                async annotationRequest(url, method, body = null) {
+                    const response = await fetch(url, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: body ? JSON.stringify(body) : null
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.message || 'Saqlashda xatolik yuz berdi.');
+                    return data;
+                },
+
+                showAnnotationMessage(message) {
+                    this.annotationMessage = message;
+                    clearTimeout(this.annotationTimer);
+                    this.annotationTimer = setTimeout(() => this.annotationMessage = '', 3500);
+                },
+
+                async addBookmark() {
+                    if (this.savingBookmark) return;
+                    this.savingBookmark = true;
+                    try {
+                        const data = await this.annotationRequest("{{ route('reader.bookmarks.store') }}", 'POST', {
+                            book_id: {{ $book->id }}, chapter_id: {{ $chapter->id }}, position: Math.round(window.scrollY)
+                        });
+                        this.bookmarks.push(data.bookmark);
+                        this.showAnnotationMessage('Xatcho‘p saqlandi.');
+                    } catch (error) {
+                        this.showAnnotationMessage(error.message || 'Xatcho‘pni saqlab bo‘lmadi.');
+                    } finally {
+                        this.savingBookmark = false;
+                    }
+                },
+
+                async removeBookmark(id) {
+                    try {
+                        const destroyUrl = @js(route('reader.bookmarks.destroy', ['bookmark' => '__BOOKMARK_ID__']));
+                        await this.annotationRequest(destroyUrl.replace('__BOOKMARK_ID__', encodeURIComponent(id)), 'DELETE');
+                        this.bookmarks = this.bookmarks.filter(bookmark => bookmark.id !== id);
+                        this.showAnnotationMessage('Xatcho‘p o‘chirildi.');
+                    } catch (error) {
+                        this.showAnnotationMessage(error.message || 'Xatcho‘pni o‘chirib bo‘lmadi.');
+                    }
+                },
+
+                jumpToBookmark(bookmark) {
+                    window.scrollTo({ top: Number(bookmark.position) || 0, behavior: 'smooth' });
+                },
+
+                formatPosition(position) {
+                    const percent = Math.max(0, Math.min(100, Math.round((Number(position) / Math.max(1, document.documentElement.scrollHeight - window.innerHeight)) * 100)));
+                    return percent + '%';
+                },
+
+                openNoteForm() {
+                    this.selectedText = window.getSelection()?.toString().trim().slice(0, 5000) || '';
+                    this.noteFormOpen = true;
+                    this.$nextTick(() => document.getElementById('reader-note-text')?.focus());
+                },
+
+                async saveNote() {
+                    const noteText = this.noteDraft.trim();
+                    if (!noteText || this.savingNote) return;
+                    this.savingNote = true;
+                    try {
+                        const data = await this.annotationRequest("{{ route('reader.notes.store') }}", 'POST', {
+                            book_id: {{ $book->id }}, chapter_id: {{ $chapter->id }},
+                            selected_text: this.selectedText, note_text: noteText
+                        });
+                        this.notes.unshift(data.note);
+                        this.noteDraft = '';
+                        this.noteFormOpen = false;
+                        this.showAnnotationMessage('Qayd saqlandi. Profilingizdagi “Qaydlar” bo‘limida ham topasiz.');
+                    } catch (error) {
+                        this.showAnnotationMessage(error.message || 'Qaydni saqlab bo‘lmadi.');
+                    } finally {
+                        this.savingNote = false;
+                    }
+                },
 
                 init() {
                     window.addEventListener('scroll', () => {
