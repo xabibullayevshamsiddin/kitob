@@ -19,6 +19,10 @@
 - Reader provides the ideal interaction surface: an Alpine root, scroll percentage, and a chapter content article. Persist bookmark scroll offsets and notes to the existing tables; expose them in the reader and keep private ownership checks server-side.
 - Quiz answer edits currently use `wire:model.defer` and option selection via `$set`, so autosave must explicitly persist on text update/choice, not just question navigation. Resume also needs to retain the original `started_at` to prevent refreshing a timed quiz from resetting its clock.
 - Use a dedicated quiz-draft table rather than incomplete `quiz_attempts` rows; the latter feed result counts, duplicate-attempt checks, teacher review, and reward logic.
-- The first focused reader test launch via `php artisan test` failed before PHPUnit because Symfony Process could not write to `D:\OSPanel\userdata\temp`; no test code ran. Next try direct PHPUnit invocation.
-- Added reader annotation endpoints/UI and a catalog recommendation service/view; direct PHPUnit verification remains pending.
+- `php artisan test` failed before PHPUnit because Symfony Process could not write to `D:\OSPanel\userdata\temp`. Invoking `php vendor/bin/phpunit` directly bypassed it successfully.
+- Reader annotation/recommendation/draft feature tests pass (7 tests, 32 assertions); existing quiz timer and written-review tests pass (17 tests, 138 assertions).
+- Quiz drafts live in `quiz_attempt_drafts` and are not counted as submitted attempts; original `started_at` is restored, so a page refresh cannot reset a timed quiz.
+- Local fallback is keyed by authenticated user ID and quiz ID, revalidated against current question/option IDs, and only used if newer than the server draft and not superseded by a completed attempt.
+- Profile pages are publicly viewable, so notes are now fetched and rendered only for their owner; profile tab changes are also server-guarded.
+- The existing pending streak/shop migration is outside this task; only the quiz-draft migration was applied locally.
 

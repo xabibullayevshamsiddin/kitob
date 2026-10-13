@@ -15,13 +15,17 @@ class UserStreak extends Model
         'user_id',
         'current_streak',
         'longest_streak',
+        'freeze_count',
+        'last_frozen_date',
         'last_active_date',
     ];
 
     protected $casts = [
         'last_active_date' => 'date',
+        'last_frozen_date' => 'date',
         'current_streak'   => 'integer',
         'longest_streak'   => 'integer',
+        'freeze_count'     => 'integer',
     ];
 
     // -------------------------------------------------------------------------

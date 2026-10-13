@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Kitobxon — Har hafta bitta sara kitob, chuqur tahlil va gamifikatsiya. O'zbekistondagi eng ilg'or kitobxonlar ekotizimi.">
-    <title>Kitobxon — @yield('title', __('site.home.hero_title') . __('site.home.hero_title_bold'))</title>
+    <x-seo-meta :title="__('site.home.hero_title') . __('site.home.hero_title_bold')" :description="__('site.home.hero_subtitle')" />
 
     @include('partials.design-system')
     @vite(['resources/js/app.js'])
@@ -164,7 +163,9 @@
         /* Scrollytelling 3D Book Stage (Apple-grade Physics + Interactive 3D Drag/Swipe) */
         .scrolly-book-stage {
             perspective: 1600px;
+            -webkit-perspective: 1600px;
             transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
             cursor: grab;
             user-select: none;
             -webkit-user-select: none;
@@ -177,7 +178,9 @@
         .scrolly-book-cover,
         .scrolly-book-leaf {
             transform-origin: left center;
+            -webkit-transform-origin: left center;
             transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
             will-change: transform;
             border-radius: 3px 8px 8px 3px;
             transition: box-shadow 0.3s ease;
@@ -194,9 +197,11 @@
         .scrolly-cover-back,
         .scrolly-leaf-back {
             transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
         }
         .scrolly-book-inside {
             transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
         }
         /* Dog-ear page corner curl cue */
         .scrolly-dogear {
@@ -378,7 +383,7 @@
         </div>
 
         <!-- Inner Centered Container -->
-        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 relative z-10 overflow-hidden lg:overflow-visible">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 relative z-10 overflow-x-clip lg:overflow-visible">
             <!-- Eyebrow Bar: Chapter / Week Indicator -->
             <div class="scrolly-eyebrow-bar mb-6 lg:mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-ink-border/50 pb-3">
                 <div class="flex items-center gap-2">
@@ -1382,9 +1387,9 @@
 
                     function updateControlsFromProgress(p) {
                         let page = 0;
-                        if (p >= 0.70) page = 3;
-                        else if (p >= 0.50) page = 2;
-                        else if (p >= 0.30) page = 1;
+                        if (p >= 0.60) page = 3;
+                        else if (p >= 0.40) page = 2;
+                        else if (p >= 0.15) page = 1;
                         else page = 0;
 
                         if (page !== currentPage) {
@@ -1521,7 +1526,7 @@
                         }
                     }, 0.70);
 
-                    // ── ATTACH SCROLLTRIGGER (DESKTOP PIN + MOBILE FLUID SCRUB) ──
+                    // ── ATTACH SCROLLTRIGGER (DESKTOP PIN + MOBILE 3D AUTO-REVEAL & INTERACTIVE FLIP) ──
                     window.bookRevealMedia = ScrollTrigger.matchMedia({
                         "(min-width: 1024px) and (prefers-reduced-motion: no-preference)": function() {
                             updateUI(0);
@@ -1538,38 +1543,38 @@
                             });
                         },
                         "(max-width: 1023px) and (prefers-reduced-motion: no-preference)": function() {
-                            gsap.set(cover, { rotateY: -152, zIndex: 12 });
-                            if (leaf1) gsap.set(leaf1, { rotateY: -158, zIndex: 14 });
-                            if (leaf2) gsap.set(leaf2, { rotateY: -148, zIndex: 16 });
-                            gsap.set(stage, { x: 0 });
+                            masterTl.progress(0);
+                            updateUI(0);
+
                             gsap.set(contentPanel, { opacity: 1, x: 0 });
-                            gsap.set(contentItems, { opacity: 0, y: 16 });
+                            gsap.set(contentItems, { opacity: 1, y: 0 });
                             gsap.set(statsRow, { opacity: 1, y: 0 });
-                            updateUI(maxPages);
+
                             statElements.forEach((el, idx) => {
                                 el.textContent = (statTargets[idx] || 0).toLocaleString('en-US');
                             });
 
-                            const mobileReveal = gsap.timeline({
-                                scrollTrigger: {
-                                    trigger: bookRevealSection,
-                                    start: 'top 76%',
-                                    toggleActions: 'play none none reverse'
+                            let hasAutoOpened = false;
+
+                            const mobileST = ScrollTrigger.create({
+                                id: 'book-reveal-mobile-st',
+                                trigger: bookRevealSection,
+                                start: 'top 75%',
+                                onEnter: () => {
+                                    if (!hasAutoOpened) {
+                                        hasAutoOpened = true;
+                                        goToPage(1, 0.9);
+                                    }
                                 }
                             });
-                            mobileReveal.to(contentItems, {
-                                opacity: 1,
-                                y: 0,
-                                duration: 0.45,
-                                stagger: 0.08,
-                                ease: 'power2.out'
-                            });
-                            return () => mobileReveal.kill();
+
+                            return () => {
+                                if (mobileST) mobileST.kill();
+                            };
                         },
                         "(prefers-reduced-motion: reduce)": function() {
-                            gsap.set(cover, { rotateY: -152, zIndex: 12 });
-                            if (leaf1) gsap.set(leaf1, { rotateY: -158, zIndex: 14 });
-                            if (leaf2) gsap.set(leaf2, { rotateY: -148, zIndex: 16 });
+                            masterTl.progress(0.70);
+                            updateUI(maxPages);
                             gsap.set(dragHint, { autoAlpha: 0 });
                             gsap.set(contentPanel, { opacity: 1, x: 0 });
                             gsap.set(contentItems, { opacity: 1, y: 0 });
@@ -1577,7 +1582,6 @@
                             statElements.forEach((el, idx) => {
                                 el.textContent = (statTargets[idx] || 0).toLocaleString('en-US');
                             });
-                            updateUI(maxPages);
                         }
                     });
 
@@ -1615,11 +1619,19 @@
                             });
                         } else if (prefersReduced()) {
                             masterTl.progress(targetProg);
+                            updateUI(targetPage);
                         } else {
                             gsap.to(masterTl, {
                                 progress: targetProg,
                                 duration: duration,
-                                ease: "power2.out"
+                                ease: "power2.out",
+                                overwrite: "auto",
+                                onUpdate: () => {
+                                    updateControlsFromProgress(masterTl.progress());
+                                },
+                                onComplete: () => {
+                                    updateUI(targetPage);
+                                }
                             });
                         }
                     }
@@ -1650,7 +1662,20 @@
                         });
                     });
 
-                    // ── MOUSE / TOUCH DRAG & SWIPE GESTURE ENGINE ──
+                    // Hero and bottom scroll cue smooth trigger
+                    document.querySelectorAll('a[href="#book-reveal-section"]').forEach((link) => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            if (bookRevealSection) {
+                                bookRevealSection.scrollIntoView({ behavior: 'smooth' });
+                                setTimeout(() => {
+                                    goToPage(1, 0.9);
+                                }, 500);
+                            }
+                        });
+                    });
+
+                    // ── MOUSE / TOUCH DRAG & SWIPE GESTURE ENGINE (DESKTOP & MOBILE) ──
                     if (stage) {
                         let isPointerDown = false;
                         let startX = 0;
@@ -1660,59 +1685,94 @@
                         let startTime = 0;
                         let startProg = 0;
                         let isHorizontalDrag = false;
+                        let isVerticalScroll = false;
+                        let activePointerId = null;
 
                         stage.addEventListener('pointerdown', (e) => {
                             if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.scrolly-dogear')) return;
 
                             isPointerDown = true;
                             isHorizontalDrag = false;
+                            isVerticalScroll = false;
                             startX = e.clientX;
                             startY = e.clientY;
                             currentX = e.clientX;
                             currentY = e.clientY;
                             startTime = performance.now();
                             startProg = masterTl.progress();
+                            activePointerId = e.pointerId;
+
+                            try {
+                                if (stage.setPointerCapture) {
+                                    stage.setPointerCapture(e.pointerId);
+                                }
+                            } catch (_) {}
+
                             stage.classList.add('is-dragging');
                         });
 
-                        window.addEventListener('pointermove', (e) => {
+                        stage.addEventListener('pointermove', (e) => {
                             if (!isPointerDown) return;
+                            if (activePointerId !== null && e.pointerId !== activePointerId) return;
 
                             currentX = e.clientX;
                             currentY = e.clientY;
                             const diffX = currentX - startX;
                             const diffY = currentY - startY;
 
-                            if (!isHorizontalDrag) {
+                            if (!isHorizontalDrag && !isVerticalScroll) {
                                 if (Math.abs(diffX) > 8 && Math.abs(diffX) > Math.abs(diffY)) {
                                     isHorizontalDrag = true;
                                 } else if (Math.abs(diffY) > 10) {
+                                    isVerticalScroll = true;
                                     isPointerDown = false;
                                     stage.classList.remove('is-dragging');
+                                    try {
+                                        if (stage.releasePointerCapture && activePointerId !== null) {
+                                            stage.releasePointerCapture(activePointerId);
+                                        }
+                                    } catch (_) {}
                                     return;
                                 }
                             }
 
                             if (isHorizontalDrag) {
-                                e.preventDefault();
-                                const stageWidth = stage.offsetWidth || 280;
-                                const deltaProg = -(diffX / stageWidth) * 0.28;
-                                const newProg = Math.max(0, Math.min(1, startProg + deltaProg));
+                                if (e.cancelable) e.preventDefault();
+                                const stageWidth = stage.offsetWidth || 260;
+                                const deltaProg = -(diffX / stageWidth) * 0.35;
+                                const newProg = Math.max(0, Math.min(0.70, startProg + deltaProg));
                                 masterTl.progress(newProg);
                             }
                         }, { passive: false });
 
-                        function onPointerRelease() {
+                        function onPointerRelease(e) {
                             if (!isPointerDown) return;
+                            if (activePointerId !== null && e && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
+
                             isPointerDown = false;
                             stage.classList.remove('is-dragging');
+                            try {
+                                if (stage.releasePointerCapture && activePointerId !== null) {
+                                    stage.releasePointerCapture(activePointerId);
+                                }
+                            } catch (_) {}
+                            activePointerId = null;
+
+                            if (e && e.type === 'pointercancel') {
+                                if (isHorizontalDrag) {
+                                    goToPage(currentPage, 0.3);
+                                }
+                                return;
+                            }
 
                             if (!isHorizontalDrag) {
-                                // Simple tap: right half = next, left half = prev
-                                const rect = stage.getBoundingClientRect();
-                                const tapRatio = (startX - rect.left) / rect.width;
-                                if (tapRatio > 0.6) goToPage(currentPage + 1);
-                                else if (tapRatio < 0.3) goToPage(currentPage - 1);
+                                const totalMovement = Math.hypot(currentX - startX, currentY - startY);
+                                if (totalMovement < 12) {
+                                    const rect = stage.getBoundingClientRect();
+                                    const tapRatio = (startX - rect.left) / rect.width;
+                                    if (tapRatio > 0.58) goToPage(currentPage + 1);
+                                    else if (tapRatio < 0.38) goToPage(currentPage - 1);
+                                }
                                 return;
                             }
 
@@ -1720,17 +1780,17 @@
                             const elapsed = performance.now() - startTime;
                             const velocity = Math.abs(diffX) / (elapsed || 1);
 
-                            if (diffX < -35 || (diffX < -15 && velocity > 0.3)) {
+                            if (diffX < -28 || (diffX < -12 && velocity > 0.25)) {
                                 goToPage(currentPage + 1);
-                            } else if (diffX > 35 || (diffX > 15 && velocity > 0.3)) {
+                            } else if (diffX > 28 || (diffX > 12 && velocity > 0.25)) {
                                 goToPage(currentPage - 1);
                             } else {
-                                goToPage(currentPage, 0.4);
+                                goToPage(currentPage, 0.35);
                             }
                         }
 
-                        window.addEventListener('pointerup', onPointerRelease);
-                        window.addEventListener('pointercancel', onPointerRelease);
+                        stage.addEventListener('pointerup', onPointerRelease);
+                        stage.addEventListener('pointercancel', onPointerRelease);
                     }
 
                 };

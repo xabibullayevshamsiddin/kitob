@@ -151,7 +151,30 @@
             </div>
 
             <div x-show="noteFormOpen" x-cloak class="mt-4 space-y-3 border-t border-ink-border pt-4">
-                <label for="reader-note-text" class="block text-xs font-semibold">Shaxsiy qaydingiz</label>
+                <p class="text-xs text-mist">Qayd hozir o‘qiyotgan joyingizga saqlanadi: <span class="font-semibold text-amber-400" x-text="formatLocation(currentPosition)"></span>.</p>
+                <div class="flex items-center justify-between">
+                    <label for="reader-note-text" class="block text-xs font-semibold">Shaxsiy qayd va matn rangi</label>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" @click="noteColor = 'amber'" :aria-pressed="noteColor === 'amber'" :class="noteColor === 'amber' ? 'ring-2 ring-amber-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="Sariq rang"><span class="h-5 w-5 rounded-full bg-amber-400"></span></button>
+                        <button type="button" @click="noteColor = 'emerald'" :aria-pressed="noteColor === 'emerald'" :class="noteColor === 'emerald' ? 'ring-2 ring-emerald-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="Yashil rang"><span class="h-5 w-5 rounded-full bg-emerald-400"></span></button>
+                        <button type="button" @click="noteColor = 'sky'" :aria-pressed="noteColor === 'sky'" :class="noteColor === 'sky' ? 'ring-2 ring-sky-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="Moviy rang"><span class="h-5 w-5 rounded-full bg-sky-400"></span></button>
+                        <button type="button" @click="noteColor = 'rose'" :aria-pressed="noteColor === 'rose'" :class="noteColor === 'rose' ? 'ring-2 ring-rose-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="Qizil rang"><span class="h-5 w-5 rounded-full bg-rose-400"></span></button>
+                        <button type="button" @click="noteColor = 'purple'" :aria-pressed="noteColor === 'purple'" :class="noteColor === 'purple' ? 'ring-2 ring-purple-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="Binafsha rang"><span class="h-5 w-5 rounded-full bg-purple-400"></span></button>
+                    </div>
+                </div>
+                <template x-if="selectedText">
+                    <div class="p-2.5 rounded-btn bg-ink-950/70 border text-xs italic font-serif flex items-center justify-between gap-2"
+                         :class="{
+                             'border-amber-400/50 text-amber-200': noteColor === 'amber',
+                             'border-emerald-400/50 text-emerald-200': noteColor === 'emerald',
+                             'border-sky-400/50 text-sky-200': noteColor === 'sky',
+                             'border-rose-400/50 text-rose-200': noteColor === 'rose',
+                             'border-purple-400/50 text-purple-200': noteColor === 'purple',
+                         }">
+                        <span class="truncate">«<span x-text="selectedText"></span>»</span>
+                        <button type="button" @click="selectedText = ''" class="text-mist hover:text-paper shrink-0">×</button>
+                    </div>
+                </template>
                 <textarea id="reader-note-text" x-model="noteDraft" rows="3" maxlength="5000"
                           class="ks-input resize-y" placeholder="Ushbu bobdan eslab qolmoqchi bo‘lgan fikringiz…"></textarea>
                 <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -181,6 +204,23 @@
                     <ul class="max-h-52 space-y-2 overflow-y-auto">
                         <template x-for="note in notes" :key="note.id">
                             <li class="rounded-btn border border-ink-border/70 px-3 py-2">
+                                <button type="button" @click="jumpToBookmark(note)"
+                                        class="mb-2 inline-flex min-h-11 w-full items-center justify-between gap-2 rounded-btn px-2 text-left text-xs font-semibold text-amber-400 transition hover:bg-amber-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+                                        :aria-label="'Qayd joyiga qaytish: ' + formatLocation(note.position)">
+                                    <span>Qayd qoldirilgan joy</span>
+                                    <span class="shrink-0" x-text="formatLocation(note.position)"></span>
+                                </button>
+                                <template x-if="note.selected_text">
+                                    <blockquote class="mb-1 border-l-2 pl-2 text-[11px] italic"
+                                                :class="{
+                                                    'border-amber-400 text-amber-300/90': note.color === 'amber' || !note.color,
+                                                    'border-emerald-400 text-emerald-300/90': note.color === 'emerald',
+                                                    'border-sky-400 text-sky-300/90': note.color === 'sky',
+                                                    'border-rose-400 text-rose-300/90': note.color === 'rose',
+                                                    'border-purple-400 text-purple-300/90': note.color === 'purple',
+                                                }"
+                                                x-text="'«' + note.selected_text + '»'"></blockquote>
+                                </template>
                                 <p class="whitespace-pre-wrap break-words text-xs" x-text="note.note_text"></p>
                                 <p class="mt-1 text-[10px] opacity-60" x-text="note.created_at"></p>
                             </li>
@@ -217,6 +257,7 @@
                 fontFamily: localStorage.getItem('reader_font') || 'serif',
                 fontSize: parseInt(localStorage.getItem('reader_size')) || 19,
                 scrollPercent: 0,
+                currentPosition: 0,
                 activeSeconds: 0,
                 isIdle: false,
                 idleTimer: null,
@@ -225,6 +266,7 @@
                 notes: initialNotes,
                 noteFormOpen: false,
                 noteDraft: '',
+                noteColor: 'amber',
                 savingBookmark: false,
                 savingNote: false,
                 annotationMessage: '',
@@ -284,12 +326,19 @@
                 },
 
                 formatPosition(position) {
-                    const percent = Math.max(0, Math.min(100, Math.round((Number(position) / Math.max(1, document.documentElement.scrollHeight - window.innerHeight)) * 100)));
+                    const article = document.querySelector('.reader-content');
+                    const articleTop = article ? article.getBoundingClientRect().top + window.scrollY : 0;
+                    const articleScrollHeight = Math.max(1, (article?.offsetHeight || document.documentElement.scrollHeight) - window.innerHeight);
+                    const percent = Math.max(0, Math.min(100, Math.round(((Number(position) - articleTop) / articleScrollHeight) * 100)));
                     return percent + '%';
                 },
 
+                formatLocation(position) {
+                    return 'Bobning ' + this.formatPosition(position) + ' qismi';
+                },
+
                 openNoteForm() {
-                    this.selectedText = window.getSelection()?.toString().trim().slice(0, 5000) || '';
+                    this.selectedText = window.getSelection()?.toString().trim().slice(0, 5000) || this.selectedText;
                     this.noteFormOpen = true;
                     this.$nextTick(() => document.getElementById('reader-note-text')?.focus());
                 },
@@ -301,7 +350,10 @@
                     try {
                         const data = await this.annotationRequest("{{ route('reader.notes.store') }}", 'POST', {
                             book_id: {{ $book->id }}, chapter_id: {{ $chapter->id }},
-                            selected_text: this.selectedText, note_text: noteText
+                            position: Math.round(window.scrollY),
+                            selected_text: this.selectedText,
+                            color: this.noteColor,
+                            note_text: noteText
                         });
                         this.notes.unshift(data.note);
                         this.noteDraft = '';
@@ -315,11 +367,21 @@
                 },
 
                 init() {
+                    this.currentPosition = Math.round(window.scrollY);
                     window.addEventListener('scroll', () => {
                         const winScroll = document.documentElement.scrollTop;
                         const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
                         this.scrollPercent = Math.min(100, Math.round((winScroll / height) * 100)) || 0;
+                        this.currentPosition = Math.round(window.scrollY);
                     }, { passive: true });
+                    document.addEventListener('selectionchange', () => {
+                        const selection = window.getSelection();
+                        const selected = selection?.toString().trim();
+                        const article = document.querySelector('.reader-content');
+                        if (selected && article?.contains(selection.anchorNode)) {
+                            this.selectedText = selected.slice(0, 5000);
+                        }
+                    });
                 },
 
                 toggleFont() {

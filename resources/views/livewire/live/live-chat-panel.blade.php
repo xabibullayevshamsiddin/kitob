@@ -113,21 +113,32 @@
                     $isH        = ($uRole === 'teacher' || $uRole === 'admin') || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('teacher'));
                     $senderRank = $msg->user_id ? ($topFiveIds[$msg->user_id] ?? null) : null;
                     $isTopFive  = ($senderRank !== null && $senderRank >= 1 && $senderRank <= 5);
+                    $chatStyle  = \App\Services\Gamification\ChatStyleService::resolveStyle($msg->user, $senderRank, $isMe);
+                    $bubbleClass = $chatStyle['bubble_class'];
+                    $badgeText  = $chatStyle['badge_text'];
+                    $badgeClass = $chatStyle['badge_class'];
+                    $authorNameClass = $chatStyle['name_class'];
                 @endphp
                 <div class="flex items-start gap-2 group {{ $isMe ? 'flex-row-reverse' : '' }}" wire:key="lmsg-{{ $msg->id }}">
                     <x-ui.avatar :user="$msg->user" size="sm" shape="rounded-btn" :rank="$senderRank" link />
                     <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md">
                         <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }} flex-wrap">
                             @if($msg->user && !$isMe)
-                                <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-medium font-sans {{ $isH ? 'text-amber-400' : 'text-paper' }} hover:text-amber-400 hover:underline transition-colors">
+                                <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-medium font-sans {{ $isH ? 'text-amber-400' : $authorNameClass }} hover:underline transition-colors">
                                     {{ $msg->user->name }}
                                 </a>
                             @else
-                                <span class="text-xs font-medium font-sans {{ $isH ? 'text-amber-400' : 'text-paper' }}">{{ $isMe ? 'Siz' : ($msg->user?->name ?? 'Foydalanuvchi') }}</span>
+                                <span class="text-xs font-medium font-sans {{ $isH ? 'text-amber-400' : $authorNameClass }}">{{ $isMe ? 'Siz' : ($msg->user?->name ?? 'Foydalanuvchi') }}</span>
                             @endif
-                            @if($isTopFive)
+
+                            @if($badgeText)
+                                <span class="{{ $badgeClass }}">{{ $badgeText }}</span>
+                            @endif
+
+                            @if($isTopFive && ($chatStyle['mode'] ?? '') !== 'rank')
                                 <x-ui.rank-badge :rank="$senderRank" size="xs" />
                             @endif
+
                             @if($msg->user_id === $event->host_user_id)
                                 <span class="px-1.5 py-0.2 bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-mono text-[9px] rounded-pill uppercase">Ustoz</span>
                             @elseif($uRole === 'admin')
@@ -187,22 +198,9 @@
                             <div class="px-3.5 py-2 rounded-panel text-xs sm:text-sm leading-relaxed shadow-sm break-words bg-amber-400 text-ink-950 font-medium rounded-tr-none">
                                 {{ $msg->question }}
                             </div>
-                        {{-- Me --}}
-                        @elseif($isMe)
-                            <div class="px-3.5 py-2 rounded-panel text-xs sm:text-sm leading-relaxed shadow-sm break-words bg-ink-800 border border-ink-border text-paper rounded-tr-none">
-                                {{ $msg->question }}
-                            </div>
+                        {{-- Oddiy yoki shop/rank xabari --}}
                         @else
-                            @php
-                                $tierBubble = match(true) {
-                                    $senderRank === 1 => 'border-amber-400/50 dark:border-[#F59E0B]/50 bg-gradient-to-r from-amber-500/10 via-ink-900 to-ink-900 dark:from-[#F59E0B]/10 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_12px_rgba(245,158,11,0.12)]',
-                                    $senderRank === 2 => 'border-slate-300 dark:border-[#E2E8F0]/40 bg-gradient-to-r from-slate-200/60 via-ink-900 to-ink-900 dark:from-[#E2E8F0]/8 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.08)]',
-                                    $senderRank === 3 => 'border-amber-700/30 dark:border-[#D97706]/40 bg-gradient-to-r from-amber-700/10 via-ink-900 to-ink-900 dark:from-[#D97706]/8 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.08)]',
-                                    $senderRank === 4 || $senderRank === 5 => 'border-indigo-300 dark:border-[#6366F1]/35 bg-gradient-to-r from-indigo-500/10 via-ink-900 to-ink-900 dark:from-[#6366F1]/8 dark:to-ink-950/90 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.08)]',
-                                    default => 'bg-ink-900/80 dark:bg-ink-950/80 border-ink-border',
-                                };
-                            @endphp
-                            <div class="px-3.5 py-2 rounded-panel text-xs sm:text-sm leading-relaxed shadow-sm break-words border {{ $tierBubble }} text-paper rounded-tl-none">
+                            <div class="px-3.5 py-2 rounded-panel text-xs sm:text-sm leading-relaxed shadow-sm break-words border {{ $bubbleClass }} text-paper {{ $isMe ? 'rounded-tr-none text-left' : 'rounded-tl-none' }}">
                                 {{ $msg->question }}
                             </div>
                         @endif

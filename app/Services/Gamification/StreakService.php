@@ -60,11 +60,27 @@ class StreakService
         $yesterday = Carbon::yesterday($this->timezone)->toDateString();
         $today = Carbon::today($this->timezone)->toDateString();
 
-        // Oxirgi faol kuni kecha ham, bugun ham bo'lmagan foydalanuvchilar streakini 0 ga tushiramiz
-        return UserStreak::where('current_streak', '>', 0)
-            ->where(function ($q) use ($yesterday, $today) {
+        // 1. Agar streak freeze (muzlatgich) bo'lsa, streakni yo'qotmay muzlatamiz
+        $streaksToProtect = UserStreak::where('current_streak', '>', 0)
+            ->where('freeze_count', '>', 0)
+            ->where(function ($q) use ($yesterday) {
                 $q->whereNull('last_active_date')
-                  ->orWhere(function ($sub) use ($yesterday, $today) {
+                  ->orWhereDate('last_active_date', '<', $yesterday);
+            })
+            ->get();
+
+        foreach ($streaksToProtect as $st) {
+            $st->freeze_count -= 1;
+            $st->last_frozen_date = $yesterday;
+            $st->last_active_date = $yesterday; // bir kunga uzaytirib beradi
+            $st->save();
+        }
+
+        // 2. Muzlatgichi yo'q bo'lganlarni esa 0 ga tushiramiz
+        return UserStreak::where('current_streak', '>', 0)
+            ->where(function ($q) use ($yesterday) {
+                $q->whereNull('last_active_date')
+                  ->orWhere(function ($sub) use ($yesterday) {
                       $sub->whereDate('last_active_date', '<', $yesterday);
                   });
             })

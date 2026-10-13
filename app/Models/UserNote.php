@@ -14,7 +14,9 @@ class UserNote extends Model
         'user_id',
         'book_id',
         'chapter_id',
+        'position',
         'selected_text',
+        'color',
         'note_text',
     ];
 

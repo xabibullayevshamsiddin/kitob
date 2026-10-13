@@ -9,8 +9,8 @@
 
     @include('partials.design-system')
 
-    <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+    <!-- Vite Bundled Scripts (Alpine.js + Collapse, Pusher, Echo, Axios) -->
+    @vite(['resources/js/app.js'])
 
     @if(class_exists('Livewire\Livewire'))
         @livewireStyles

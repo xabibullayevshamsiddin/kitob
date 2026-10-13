@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Http\Livewire\Profile\ProfilePage;
 use App\Models\Book;
 use App\Models\BookChapter;
 use App\Models\Bookmark;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ReaderAnnotationsTest extends TestCase
@@ -58,10 +60,12 @@ class ReaderAnnotationsTest extends TestCase
             ->postJson(route('reader.notes.store'), [
                 'book_id' => $book->id,
                 'chapter_id' => $chapter->id,
+                'position' => 420,
                 'selected_text' => 'Muhim parcha',
                 'note_text' => 'Bu fikrni keyin qayta ko‘raman.',
             ])
             ->assertCreated()
+            ->assertJsonPath('note.position', 420)
             ->assertJsonPath('note.selected_text', 'Muhim parcha');
 
         $this->assertDatabaseHas('bookmarks', [
@@ -74,13 +78,15 @@ class ReaderAnnotationsTest extends TestCase
             'user_id' => $user->id,
             'book_id' => $book->id,
             'chapter_id' => $chapter->id,
+            'position' => 420,
             'note_text' => 'Bu fikrni keyin qayta ko‘raman.',
         ]);
 
         $this->get(route('reader.show', ['book' => $book->id, 'chapter' => $chapter->id]))
             ->assertOk()
             ->assertSee('Xatcho‘p va qaydlar')
-            ->assertSee('Muhim parcha');
+            ->assertSee('Muhim parcha')
+            ->assertSee('Qayd qoldirilgan joy');
     }
 
     public function test_reader_cannot_attach_annotation_to_another_books_chapter_or_delete_another_users_bookmark(): void
@@ -125,5 +131,29 @@ class ReaderAnnotationsTest extends TestCase
 
         $this->deleteJson(route('reader.bookmarks.destroy', $bookmark))->assertNotFound();
         $this->assertDatabaseHas('bookmarks', ['id' => $bookmark->id]);
+    }
+
+    public function test_notes_remain_private_on_public_profiles(): void
+    {
+        [$owner, $book, $chapter] = $this->makeReaderFixture();
+        $otherUser = User::create([
+            'name' => 'Profile Visitor',
+            'username' => 'visitor_' . uniqid(),
+            'email' => uniqid() . '@example.test',
+            'password' => bcrypt('password'),
+        ]);
+        $owner->notes()->create([
+            'book_id' => $book->id,
+            'chapter_id' => $chapter->id,
+            'selected_text' => 'Private passage',
+            'note_text' => 'This note belongs only to the reader.',
+        ]);
+
+        $this->actingAs($otherUser);
+        Livewire::test(ProfilePage::class, ['username' => $owner->username])
+            ->call('setTab', 'notes')
+            ->assertSet('activeTab', 'overview')
+            ->assertDontSee('This note belongs only to the reader.')
+            ->assertDontSee('Private passage');
     }
 }

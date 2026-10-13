@@ -110,6 +110,8 @@
     </div>
 
     <!-- ── Ultra-Realistic 3D Flipbook Stage ── -->
+    <x-reader.pdf-annotations :book="$book" :annotations="$pdfAnnotations" />
+
     <div id="fb-root" 
          data-pdf-url="{{ route('books.pdf.stream', $book) }}" 
          data-sound-url="{{ asset('sounds/oxidvideos-page-flip-1-178322.mp3') }}"

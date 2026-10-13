@@ -50,12 +50,31 @@
         default => 'top5',
     } : null;
 
-    $ringClasses = match($tier) {
+    $pref = $user?->profile?->chat_style_preference ?? 'shop';
+    $frame = $user?->profile?->avatar_frame;
+
+    $shopRing = match($frame) {
+        'aurora'   => 'ring-2 ring-teal-400 shadow-[0_0_12px_rgba(45,212,191,0.45)]',
+        'cyber'    => 'ring-2 ring-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.45)]',
+        'gold'     => 'ring-2 ring-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.45)]',
+        'emerald'  => 'ring-2 ring-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.45)]',
+        'obsidian' => 'ring-2 ring-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.45)]',
+        default    => null,
+    };
+
+    $rankRing = match($tier) {
         'gold'   => 'ring-2 ring-amber-500 dark:ring-[#F59E0B] shadow-sm dark:shadow-[0_0_12px_rgba(245,158,11,0.35)]',
         'silver' => 'ring-2 ring-slate-400 dark:ring-[#E2E8F0] shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.25)]',
         'bronze' => 'ring-2 ring-amber-700 dark:ring-[#D97706] shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.25)]',
         'top5'   => 'ring-2 ring-indigo-500 dark:ring-[#6366F1]/80 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.25)]',
-        default  => 'border border-ink-border',
+        default  => null,
+    };
+
+    $ringClasses = match(true) {
+        $pref === 'default' => 'border border-ink-border',
+        $pref === 'rank' && !empty($rankRing) => $rankRing,
+        $pref === 'shop' && !empty($shopRing) => $shopRing,
+        default => 'border border-ink-border',
     };
 
     $avatarUrl = $user?->avatar_url;
@@ -83,8 +102,8 @@
         </div>
     @endif
 
-    {{-- Top 5 Plashka / Floating Rank Badge --}}
-    @if($showRank && $tier)
+    {{-- Top 5 Plashka / Floating Rank Badge (Faqat Standart rejimda bo'lmaganda) --}}
+    @if($showRank && $tier && $pref !== 'default')
         <div class="absolute {{ $badgeSizes }} rounded-full flex items-center justify-center shadow-md z-10 animate-fade-in
             {{ $tier === 'gold'   ? 'bg-amber-500 text-ink-950 ring-1 ring-amber-600/40 dark:ring-white/40' : '' }}
             {{ $tier === 'silver' ? 'bg-slate-300 dark:bg-[#E2E8F0] text-slate-800 dark:text-ink-950 ring-1 ring-slate-400/60 dark:ring-white/40' : '' }}

@@ -118,14 +118,21 @@
         <!-- Quick Stats Grid in Header (DENSITY: 6, DM Mono) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-ink-border">
             <div class="p-3.5 rounded-panel bg-ink-800/60 border border-ink-border">
-                <div class="flex items-center gap-1 text-[11px] text-mist font-mono uppercase tracking-wider mb-1">
-                    <span class="ks-flame is-lit inline-block scale-75">
-                        <svg class="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-4-6-4-10z"/></svg>
-                    </span>
-                    <span>{{ __('site.profile.streak') }}</span>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-1 text-[11px] text-mist font-mono uppercase tracking-wider mb-1">
+                            <span class="ks-flame is-lit inline-block scale-75">
+                                <svg class="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-4-6-4-10z"/></svg>
+                            </span>
+                            <span>{{ __('site.profile.streak') }}</span>
+                        </div>
+                        @if(($user->streak?->freeze_count ?? 0) > 0)
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-pill bg-sky-500/15 text-sky-400 border border-sky-500/30" title="Muzlatgich himoyasi faol">
+                                🧊 {{ $user->streak->freeze_count }}
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-2xl font-bold font-mono text-amber-400">{{ $stats['current_streak'] }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.days') }}</span></p>
                 </div>
-                <p class="text-2xl font-bold font-mono text-amber-400">{{ $stats['current_streak'] }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.days') }}</span></p>
-            </div>
             <div class="p-3.5 rounded-panel bg-ink-800/60 border border-ink-border">
                 <span class="text-[11px] text-mist font-mono uppercase tracking-wider block mb-1">{{ __('site.profile.total_points') }}</span>
                 <p class="text-2xl font-bold font-mono text-paper">{{ number_format($stats['total_points']) }}</p>
@@ -152,9 +159,14 @@
         <button wire:click="setTab('badges')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'badges' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
             {{ __('site.profile.tab_badges') }} ({{ count($badges) }})
         </button>
-        <button wire:click="setTab('notes')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'notes' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
-            {{ __('site.profile.tab_notes') }} ({{ count($notes) }})
-        </button>
+        @if($isOwner)
+            <button wire:click="setTab('notes')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'notes' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
+                {{ __('site.profile.tab_notes') }} ({{ count($notes) }})
+            </button>
+            <button wire:click="setTab('shop')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 flex items-center gap-1.5 {{ $activeTab === 'shop' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-amber-400/80 hover:text-amber-400 hover:bg-ink-900 border border-amber-500/20' }}">
+                <span>🛍️ Tanga do'koni</span>
+            </button>
+        @endif
     </div>
 
     <!-- Tab 1: Overview & Heatmap -->
@@ -288,7 +300,7 @@
     @endif
 
     <!-- Tab 4: Notes (Qaydlar) -->
-    @if ($activeTab === 'notes')
+    @if ($activeTab === 'notes' && $isOwner)
         <div class="space-y-3.5">
             @forelse ($notes as $note)
                 <div class="p-4 rounded-panel bg-ink-900 border border-ink-border space-y-2.5">
@@ -300,7 +312,14 @@
                         <span class="text-mist font-mono text-[11px]">{{ $note->created_at->format('d.m.Y H:i') }}</span>
                     </div>
                     @if($note->selected_text)
-                        <blockquote class="p-3 rounded-panel bg-ink-950/60 border-l-2 border-amber-400 text-xs italic font-serif text-paper">
+                        <blockquote class="p-3 rounded-panel bg-ink-950/60 border-l-2 text-xs italic font-serif text-paper"
+                                    :class="{
+                                        'border-amber-400': '{{ $note->color ?? 'amber' }}' === 'amber',
+                                        'border-emerald-400': '{{ $note->color ?? 'amber' }}' === 'emerald',
+                                        'border-sky-400': '{{ $note->color ?? 'amber' }}' === 'sky',
+                                        'border-rose-400': '{{ $note->color ?? 'amber' }}' === 'rose',
+                                        'border-purple-400': '{{ $note->color ?? 'amber' }}' === 'purple',
+                                    }">
                             «{{ $note->selected_text }}»
                         </blockquote>
                     @endif
@@ -316,6 +335,266 @@
                     <p class="text-xs text-mist font-mono">{{ __('site.profile.empty_notes') }}</p>
                 </div>
             @endforelse
+        </div>
+    @endif
+
+    <!-- Tab 5: Tangalar do'koni (Coin Shop) -->
+    @if ($activeTab === 'shop' && $isOwner)
+        @php
+            $profile = $user->profile;
+            $currentPref = $profile?->chat_style_preference ?? 'shop';
+            $activeFrame = $profile?->avatar_frame;
+            $previewStyle = \App\Services\Gamification\ChatStyleService::resolveStyle($user, $userRank, true);
+
+            $catalog = [
+                'aurora' => [
+                    'key' => 'aurora',
+                    'name' => 'Qutb yog‘dusi (Aurora Neon)',
+                    'icon' => '✨',
+                    'price' => 120,
+                    'color' => 'teal',
+                    'border_color' => 'border-teal-500/30',
+                    'desc' => 'Feruza va zumrad jilosi. Chatda jozibali neon gradient va [✨ Aurora] VIP nishoni.',
+                    'preview_class' => 'border-teal-500/50 bg-gradient-to-br from-teal-500/20 via-emerald-950/40 to-ink-950 text-teal-100',
+                ],
+                'cyber' => [
+                    'key' => 'cyber',
+                    'name' => 'Kiber Neon (Cyberpunk)',
+                    'icon' => '🔥',
+                    'price' => 150,
+                    'color' => 'rose',
+                    'border_color' => 'border-rose-500/30',
+                    'desc' => 'Alvon kiberpank chaqnashi. Chatda olovrang-pushti neon porlashi va [🔥 Cyberpunk] nishoni.',
+                    'preview_class' => 'border-rose-500/50 bg-gradient-to-br from-rose-500/20 via-purple-950/40 to-ink-950 text-rose-100',
+                ],
+                'gold' => [
+                    'key' => 'gold',
+                    'name' => 'Oltin Toj (Royal Gold)',
+                    'icon' => '👑',
+                    'price' => 100,
+                    'color' => 'amber',
+                    'border_color' => 'border-amber-500/30',
+                    'desc' => 'Aristokrat kitobxon nurlari. Chatda qirollik oltin jilosi va [👑 Royal] nishoni.',
+                    'preview_class' => 'border-amber-400/60 bg-gradient-to-br from-amber-500/20 via-amber-950/30 to-ink-950 text-amber-100',
+                ],
+                'emerald' => [
+                    'key' => 'emerald',
+                    'name' => 'Zumrad Nuri (Emerald)',
+                    'icon' => '💎',
+                    'price' => 90,
+                    'color' => 'emerald',
+                    'border_color' => 'border-emerald-500/30',
+                    'desc' => 'Qimmatbaho zumrad kristalli. Chatda nafis yashil gradient va [💎 Emerald] nishoni.',
+                    'preview_class' => 'border-emerald-400/50 bg-gradient-to-br from-emerald-500/20 via-emerald-950/40 to-ink-950 text-emerald-100',
+                ],
+                'obsidian' => [
+                    'key' => 'obsidian',
+                    'name' => 'Kosmik Bo‘shliq (Obsidian Void)',
+                    'icon' => '🌌',
+                    'price' => 80,
+                    'color' => 'purple',
+                    'border_color' => 'border-purple-500/30',
+                    'desc' => 'Sirli galaktik kosmos jilosi. To‘q binafsha-indigo chaqnashi va [🌌 Obsidian] nishoni.',
+                    'preview_class' => 'border-purple-500/50 bg-gradient-to-br from-purple-500/20 via-indigo-950/40 to-ink-950 text-purple-100',
+                ],
+            ];
+        @endphp
+
+        <div class="space-y-6">
+            <!-- Header Banner -->
+            <div class="p-5 sm:p-6 rounded-panel bg-ink-900 border border-ink-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-paper font-serif flex items-center gap-2">
+                        <span>🛍️</span>
+                        <span>Kitobxon Tangalar Do‘koni</span>
+                    </h3>
+                    <p class="text-xs text-mist font-sans mt-1">Kitob o‘qib, testlar yechib jamg‘argan tangalaringizni foydali vositalar va vizual bezaklarga almashtiring.</p>
+                </div>
+                <div class="flex items-center gap-2 px-3.5 py-2 rounded-btn bg-ink-800 border border-ink-border text-amber-400 font-mono font-bold text-sm shrink-0">
+                    <span>🪙 Balansingiz:</span>
+                    <span>{{ number_format($user->coin_balance) }} tanga</span>
+                </div>
+            </div>
+
+            <!-- Chat & Profile Visual Style Preference Switcher -->
+            <div class="p-5 sm:p-6 rounded-panel bg-ink-900/90 border border-ink-border space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h4 class="text-sm font-bold text-paper flex items-center gap-2">
+                            <span>🎨</span>
+                            <span>Chat va Profil Vizual Ko‘rinishi</span>
+                        </h4>
+                        <p class="text-xs text-mist mt-0.5">Umumiy chat va jonli efirda xabarlaringiz hamda avataringiz qaysi uslubda chiqishini tanlang.</p>
+                    </div>
+
+                    @if($activeFrame)
+                        <button type="button" wire:click="unequipShopTheme"
+                                class="text-[11px] font-mono text-mist hover:text-rose-400 transition underline self-start sm:self-auto">
+                            Maxsus bezakni yechish
+                        </button>
+                    @endif
+                </div>
+
+                <!-- 3 Options Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                    <!-- Option 1: Shop Style -->
+                    <button type="button"
+                            wire:click="setChatStylePreference('shop')"
+                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'shop' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/40' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80 opacity-80 hover:opacity-100' }}">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-paper flex items-center gap-1.5">
+                                <span>🛍️</span>
+                                <span>Do‘kon Uslubi</span>
+                            </span>
+                            @if($currentPref === 'shop')
+                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            @endif
+                        </div>
+                        <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
+                            Tangaga xarid qilingan rangli avatar ramkasi va VIP chat effekti.
+                        </p>
+                        <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
+                            Faol: {{ $activeFrame ? ($catalog[$activeFrame]['name'] ?? ucfirst($activeFrame)) : 'Hali tanlanmagan' }}
+                        </div>
+                    </button>
+
+                    <!-- Option 2: Leaderboard Rank Style -->
+                    <button type="button"
+                            wire:click="setChatStylePreference('rank')"
+                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'rank' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/40' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80 opacity-80 hover:opacity-100' }}">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-paper flex items-center gap-1.5">
+                                <span>🏆</span>
+                                <span>Reyting Uslubi</span>
+                            </span>
+                            @if($currentPref === 'rank')
+                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            @endif
+                        </div>
+                        <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
+                            Reytingdagi o‘rningizga mos chempionlik effekti (Top 1 Oltin, Kumush, Bronza).
+                        </p>
+                        <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
+                            O‘rningiz: {{ $userRank ? "#{$userRank}-o‘rin" : 'Ball yetarli emas' }}
+                        </div>
+                    </button>
+
+                    <!-- Option 3: Default Standard Style -->
+                    <button type="button"
+                            wire:click="setChatStylePreference('default')"
+                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'default' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/40' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80 opacity-80 hover:opacity-100' }}">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-paper flex items-center gap-1.5">
+                                <span>👤</span>
+                                <span>Standart Ko‘rinish</span>
+                            </span>
+                            @if($currentPref === 'default')
+                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            @endif
+                        </div>
+                        <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
+                            Sokin, qo‘shimcha fon va auralarsiz klassik kitobxon ko‘rinishi.
+                        </p>
+                        <div class="text-[10px] font-mono text-mist mt-2">
+                            Oddiy holat
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Live Chat Message Preview -->
+                <div class="p-3.5 rounded-btn bg-ink-950/70 border border-ink-border/60 mt-3">
+                    <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">Jonli ko‘rinish (Chatda xabaringiz):</span>
+                    <div class="flex items-start gap-2.5 max-w-md">
+                        <x-ui.avatar :user="$user" size="sm" :rank="$userRank" />
+                        <div class="flex flex-col items-start min-w-0">
+                            <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                                <span class="text-xs font-semibold {{ $previewStyle['name_class'] }}">{{ $user->name }}</span>
+                                @if($previewStyle['badge_text'])
+                                    <span class="{{ $previewStyle['badge_class'] }}">{{ $previewStyle['badge_text'] }}</span>
+                                @endif
+                                <span class="text-[10px] font-mono text-mist">Hozir</span>
+                            </div>
+                            <div class="px-3 py-2 rounded-card text-xs leading-relaxed border {{ $previewStyle['bubble_class'] }}">
+                                Salom hammaga! Bugun yangi kitob mutolaasini tugatdim 📖✨
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Catalog Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Streak Freeze Card -->
+                <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between space-y-4 hover:border-sky-500/40 transition">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-2xl">🧊</span>
+                            <span class="px-2.5 py-0.5 rounded-pill bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-mono font-bold">50 tanga</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-paper">Streak Freeze (Muzlatgich)</h4>
+                        <p class="text-xs text-mist leading-relaxed font-sans">
+                            Bir kun kitob o‘qishga ulgurmasangiz ham, kunlik ketma-ketligingiz (streak) uzilmaydi va saqlanib qoladi!
+                        </p>
+                        <div class="text-[11px] font-mono text-mist pt-1">
+                            Sizda mavjud: <strong class="text-sky-400">{{ (int) ($user->streak?->freeze_count ?? 0) }}/5 dona</strong>
+                        </div>
+                    </div>
+                    <button wire:click="buyStreakFreeze" wire:loading.attr="disabled"
+                            class="w-full min-h-11 rounded-btn bg-sky-500/15 border border-sky-500/30 hover:bg-sky-500/25 text-sky-300 font-mono text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        <span wire:loading.remove wire:target="buyStreakFreeze">Muzlatgich sotib olish (50 🪙)</span>
+                        <span wire:loading wire:target="buyStreakFreeze">Xarid qilinmoqda...</span>
+                    </button>
+                </div>
+
+                <!-- Cosmetic Themes (Aurora, Cyberpunk, Gold, Emerald, Obsidian) -->
+                @foreach($catalog as $item)
+                    @php
+                        $isOwned = $profile?->hasUnlockedItem($item['key']) ?? false;
+                        $isActive = ($activeFrame === $item['key']) && ($currentPref === 'shop');
+                    @endphp
+                    <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between space-y-4 hover:{{ $item['border_color'] }} transition">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-2xl">{{ $item['icon'] }}</span>
+                                @if($isOwned)
+                                    <span class="px-2 py-0.5 rounded-pill bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono font-bold">
+                                        ✓ Sizda mavjud
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold">
+                                        {{ $item['price'] }} tanga
+                                    </span>
+                                @endif
+                            </div>
+                            <h4 class="text-sm font-bold text-paper">{{ $item['name'] }}</h4>
+                            <p class="text-xs text-mist leading-relaxed font-sans">
+                                {{ $item['desc'] }}
+                            </p>
+
+                            <!-- Theme mini swatch -->
+                            <div class="p-2 rounded-btn border text-[11px] font-mono {{ $item['preview_class'] }} mt-2">
+                                Namuna: [{{ $item['icon'] }} {{ explode(' ', $item['name'])[0] }}] Chat porlashi
+                            </div>
+                        </div>
+
+                        <button wire:click="buyAvatarFrame('{{ $item['key'] }}')" wire:loading.attr="disabled"
+                                class="w-full min-h-11 rounded-btn font-mono text-xs font-bold transition flex items-center justify-center gap-1.5
+                                {{ $isActive
+                                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                                    : ($isOwned
+                                        ? 'bg-ink-800 border border-ink-border hover:bg-ink-700 text-paper'
+                                        : 'bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-300') }}">
+                            @if($isActive)
+                                <span>✓ O‘rnatilgan va faol</span>
+                            @elseif($isOwned)
+                                <span>🔄 Faollashtirish (0 🪙)</span>
+                            @else
+                                <span>Xarid qilish ({{ $item['price'] }} 🪙)</span>
+                            @endif
+                        </button>
+                    </div>
+                @endforeach
+            </div>
         </div>
     @endif
 

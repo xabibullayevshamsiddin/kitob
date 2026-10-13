@@ -210,7 +210,10 @@ class GlobalChat extends Component
     {
         $messages = GlobalChatMessage::query()
             ->has('user')
-            ->with(['user:id,name,username,avatar,role'])
+            ->with([
+                'user:id,name,username,avatar,role',
+                'user.profile:id,user_id,avatar_frame,chat_style_preference,chat_bubble_theme'
+            ])
             ->notDeleted()
             ->latest()
             ->take($this->perPage)

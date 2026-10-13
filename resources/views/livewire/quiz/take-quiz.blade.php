@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto space-y-6 pb-20">
+<div class="max-w-4xl mx-auto space-y-6 pb-20" x-data="quizDraftStore(@js($quizId), @js(auth()->id()))" x-init="init()">
 
     {{-- ── Top Navigation & Book Info ── --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-md">
@@ -93,6 +93,12 @@
 
         {{-- ── 1. ACTIVE QUIZ CARD (SAVOL TOPSHIRISH QISMI) ── --}}
         @if (!$finished)
+            @if($resumedSavedDraft)
+                <div class="flex flex-col gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-200 sm:flex-row sm:items-center sm:justify-between">
+                    <p role="status" aria-live="polite">Oldingi urinishdagi javoblaringiz va vaqtingiz tiklandi.</p>
+                    <button type="button" wire:click="discardDraftAndRestart" class="min-h-11 rounded-xl border border-emerald-500/20 px-3 py-2 text-xs font-semibold transition hover:bg-emerald-500/10">Yangidan boshlash</button>
+                </div>
+            @endif
             <div class="p-6 sm:p-10 rounded-3xl bg-slate-900/90 border border-white/[0.08] shadow-2xl backdrop-blur-md space-y-6 relative overflow-hidden">
                 {{-- Progress Bar --}}
                 <div class="absolute top-0 inset-x-0 h-1.5 bg-slate-800">
@@ -175,7 +181,7 @@
                 @if(($questions[$currentQuestion]['type'] ?? 'single') === 'text')
                     <div class="space-y-2 pt-2">
                         <label for="writtenAnswer" class="block text-sm font-semibold text-slate-200">Javobingiz</label>
-                        <textarea id="writtenAnswer" wire:model.defer="writtenAnswer" rows="6" maxlength="5000" placeholder="Javobingizni shu yerga yozing..." class="w-full rounded-2xl border border-white/10 bg-slate-800/70 p-4 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"></textarea>
+                        <textarea id="writtenAnswer" wire:model.debounce.500ms="writtenAnswer" x-on:input="saveWritten({{ $currentQuestion }}, $event.target.value)" rows="6" maxlength="5000" placeholder="Javobingizni shu yerga yozing..." class="w-full rounded-2xl border border-white/10 bg-slate-800/70 p-4 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"></textarea>
                         @error('writtenAnswer') <p class="text-xs text-rose-400">{{ $message }}</p> @enderror
                         <p class="text-xs text-slate-500">Yozma javob test tugagach ustoz yoki admin tomonidan tekshiriladi.</p>
                     </div>
@@ -191,7 +197,8 @@
                             $letter = $optionLetters[$idx] ?? ($idx + 1);
                         @endphp
                         <button type="button" 
-                                wire:click="$set('selectedOption', {{ $opt['id'] }})"
+                                wire:click="chooseOption({{ $opt['id'] }})"
+                                x-on:click="saveChoice({{ $currentQuestion }}, {{ $opt['id'] }})"
                                 class="w-full p-4 rounded-2xl border text-left text-xs sm:text-sm font-medium transition-all flex items-center justify-between gap-4 group cursor-pointer {{ $isSelected ? 'bg-gradient-to-r from-amber-500/20 to-indigo-600/20 border-amber-400 text-white shadow-lg shadow-amber-500/10' : 'bg-slate-800/60 hover:bg-slate-800 border-white/[0.08] text-slate-300 hover:border-slate-600' }}">
                             <div class="flex items-center gap-3">
                                 <span class="w-8 h-8 rounded-xl flex items-center justify-center font-mono font-bold text-xs shrink-0 transition-colors {{ $isSelected ? 'bg-amber-400 text-ink-950 shadow-md' : 'bg-slate-700/80 text-slate-300 group-hover:bg-slate-600' }}">
@@ -222,7 +229,7 @@
                         @endif
                     </div>
 
-                    <button type="button" wire:click="previousQuestion" @if($currentQuestion === 0) disabled @endif
+                    <button type="button" wire:click="previousQuestion" x-on:click="savePointer({{ max(0, $currentQuestion - 1) }})" @if($currentQuestion === 0) disabled @endif
                             class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-xs font-bold text-slate-200 transition hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-40">
                         <span aria-hidden="true">←</span> Oldingi
                     </button>
@@ -233,6 +240,7 @@
                             @else
                                 wire:click="nextQuestion"
                             @endif
+                            x-on:click="savePointer({{ min(count($questions) - 1, $currentQuestion + 1) }})"
                             class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-ink-950 shadow-lg shadow-amber-500/20 transition hover:from-amber-400 hover:to-amber-500 active:scale-95">
                         <span>{{ $currentQuestion === count($questions) - 1 ? 'Testni yakunlash' : 'Keyingi savol' }}</span>
                         <span>→</span>
@@ -415,6 +423,61 @@
     {{-- Confetti & Celebration Script --}}
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
+        window.quizDraftStore = function (quizId, userId) {
+            return {
+                quizId: String(quizId || ''),
+                userId: String(userId || ''),
+                storageKey: '',
+                draft: { answers: {}, current_question: 0, saved_at: 0 },
+                init() {
+                    if (!this.quizId || !this.userId) return;
+                    this.storageKey = `kitob:quiz-draft:v1:${this.userId}:${this.quizId}`;
+                    try {
+                        const saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
+                        if (saved && saved.answers && typeof saved.answers === 'object') {
+                            this.draft = saved;
+                            this.restoreWhenLivewireReady();
+                        }
+                    } catch (error) {
+                        localStorage.removeItem(this.storageKey);
+                    }
+
+                    window.addEventListener('quiz-draft-cleared', (event) => {
+                        if (String(event.detail?.quizId || '') === this.quizId) {
+                            localStorage.removeItem(this.storageKey);
+                            this.draft = { answers: {}, current_question: 0, saved_at: 0 };
+                        }
+                    });
+                },
+                save() {
+                    this.draft.saved_at = Date.now();
+                    try { localStorage.setItem(this.storageKey, JSON.stringify(this.draft)); } catch (error) {}
+                },
+                saveWritten(index, value) {
+                    this.draft.answers[index] = { type: 'text', written_answer: String(value).slice(0, 5000) };
+                    this.save();
+                },
+                saveChoice(index, optionId) {
+                    this.draft.answers[index] = { type: 'single', selected_option: Number(optionId) };
+                    this.save();
+                },
+                savePointer(index) {
+                    this.draft.current_question = Number(index) || 0;
+                    this.save();
+                },
+                restoreWhenLivewireReady(retries = 12) {
+                    const root = this.$el.closest('[wire\\:id]');
+                    const componentId = root?.getAttribute('wire:id');
+                    const component = componentId && window.Livewire?.find(componentId);
+                    if (component) {
+                        component.call('restoreClientDraft', this.draft.answers, Number(this.draft.current_question) || 0, Number(this.draft.saved_at) || 0);
+                    } else if (retries > 0) {
+                        setTimeout(() => this.restoreWhenLivewireReady(retries - 1), 250);
+                    }
+                }
+            };
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('points-awarded', (e) => {
                 if (typeof confetti === 'function') {

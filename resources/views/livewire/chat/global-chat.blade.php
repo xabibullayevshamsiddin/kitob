@@ -87,35 +87,32 @@
                 $canDelete = $isMe || $isAdmin;
 
                 $senderRank = $topFiveIds[$msg->user_id] ?? null;
-                $senderTier = $senderRank ? match($senderRank) {
-                    1 => 'gold',
-                    2 => 'silver',
-                    3 => 'bronze',
-                    default => 'top5',
-                } : null;
-
-                $bubbleTierClass = match($senderTier) {
-                    'gold'   => 'border-amber-400/60 dark:border-[#F59E0B]/60 bg-gradient-to-br from-amber-500/10 via-ink-950 to-ink-950 dark:from-[#F59E0B]/10 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_12px_rgba(245,158,11,0.12)]',
-                    'silver' => 'border-slate-300 dark:border-[#E2E8F0]/40 bg-gradient-to-br from-slate-200/60 via-ink-950 to-ink-950 dark:from-[#E2E8F0]/5 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.08)]',
-                    'bronze' => 'border-amber-700/40 dark:border-[#D97706]/50 bg-gradient-to-br from-amber-700/10 via-ink-950 to-ink-950 dark:from-[#D97706]/10 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.08)]',
-                    'top5'   => 'border-indigo-400/40 dark:border-[#6366F1]/40 bg-gradient-to-br from-indigo-500/10 via-ink-950 to-ink-950 dark:from-[#6366F1]/5 dark:via-ink-950 dark:to-ink-950 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.08)]',
-                    default  => $isMe ? 'bg-ink-800 border-amber-500/40' : 'bg-ink-950 border-ink-border',
-                };
+                $chatStyle = \App\Services\Gamification\ChatStyleService::resolveStyle($msg->user, $senderRank, $isMe);
+                $bubbleTierClass = $chatStyle['bubble_class'];
+                $badgeText = $chatStyle['badge_text'];
+                $badgeClass = $chatStyle['badge_class'];
+                $authorNameClass = $chatStyle['name_class'];
             @endphp
             <div class="flex items-start gap-2.5 group {{ $isMe ? 'flex-row-reverse' : '' }}" wire:key="msg-{{ $msg->id }}">
                 <x-ui.avatar :user="$msg->user" size="sm" :rank="$senderRank" link />
                 <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md min-w-0">
-                    <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }}">
+                    <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }} flex-wrap">
                         @if($msg->user && !$isMe)
-                            <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-semibold text-paper hover:text-amber-400 hover:underline transition-colors truncate max-w-[150px]">
+                            <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-semibold {{ $authorNameClass }} hover:underline transition-colors truncate max-w-[150px]">
                                 {{ $msg->user->name }}
                             </a>
                         @else
-                            <span class="text-xs font-semibold text-paper truncate max-w-[150px]">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
+                            <span class="text-xs font-semibold {{ $authorNameClass }} truncate max-w-[150px]">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
                         @endif
-                        @if($senderRank)
+
+                        @if($badgeText)
+                            <span class="{{ $badgeClass }}">{{ $badgeText }}</span>
+                        @endif
+
+                        @if($senderRank && ($chatStyle['mode'] ?? '') !== 'rank')
                             <x-ui.rank-badge :rank="$senderRank" size="xs" :compact="true" />
                         @endif
+
                         @if(($msg->user?->role ?? '') === 'admin' || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('admin')))
                             <span class="px-1.5 py-0.2 bg-rose-500/10 dark:bg-amber-500/15 border border-rose-500/25 dark:border-amber-500/30 text-rose-700 dark:text-amber-400 font-mono font-bold text-[9px] rounded uppercase">{{ __('site.leaderboard.role_admin') }}</span>
                         @endif

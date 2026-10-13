@@ -472,7 +472,10 @@ class GroupDetail extends Component
     public function render()
     {
         $messages = GroupMessage::where('group_id', $this->group->id)
-            ->with('user:id,name,username,avatar')
+            ->with([
+                'user:id,name,username,avatar',
+                'user.profile:id,user_id,avatar_frame,chat_style_preference,chat_bubble_theme'
+            ])
             ->notDeleted()
             ->latest()
             ->take(50)
@@ -490,6 +493,7 @@ class GroupDetail extends Component
         $canChat = $this->group->canUserChat($user);
         $canSendVoice = $this->group->canUserSendVoice($user);
         $isOwner = $user && ($this->group->created_by === $user->id);
+        $topFiveIds = app(\App\Services\LeaderboardService::class)->getTopFiveIds();
 
         return view('livewire.groups.group-detail', [
             'messages'     => $messages,
@@ -499,6 +503,7 @@ class GroupDetail extends Component
             'canChat'      => $canChat,
             'canSendVoice' => $canSendVoice,
             'isOwner'      => $isOwner,
+            'topFiveIds'   => $topFiveIds,
         ])->layout('layouts.app', ['title' => $this->group->name]);
     }
 }

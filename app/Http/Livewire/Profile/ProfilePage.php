@@ -115,7 +115,144 @@ class ProfilePage extends Component
 
     public function setTab(string $tab)
     {
+        if ($tab === 'notes' && Auth::id() !== $this->user->id) {
+            return;
+        }
+
         $this->activeTab = $tab;
+    }
+
+    public function buyStreakFreeze(): void
+    {
+        if (Auth::id() !== $this->user->id) return;
+
+        $cost = 50;
+        if ($this->user->coin_balance < $cost) {
+            $this->toastWarning("Tangalar yetarli emas! Streak Freeze narxi: {$cost} tanga.");
+            return;
+        }
+
+        $streak = $this->user->streak ?? \App\Models\UserStreak::firstOrCreate(['user_id' => $this->user->id], ['current_streak' => 0, 'longest_streak' => 0]);
+        if ($streak->freeze_count >= 5) {
+            $this->toastWarning("Sizda allaqachon maksimal (5 ta) Streak Freeze mavjud!");
+            return;
+        }
+
+        $this->user->coin_balance -= $cost;
+        $this->user->save();
+
+        $streak->freeze_count += 1;
+        $streak->save();
+
+        \App\Models\CoinTransaction::create([
+            'user_id' => $this->user->id,
+            'coins' => -$cost,
+            'source' => 'spend',
+            'description' => 'Streak Freeze (muzlatgich) xaridi',
+        ]);
+
+        $this->toastSuccess("Streak Freeze muvaffaqiyatli xarid qilindi! Streak muzlatgichingiz saqlandi.");
+    }
+
+    public function buyAvatarFrame(string $frame): void
+    {
+        if (Auth::id() !== $this->user->id) return;
+
+        $frames = [
+            'gold'     => ['name' => 'Oltin toj (Royal Gold)', 'price' => 100],
+            'aurora'   => ['name' => 'Qutb yog‘dusi (Aurora Neon)', 'price' => 120],
+            'cyber'    => ['name' => 'Kiber neon (Cyberpunk)', 'price' => 150],
+            'emerald'  => ['name' => 'Zumrad nuri (Emerald)', 'price' => 90],
+            'obsidian' => ['name' => 'Kosmik bo‘shliq (Obsidian)', 'price' => 80],
+        ];
+
+        if (!isset($frames[$frame])) {
+            $this->toastWarning("Noma'lum ramka!");
+            return;
+        }
+
+        $item = $frames[$frame];
+        $profile = $this->user->profile ?? \App\Models\UserProfile::create(['user_id' => $this->user->id]);
+
+        // Agar ushbu buyum allaqachon sotib olingan bo'lsa — qayta to'lovsiz faollashtiramiz
+        if ($profile->hasUnlockedItem($frame)) {
+            $profile->avatar_frame = $frame;
+            $profile->chat_bubble_theme = $frame;
+            $profile->chat_style_preference = 'shop';
+            $profile->save();
+
+            $this->user->unsetRelation('profile');
+            $this->user->load('profile');
+
+            $this->toastSuccess("{$item['name']} o‘rnatildi va faol qilib belgilandi! 🎨");
+            return;
+        }
+
+        // Yangi xarid qilish
+        if ($this->user->coin_balance < $item['price']) {
+            $this->toastWarning("Tangalar yetarli emas! Narxi: {$item['price']} tanga.");
+            return;
+        }
+
+        $this->user->coin_balance -= $item['price'];
+        $this->user->save();
+
+        $profile->unlockItem($frame);
+        $profile->avatar_frame = $frame;
+        $profile->chat_bubble_theme = $frame;
+        $profile->chat_style_preference = 'shop';
+        $profile->save();
+
+        $this->user->unsetRelation('profile');
+        $this->user->load('profile');
+
+        \App\Models\CoinTransaction::create([
+            'user_id' => $this->user->id,
+            'coins' => -$item['price'],
+            'source' => 'spend',
+            'description' => "{$item['name']} avatar va chat uslubi xaridi",
+        ]);
+
+        $this->toastSuccess("{$item['name']} muvaffaqiyatli xarid qilindi va chat/profilingizga o‘rnatildi! 🎉");
+    }
+
+    public function setChatStylePreference(string $pref): void
+    {
+        if (Auth::id() !== $this->user->id) return;
+        if (!in_array($pref, ['shop', 'rank', 'default'], true)) return;
+
+        $profile = $this->user->profile ?? \App\Models\UserProfile::create(['user_id' => $this->user->id]);
+        $profile->chat_style_preference = $pref;
+        $profile->save();
+
+        $this->user->unsetRelation('profile');
+        $this->user->load('profile');
+
+        $msg = match($pref) {
+            'rank' => 'Chat va profil ko‘rinishi: Reyting uslubiga o‘tkazildi! 🏆',
+            'shop' => 'Chat va profil ko‘rinishi: Tangaga olingan do‘kon uslubiga o‘tkazildi! 🛍️',
+            default => 'Chat va profil ko‘rinishi: Standart ko‘rinishga qaytarildi.',
+        };
+
+        $this->toastSuccess($msg);
+    }
+
+    public function unequipShopTheme(): void
+    {
+        if (Auth::id() !== $this->user->id) return;
+
+        $profile = $this->user->profile;
+        if ($profile) {
+            $profile->avatar_frame = null;
+            $profile->chat_bubble_theme = null;
+            $profile->chat_style_preference = 'default';
+            $profile->save();
+
+            $this->user->unsetRelation('profile');
+            $this->user->load('profile');
+
+            $this->toastInfo("Maxsus bezak yechildi va standart ko‘rinishga qaytarildi.");
+        }
     }
 
     public function render()
@@ -148,7 +285,10 @@ class ProfilePage extends Component
         }
 
         $badges = $this->user->badges;
-        $notes = $this->user->notes()->with(['book', 'chapter'])->latest()->take(12)->get();
+        $isOwner = Auth::id() === $this->user->id;
+        $notes = $isOwner
+            ? $this->user->notes()->with(['book', 'chapter'])->latest()->take(12)->get()
+            : collect();
 
         // Dinamik hisob-kitoblar
         $totalReadingMinutes = max(
@@ -181,7 +321,7 @@ class ProfilePage extends Component
             'badges'            => $badges,
             'notes'             => $notes,
             'stats'             => $stats,
-            'isOwner'           => Auth::id() === $this->user->id,
+            'isOwner'           => $isOwner,
         ])->layout('layouts.app', ['title' => $this->user->name . ' (@' . $this->user->username . ')']);
     }
 }

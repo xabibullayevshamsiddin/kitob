@@ -554,6 +554,8 @@ class TakeQuiz extends Component
         }
 
         if ($this->currentQuestion === count($this->questions) - 1) {
+            $this->saveCurrentDraft();
+            $this->persistAttemptDraft();
             $this->confirmFinishOpen = true;
         }
     }

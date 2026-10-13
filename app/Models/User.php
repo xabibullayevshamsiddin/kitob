@@ -88,6 +88,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Bookmark::class);
     }
 
+    public function pdfAnnotations(): HasMany
+    {
+        return $this->hasMany(PdfAnnotation::class);
+    }
+
     public function notes(): HasMany
     {
         return $this->hasMany(UserNote::class);

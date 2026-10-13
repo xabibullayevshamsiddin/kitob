@@ -200,19 +200,34 @@
                         $isAdmin = auth()->check() && (auth()->user()->role === 'admin' || (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin')));
                         $isGroupOwner = auth()->check() && ($group->created_by === auth()->id());
                         $canDeleteMsg = $isMe || $isAdmin || $isGroupOwner;
+                        $senderRank = $msg->user_id ? ($topFiveIds[$msg->user_id] ?? null) : null;
+                        $chatStyle = \App\Services\Gamification\ChatStyleService::resolveStyle($msg->user, $senderRank, $isMe);
+                        $bubbleClass = $chatStyle['bubble_class'];
+                        $badgeText = $chatStyle['badge_text'];
+                        $badgeClass = $chatStyle['badge_class'];
+                        $authorNameClass = $chatStyle['name_class'];
                     @endphp
                     <div class="flex items-start gap-2.5 group {{ $isMe ? 'flex-row-reverse' : '' }}" wire:key="gm-{{ $msg->id }}">
-                        <x-ui.avatar :user="$msg->user" size="sm" shape="rounded-btn" link />
+                        <x-ui.avatar :user="$msg->user" size="sm" shape="rounded-btn" :rank="$senderRank" link />
 
                         <div class="flex flex-col {{ $isMe ? 'items-end' : 'items-start' }} max-w-[80%] sm:max-w-md min-w-0">
-                            <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }}">
+                            <div class="flex items-center gap-1.5 mb-1 {{ $isMe ? 'flex-row-reverse' : '' }} flex-wrap">
                                 @if($msg->user && !$isMe)
-                                    <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-bold text-paper font-sans hover:text-amber-400 hover:underline transition-colors truncate max-w-[150px]">
+                                    <a href="{{ route('profile.show', $msg->user->username) }}" class="text-xs font-bold {{ $authorNameClass }} font-sans hover:underline transition-colors truncate max-w-[150px]">
                                         {{ $msg->user->name }}
                                     </a>
                                 @else
-                                    <span class="text-xs font-bold text-paper font-sans truncate max-w-[150px]">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
+                                    <span class="text-xs font-bold {{ $authorNameClass }} font-sans truncate max-w-[150px]">{{ $isMe ? __('site.chat.you') : ($msg->user?->name ?? __('site.chat.user')) }}</span>
                                 @endif
+
+                                @if($badgeText)
+                                    <span class="{{ $badgeClass }}">{{ $badgeText }}</span>
+                                @endif
+
+                                @if($senderRank && ($chatStyle['mode'] ?? '') !== 'rank')
+                                    <x-ui.rank-badge :rank="$senderRank" size="xs" :compact="true" />
+                                @endif
+
                                 @if(($msg->user?->role ?? '') === 'admin' || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('admin')))
                                     <span class="px-1.5 py-0.2 bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 font-mono text-[9px] rounded-pill uppercase">{{ __('site.leaderboard.role_admin') }}</span>
                                 @elseif($msg->user_id === $group->created_by)
@@ -339,7 +354,7 @@
                                     </div>
                                 </div>
                             @else
-                                <div class="px-3.5 py-2 rounded-panel text-xs sm:text-sm leading-relaxed shadow-sm break-words [word-break:break-word] {{ $isMe ? 'bg-ink-800 border border-ink-border text-paper rounded-tr-none text-left' : 'bg-ink-950/80 border border-ink-border text-paper rounded-tl-none' }}">{{ $msg->message }}</div>
+                                <div class="px-3.5 py-2 rounded-panel text-xs sm:text-sm leading-relaxed shadow-sm break-words [word-break:break-word] border {{ $bubbleClass }} text-paper {{ $isMe ? 'rounded-tr-none text-left' : 'rounded-tl-none' }}">{{ $msg->message }}</div>
                             @endif
                         </div>
                     </div>

@@ -3,6 +3,13 @@
 @section('title', $book->title)
 
 @push('styles')
+    <x-seo-meta 
+        :title="$book->title"
+        :description="$book->description"
+        :image="$book->cover_url"
+        :book="$book"
+        type="book"
+    />
 <link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.css')) }}">
 <style>
     .preserve-3d { transform-style: preserve-3d; }
@@ -224,6 +231,7 @@
         @if($book->pdf_path)
             <!-- 3D Real Kitob Varaqlash Ko'rinishi (Default) -->
             <div x-show="readerMode === '3d'" class="space-y-4">
+                <x-reader.pdf-annotations :book="$book" :annotations="$pdfAnnotations" />
                 <div id="fb-root" 
                      data-pdf-url="{{ route('books.pdf.stream', $book) }}" 
                      data-sound-url="{{ asset('sounds/oxidvideos-page-flip-1-178322.mp3') }}"

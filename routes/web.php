@@ -238,7 +238,22 @@ Route::middleware(['auth'])->group(function () {
                 abort(403, 'Ushbu kitob hali rasman e\'lon qilinmagan. Top 5 kitobxonlar uchun erta kirish imtiyozi mavjud.');
             }
         }
-        return view('pages.book-detail', compact('book'));
+        $pdfAnnotations = request()->user()->pdfAnnotations()
+            ->where('book_id', $book->id)
+            ->latest()
+            ->take(100)
+            ->get(['id', 'page_number', 'kind', 'label', 'note_text', 'color', 'created_at'])
+            ->map(fn ($annotation) => [
+                'id' => $annotation->id,
+                'page_number' => $annotation->page_number,
+                'kind' => $annotation->kind,
+                'label' => $annotation->label,
+                'note_text' => $annotation->note_text,
+                'color' => $annotation->color,
+                'created_at' => $annotation->created_at?->format('d.m.Y H:i'),
+            ]);
+
+        return view('pages.book-detail', compact('book', 'pdfAnnotations'));
     })->name('books.show');
 
     // Kitobni BRAUZERDA onlayn o'qish (PDF embed)
@@ -259,10 +274,12 @@ Route::middleware(['auth'])->group(function () {
             ->where('chapter_id', $chapter->id)
             ->latest()
             ->take(20)
-            ->get(['id', 'selected_text', 'note_text', 'created_at'])
+            ->get(['id', 'position', 'selected_text', 'color', 'note_text', 'created_at'])
             ->map(fn ($note) => [
                 'id' => $note->id,
+                'position' => $note->position,
                 'selected_text' => $note->selected_text,
+                'color' => $note->color ?? 'amber',
                 'note_text' => $note->note_text,
                 'created_at' => $note->created_at?->format('d.m.Y H:i'),
             ]);
@@ -276,6 +293,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('reader.bookmarks.destroy');
     Route::post('/reader/notes', [\App\Http\Controllers\ReaderAnnotationController::class, 'storeNote'])
         ->name('reader.notes.store');
+
+    Route::post('/books/{book}/pdf-annotations', [\App\Http\Controllers\PdfAnnotationController::class, 'store'])
+        ->name('books.pdf.annotations.store');
+    Route::delete('/pdf-annotations/{pdfAnnotation}', [\App\Http\Controllers\PdfAnnotationController::class, 'destroy'])
+        ->name('books.pdf.annotations.destroy');
 
     // reader alias route
     Route::get('/reader/{book}', function ($bookId) {
@@ -331,7 +353,22 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/books/{book}/flipbook', function (\App\Models\Book $book) {
         abort_unless($book->pdf_path, 404);
-        return view('pages.book-flipbook', compact('book'));
+        $pdfAnnotations = request()->user()->pdfAnnotations()
+            ->where('book_id', $book->id)
+            ->latest()
+            ->take(100)
+            ->get(['id', 'page_number', 'kind', 'label', 'note_text', 'color', 'created_at'])
+            ->map(fn ($annotation) => [
+                'id' => $annotation->id,
+                'page_number' => $annotation->page_number,
+                'kind' => $annotation->kind,
+                'label' => $annotation->label,
+                'note_text' => $annotation->note_text,
+                'color' => $annotation->color,
+                'created_at' => $annotation->created_at?->format('d.m.Y H:i'),
+            ]);
+
+        return view('pages.book-flipbook', compact('book', 'pdfAnnotations'));
     })->name('books.flipbook');
 
     // Mutolaa va video sessiyasi va progressini real-time hisoblash
@@ -1034,4 +1071,49 @@ Route::prefix('admin')
 Route::middleware(['auth'])->get('/profile-edit', function () {
     return redirect()->route('settings');
 })->name('profile.edit');
+
+// ── SEO: sitemap.xml va robots.txt ──
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /teacher\nDisallow: /settings\nSitemap: " . url('/sitemap.xml');
+    return response($content, 200)->header('Content-Type', 'text/plain');
+});
+
+Route::get('/sitemap.xml', function () {
+    $books = \App\Models\Book::where('is_active', true)->latest()->get();
+    
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+    
+    // Asosiy sahifalar
+    $staticRoutes = [
+        url('/'),
+        url('/books'),
+        url('/leaderboard'),
+        url('/about'),
+        url('/faq'),
+        url('/contact'),
+    ];
+    
+    foreach ($staticRoutes as $route) {
+        $xml .= '<url>';
+        $xml .= '<loc>' . htmlspecialchars($route) . '</loc>';
+        $xml .= '<changefreq>daily</changefreq>';
+        $xml .= '<priority>' . ($route === url('/') ? '1.0' : '0.8') . '</priority>';
+        $xml .= '</url>';
+    }
+    
+    // Kitob sahifalari
+    foreach ($books as $b) {
+        $xml .= '<url>';
+        $xml .= '<loc>' . htmlspecialchars(route('books.show', $b->slug)) . '</loc>';
+        $xml .= '<lastmod>' . ($b->updated_at ? $b->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
+        $xml .= '<changefreq>weekly</changefreq>';
+        $xml .= '<priority>0.9</priority>';
+        $xml .= '</url>';
+    }
+    
+    $xml .= '</urlset>';
+    
+    return response($xml, 200)->header('Content-Type', 'application/xml');
+})->name('sitemap');
 

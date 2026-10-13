@@ -48,10 +48,13 @@ class ReaderAnnotationController extends Controller
 
     public function storeNote(Request $request): JsonResponse
     {
+        $request->merge(['note_text' => trim((string) $request->input('note_text', ''))]);
         $data = $request->validate([
             'book_id' => ['required', 'integer', 'exists:books,id'],
             'chapter_id' => ['required', 'integer', 'exists:book_chapters,id'],
+            'position' => ['required', 'integer', 'min:0', 'max:10000000'],
             'selected_text' => ['nullable', 'string', 'max:5000'],
+            'color' => ['nullable', 'string', 'in:amber,emerald,sky,rose,purple'],
             'note_text' => ['required', 'string', 'min:1', 'max:5000'],
         ]);
 
@@ -63,14 +66,18 @@ class ReaderAnnotationController extends Controller
         $note = $request->user()->notes()->create([
             'book_id' => $data['book_id'],
             'chapter_id' => $data['chapter_id'],
+            'position' => $data['position'],
             'selected_text' => trim((string) ($data['selected_text'] ?? '')) ?: null,
+            'color' => $data['color'] ?? 'amber',
             'note_text' => trim($data['note_text']),
         ]);
 
         return response()->json([
             'note' => [
                 'id' => $note->id,
+                'position' => $note->position,
                 'selected_text' => $note->selected_text,
+                'color' => $note->color,
                 'note_text' => $note->note_text,
                 'created_at' => $note->created_at->format('d.m.Y H:i'),
             ],

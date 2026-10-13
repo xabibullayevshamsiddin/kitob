@@ -1001,6 +1001,13 @@
       }
       selectEl.value = targetVal;
     });
+
+    const visiblePages = currentVal === 1 || isMobile
+      ? [currentVal]
+      : [currentVal, currentVal + 1].filter(page => page <= totalPages);
+    window.dispatchEvent(new CustomEvent('flipbook:pagechange', {
+      detail: { page: currentVal, totalPages, visiblePages },
+    }));
   }
 
   function updateZoomLabel() {
