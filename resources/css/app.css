@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -69,4 +69,95 @@
 }
 .skeleton-pulse {
     animation: pulse-subtle 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Profile Visual Dynamic Animations */
+@keyframes ks-ambient-breathe {
+    0%, 100% {
+        transform: scale(1) translate(0, 0);
+        opacity: 0.65;
+    }
+    50% {
+        transform: scale(1.15) translate(-1.5%, 2%);
+        opacity: 0.95;
+    }
+}
+.animate-ambient-breathe {
+    animation: ks-ambient-breathe 7s ease-in-out infinite;
+    will-change: transform, opacity;
+}
+
+@keyframes ks-cyber-laser {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    15% {
+        opacity: 0.9;
+    }
+    85% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+.animate-laser-scan {
+    animation: ks-cyber-laser 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    will-change: transform;
+}
+
+@keyframes ks-aurora-drift {
+    0%, 100% {
+        transform: scaleY(1) translateY(0) skewX(0deg);
+        opacity: 0.3;
+    }
+    50% {
+        transform: scaleY(1.2) translateY(-6px) skewX(-3deg);
+        opacity: 0.65;
+    }
+}
+.animate-aurora-drift {
+    animation: ks-aurora-drift 6.5s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+}
+
+@keyframes ks-star-twinkle {
+    0%, 100% {
+        opacity: 0.2;
+        transform: scale(0.96);
+    }
+    50% {
+        opacity: 0.65;
+        transform: scale(1.04);
+    }
+}
+.animate-star-twinkle {
+    animation: ks-star-twinkle 3.2s ease-in-out infinite;
+    will-change: opacity, transform;
+}
+
+@keyframes ks-badge-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+.animate-badge-float {
+    animation: ks-badge-float 3.5s ease-in-out infinite;
+}
+
+@keyframes ks-ring-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(244, 63, 94, 0.25);
+    }
+    50% {
+        box-shadow: 0 0 22px rgba(244, 63, 94, 0.55);
+    }
+}
+.animate-ring-pulse {
+    animation: ks-ring-pulse 2.8s ease-in-out infinite;
 }

@@ -193,11 +193,13 @@
             -webkit-backface-visibility: hidden;
             border-radius: 3px 8px 8px 3px;
             overflow: hidden;
+            transform: translateZ(1px);
+            -webkit-transform: translateZ(1px);
         }
         .scrolly-cover-back,
         .scrolly-leaf-back {
-            transform: rotateY(180deg);
-            -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg) translateZ(1px);
+            -webkit-transform: rotateY(180deg) translateZ(1px);
         }
         .scrolly-book-inside {
             transform-style: preserve-3d;
@@ -268,7 +270,7 @@
         <div class="relative z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-24 sm:pt-32 pb-20 sm:pb-28 max-w-7xl mx-auto w-full flex-1 overflow-hidden">
             
             <!-- Eyebrow Pill Badge -->
-            <div class="animate-fade-rise inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full liquid-glass text-[10.5px] sm:text-xs text-amber-300 font-mono tracking-wider mb-6 max-w-full font-semibold">
+            <div class="hero-anim-item animate-fade-rise inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full liquid-glass text-[10.5px] sm:text-xs text-amber-300 font-mono tracking-wider mb-6 max-w-full font-semibold">
                 <span class="relative flex h-2 w-2 shrink-0">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
@@ -277,19 +279,19 @@
             </div>
 
             <!-- H1 Cinematic Headline -->
-            <h1 class="animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-white break-words"
+            <h1 class="hero-anim-item animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-white break-words"
                 style="font-family: 'Instrument Serif', serif;">
                 Sahifalar aro <em class="not-italic text-amber-300">orzular</em> va <em class="not-italic text-white/70">teran tafakkur yuksaladi.</em>
             </h1>
 
             <!-- Subtext -->
-            <p class="animate-fade-rise-delay text-white/75 text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal"
+            <p class="hero-anim-item animate-fade-rise-delay text-white/75 text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal"
                style="font-family: var(--font-body, 'Inter', sans-serif);">
                 Chalg'ituvchi shovqinlar orasida — chuqur mutolaa, 3D interaktiv varaqlash va ilhom maskani. Sara jahon hamda o'zbek adabiyoti, audio asarlar va intellektual kitobxonlar ekotizimi.
             </p>
 
             <!-- Hero CTA Buttons -->
-            <div class="animate-fade-rise-delay-2 mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+            <div class="hero-anim-item animate-fade-rise-delay-2 mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
                 <a href="{{ auth()->check() ? route('books.catalog') : route('register') }}"
                    class="group relative inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-ink-950 font-bold text-sm sm:text-base shadow-[0_0_30px_rgba(245,158,11,0.45),inset_0_1px_1px_rgba(255,255,255,0.6)] border border-amber-300/80 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 w-full sm:w-auto"
                    style="font-family: var(--font-body, 'Inter', sans-serif);">
@@ -306,7 +308,7 @@
             </div>
 
             <!-- Micro-features Pill Bar -->
-            <div class="animate-fade-rise-delay-2 mt-12 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-mono">
+            <div class="hero-anim-item animate-fade-rise-delay-2 mt-12 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-mono">
                 <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">📚</span>
                     <span class="font-bold text-amber-300 font-mono">{{ $booksCount ?? 1000 }}+</span>
@@ -376,7 +378,7 @@
         $scrollyCover = $scrollyBook->cover_url ?? null;
     @endphp
 
-    <section id="book-reveal-section" class="relative w-full min-h-screen bg-ink-950 border-b border-ink-border flex items-center justify-center py-16 lg:py-0 overflow-hidden max-w-full">
+    <section id="book-reveal-section" class="relative w-full min-h-screen bg-ink-950 border-b border-ink-border flex items-center justify-center py-16 lg:py-0 overflow-x-clip max-w-full">
         <!-- Atmospheric Ambient Spotlight behind the book -->
         <div class="scrolly-ambient-glow absolute inset-0 pointer-events-none flex items-center justify-center opacity-60 overflow-hidden" aria-hidden="true">
             <div class="w-[500px] lg:w-[650px] h-[500px] lg:h-[650px] rounded-full bg-gradient-radial from-amber-500/15 via-vermilion/5 to-transparent blur-3xl max-w-full"></div>
@@ -409,7 +411,7 @@
                 
                 <!-- LEFT (cols 1-6): The Grand 3D Book Stage (Multi-Leaf 3D Interactive Flip) -->
                 <div class="lg:col-span-6 flex flex-col justify-center lg:justify-end lg:pr-8 items-center max-w-full">
-                    <div class="scrolly-book-stage relative w-[205px] sm:w-[260px] lg:w-[320px] aspect-[2/3] select-none" id="scrolly-book-stage">
+                    <div class="scrolly-book-stage relative w-[165px] sm:w-[240px] lg:w-[320px] aspect-[2/3] select-none" id="scrolly-book-stage">
                         
                         <!-- Floating Drag/Swipe Gesture Hint Pill -->
                         <div id="scrolly-drag-hint"
@@ -709,7 +711,7 @@
                     </div>
 
                     <!-- 3D Book Interactive Controls & Page Flip Toolbar -->
-                    <div class="scrolly-book-controls flex items-center justify-between gap-2 mt-4 px-1 w-full max-w-[205px] sm:max-w-[260px] lg:max-w-[320px] select-none">
+                    <div class="scrolly-book-controls flex items-center justify-between gap-2 mt-4 px-1 w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[380px] select-none">
                         <button type="button" id="scrolly-prev-page-btn"
                                 class="px-2.5 py-1 rounded-full bg-ink-900 border border-ink-border text-mist hover:text-paper hover:border-amber-400/50 text-xs font-mono transition-colors flex items-center gap-1 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
                                 title="Oldingi bet">
@@ -718,7 +720,7 @@
                         </button>
 
                         <div class="px-2.5 py-1 rounded-full bg-ink-900/90 border border-ink-border flex items-center gap-2 shadow-sm">
-                            <span id="scrolly-page-label" class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-semibold tracking-wider">Muqova</span>
+                            <span id="scrolly-page-label" class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-semibold tracking-wider whitespace-nowrap shrink-0">Muqova</span>
                             <div class="flex items-center gap-1">
                                 <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 transition-all cursor-pointer" data-page="0" title="Muqova"></span>
                                 <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="1" title="1-bet"></span>
@@ -1218,6 +1220,7 @@
             homeAnimationInitAttempts = 0;
 
             gsap.registerPlugin(ScrollTrigger);
+            if (gsap.config) gsap.config({ nullTargetWarn: false });
 
             try {
                 // Auto-refresh on standard events & ignore mobile browser address-bar resize jumps
@@ -1241,10 +1244,12 @@
                 });
 
                 // 1. Header Entrance
-                gsap.fromTo('#site-header',
-                    { y: -20, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
-                );
+                if (document.querySelector('#site-header')) {
+                    gsap.fromTo('#site-header',
+                        { y: -20, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
+                    );
+                }
 
                 // 🌠 1.1 Silky-Smooth 60FPS Shooting Stars (Meteors in Night Sky)
                 function launchMeteor(el) {
@@ -1313,17 +1318,19 @@
                 if (meteor2) gsap.delayedCall(3.8, () => launchMeteor(meteor2));
 
                 // 2. Editorial Hero Staggered Entrance Reveal
-                gsap.fromTo('.hero-anim-item', 
-                    { opacity: 0, y: 25 },
-                    { 
-                        opacity: 1, 
-                        y: 0, 
-                        duration: 0.7, 
-                        stagger: 0.08, 
-                        ease: "power2.out",
-                        clearProps: "all"
-                    }
-                );
+                if (document.querySelectorAll('.hero-anim-item').length > 0) {
+                    gsap.fromTo('.hero-anim-item', 
+                        { opacity: 0, y: 25 },
+                        { 
+                            opacity: 1, 
+                            y: 0, 
+                            duration: 0.7, 
+                            stagger: 0.08, 
+                            ease: "power2.out",
+                            clearProps: "all"
+                        }
+                    );
+                }
 
                 // ── 2.1. SCROLLYTELLING BOOK REVEAL SCENE (APPLE-GRADE PINNED SCROLL) ──
                 window.initBookRevealSection = function() {
@@ -1398,24 +1405,49 @@
                     }
 
                     // Reset initial positions & clear old inline transforms
-                    gsap.set(cover, { rotateY: 0, transformOrigin: "left center", zIndex: 40 });
+                    if (cover) gsap.set(cover, { rotateY: 0, transformOrigin: "left center", zIndex: 40 });
                     if (leaf1) gsap.set(leaf1, { rotateY: 0, transformOrigin: "left center", zIndex: 30 });
                     if (leaf2) gsap.set(leaf2, { rotateY: 0, transformOrigin: "left center", zIndex: 20 });
-                    gsap.set(stage, { x: 0 });
-                    gsap.set(shadow, { scaleX: 1, opacity: 0.6, x: 0 });
-                    gsap.set(contentPanel, { opacity: 0, x: 45 });
-                    gsap.set(contentItems, { opacity: 0, y: 16 });
-                    gsap.set(statsRow, { opacity: 0, y: 24 });
+                    if (stage) gsap.set(stage, { x: 0 });
+                    if (shadow) gsap.set(shadow, { scaleX: 1, opacity: 0.6, x: 0 });
+                    if (contentPanel) gsap.set(contentPanel, { opacity: 0, x: 45 });
+                    if (contentItems && contentItems.length > 0) gsap.set(contentItems, { opacity: 0, y: 16 });
+                    if (statsRow) gsap.set(statsRow, { opacity: 0, y: 24 });
 
                     const statElements = document.querySelectorAll('.scrolly-stat-num');
                     const statTargets = Array.from(statElements).map(el => parseInt(el.getAttribute('data-target') || '0', 10));
                     const statProgressObj = { progress: 0 };
 
-                    // ── MASTER TIMELINE: SINGLE SOURCE OF TRUTH FOR ALL LEAVES ──
+                    function getStageShiftX() {
+                        const stageWidth = stage ? stage.offsetWidth : 165;
+                        return isDesktop() ? 45 : Math.round(stageWidth * 0.45);
+                    }
+
+                    // ── MASTER TIMELINE: DYNAMIC Z-INDEX & SCROLL SYNCHRONIZATION ──
                     const masterTl = gsap.timeline({
                         paused: true,
                         onUpdate: function() {
-                            updateControlsFromProgress(this.progress());
+                            const p = this.progress();
+                            updateControlsFromProgress(p);
+
+                            // Dynamic deterministic z-index management for forward/backward scrubbing
+                            if (p <= 0.15) {
+                                cover.style.zIndex = '50';
+                                if (leaf1) leaf1.style.zIndex = '30';
+                                if (leaf2) leaf2.style.zIndex = '20';
+                            } else if (p <= 0.38) {
+                                cover.style.zIndex = '12';
+                                if (leaf1) leaf1.style.zIndex = '40';
+                                if (leaf2) leaf2.style.zIndex = '20';
+                            } else if (p <= 0.58) {
+                                cover.style.zIndex = '10';
+                                if (leaf1) leaf1.style.zIndex = '25';
+                                if (leaf2) leaf2.style.zIndex = '40';
+                            } else {
+                                cover.style.zIndex = '10';
+                                if (leaf1) leaf1.style.zIndex = '20';
+                                if (leaf2) leaf2.style.zIndex = '30';
+                            }
                         }
                     });
 
@@ -1428,48 +1460,54 @@
                         }, 0.04);
                     }
 
-                    // 0–30%: muqova ochiladi.
-                    masterTl.to(cover, {
-                        rotateY: -142,
-                        ease: 'power1.inOut',
-                        duration: 0.30,
-                    }, 0);
-
-                    // Drop cover z-index behind right leaves as it passes -90deg
-                    masterTl.set(cover, { zIndex: 12 }, 0.16);
+                    // 0–30%: muqova ochiladi (Page 0 -> Page 1)
+                    if (cover) {
+                        masterTl.to(cover, {
+                            rotateY: -148,
+                            ease: 'power1.inOut',
+                            duration: 0.30,
+                        }, 0);
+                    }
 
                     // Gentle X adjustment to keep open book centered
-                    const shiftX = isDesktop() ? 40 : Math.round(Math.min(50, Math.max(25, (window.innerWidth - 205) * 0.28)));
-                    masterTl.to(stage, {
-                        x: shiftX,
-                        ease: 'power1.inOut',
-                        duration: 0.30
-                    }, 0);
+                    if (stage) {
+                        masterTl.to(stage, {
+                            x: () => getStageShiftX(),
+                            ease: 'power1.inOut',
+                            duration: 0.30
+                        }, 0);
+                    }
 
-                    masterTl.to(shadow, {
-                        scaleX: isDesktop() ? 1.25 : 1.15,
-                        x: isDesktop() ? -24 : -15,
-                        opacity: 0.9,
-                        ease: 'power1.inOut',
-                        duration: 0.30
-                    }, 0);
+                    if (shadow) {
+                        masterTl.to(shadow, {
+                            scaleX: isDesktop() ? 1.25 : 1.15,
+                            x: () => isDesktop() ? -24 : -Math.round(getStageShiftX() * 0.4),
+                            opacity: 0.9,
+                            ease: 'power1.inOut',
+                            duration: 0.30
+                        }, 0);
+                    }
 
                     // 30–70%: sarlavha, muallif va tavsif navbat bilan ko'rinadi.
-                    masterTl.to(contentPanel, {
-                        opacity: 1,
-                        x: 0,
-                        ease: 'power2.out',
-                        duration: 0.18
-                    }, 0.30);
-                    masterTl.to(contentItems, {
-                        opacity: 1,
-                        y: 0,
-                        ease: 'power2.out',
-                        duration: 0.12,
-                        stagger: 0.055
-                    }, 0.38);
+                    if (contentPanel) {
+                        masterTl.to(contentPanel, {
+                            opacity: 1,
+                            x: 0,
+                            ease: 'power2.out',
+                            duration: 0.18
+                        }, 0.30);
+                    }
+                    if (contentItems && contentItems.length > 0) {
+                        masterTl.to(contentItems, {
+                            opacity: 1,
+                            y: 0,
+                            ease: 'power2.out',
+                            duration: 0.12,
+                            stagger: 0.055
+                        }, 0.38);
+                    }
 
-                    // Kitob varaqlari 30–70% oralig'ida ochiladi.
+                    // Kitob 1-varaqlari 30–50% oralig'ida ochiladi (Page 1 -> Page 2)
                     if (leaf1) {
                         masterTl.to(leaf1, {
                             rotateY: -148,
@@ -1477,16 +1515,16 @@
                             duration: 0.20
                         }, 0.30);
 
-                        masterTl.set(leaf1, { zIndex: 14 }, 0.41);
-
-                        masterTl.to(cover, {
-                            rotateY: -152,
-                            ease: 'power1.inOut',
-                            duration: 0.20
-                        }, 0.30);
+                        if (cover) {
+                            masterTl.to(cover, {
+                                rotateY: -152,
+                                ease: 'power1.inOut',
+                                duration: 0.20
+                            }, 0.30);
+                        }
                     }
 
-                    // Ikkinchi varaq 50–70%: ochiq kitob holatini yakunlaydi.
+                    // Ikkinchi varaq 50–70% oralig'ida ochiladi (Page 2 -> Page 3)
                     if (leaf2) {
                         masterTl.to(leaf2, {
                             rotateY: -148,
@@ -1494,11 +1532,9 @@
                             duration: 0.20
                         }, 0.50);
 
-                        masterTl.set(leaf2, { zIndex: 16 }, 0.63);
-
                         if (leaf1) {
                             masterTl.to(leaf1, {
-                                rotateY: -158,
+                                rotateY: -156,
                                 ease: 'power1.inOut',
                                 duration: 0.20
                             }, 0.50);
@@ -1506,12 +1542,14 @@
                     }
 
                     // 70–100%: statistika chiqadi va sonlar scroll bilan sanaladi.
-                    masterTl.to(statsRow, {
-                        opacity: 1,
-                        y: 0,
-                        ease: 'power2.out',
-                        duration: 0.30
-                    }, 0.70);
+                    if (statsRow) {
+                        masterTl.to(statsRow, {
+                            opacity: 1,
+                            y: 0,
+                            ease: 'power2.out',
+                            duration: 0.30
+                        }, 0.70);
+                    }
 
                     masterTl.to(statProgressObj, {
                         progress: 1,
@@ -1526,7 +1564,7 @@
                         }
                     }, 0.70);
 
-                    // ── ATTACH SCROLLTRIGGER (DESKTOP PIN + MOBILE 3D AUTO-REVEAL & INTERACTIVE FLIP) ──
+                    // ── ATTACH SCROLLTRIGGER (DESKTOP PIN + MOBILE AUTO OPEN & CLOSE ON SCROLL) ──
                     window.bookRevealMedia = ScrollTrigger.matchMedia({
                         "(min-width: 1024px) and (prefers-reduced-motion: no-preference)": function() {
                             updateUI(0);
@@ -1546,25 +1584,23 @@
                             masterTl.progress(0);
                             updateUI(0);
 
-                            gsap.set(contentPanel, { opacity: 1, x: 0 });
-                            gsap.set(contentItems, { opacity: 1, y: 0 });
-                            gsap.set(statsRow, { opacity: 1, y: 0 });
+                            if (contentPanel) gsap.set(contentPanel, { opacity: 1, x: 0 });
+                            if (contentItems && contentItems.length > 0) gsap.set(contentItems, { opacity: 1, y: 0 });
+                            if (statsRow) gsap.set(statsRow, { opacity: 1, y: 0 });
 
                             statElements.forEach((el, idx) => {
                                 el.textContent = (statTargets[idx] || 0).toLocaleString('en-US');
                             });
-
-                            let hasAutoOpened = false;
 
                             const mobileST = ScrollTrigger.create({
                                 id: 'book-reveal-mobile-st',
                                 trigger: bookRevealSection,
                                 start: 'top 75%',
                                 onEnter: () => {
-                                    if (!hasAutoOpened) {
-                                        hasAutoOpened = true;
-                                        goToPage(1, 0.9);
-                                    }
+                                    goToPage(1, 0.85);
+                                },
+                                onLeaveBack: () => {
+                                    goToPage(0, 0.7);
                                 }
                             });
 
@@ -1575,17 +1611,17 @@
                         "(prefers-reduced-motion: reduce)": function() {
                             masterTl.progress(0.70);
                             updateUI(maxPages);
-                            gsap.set(dragHint, { autoAlpha: 0 });
-                            gsap.set(contentPanel, { opacity: 1, x: 0 });
-                            gsap.set(contentItems, { opacity: 1, y: 0 });
-                            gsap.set(statsRow, { opacity: 1, y: 0 });
+                            if (dragHint) gsap.set(dragHint, { autoAlpha: 0 });
+                            if (contentPanel) gsap.set(contentPanel, { opacity: 1, x: 0 });
+                            if (contentItems && contentItems.length > 0) gsap.set(contentItems, { opacity: 1, y: 0 });
+                            if (statsRow) gsap.set(statsRow, { opacity: 1, y: 0 });
                             statElements.forEach((el, idx) => {
                                 el.textContent = (statTargets[idx] || 0).toLocaleString('en-US');
                             });
                         }
                     });
 
-                    // ── PROGRAMMATIC NAVIGATION (BUTTONS, DOTS, DOGEAR) ──
+                    // ── PROGRAMMATIC NAVIGATION (BUTTONS, DOTS, DOGEAR, SWIPES) ──
                     function goToPage(targetPage, duration = 0.65) {
                         if (targetPage < 0) targetPage = 0;
                         if (targetPage > maxPages) {
@@ -1599,6 +1635,8 @@
                             dragHint.style.pointerEvents = 'none';
                         }
 
+                        const prevPage = currentPage;
+                        const isForward = targetPage >= prevPage;
                         const targetProg = pageProgressTargets[targetPage] ?? 0;
                         const st = (typeof ScrollTrigger !== 'undefined') ? ScrollTrigger.getById('book-reveal-st') : null;
 
@@ -1621,18 +1659,105 @@
                             masterTl.progress(targetProg);
                             updateUI(targetPage);
                         } else {
-                            gsap.to(masterTl, {
-                                progress: targetProg,
+                            // On mobile or unpinned: deterministic direct 3D animation
+                            gsap.killTweensOf([cover, leaf1, leaf2, stage, shadow]);
+
+                            const shiftX = getStageShiftX();
+                            const pageStates = {
+                                0: { cover: 0, leaf1: 0, leaf2: 0, stageX: 0, shadowScale: 1, shadowX: 0, shadowOp: 0.6 },
+                                1: { cover: -148, leaf1: 0, leaf2: 0, stageX: shiftX, shadowScale: 1.15, shadowX: -Math.round(shiftX * 0.4), shadowOp: 0.9 },
+                                2: { cover: -152, leaf1: -148, leaf2: 0, stageX: shiftX, shadowScale: 1.15, shadowX: -Math.round(shiftX * 0.4), shadowOp: 0.9 },
+                                3: { cover: -156, leaf1: -152, leaf2: -148, stageX: shiftX, shadowScale: 1.15, shadowX: -Math.round(shiftX * 0.4), shadowOp: 0.9 },
+                            };
+                            const targetState = pageStates[targetPage] || pageStates[0];
+
+                            // Deterministic Z-Index stacking:
+                            if (targetPage === 0) {
+                                // Closing: cover immediately on top so it swings over everything
+                                cover.style.zIndex = '50';
+                                if (leaf1) leaf1.style.zIndex = '30';
+                                if (leaf2) leaf2.style.zIndex = '20';
+                            } else if (targetPage === 1) {
+                                if (!isForward) {
+                                    // Flipping back from Page 2: leaf1 swings on top of leaf2
+                                    if (leaf1) leaf1.style.zIndex = '45';
+                                }
+                                if (leaf2) leaf2.style.zIndex = '20';
+                            } else if (targetPage === 2) {
+                                if (isForward) {
+                                    // Turning to Page 2: leaf2 is the active right page
+                                    if (leaf2) leaf2.style.zIndex = '40';
+                                } else {
+                                    // Flipping back from Page 3: leaf2 swings on top of base page
+                                    if (leaf2) leaf2.style.zIndex = '45';
+                                }
+                            } else if (targetPage === 3) {
+                                if (leaf2) leaf2.style.zIndex = '30';
+                            }
+
+                            const ease3D = "power2.inOut";
+
+                            gsap.to(cover, {
+                                rotateY: targetState.cover,
                                 duration: duration,
-                                ease: "power2.out",
-                                overwrite: "auto",
-                                onUpdate: () => {
-                                    updateControlsFromProgress(masterTl.progress());
-                                },
-                                onComplete: () => {
-                                    updateUI(targetPage);
+                                ease: ease3D,
+                                onUpdate: function() {
+                                    const rot = gsap.getProperty(cover, "rotateY");
+                                    if (targetPage > 0 && rot < -90) {
+                                        cover.style.zIndex = '12';
+                                    }
                                 }
                             });
+
+                            if (leaf1) {
+                                gsap.to(leaf1, {
+                                    rotateY: targetState.leaf1,
+                                    duration: duration,
+                                    ease: ease3D,
+                                    onUpdate: function() {
+                                        const rot = gsap.getProperty(leaf1, "rotateY");
+                                        if (targetPage >= 2 && rot < -90) {
+                                            leaf1.style.zIndex = '25';
+                                        } else if (targetPage === 1 && rot > -90) {
+                                            leaf1.style.zIndex = '40';
+                                        }
+                                    }
+                                });
+                            }
+
+                            if (leaf2) {
+                                gsap.to(leaf2, {
+                                    rotateY: targetState.leaf2,
+                                    duration: duration,
+                                    ease: ease3D,
+                                    onUpdate: function() {
+                                        const rot = gsap.getProperty(leaf2, "rotateY");
+                                        if (targetPage >= 3 && rot < -90) {
+                                            leaf2.style.zIndex = '30';
+                                        } else if (targetPage <= 2 && rot > -90) {
+                                            leaf2.style.zIndex = (targetPage === 2) ? '40' : '20';
+                                        }
+                                    }
+                                });
+                            }
+
+                            gsap.to(stage, {
+                                x: targetState.stageX,
+                                duration: duration,
+                                ease: ease3D
+                            });
+
+                            gsap.to(shadow, {
+                                scaleX: targetState.shadowScale,
+                                x: targetState.shadowX,
+                                opacity: targetState.shadowOp,
+                                duration: duration,
+                                ease: ease3D
+                            });
+
+                            // Keep masterTl progress synced
+                            masterTl.progress(targetProg);
+                            updateUI(targetPage);
                         }
                     }
 
@@ -1799,68 +1924,76 @@
                 window.initBookRevealSection();
 
                 // 3. Bento Grid Reveal
-                gsap.fromTo('.bento-header',
-                    { opacity: 0, y: 25 },
-                    {
-                        opacity: 1,
-                        y: 0,
-                        duration: 0.6,
-                        ease: "power2.out",
-                        scrollTrigger: {
-                            trigger: '#features',
-                            start: "top 85%",
+                if (document.querySelector('#features') && document.querySelectorAll('.bento-header').length > 0) {
+                    gsap.fromTo('.bento-header',
+                        { opacity: 0, y: 25 },
+                        {
+                            opacity: 1,
+                            y: 0,
+                            duration: 0.6,
+                            ease: "power2.out",
+                            scrollTrigger: {
+                                trigger: '#features',
+                                start: "top 85%",
+                            }
                         }
-                    }
-                );
+                    );
+                }
 
-                gsap.fromTo('.bento-card', 
-                    { opacity: 0, y: 30 },
-                    {
-                        opacity: 1,
-                        y: 0,
-                        duration: 0.7,
-                        stagger: 0.1,
-                        ease: "power2.out",
-                        scrollTrigger: {
-                            trigger: '#features',
-                            start: "top 80%",
-                        },
-                        clearProps: "all"
-                    }
-                );
+                if (document.querySelector('#features') && document.querySelectorAll('.bento-card').length > 0) {
+                    gsap.fromTo('.bento-card', 
+                        { opacity: 0, y: 30 },
+                        {
+                            opacity: 1,
+                            y: 0,
+                            duration: 0.7,
+                            stagger: 0.1,
+                            ease: "power2.out",
+                            scrollTrigger: {
+                                trigger: '#features',
+                                start: "top 80%",
+                            },
+                            clearProps: "all"
+                        }
+                    );
+                }
 
                 // 4. Step Cards Stagger Reveal
-                gsap.fromTo('.step-card',
-                    { opacity: 0, y: 25 },
-                    {
-                        opacity: 1,
-                        y: 0,
-                        duration: 0.6,
-                        stagger: 0.1,
-                        ease: "power2.out",
-                        scrollTrigger: {
-                            trigger: '.step-card',
-                            start: "top 85%",
-                        },
-                        clearProps: "all"
-                    }
-                );
+                if (document.querySelectorAll('.step-card').length > 0) {
+                    gsap.fromTo('.step-card',
+                        { opacity: 0, y: 25 },
+                        {
+                            opacity: 1,
+                            y: 0,
+                            duration: 0.6,
+                            stagger: 0.1,
+                            ease: "power2.out",
+                            scrollTrigger: {
+                                trigger: '.step-card',
+                                start: "top 85%",
+                            },
+                            clearProps: "all"
+                        }
+                    );
+                }
 
                 // 5. CTA Box Reveal
-                gsap.fromTo('.cta-box',
-                    { opacity: 0, y: 20 },
-                    {
-                        opacity: 1,
-                        y: 0,
-                        duration: 0.7,
-                        ease: "power2.out",
-                        scrollTrigger: {
-                            trigger: '.cta-box',
-                            start: "top 85%",
-                        },
-                        clearProps: "all"
-                    }
-                );
+                if (document.querySelectorAll('.cta-box').length > 0) {
+                    gsap.fromTo('.cta-box',
+                        { opacity: 0, y: 20 },
+                        {
+                            opacity: 1,
+                            y: 0,
+                            duration: 0.7,
+                            ease: "power2.out",
+                            scrollTrigger: {
+                                trigger: '.cta-box',
+                                start: "top 85%",
+                            },
+                            clearProps: "all"
+                        }
+                    );
+                }
 
                 // 6. Dynamic Rolling Number Counters
                 document.querySelectorAll('.counter-element').forEach(el => {
@@ -1945,9 +2078,22 @@
                 }
             });
         }
-        __kitobxonVisibilityFailsafe();
-        window.addEventListener('scroll', __kitobxonVisibilityFailsafe, { passive: true });
-        setInterval(__kitobxonVisibilityFailsafe, 1500);
+        let __failsafeTicking = false;
+        function __throttledVisibilityFailsafe() {
+            if (__failsafeTicking) return;
+            __failsafeTicking = true;
+            requestAnimationFrame(() => {
+                __kitobxonVisibilityFailsafe();
+                __failsafeTicking = false;
+            });
+        }
+        if (window.requestIdleCallback) {
+            requestIdleCallback(__kitobxonVisibilityFailsafe);
+        } else {
+            setTimeout(__kitobxonVisibilityFailsafe, 150);
+        }
+        window.addEventListener('scroll', __throttledVisibilityFailsafe, { passive: true });
+        setInterval(__throttledVisibilityFailsafe, 3000);
     </script>
 
     <!-- ── Universal Toast Notification Container ── -->

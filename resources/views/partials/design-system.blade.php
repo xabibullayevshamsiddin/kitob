@@ -121,6 +121,17 @@
     };
 </script>
 
+<script>
+    (function() {
+        const _origWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) {
+                return;
+            }
+            _origWarn.apply(console, args);
+        };
+    })();
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
     tailwind.config = {

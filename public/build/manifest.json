@@ -10,7 +10,7 @@
     "src": "node_modules/gsap/index.js"
   },
   "resources/css/app.css": {
-    "file": "assets/app-be4b7271.css",
+    "file": "assets/app-8edf4966.css",
     "isEntry": true,
     "src": "resources/css/app.css"
   },
@@ -19,7 +19,7 @@
       "node_modules/gsap/index.js",
       "node_modules/gsap/ScrollTrigger.js"
     ],
-    "file": "assets/app-2c91c33b.js",
+    "file": "assets/app-2915b337.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   }

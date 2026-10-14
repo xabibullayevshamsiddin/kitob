@@ -1,149 +1,210 @@
 @php
     $isTopFive = ($userRank !== null && $userRank >= 1 && $userRank <= 5);
-    $cardAccent = match(true) {
-        $userRank === 1 => 'border-amber-500/40 dark:border-[#F59E0B]/40 before:absolute before:inset-0 before:bg-gradient-to-r before:from-amber-500/10 dark:before:from-[#F59E0B]/10 before:via-transparent before:to-transparent before:pointer-events-none',
-        $userRank === 2 => 'border-slate-400/50 dark:border-[#E2E8F0]/35 before:absolute before:inset-0 before:bg-gradient-to-r before:from-slate-400/15 dark:before:from-[#E2E8F0]/8 before:via-transparent before:to-transparent before:pointer-events-none',
-        $userRank === 3 => 'border-amber-700/40 dark:border-[#D97706]/35 before:absolute before:inset-0 before:bg-gradient-to-r before:from-amber-700/10 dark:before:from-[#D97706]/8 before:via-transparent before:to-transparent before:pointer-events-none',
-        $userRank === 4 || $userRank === 5 => 'border-indigo-400/40 dark:border-[#6366F1]/35 before:absolute before:inset-0 before:bg-gradient-to-r before:from-indigo-500/10 dark:before:from-[#6366F1]/8 before:via-transparent before:to-transparent before:pointer-events-none',
-        default => 'border-ink-border',
-    };
 @endphp
 
 <div class="max-w-6xl mx-auto space-y-6 pb-16">
 
-    <!-- Profile Header Card -->
-    <div class="p-6 sm:p-8 rounded-panel bg-ink-900 border relative overflow-hidden {{ $cardAccent }}">
-        <div class="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-            <!-- Avatar -->
-            <div class="relative shrink-0">
-                <x-ui.avatar :user="$user" size="3xl" shape="rounded-panel" :rank="$userRank" />
-                @if($stats['current_streak'] > 0)
-                    <div class="absolute -bottom-2 -right-2 px-2 py-0.5 bg-amber-400 text-ink-950 font-mono font-bold text-[11px] rounded-pill shadow-md flex items-center gap-1 z-20">
-                        <span class="ks-flame is-lit inline-block scale-75">
-                            <svg class="w-3.5 h-3.5 text-ink-950 fill-current" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-4-6-4-10z"/></svg>
-                        </span>
-                        <span>{{ $stats['current_streak'] }}</span>
-                    </div>
-                @endif
-            </div>
+    <!-- Profile Header Card with Custom Visual Banner -->
+    <div class="rounded-2xl sm:rounded-3xl bg-ink-900 border relative overflow-hidden transition-all duration-500 shadow-xl {{ $profileVisual['card_border'] }} {{ $profileVisual['card_glow'] }}">
+        
+        <!-- Atmospheric Cover Banner (Sleek h-28 sm:h-36 md:h-40) -->
+        <div class="relative w-full h-28 sm:h-36 md:h-40 overflow-hidden select-none transition-all duration-500 {{ $profileVisual['banner_gradient'] }}">
+            <!-- Ambient Radial Aura Glow with Smooth Breathing Animation -->
+            <div class="absolute inset-0 pointer-events-none transition-opacity duration-700 animate-ambient-breathe"
+                 style="background: {{ $profileVisual['banner_ambient'] }};"></div>
 
-            <!-- Profile Info -->
-            <div class="flex-1 space-y-3 min-w-0">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <div class="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
-                            <h1 class="text-2xl sm:text-3xl font-bold text-paper font-serif break-words">{{ $user->name }}</h1>
-                            @if($isTopFive)
-                                <x-ui.rank-badge :rank="$userRank" size="md" />
-                            @endif
-                            @if($user->role === 'admin' || $user->hasRole('admin'))
-                                <span class="px-2 py-0.5 rounded-pill bg-rose-500/10 dark:bg-[#C1392B]/15 border border-rose-500/25 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-[10px] font-mono uppercase tracking-wider">{{ __('site.profile.role_admin') }}</span>
-                            @elseif($user->role === 'teacher' || $user->hasRole('teacher'))
-                                <span class="px-2 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-400 text-[10px] font-mono uppercase tracking-wider">{{ __('site.profile.role_teacher') }}</span>
-                            @else
-                                <span class="px-2 py-0.5 rounded-pill bg-ink-800 border border-ink-border text-mist text-[10px] font-mono uppercase tracking-wider">{{ __('site.profile.role_reader') }}</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center justify-center sm:justify-start gap-3 mt-1 flex-wrap">
-                            <p class="text-xs text-mist font-mono">{{ '@' . $user->username }}</p>
-                            @if($isTopFive)
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill text-[11px] font-mono font-bold
-                                    {{ $userRank === 1 ? 'bg-amber-500/15 text-amber-700 dark:text-[#F59E0B] border border-amber-500/40 dark:border-[#F59E0B]/40 shadow-sm dark:shadow-[0_0_10px_rgba(245,158,11,0.2)]' : '' }}
-                                    {{ $userRank === 2 ? 'bg-slate-200/90 dark:bg-[#E2E8F0]/15 text-slate-700 dark:text-[#E2E8F0] border border-slate-400/60 dark:border-[#E2E8F0]/40 shadow-sm dark:shadow-[0_0_8px_rgba(226,232,240,0.15)]' : '' }}
-                                    {{ $userRank === 3 ? 'bg-amber-700/15 dark:bg-[#D97706]/15 text-amber-800 dark:text-[#D97706] border border-amber-700/40 dark:border-[#D97706]/40 shadow-sm dark:shadow-[0_0_8px_rgba(217,119,6,0.15)]' : '' }}
-                                    {{ ($userRank === 4 || $userRank === 5) ? 'bg-indigo-500/15 dark:bg-[#6366F1]/15 text-indigo-700 dark:text-[#818CF8] border border-indigo-500/40 dark:border-[#6366F1]/40 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.15)]' : '' }}">
-                                    @if($userRank === 1)
-                                        <svg class="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-[#F59E0B]" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
-                                        <span>Reytingda #1 o'rin &bull; Peshqadam</span>
-                                    @elseif($userRank === 2)
-                                        <svg class="w-3.5 h-3.5 shrink-0 text-slate-700 dark:text-[#E2E8F0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="7"/><path d="M8.21 13.89L7 22l5-3 5 3-1.21-8.11"/><path d="M12 7V3"/></svg>
-                                        <span>Reytingda #2 o'rin &bull; Kumush sovrindor</span>
-                                    @elseif($userRank === 3)
-                                        <svg class="w-3.5 h-3.5 shrink-0 text-amber-800 dark:text-[#D97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="7"/><path d="M8.21 13.89L7 22l5-3 5 3-1.21-8.11"/><path d="M12 7V3"/></svg>
-                                        <span>Reytingda #3 o'rin &bull; Bronza sovrindor</span>
-                                    @else
-                                        <svg class="w-3.5 h-3.5 shrink-0 text-indigo-700 dark:text-[#818CF8]" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                                        <span>Reytingda #{{ $userRank }} o'rin &bull; Top 5</span>
-                                    @endif
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Action Button -->
-                    <div>
-                        @if ($isOwner)
-                            <a href="{{ route('settings') }}" class="ks-btn-ghost text-xs py-2 px-3.5 inline-flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                                <span>{{ __('site.profile.settings') }}</span>
-                            </a>
-                        @else
-                            <button wire:click="toggleFollow" class="text-xs py-2 px-4 rounded-btn font-mono font-bold transition-all {{ $isFollowing ? 'bg-ink-800 hover:bg-ink-700/60 border border-ink-border text-paper' : 'ks-btn-primary' }}">
-                                {{ $isFollowing ? '✓ '.__('site.profile.following') : '+ '.__('site.profile.follow') }}
-                            </button>
-                        @endif
-                    </div>
+            <!-- Dynamic Animated Micro-Patterns -->
+            @if($profileVisual['pattern'] === 'cyber')
+                <!-- Cyberpunk Refined Micro-Dot Matrix & Laser Horizon Sweep -->
+                <div class="absolute inset-0 opacity-20 pointer-events-none"
+                     style="background-image: radial-gradient(rgba(244,63,94,0.7) 1px, transparent 1px); background-size: 20px 20px;"></div>
+                <!-- Dynamic laser scan beam -->
+                <div class="absolute inset-x-0 bottom-5 h-[2px] bg-gradient-to-r from-transparent via-rose-500 to-transparent pointer-events-none animate-laser-scan shadow-[0_0_10px_rgba(244,63,94,0.7)]"></div>
+            @elseif($profileVisual['pattern'] === 'aurora')
+                <!-- Aurora Smooth Ambient Waves with Undulating Drift Animation -->
+                <div class="absolute inset-0 opacity-35 mix-blend-screen pointer-events-none animate-aurora-drift">
+                    <svg class="w-full h-full object-cover" viewBox="0 0 1000 200" preserveAspectRatio="none" fill="none">
+                        <path d="M0,120 Q300,40 600,140 T1000,80 L1000,0 L0,0 Z" fill="rgba(45,212,191,0.35)"/>
+                        <path d="M0,70 Q400,150 800,50 T1000,110 L1000,0 L0,0 Z" fill="rgba(16,185,129,0.25)"/>
+                    </svg>
                 </div>
+            @elseif($profileVisual['pattern'] === 'gold' || $profileVisual['pattern'] === 'rank-gold')
+                <!-- Royal Gold Soft Shimmer with Twinkling Stardust Animation -->
+                <div class="absolute inset-0 opacity-30 pointer-events-none animate-star-twinkle"
+                     style="background-image: radial-gradient(#FCD34D 1.2px, transparent 1.2px); background-size: 28px 28px;"></div>
+                <div class="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div class="w-1/2 h-full bg-gradient-to-r from-transparent via-amber-400/20 to-transparent animate-laser-scan"></div>
+                </div>
+            @elseif($profileVisual['pattern'] === 'rank-silver')
+                <!-- Silver Delicate Shimmer Animation -->
+                <div class="absolute inset-0 opacity-25 pointer-events-none animate-star-twinkle"
+                     style="background: radial-gradient(circle at 80% 30%, rgba(226,232,240,0.35) 0%, transparent 60%);"></div>
+            @elseif($profileVisual['pattern'] === 'rank-bronze')
+                <!-- Bronze Warm Hearth Aura -->
+                <div class="absolute inset-0 opacity-25 pointer-events-none animate-ambient-breathe"
+                     style="background: radial-gradient(circle at 80% 30%, rgba(217,119,6,0.35) 0%, transparent 60%);"></div>
+            @elseif($profileVisual['pattern'] === 'rank-indigo')
+                <!-- Indigo Star Dots with Twinkling Animation -->
+                <div class="absolute inset-0 opacity-30 pointer-events-none animate-star-twinkle"
+                     style="background-image: radial-gradient(#818CF8 1.2px, transparent 1.2px); background-size: 24px 24px;"></div>
+            @elseif($profileVisual['pattern'] === 'emerald')
+                <!-- Emerald Crystal Dot Sparkles with Twinkle Animation -->
+                <div class="absolute inset-0 opacity-30 pointer-events-none animate-star-twinkle"
+                     style="background-image: radial-gradient(#10B981 1.2px, transparent 1.2px); background-size: 24px 24px;"></div>
+            @elseif($profileVisual['pattern'] === 'cosmic')
+                <!-- Cosmic Stardust with Twinkle Animation -->
+                <div class="absolute inset-0 opacity-35 pointer-events-none animate-star-twinkle"
+                     style="background-image: radial-gradient(#E9D5FF 1.2px, transparent 1.2px); background-size: 32px 32px;"></div>
+            @elseif($profileVisual['pattern'] === 'vintage')
+                <!-- Vintage Quiet Warmth with Soft Breathing Ambient -->
+                <div class="absolute inset-0 opacity-20 pointer-events-none animate-ambient-breathe"
+                     style="background: radial-gradient(circle at 80% 30%, rgba(217,119,6,0.3) 0%, transparent 65%);"></div>
+            @elseif($profileVisual['pattern'] === 'sunset')
+                <!-- Sunset Twilight Dusk with Ambient Drift -->
+                <div class="absolute inset-0 opacity-30 mix-blend-screen pointer-events-none animate-aurora-drift">
+                    <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 150" fill="none">
+                        <path d="M0,60 Q300,120 600,60 T1000,90 L1000,150 L0,150 Z" fill="rgba(249,115,22,0.35)"/>
+                    </svg>
+                </div>
+            @endif
 
-                @if ($user->bio)
-                    <p class="text-xs sm:text-sm text-mist max-w-2xl leading-relaxed font-sans break-words whitespace-pre-line">
-                        {{ $user->bio }}
-                    </p>
-                @endif
+            <!-- Bottom Gradient Fade into Card Background -->
+            <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink-900 to-transparent"></div>
 
-                <!-- Meta Pills -->
-                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1 font-mono text-xs">
-                    @if($user->profile && $user->profile->reading_place)
-                        <span class="px-2.5 py-1 rounded-pill bg-ink-800 border border-ink-border text-mist flex items-center gap-1.5">
-                            <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            <span>{{ __('site.profile.reading_place') }}: <strong class="text-paper">{{ ucfirst($user->profile->reading_place) }}</strong></span>
-                        </span>
-                    @endif
-
-                    @if($user->profile && $user->profile->reading_goal)
-                        <span class="px-2.5 py-1 rounded-pill bg-ink-800 border border-ink-border text-mist flex items-center gap-1.5">
-                            <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                            <span>{{ __('site.profile.goal') }}: <strong class="text-paper">{{ ucfirst($user->profile->reading_goal) }}</strong></span>
-                        </span>
-                    @endif
-
-                    <span class="px-2.5 py-1 rounded-pill bg-ink-800 border border-ink-border text-mist flex items-center gap-1.5">
-                        <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        <span>{{ __('site.profile.joined') }}: {{ $user->created_at->format('d.m.Y') }}</span>
+            <!-- Top Right Theme Badge Capsule with Floating Micro-Animation -->
+            @if($profileVisual['badge_text'])
+                <div class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center animate-badge-float">
+                    <span class="{{ $profileVisual['badge_class'] }} flex items-center gap-1.5 shadow-sm">
+                        <span class="text-xs inline-block animate-pulse">{{ $profileVisual['icon'] }}</span>
+                        <span>{{ $profileVisual['badge_text'] }}</span>
                     </span>
                 </div>
-            </div>
+            @endif
         </div>
 
-        <!-- Quick Stats Grid in Header (DENSITY: 6, DM Mono) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-ink-border">
-            <div class="p-3.5 rounded-panel bg-ink-800/60 border border-ink-border">
+        <!-- Main Profile Info Body (Single clean avatar ring without double borders) -->
+        <div class="px-5 pb-6 sm:px-8 sm:pb-7 pt-0 relative z-10 -mt-10 sm:-mt-14">
+            <div class="flex flex-col sm:flex-row items-center sm:items-end gap-5 text-center sm:text-left">
+                <!-- Avatar (Single ring, subtle breathing pulse) -->
+                <div class="relative shrink-0 rounded-2xl animate-ring-pulse">
+                    <x-ui.avatar :user="$user" size="3xl" shape="rounded-2xl" :showRank="false" />
+                </div>
+
+                <!-- Profile Info -->
+                <div class="flex-1 min-w-0 sm:pb-0.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <div class="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
+                                <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-paper tracking-tight font-serif break-words">{{ $user->name }}</h1>
+                                @if($isTopFive)
+                                    <x-ui.rank-badge :rank="$userRank" size="md" />
+                                @endif
+                                @if($user->role === 'admin' || $user->hasRole('admin'))
+                                    <span class="px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-300 text-[10px] font-mono uppercase tracking-wider font-semibold">Admin</span>
+                                @elseif($user->role === 'teacher' || $user->hasRole('teacher'))
+                                    <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[10px] font-mono uppercase tracking-wider font-semibold">O‘qituvchi</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
+                                <p class="text-xs text-mist font-mono">{{ '@' . $user->username }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="self-center sm:self-auto shrink-0">
+                            @if ($isOwner)
+                                <a href="{{ route('settings') }}" class="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium bg-ink-800/80 hover:bg-ink-700/80 hover:scale-105 active:scale-95 text-paper border border-ink-border transition-all flex items-center gap-1.5 shadow-sm">
+                                    <svg class="w-3.5 h-3.5 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                    <span>{{ __('site.profile.settings') }}</span>
+                                </a>
+                            @else
+                                <button wire:click="toggleFollow" class="text-xs py-1.5 px-4 rounded-full font-mono font-bold hover:scale-105 active:scale-95 transition-all {{ $isFollowing ? 'bg-ink-800 hover:bg-ink-700/60 border border-ink-border text-paper' : 'ks-btn-primary' }}">
+                                    {{ $isFollowing ? '✓ '.__('site.profile.following') : '+ '.__('site.profile.follow') }}
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if ($user->bio)
+                        <p class="text-xs sm:text-sm text-mist/90 max-w-2xl leading-relaxed font-sans break-words whitespace-pre-line pt-2">
+                            {{ $user->bio }}
+                        </p>
+                    @endif
+
+                    <!-- Meta Chips: Clean, Modern Inline Items -->
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1.5 pt-2.5 text-xs text-mist/80 font-sans">
+                        @if($user->profile && $user->profile->reading_place)
+                            <span class="inline-flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-mist/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>{{ ucfirst($user->profile->reading_place) }}</span>
+                            </span>
+                        @endif
+
+                        @if($user->profile && $user->profile->reading_goal)
+                            <span class="inline-flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-mist/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                                <span>{{ ucfirst($user->profile->reading_goal) }}</span>
+                            </span>
+                        @endif
+
+                        <span class="inline-flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-mist/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <span>{{ $user->created_at->format('d.m.Y') }} da a'zo bo'lgan</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Bento Grid in Header (Interactive Lift & Glow Animation) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 mt-5 border-t border-ink-border/60">
+                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-1 text-[11px] text-mist font-mono uppercase tracking-wider mb-1">
-                            <span class="ks-flame is-lit inline-block scale-75">
+                        <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
+                            <span class="ks-flame is-lit inline-block scale-75 group-hover:scale-100 transition-transform">
                                 <svg class="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-4-6-4-10z"/></svg>
                             </span>
                             <span>{{ __('site.profile.streak') }}</span>
-                        </div>
+                        </span>
                         @if(($user->streak?->freeze_count ?? 0) > 0)
-                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-pill bg-sky-500/15 text-sky-400 border border-sky-500/30" title="Muzlatgich himoyasi faol">
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25" title="Muzlatgich himoyasi faol">
                                 🧊 {{ $user->streak->freeze_count }}
                             </span>
                         @endif
                     </div>
-                    <p class="text-2xl font-bold font-mono text-amber-400">{{ $stats['current_streak'] }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.days') }}</span></p>
+                    <p class="text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-1.5 group-hover:text-amber-300 transition-colors">
+                        {{ $stats['current_streak'] }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.days') }}</span>
+                    </p>
                 </div>
-            <div class="p-3.5 rounded-panel bg-ink-800/60 border border-ink-border">
-                <span class="text-[11px] text-mist font-mono uppercase tracking-wider block mb-1">{{ __('site.profile.total_points') }}</span>
-                <p class="text-2xl font-bold font-mono text-paper">{{ number_format($stats['total_points']) }}</p>
-            </div>
-            <div class="p-3.5 rounded-panel bg-ink-800/60 border border-ink-border">
-                <span class="text-[11px] text-mist font-mono uppercase tracking-wider block mb-1">{{ __('site.profile.coin_balance') }}</span>
-                <p class="text-2xl font-bold font-mono text-amber-400">{{ number_format($stats['coin_balance']) }}</p>
-            </div>
-            <div class="p-3.5 rounded-panel bg-ink-800/60 border border-ink-border">
-                <span class="text-[11px] text-mist font-mono uppercase tracking-wider block mb-1">{{ __('site.profile.reading_time') }}</span>
-                <p class="text-2xl font-bold font-mono text-emerald-400">{{ number_format($stats['total_minutes']) }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.minutes_short') }}</span></p>
+
+                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
+                        <span class="group-hover:scale-110 transition-transform">⭐</span>
+                        <span>{{ __('site.profile.total_points') }}</span>
+                    </span>
+                    <p class="text-xl sm:text-2xl font-bold font-mono text-paper mt-1.5">
+                        {{ number_format($stats['total_points']) }}
+                    </p>
+                </div>
+
+                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
+                        <span class="group-hover:scale-110 transition-transform">🪙</span>
+                        <span>{{ __('site.profile.coin_balance') }}</span>
+                    </span>
+                    <p class="text-xl sm:text-2xl font-bold font-mono text-amber-300 mt-1.5">
+                        {{ number_format($stats['coin_balance']) }}
+                    </p>
+                </div>
+
+                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
+                        <span class="group-hover:scale-110 transition-transform">⏱️</span>
+                        <span>{{ __('site.profile.reading_time') }}</span>
+                    </span>
+                    <p class="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1.5">
+                        {{ number_format($stats['total_minutes']) }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.minutes_short') }}</span>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -343,61 +404,9 @@
         @php
             $profile = $user->profile;
             $currentPref = $profile?->chat_style_preference ?? 'shop';
-            $activeFrame = $profile?->avatar_frame;
+            $activeTheme = $profile?->profile_theme ?? $profile?->avatar_frame ?? $profile?->chat_bubble_theme;
             $previewStyle = \App\Services\Gamification\ChatStyleService::resolveStyle($user, $userRank, true);
-
-            $catalog = [
-                'aurora' => [
-                    'key' => 'aurora',
-                    'name' => 'Qutb yog‘dusi (Aurora Neon)',
-                    'icon' => '✨',
-                    'price' => 120,
-                    'color' => 'teal',
-                    'border_color' => 'border-teal-500/30',
-                    'desc' => 'Feruza va zumrad jilosi. Chatda jozibali neon gradient va [✨ Aurora] VIP nishoni.',
-                    'preview_class' => 'border-teal-500/50 bg-gradient-to-br from-teal-500/20 via-emerald-950/40 to-ink-950 text-teal-100',
-                ],
-                'cyber' => [
-                    'key' => 'cyber',
-                    'name' => 'Kiber Neon (Cyberpunk)',
-                    'icon' => '🔥',
-                    'price' => 150,
-                    'color' => 'rose',
-                    'border_color' => 'border-rose-500/30',
-                    'desc' => 'Alvon kiberpank chaqnashi. Chatda olovrang-pushti neon porlashi va [🔥 Cyberpunk] nishoni.',
-                    'preview_class' => 'border-rose-500/50 bg-gradient-to-br from-rose-500/20 via-purple-950/40 to-ink-950 text-rose-100',
-                ],
-                'gold' => [
-                    'key' => 'gold',
-                    'name' => 'Oltin Toj (Royal Gold)',
-                    'icon' => '👑',
-                    'price' => 100,
-                    'color' => 'amber',
-                    'border_color' => 'border-amber-500/30',
-                    'desc' => 'Aristokrat kitobxon nurlari. Chatda qirollik oltin jilosi va [👑 Royal] nishoni.',
-                    'preview_class' => 'border-amber-400/60 bg-gradient-to-br from-amber-500/20 via-amber-950/30 to-ink-950 text-amber-100',
-                ],
-                'emerald' => [
-                    'key' => 'emerald',
-                    'name' => 'Zumrad Nuri (Emerald)',
-                    'icon' => '💎',
-                    'price' => 90,
-                    'color' => 'emerald',
-                    'border_color' => 'border-emerald-500/30',
-                    'desc' => 'Qimmatbaho zumrad kristalli. Chatda nafis yashil gradient va [💎 Emerald] nishoni.',
-                    'preview_class' => 'border-emerald-400/50 bg-gradient-to-br from-emerald-500/20 via-emerald-950/40 to-ink-950 text-emerald-100',
-                ],
-                'obsidian' => [
-                    'key' => 'obsidian',
-                    'name' => 'Kosmik Bo‘shliq (Obsidian Void)',
-                    'icon' => '🌌',
-                    'price' => 80,
-                    'color' => 'purple',
-                    'border_color' => 'border-purple-500/30',
-                    'desc' => 'Sirli galaktik kosmos jilosi. To‘q binafsha-indigo chaqnashi va [🌌 Obsidian] nishoni.',
-                    'preview_class' => 'border-purple-500/50 bg-gradient-to-br from-purple-500/20 via-indigo-950/40 to-ink-950 text-purple-100',
-                ],
-            ];
+            $visualCatalog = \App\Services\Gamification\ProfileVisualService::THEMES;
         @endphp
 
         <div class="space-y-6">
@@ -408,7 +417,7 @@
                         <span>🛍️</span>
                         <span>Kitobxon Tangalar Do‘koni</span>
                     </h3>
-                    <p class="text-xs text-mist font-sans mt-1">Kitob o‘qib, testlar yechib jamg‘argan tangalaringizni foydali vositalar va vizual bezaklarga almashtiring.</p>
+                    <p class="text-xs text-mist font-sans mt-1">Kitob o‘qib, testlar yechib jamg‘argan tangalaringizni profil vizual fonlari, VIP chat bezaklari va foydali vositalarga almashtiring.</p>
                 </div>
                 <div class="flex items-center gap-2 px-3.5 py-2 rounded-btn bg-ink-800 border border-ink-border text-amber-400 font-mono font-bold text-sm shrink-0">
                     <span>🪙 Balansingiz:</span>
@@ -422,15 +431,15 @@
                     <div>
                         <h4 class="text-sm font-bold text-paper flex items-center gap-2">
                             <span>🎨</span>
-                            <span>Chat va Profil Vizual Ko‘rinishi</span>
+                            <span>Profil va Chat Vizual Ko‘rinishi</span>
                         </h4>
-                        <p class="text-xs text-mist mt-0.5">Umumiy chat va jonli efirda xabarlaringiz hamda avataringiz qaysi uslubda chiqishini tanlang.</p>
+                        <p class="text-xs text-mist mt-0.5">Profilingizga boshqalar kirganida ko‘rinadigan fon hamda umumiy chatda xabarlaringiz qaysi uslubda chiqishini tanlang.</p>
                     </div>
 
-                    @if($activeFrame)
+                    @if($activeTheme)
                         <button type="button" wire:click="unequipShopTheme"
                                 class="text-[11px] font-mono text-mist hover:text-rose-400 transition underline self-start sm:self-auto">
-                            Maxsus bezakni yechish
+                            Maxsus bezakni yechish (Standartga qaytish)
                         </button>
                     @endif
                 </div>
@@ -444,17 +453,17 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>🛍️</span>
-                                <span>Do‘kon Uslubi</span>
+                                <span>Do‘kon Foni</span>
                             </span>
                             @if($currentPref === 'shop')
                                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
-                            Tangaga xarid qilingan rangli avatar ramkasi va VIP chat effekti.
+                            Tangaga xarid qilingan rangli profil foni, avatar aurası va VIP chat effekti.
                         </p>
                         <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
-                            Faol: {{ $activeFrame ? ($catalog[$activeFrame]['name'] ?? ucfirst($activeFrame)) : 'Hali tanlanmagan' }}
+                            Faol: {{ $activeTheme ? ($visualCatalog[$activeTheme]['name'] ?? ucfirst($activeTheme)) : 'Tanlanmagan' }}
                         </div>
                     </button>
 
@@ -465,14 +474,14 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>🏆</span>
-                                <span>Reyting Uslubi</span>
+                                <span>Reyting Foni</span>
                             </span>
                             @if($currentPref === 'rank')
                                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
-                            Reytingdagi o‘rningizga mos chempionlik effekti (Top 1 Oltin, Kumush, Bronza).
+                            Reytingdagi o‘rningizga mos chempionlik foni (Top 1 Oltin, Kumush, Bronza yoki Liderlar aurası).
                         </p>
                         <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
                             O‘rningiz: {{ $userRank ? "#{$userRank}-o‘rin" : 'Ball yetarli emas' }}
@@ -493,29 +502,55 @@
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
-                            Sokin, qo‘shimcha fon va auralarsiz klassik kitobxon ko‘rinishi.
+                            Sokin, qo‘shimcha porlash va auralarsiz klassik kitobxon ko‘rinishi.
                         </p>
                         <div class="text-[10px] font-mono text-mist mt-2">
-                            Oddiy holat
+                            Oddiy sokin holat
                         </div>
                     </button>
                 </div>
 
-                <!-- Live Chat Message Preview -->
-                <div class="p-3.5 rounded-btn bg-ink-950/70 border border-ink-border/60 mt-3">
-                    <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">Jonli ko‘rinish (Chatda xabaringiz):</span>
-                    <div class="flex items-start gap-2.5 max-w-md">
-                        <x-ui.avatar :user="$user" size="sm" :rank="$userRank" />
-                        <div class="flex flex-col items-start min-w-0">
-                            <div class="flex items-center gap-1.5 mb-1 flex-wrap">
-                                <span class="text-xs font-semibold {{ $previewStyle['name_class'] }}">{{ $user->name }}</span>
-                                @if($previewStyle['badge_text'])
-                                    <span class="{{ $previewStyle['badge_class'] }}">{{ $previewStyle['badge_text'] }}</span>
+                <!-- Live Previews Grid (Profile Cover + Chat Message) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                    <!-- Profile Header Live Preview -->
+                    <div class="p-3.5 rounded-card bg-ink-950/70 border border-ink-border/60 flex flex-col justify-between">
+                        <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">Profil Bosh Qismi Namunasi:</span>
+                        <div class="rounded-btn overflow-hidden border relative p-3 flex flex-col justify-between min-h-[96px] {{ $profileVisual['card_border'] }} {{ $profileVisual['banner_gradient'] }}">
+                            <div class="absolute inset-0 pointer-events-none animate-ambient-breathe" style="background: {{ $profileVisual['banner_ambient'] }};"></div>
+                            <div class="relative z-10 flex items-center justify-between">
+                                <span class="text-[10px] font-mono text-paper/80 font-bold uppercase tracking-wider">Profil Foni</span>
+                                @if($profileVisual['badge_text'])
+                                    <span class="{{ $profileVisual['badge_class'] }} text-[9px] px-2 py-0.5">{{ $profileVisual['badge_text'] }}</span>
                                 @endif
-                                <span class="text-[10px] font-mono text-mist">Hozir</span>
                             </div>
-                            <div class="px-3 py-2 rounded-card text-xs leading-relaxed border {{ $previewStyle['bubble_class'] }}">
-                                Salom hammaga! Bugun yangi kitob mutolaasini tugatdim 📖✨
+                            <div class="relative z-10 flex items-center gap-2.5 mt-2">
+                                <div class="w-8 h-8 rounded-full border border-paper/40 bg-ink-950 flex items-center justify-center text-xs font-bold font-serif {{ $profileVisual['avatar_ring'] }}">
+                                    {{ mb_substr($user->name, 0, 1) }}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold text-paper truncate">{{ $user->name }}</div>
+                                    <div class="text-[10px] font-mono text-mist">{{ '@' . $user->username }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Message Live Preview -->
+                    <div class="p-3.5 rounded-card bg-ink-950/70 border border-ink-border/60 flex flex-col justify-between">
+                        <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">Umumiy Chatda Xabaringiz:</span>
+                        <div class="flex items-start gap-2.5">
+                            <x-ui.avatar :user="$user" size="sm" :rank="$userRank" />
+                            <div class="flex flex-col items-start min-w-0">
+                                <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                                    <span class="text-xs font-semibold {{ $previewStyle['name_class'] }}">{{ $user->name }}</span>
+                                    @if($previewStyle['badge_text'])
+                                        <span class="{{ $previewStyle['badge_class'] }}">{{ $previewStyle['badge_text'] }}</span>
+                                    @endif
+                                    <span class="text-[10px] font-mono text-mist">Hozir</span>
+                                </div>
+                                <div class="px-3 py-1.5 rounded-card text-xs leading-relaxed border {{ $previewStyle['bubble_class'] }}">
+                                    Salom hammaga! Profilimga yangi vizual fon o‘rnatdim 📖✨
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -546,38 +581,49 @@
                     </button>
                 </div>
 
-                <!-- Cosmetic Themes (Aurora, Cyberpunk, Gold, Emerald, Obsidian) -->
-                @foreach($catalog as $item)
+                <!-- 7 Visual Profile & Chat Themes -->
+                @foreach($visualCatalog as $item)
                     @php
-                        $isOwned = $profile?->hasUnlockedItem($item['key']) ?? false;
-                        $isActive = ($activeFrame === $item['key']) && ($currentPref === 'shop');
+                        $isOwned = $profile?->hasUnlockedItem($item['id']) ?? false;
+                        $isActive = ($activeTheme === $item['id']) && ($currentPref === 'shop');
                     @endphp
-                    <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between space-y-4 hover:{{ $item['border_color'] }} transition">
-                        <div class="space-y-2">
+                    <div class="p-5 rounded-panel bg-ink-900 border flex flex-col justify-between space-y-4 transition-all duration-300 {{ $isActive ? $item['card_border'] . ' ' . $item['card_glow'] : 'border-ink-border hover:border-ink-border/80' }}">
+                        <div class="space-y-3">
                             <div class="flex items-center justify-between">
-                                <span class="text-2xl">{{ $item['icon'] }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl">{{ $item['icon'] }}</span>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-paper">{{ $item['name'] }}</h4>
+                                        <span class="text-[10px] font-mono text-mist">Profil Foni + Chat</span>
+                                    </div>
+                                </div>
                                 @if($isOwned)
-                                    <span class="px-2 py-0.5 rounded-pill bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono font-bold">
+                                    <span class="px-2 py-0.5 rounded-pill bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono font-bold shrink-0">
                                         ✓ Sizda mavjud
                                     </span>
                                 @else
-                                    <span class="px-2.5 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold">
+                                    <span class="px-2.5 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold shrink-0">
                                         {{ $item['price'] }} tanga
                                     </span>
                                 @endif
                             </div>
-                            <h4 class="text-sm font-bold text-paper">{{ $item['name'] }}</h4>
-                            <p class="text-xs text-mist leading-relaxed font-sans">
-                                {{ $item['desc'] }}
+
+                            <p class="text-xs text-mist leading-relaxed font-sans min-h-[36px]">
+                                {{ $item['description'] }}
                             </p>
 
-                            <!-- Theme mini swatch -->
-                            <div class="p-2 rounded-btn border text-[11px] font-mono {{ $item['preview_class'] }} mt-2">
-                                Namuna: [{{ $item['icon'] }} {{ explode(' ', $item['name'])[0] }}] Chat porlashi
+                            <!-- Theme mini banner preview swatch -->
+                            <div class="rounded-btn overflow-hidden border {{ $item['card_border'] }} relative h-16 p-2 flex flex-col justify-between {{ $item['banner_gradient'] }}">
+                                <div class="absolute inset-0 pointer-events-none" style="background: {{ $item['banner_ambient'] }};"></div>
+                                <div class="relative z-10 flex items-center justify-between">
+                                    <span class="{{ $item['badge_class'] }} text-[9px] px-2 py-0.5">{{ $item['badge_text'] }}</span>
+                                    <span class="text-[10px] font-mono text-paper/70 font-semibold">Jonli fon</span>
+                                </div>
+                                <div class="relative z-10 h-0.5 w-full {{ $item['card_accent_line'] }} rounded-full"></div>
                             </div>
                         </div>
 
-                        <button wire:click="buyAvatarFrame('{{ $item['key'] }}')" wire:loading.attr="disabled"
+                        <button wire:click="setProfileTheme('{{ $item['id'] }}')" wire:loading.attr="disabled"
                                 class="w-full min-h-11 rounded-btn font-mono text-xs font-bold transition flex items-center justify-center gap-1.5
                                 {{ $isActive
                                     ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
@@ -585,11 +631,11 @@
                                         ? 'bg-ink-800 border border-ink-border hover:bg-ink-700 text-paper'
                                         : 'bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-300') }}">
                             @if($isActive)
-                                <span>✓ O‘rnatilgan va faol</span>
+                                <span>✓ Profilga o‘rnatilgan va faol</span>
                             @elseif($isOwned)
-                                <span>🔄 Faollashtirish (0 🪙)</span>
+                                <span>🔄 Profilga faollashtirish (0 🪙)</span>
                             @else
-                                <span>Xarid qilish ({{ $item['price'] }} 🪙)</span>
+                                <span>Xarid qilish va o‘rnatish ({{ $item['price'] }} 🪙)</span>
                             @endif
                         </button>
                     </div>

@@ -48,15 +48,16 @@
             indicator = document.createElement('aside');
             indicator.className = 'kitob-pwa-status';
             indicator.setAttribute('role', 'status');
-            indicator.innerHTML = '<span class="kitob-pwa-dot" aria-hidden="true"></span><span class="kitob-pwa-label"></span><a href="#">Offline sahifani ochish</a>';
+            indicator.innerHTML = '<span class="kitob-pwa-dot" aria-hidden="true"></span><span class="kitob-pwa-label"></span><a href="#">Offline sahifani ochish</a><button type="button" class="kitob-pwa-close" aria-label="Yopish">&times;</button>';
             document.body.appendChild(indicator);
             indicator.querySelector('a').href = new URL('offline/index.html?reason=offline&from=' + encodeURIComponent(location.pathname + location.search), base).href;
+            indicator.querySelector('.kitob-pwa-close').addEventListener('click', () => { indicator.hidden = true; });
         }
         indicator.classList.toggle('is-offline', offline);
         indicator.querySelector('.kitob-pwa-label').textContent = offline ? 'Internet aloqasi yo‘q' : 'Aloqa tiklandi';
         indicator.hidden = !offline;
         if (offline && !wasOffline) notify('warning', 'Internet aloqasi uzildi. Sahifani yopmay turing.');
-        if (!offline && wasOffline) notify('success', 'Internet aloqasi tiklandi.');
+        if (!offline && !wasOffline) notify('success', 'Internet aloqasi tiklandi.');
         wasOffline = offline;
     };
     const check = async () => render(!(await ping()));
@@ -71,7 +72,7 @@
     window.addEventListener('pagehide', () => clearInterval(probeTimer), { once: true });
 
     const style = document.createElement('style');
-    style.textContent = '.kitob-pwa-status{position:fixed;z-index:99999;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 13px;border:1px solid #f59e0b66;border-radius:8px;background:#0d111af2;color:#f0ede6;box-shadow:0 8px 28px #0007;font:13px system-ui,sans-serif}.kitob-pwa-status[hidden]{display:none}.kitob-pwa-dot{width:8px;height:8px;flex:none;border-radius:50%;background:#f59e0b}.kitob-pwa-status a{color:#fbbf24;white-space:nowrap;text-decoration:underline}@media(max-width:520px){.kitob-pwa-status{width:calc(100vw - 24px);justify-content:center;flex-wrap:wrap}}';
+    style.textContent = '.kitob-pwa-status{position:fixed;z-index:99999;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,8px));transform:translateX(-50%);display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:8px 16px;border:1px solid #f59e0b66;border-radius:9999px;background:#0d111af5;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:#f0ede6;box-shadow:0 10px 30px #0009,0 0 15px #f59e0b26;font:12px system-ui,-apple-system,sans-serif;animation:kitobSlideUp .35s cubic-bezier(0.16,1,0.3,1);pointer-events:auto}@media(min-width:1024px){.kitob-pwa-status{bottom:24px}}.kitob-pwa-status[hidden]{display:none}.kitob-pwa-dot{width:8px;height:8px;flex:none;border-radius:50%;background:#f59e0b;box-shadow:0 0 8px #f59e0b;animation:kitobDotPulse 2s infinite}@keyframes kitobDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}@keyframes kitobSlideUp{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}.kitob-pwa-status a{color:#fbbf24;white-space:nowrap;text-decoration:underline;font-weight:500}.kitob-pwa-close{background:none;border:none;color:#8b9bad;cursor:pointer;font-size:16px;line-height:1;padding:0 0 0 4px;margin-left:2px}.kitob-pwa-close:hover{color:#f0ede6}@media(max-width:480px){.kitob-pwa-status{font-size:11.5px;padding:7px 12px;gap:8px}}';
     document.head.appendChild(style);
 })();
 </script>

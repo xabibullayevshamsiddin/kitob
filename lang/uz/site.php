@@ -18,6 +18,7 @@ return [
         'dashboard'     => 'Boshqaruv paneli',
         'teacher_panel' => "O'qituvchi paneli",
         'my_profile'    => 'Profilim',
+        'profile'       => 'Profil',
         'settings'      => 'Sozlamalar',
         'notifications' => 'Bildirishnomalar',
         'logout'        => 'Tizimdan chiqish',

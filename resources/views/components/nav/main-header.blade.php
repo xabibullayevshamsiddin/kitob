@@ -36,7 +36,7 @@
             'is-hero-header !bg-transparent !border-b !border-white/10 !backdrop-blur-none !shadow-none': (isHome && !scrolled && !mobileMenu && theme === 'dark'),
             'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10': (!isHome || scrolled || mobileMenu || theme === 'light')
         }">
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+    <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-1.5 sm:gap-3">
 
         {{-- Logo: SVG kitob belgisi + Spectral so'z belgisi --}}
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 group shrink-0" aria-label="Kitobxon">
@@ -106,8 +106,8 @@
         {{-- Right side actions --}}
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-            {{-- Til almashtirgich --}}
-            <x-lang-switcher class="hidden sm:block" />
+            {{-- Til almashtirgich (faqat desktopda ko'rinadi, mobilda burger ichida) --}}
+            <x-lang-switcher class="hidden lg:block" />
 
             {{-- Mavzu almashtirgich (Light / Dark mode toggle) --}}
             <button @click="toggleTheme($event)" 
@@ -262,7 +262,7 @@
                     {{-- Streak Flame --}}
                     <span x-data="{ streakCount: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                           @streak-updated.window="streakCount = $event.detail.streak"
-                          class="header-streak-pill inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 text-amber-500 dark:text-amber-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
+                          class="header-streak-pill inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 text-amber-500 dark:text-amber-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
                           title="{{ __('site.common.streak') }}">
                         <svg class="ks-flame w-3.5 h-3.5 sm:w-4 sm:h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
@@ -272,7 +272,7 @@
 
                     {{-- Points with Live Counting and Floating Badge --}}
                     <div class="relative">
-                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
+                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
                               :class="pointsBump ? 'bg-amber-500/20 text-amber-300' : 'text-paper'"
                               title="{{ __('site.common.points') }}">
                             <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 transition-transform duration-300"
@@ -292,9 +292,9 @@
                         </template>
                     </div>
 
-                    {{-- Coins with Live Counting and Floating Badge --}}
-                    <div class="relative">
-                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
+                    {{-- Coins with Live Counting and Floating Badge (mobilda profil menyusida, sm dan boshlab ko'rinadi) --}}
+                    <div class="relative hidden sm:block">
+                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
                               :class="coinsBump ? 'bg-yellow-500/20 text-yellow-300' : 'text-paper'"
                               title="{{ __('site.common.coins') }}">
                             <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gilt transition-transform duration-300"
@@ -496,74 +496,112 @@
                 </a>
             @endauth
 
-            {{-- Hamburger (mobil) --}}
-            <button @click="mobileMenu = !mobileMenu" type="button" class="lg:hidden p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base" aria-label="{{ __('site.nav.menu') }}" :aria-expanded="mobileMenu.toString()">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path x-show="!mobileMenu" d="M4 6h16M4 12h16M4 18h10"/>
-                    <path x-show="mobileMenu" d="M18 6 6 18M6 6l12 12"/>
-                </svg>
+            {{-- Hamburger (mobil) — 3-line animated morph --}}
+            <button @click="mobileMenu = !mobileMenu" type="button" 
+                    class="lg:hidden relative w-9 h-9 rounded-btn flex flex-col items-center justify-center gap-1 text-mist hover:text-paper hover:bg-ink-800 active:scale-95 transition-all duration-200 shrink-0 select-none focus:outline-none border border-transparent hover:border-ink-border"
+                    :class="mobileMenu ? 'text-amber-500 dark:text-amber-400 !bg-ink-800 border-amber-500/30' : ''" 
+                    aria-label="{{ __('site.nav.menu') }}" :aria-expanded="mobileMenu.toString()">
+                <span class="w-5 h-[2px] bg-current rounded-full transition-all duration-300 ease-out origin-center pointer-events-none"
+                      :class="mobileMenu ? 'rotate-45 translate-y-[6px]' : ''"></span>
+                <span class="w-5 h-[2px] bg-current rounded-full transition-all duration-200 ease-out origin-center pointer-events-none"
+                      :class="mobileMenu ? 'opacity-0 scale-x-0' : ''"></span>
+                <span class="w-5 h-[2px] bg-current rounded-full transition-all duration-300 ease-out origin-center pointer-events-none"
+                      :class="mobileMenu ? '-rotate-45 -translate-y-[6px]' : ''"></span>
             </button>
         </div>
     </div>
 
-    {{-- Mobile Menu --}}
-    <div x-show="mobileMenu" x-cloak @click.away="mobileMenu = false"
-         x-transition:enter="transition ease-out duration-base"
-         x-transition:enter-start="opacity-0 -translate-y-1"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         x-transition:leave="transition ease-out duration-micro"
+    {{-- Mobile Menu Backdrop Blur Overlay --}}
+    <div x-show="mobileMenu" x-cloak
+         x-transition:enter="transition-opacity duration-300 ease-out"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity duration-200 ease-in"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="lg:hidden border-t border-ink-border bg-ink-900 px-5 sm:px-6 pt-3 pb-5 max-h-[calc(100vh-4rem)] overflow-y-auto">
-        <p class="ks-eyebrow pb-2">{{ __('site.nav.sections') }}</p>
-        @foreach($navLinks as $link)
-            @php $active = request()->routeIs(...$link['match']); @endphp
-            <a href="{{ route($link['route']) }}" @click="mobileMenu = false"
-               class="flex items-center justify-between font-display text-lg py-2.5 border-b border-ink-border transition-colors duration-base {{ $active ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-paper hover:text-amber-600 dark:hover:text-amber-400' }}">
-                <span>{{ $link['label'] }}</span>
-                @if($active)<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>@endif
-            </a>
-        @endforeach
-        <a href="{{ route('about') }}"   @click="mobileMenu = false" class="block text-sm py-2.5 text-mist hover:text-paper border-b border-ink-border transition-colors duration-base">{{ __('site.nav.about') }}</a>
-        <a href="{{ route('faq') }}"     @click="mobileMenu = false" class="block text-sm py-2.5 text-mist hover:text-paper border-b border-ink-border transition-colors duration-base">{{ __('site.nav.faq') }}</a>
-        <a href="{{ route('contact') }}" @click="mobileMenu = false" class="block text-sm py-2.5 text-mist hover:text-paper transition-colors duration-base">{{ __('site.nav.contact') }}</a>
+         class="fixed inset-0 top-16 bg-black/60 backdrop-blur-sm z-30 lg:hidden pointer-events-auto"
+         @click="mobileMenu = false"
+         aria-hidden="true"></div>
 
-        <div class="pt-4 mt-2 border-t border-ink-border space-y-2">
+    {{-- Mobile Menu Drawer --}}
+    <div x-show="mobileMenu" x-cloak
+         x-transition:enter="transition-all duration-300 ease-out"
+         x-transition:enter-start="opacity-0 -translate-y-4 scale-[0.98]"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition-all duration-200 ease-in"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 -translate-y-3 scale-[0.98]"
+         class="lg:hidden border-t border-ink-border bg-ink-950/98 backdrop-blur-2xl px-5 sm:px-6 pt-4 pb-6 max-h-[calc(100vh-4rem)] overflow-y-auto relative z-40 shadow-2xl">
+        <p class="ks-eyebrow pb-2 text-[10px] tracking-widest text-mist uppercase font-mono">{{ __('site.nav.sections') }}</p>
+        <div class="space-y-1">
+            @foreach($navLinks as $link)
+                @php $active = request()->routeIs(...$link['match']); @endphp
+                <a href="{{ route($link['route']) }}" @click="mobileMenu = false"
+                   class="group flex items-center justify-between font-display text-lg py-2 px-3 rounded-btn border border-transparent transition-all duration-200 {{ $active ? 'text-amber-500 dark:text-amber-400 font-semibold bg-amber-500/10 border-amber-500/20' : 'text-paper hover:text-amber-400 hover:bg-white/[0.04]' }}">
+                    <span class="group-hover:translate-x-1 transition-transform duration-200">{{ $link['label'] }}</span>
+                    @if($active)
+                        <span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] animate-pulse"></span>
+                    @else
+                        <svg class="w-4 h-4 text-mist/30 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all opacity-0 group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                    @endif
+                </a>
+            @endforeach
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 py-3 my-2 border-y border-ink-border/50 text-center">
+            <a href="{{ route('about') }}"   @click="mobileMenu = false" class="py-2 px-1 rounded-btn text-xs font-medium text-mist hover:text-paper hover:bg-white/[0.05] border border-ink-border/40 transition-all">{{ __('site.nav.about') }}</a>
+            <a href="{{ route('faq') }}"     @click="mobileMenu = false" class="py-2 px-1 rounded-btn text-xs font-medium text-mist hover:text-paper hover:bg-white/[0.05] border border-ink-border/40 transition-all">{{ __('site.nav.faq') }}</a>
+            <a href="{{ route('contact') }}" @click="mobileMenu = false" class="py-2 px-1 rounded-btn text-xs font-medium text-mist hover:text-paper hover:bg-white/[0.05] border border-ink-border/40 transition-all">{{ __('site.nav.contact') }}</a>
+        </div>
+
+        <div class="pt-2 space-y-2">
             @auth
                 @if(auth()->user()->hasRole('admin'))
-                    <a href="{{ route('admin.dashboard') }}" @click="mobileMenu = false" class="ks-btn-gold w-full font-mono !text-[11px] uppercase tracking-[0.08em]">{{ __('site.nav.dashboard') }} →</a>
+                    <a href="{{ route('admin.dashboard') }}" @click="mobileMenu = false" class="ks-btn-gold w-full font-mono !text-[11px] uppercase tracking-[0.08em] shadow-md">{{ __('site.nav.dashboard') }} →</a>
                 @elseif(auth()->user()->hasRole('teacher'))
-                    <a href="{{ route('teacher.dashboard') }}" @click="mobileMenu = false" class="ks-btn-gold w-full font-mono !text-[11px] uppercase tracking-[0.08em]">{{ __('site.nav.teacher_panel') }} →</a>
+                    <a href="{{ route('teacher.dashboard') }}" @click="mobileMenu = false" class="ks-btn-gold w-full font-mono !text-[11px] uppercase tracking-[0.08em] shadow-md">{{ __('site.nav.teacher_panel') }} →</a>
                 @endif
-                <a href="{{ route('profile.show', auth()->user()->username) }}" @click="mobileMenu = false" class="block text-sm py-1.5 text-mist hover:text-paper transition-colors duration-base">{{ __('site.nav.my_profile') }}</a>
-                <a href="{{ route('notifications') }}" @click="mobileMenu = false" class="block md:hidden text-sm py-1.5 text-mist hover:text-paper transition-colors duration-base">{{ __('site.nav.notifications') }}</a>
-                <a href="{{ route('settings') }}" @click="mobileMenu = false" class="block text-sm py-1.5 text-mist hover:text-paper transition-colors duration-base">{{ __('site.nav.settings') }}</a>
+                <a href="{{ route('profile.show', auth()->user()->username) }}" @click="mobileMenu = false" class="flex items-center gap-2 py-2 px-3 rounded-btn text-sm text-mist hover:text-paper hover:bg-white/[0.04] transition-all">{{ __('site.nav.my_profile') }}</a>
+                <a href="{{ route('notifications') }}" @click="mobileMenu = false" class="flex items-center gap-2 md:hidden py-2 px-3 rounded-btn text-sm text-mist hover:text-paper hover:bg-white/[0.04] transition-all">{{ __('site.nav.notifications') }}</a>
+                <a href="{{ route('settings') }}" @click="mobileMenu = false" class="flex items-center gap-2 py-2 px-3 rounded-btn text-sm text-mist hover:text-paper hover:bg-white/[0.04] transition-all">{{ __('site.nav.settings') }}</a>
                 <form method="POST" action="{{ route('logout') }}" class="pt-1">
                     @csrf
-                    <button type="submit" class="text-sm text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 transition-colors">{{ __('site.nav.logout') }}</button>
+                    <button type="submit" class="w-full text-left py-2 px-3 rounded-btn text-sm text-rose-600 dark:text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all">{{ __('site.nav.logout') }}</button>
                 </form>
             @else
-                <a href="{{ route('login') }}"    @click="mobileMenu = false" class="ks-btn-ghost w-full">{{ __('site.nav.login') }}</a>
-                <a href="{{ route('register') }}" @click="mobileMenu = false" class="ks-btn-primary w-full">{{ __('site.nav.register') }}</a>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <a href="{{ route('login') }}"    @click="mobileMenu = false" class="ks-btn-ghost w-full justify-center text-center">{{ __('site.nav.login') }}</a>
+                    <a href="{{ route('register') }}" @click="mobileMenu = false" class="ks-btn-primary w-full justify-center text-center">{{ __('site.nav.register') }}</a>
+                </div>
             @endauth
 
-            {{-- Til almashtirgich (mobil) --}}
-            <div class="pt-3 flex items-center gap-2">
+            {{-- Til almashtirgich (mobil burger ichida) --}}
+            <div class="pt-3.5 mt-2 flex items-center justify-between border-t border-ink-border/50">
                 <span class="ks-eyebrow">{{ __('site.common.language') }}</span>
-                @foreach(['uz', 'ru', 'en'] as $code)
-                    <a href="{{ url()->current() }}?lang={{ $code }}"
-                       class="px-2.5 py-1 rounded-badge font-mono text-[11px] font-medium transition-colors duration-base {{ app()->getLocale() === $code ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper border border-ink-border' }}">
-                       {{ strtoupper($code) }}
-                    </a>
-                @endforeach
+                <div class="flex items-center gap-1.5">
+                    @foreach(['uz' => ['code' => 'UZ', 'flag' => 'uz'], 'ru' => ['code' => 'RU', 'flag' => 'ru'], 'en' => ['code' => 'EN', 'flag' => 'gb']] as $code => $l)
+                        <a href="{{ url()->current() }}?lang={{ $code }}"
+                           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn font-mono text-[11px] font-medium transition-all duration-200 active:scale-95 {{ app()->getLocale() === $code ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/40 font-bold shadow-sm' : 'text-mist hover:text-paper border border-ink-border bg-ink-800 hover:bg-ink-700' }}">
+                            <img src="https://flagcdn.com/20x15/{{ $l['flag'] }}.png" width="16" height="12" class="rounded-[2px] object-cover ring-1 ring-white/10" alt="{{ $l['code'] }}">
+                            <span>{{ $l['code'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
             </div>
 
             {{-- Mavzu almashtirgich (mobil) --}}
-            <div class="pt-3 mt-1 flex items-center justify-between border-t border-ink-border">
+            <div class="pt-3 mt-1 flex items-center justify-between border-t border-ink-border/50">
                 <span class="ks-eyebrow">Mavzu / Theme</span>
-                <button @click="toggleTheme($event)" type="button" data-theme-toggle class="inline-flex items-center gap-2 px-3 py-1.5 rounded-card border border-ink-border bg-ink-800 text-paper text-xs font-mono transition-colors hover:bg-ink-700">
-                    <span x-show="theme === 'dark'">☀️ Yorug' rejim</span>
-                    <span x-show="theme === 'light'">🌙 Tungi rejim</span>
+                <button @click="toggleTheme($event)" type="button" data-theme-toggle 
+                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-btn border border-ink-border bg-ink-800 text-paper text-xs font-mono transition-all duration-200 hover:bg-ink-700 active:scale-95">
+                    <span x-show="theme === 'dark'" class="flex items-center gap-1.5 text-amber-400">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                        <span>Yorug' rejim</span>
+                    </span>
+                    <span x-show="theme === 'light'" class="flex items-center gap-1.5 text-amber-600">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                        <span>Tungi rejim</span>
+                    </span>
                 </button>
             </div>
         </div>

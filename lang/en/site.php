@@ -18,6 +18,7 @@ return [
         'dashboard'     => 'Dashboard',
         'teacher_panel' => 'Teacher panel',
         'my_profile'    => 'My profile',
+        'profile'       => 'Profile',
         'settings'      => 'Settings',
         'notifications' => 'Notifications',
         'logout'        => 'Log out',

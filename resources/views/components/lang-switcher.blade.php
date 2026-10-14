@@ -9,7 +9,7 @@
     $current = $languages[$currentLocale] ?? $languages['uz'];
 @endphp
 
-<div x-data="{ langOpen: false }" x-on:click.outside="langOpen = false" class="relative">
+<div x-data="{ langOpen: false }" x-on:click.outside="langOpen = false" {{ $attributes->merge(['class' => 'relative']) }}>
 
     {{-- Trigger button --}}
     <button

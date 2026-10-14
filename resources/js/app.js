@@ -17,6 +17,7 @@ if (document.getElementById('book-reveal-section') || document.getElementById('s
             const ScrollTrigger = scrollTriggerModule.ScrollTrigger || scrollTriggerModule.default;
 
             gsap.registerPlugin(ScrollTrigger);
+            gsap.config({ nullTargetWarn: false });
             window.gsap = gsap;
             window.ScrollTrigger = ScrollTrigger;
             window.dispatchEvent(new CustomEvent('kitobxon:gsap-ready'));

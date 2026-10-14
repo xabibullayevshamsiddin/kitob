@@ -18,6 +18,7 @@ return [
         'dashboard'     => 'Панель управления',
         'teacher_panel' => 'Панель учителя',
         'my_profile'    => 'Мой профиль',
+        'profile'       => 'Профиль',
         'settings'      => 'Настройки',
         'notifications' => 'Уведомления',
         'logout'        => 'Выйти',

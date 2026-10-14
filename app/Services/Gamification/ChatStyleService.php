@@ -67,6 +67,30 @@ class ChatStyleService
             'name_class' => 'text-purple-300 hover:text-purple-200',
             'ring_class' => 'ring-2 ring-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.45)]',
         ],
+        'library' => [
+            'id' => 'library',
+            'name' => 'Antik Kutubxona (Vintage Library)',
+            'icon' => '📜',
+            'price' => 110,
+            'description' => 'Qadimiy charm muqovalar va sokin mutolaa aurasini ifodalovchi asil kitobxon uslubi.',
+            'bubble_class' => 'border-amber-700/50 dark:border-amber-600/50 bg-gradient-to-br from-amber-950/30 via-stone-900/40 to-ink-950 dark:from-amber-950/30 dark:via-ink-950 dark:to-ink-950 shadow-[0_0_15px_rgba(217,119,6,0.18)] text-amber-100',
+            'badge_text' => '📜 Kutubxona',
+            'badge_class' => 'bg-amber-700/15 border border-amber-700/30 text-amber-300 font-mono font-bold text-[9px] rounded-pill px-1.5 py-0.5',
+            'name_class' => 'text-amber-400 hover:text-amber-300',
+            'ring_class' => 'ring-2 ring-amber-600 shadow-[0_0_12px_rgba(217,119,6,0.4)]',
+        ],
+        'sunset' => [
+            'id' => 'sunset',
+            'name' => 'Shafaq Yog‘dusi (Sunset Solitude)',
+            'icon' => '🌅',
+            'price' => 95,
+            'description' => 'Olovrang-binafsha shafaq nuri. Romantik sokin oqshom mutolaasi jilosi.',
+            'bubble_class' => 'border-orange-500/50 dark:border-orange-400/50 bg-gradient-to-br from-orange-500/15 via-pink-950/40 to-ink-950 dark:from-orange-500/20 dark:via-ink-950 dark:to-ink-950 shadow-[0_0_15px_rgba(249,115,22,0.18)] text-orange-100',
+            'badge_text' => '🌅 Sunset',
+            'badge_class' => 'bg-orange-500/15 border border-orange-500/30 text-orange-300 font-mono font-bold text-[9px] rounded-pill px-1.5 py-0.5',
+            'name_class' => 'text-orange-300 hover:text-orange-200',
+            'ring_class' => 'ring-2 ring-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.4)]',
+        ],
     ];
 
     public const RANKS = [
@@ -118,7 +142,7 @@ class ChatStyleService
 
         $profile = $user->profile;
         $preference = $profile?->chat_style_preference ?? 'shop';
-        $shopThemeKey = $profile?->chat_bubble_theme ?? $profile?->avatar_frame;
+        $shopThemeKey = $profile?->profile_theme ?? $profile?->chat_bubble_theme ?? $profile?->avatar_frame;
 
         // 0. Agar foydalanuvchi "default" (Standart) ko'rinishni tanlagan bo'lsa:
         if ($preference === 'default') {

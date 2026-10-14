@@ -156,35 +156,35 @@ class ProfilePage extends Component
 
     public function buyAvatarFrame(string $frame): void
     {
+        $this->setProfileTheme($frame);
+    }
+
+    public function setProfileTheme(string $themeKey): void
+    {
         if (Auth::id() !== $this->user->id) return;
 
-        $frames = [
-            'gold'     => ['name' => 'Oltin toj (Royal Gold)', 'price' => 100],
-            'aurora'   => ['name' => 'Qutb yog‘dusi (Aurora Neon)', 'price' => 120],
-            'cyber'    => ['name' => 'Kiber neon (Cyberpunk)', 'price' => 150],
-            'emerald'  => ['name' => 'Zumrad nuri (Emerald)', 'price' => 90],
-            'obsidian' => ['name' => 'Kosmik bo‘shliq (Obsidian)', 'price' => 80],
-        ];
+        $themes = \App\Services\Gamification\ProfileVisualService::THEMES;
 
-        if (!isset($frames[$frame])) {
-            $this->toastWarning("Noma'lum ramka!");
+        if (!isset($themes[$themeKey])) {
+            $this->toastWarning("Noma'lum vizual fon!");
             return;
         }
 
-        $item = $frames[$frame];
+        $item = $themes[$themeKey];
         $profile = $this->user->profile ?? \App\Models\UserProfile::create(['user_id' => $this->user->id]);
 
         // Agar ushbu buyum allaqachon sotib olingan bo'lsa — qayta to'lovsiz faollashtiramiz
-        if ($profile->hasUnlockedItem($frame)) {
-            $profile->avatar_frame = $frame;
-            $profile->chat_bubble_theme = $frame;
+        if ($profile->hasUnlockedItem($themeKey)) {
+            $profile->profile_theme = $themeKey;
+            $profile->avatar_frame = $themeKey;
+            $profile->chat_bubble_theme = $themeKey;
             $profile->chat_style_preference = 'shop';
             $profile->save();
 
             $this->user->unsetRelation('profile');
             $this->user->load('profile');
 
-            $this->toastSuccess("{$item['name']} o‘rnatildi va faol qilib belgilandi! 🎨");
+            $this->toastSuccess("{$item['name']} foni o‘rnatildi va profilingizga faol qilindi! 🎨");
             return;
         }
 
@@ -197,9 +197,10 @@ class ProfilePage extends Component
         $this->user->coin_balance -= $item['price'];
         $this->user->save();
 
-        $profile->unlockItem($frame);
-        $profile->avatar_frame = $frame;
-        $profile->chat_bubble_theme = $frame;
+        $profile->unlockItem($themeKey);
+        $profile->profile_theme = $themeKey;
+        $profile->avatar_frame = $themeKey;
+        $profile->chat_bubble_theme = $themeKey;
         $profile->chat_style_preference = 'shop';
         $profile->save();
 
@@ -210,10 +211,10 @@ class ProfilePage extends Component
             'user_id' => $this->user->id,
             'coins' => -$item['price'],
             'source' => 'spend',
-            'description' => "{$item['name']} avatar va chat uslubi xaridi",
+            'description' => "{$item['name']} profil vizual foni va chat uslubi xaridi",
         ]);
 
-        $this->toastSuccess("{$item['name']} muvaffaqiyatli xarid qilindi va chat/profilingizga o‘rnatildi! 🎉");
+        $this->toastSuccess("{$item['name']} muvaffaqiyatli xarid qilindi va profilingizga o‘rnatildi! 🎉");
     }
 
     public function setChatStylePreference(string $pref): void
@@ -229,9 +230,9 @@ class ProfilePage extends Component
         $this->user->load('profile');
 
         $msg = match($pref) {
-            'rank' => 'Chat va profil ko‘rinishi: Reyting uslubiga o‘tkazildi! 🏆',
-            'shop' => 'Chat va profil ko‘rinishi: Tangaga olingan do‘kon uslubiga o‘tkazildi! 🛍️',
-            default => 'Chat va profil ko‘rinishi: Standart ko‘rinishga qaytarildi.',
+            'rank' => 'Profil va chat vizual foni: Reyting uslubiga o‘tkazildi! 🏆',
+            'shop' => 'Profil va chat vizual foni: Tangaga olingan do‘kon foniga o‘tkazildi! 🛍️',
+            default => 'Profil va chat vizual foni: Standart ko‘rinishga qaytarildi.',
         };
 
         $this->toastSuccess($msg);
@@ -245,13 +246,14 @@ class ProfilePage extends Component
         if ($profile) {
             $profile->avatar_frame = null;
             $profile->chat_bubble_theme = null;
+            $profile->profile_theme = null;
             $profile->chat_style_preference = 'default';
             $profile->save();
 
             $this->user->unsetRelation('profile');
             $this->user->load('profile');
 
-            $this->toastInfo("Maxsus bezak yechildi va standart ko‘rinishga qaytarildi.");
+            $this->toastInfo("Maxsus fon va bezaklar yechildi, standart ko‘rinishga qaytarildi.");
         }
     }
 
@@ -311,9 +313,13 @@ class ProfilePage extends Component
             'following_count' => $this->user->following()->count(),
         ];
 
+        $userRank = app(\App\Services\LeaderboardService::class)->getUserRank($this->user);
+        $profileVisual = \App\Services\Gamification\ProfileVisualService::resolveVisual($this->user, $userRank);
+
         return view('livewire.profile.profile-page', [
             'user'              => $this->user,
-            'userRank'          => app(\App\Services\LeaderboardService::class)->getUserRank($this->user),
+            'userRank'          => $userRank,
+            'profileVisual'     => $profileVisual,
             'activeTab'         => $this->activeTab,
             'isFollowing'       => $this->isFollowing,
             'readingProgresses' => $readingProgresses,
