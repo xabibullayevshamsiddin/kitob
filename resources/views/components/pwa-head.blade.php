@@ -4,7 +4,6 @@
 <script>
 (() => {
     const enabled = @json((bool) config('pwa.enabled', true));
-    const base = new URL(@json(url('/') . '/'), location.href);
     const syncThemeColor = () => {
         const meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.content = document.documentElement.classList.contains('light') ? '#F3EFE7' : '#07090E';
@@ -17,28 +16,38 @@
     };
     if ('serviceWorker' in navigator) {
         if (enabled) {
-            window.addEventListener('load', () => navigator.serviceWorker.register(new URL('sw.js', base), { scope: base.pathname }).catch(() => {}));
+            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {}));
         } else {
             navigator.serviceWorker.getRegistrations().then((registrations) => Promise.all(registrations
-                .filter((registration) => new URL(registration.scope).pathname === base.pathname)
                 .map((registration) => registration.unregister()))).catch(() => {});
         }
     }
     if (!enabled) return;
 
     const ping = async () => {
+        if (!navigator.onLine) return false;
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 3000);
+        const timer = setTimeout(() => controller.abort(), 3500);
         try {
-            const response = await fetch(new URL('ping', base), { cache: 'no-store', signal: controller.signal, credentials: 'omit' });
-            return response.status === 204;
-        } catch (_) { return false; }
-        finally { clearTimeout(timer); }
+            const response = await fetch('/ping', {
+                method: 'GET',
+                cache: 'no-store',
+                signal: controller.signal,
+                credentials: 'omit'
+            });
+            return response.status === 204 || response.ok;
+        } catch (_) {
+            return navigator.onLine;
+        } finally {
+            clearTimeout(timer);
+        }
     };
 
     let indicator;
-    let wasOffline = !navigator.onLine;
+    let wasOffline = false;
+    let hasInitialized = false;
     let probeTimer;
+
     const render = (offline) => {
         if (!indicator) {
             if (!document.body) {
@@ -50,25 +59,41 @@
             indicator.setAttribute('role', 'status');
             indicator.innerHTML = '<span class="kitob-pwa-dot" aria-hidden="true"></span><span class="kitob-pwa-label"></span><a href="#">Offline sahifani ochish</a><button type="button" class="kitob-pwa-close" aria-label="Yopish">&times;</button>';
             document.body.appendChild(indicator);
-            indicator.querySelector('a').href = new URL('offline/index.html?reason=offline&from=' + encodeURIComponent(location.pathname + location.search), base).href;
+            indicator.querySelector('a').href = '/offline/index.html?reason=offline&from=' + encodeURIComponent(location.pathname + location.search);
             indicator.querySelector('.kitob-pwa-close').addEventListener('click', () => { indicator.hidden = true; });
         }
         indicator.classList.toggle('is-offline', offline);
         indicator.querySelector('.kitob-pwa-label').textContent = offline ? 'Internet aloqasi yo‘q' : 'Aloqa tiklandi';
         indicator.hidden = !offline;
-        if (offline && !wasOffline) notify('warning', 'Internet aloqasi uzildi. Sahifani yopmay turing.');
-        if (!offline && !wasOffline) notify('success', 'Internet aloqasi tiklandi.');
+
+        // Faqat oldin haqiqatdan offline bo'lib, keyin tiklangandagina bildirishnoma berish!
+        // Boshlang'ich sahifa ochilishida (hasInitialized === false) aslo "Aloqa tiklandi" demaslik!
+        if (hasInitialized) {
+            if (offline && !wasOffline) {
+                notify('warning', 'Internet aloqasi uzildi. Sahifani yopmay turing.');
+            } else if (!offline && wasOffline) {
+                notify('success', 'Internet aloqasi tiklandi.');
+            }
+        }
         wasOffline = offline;
+        hasInitialized = true;
     };
+
     const check = async () => render(!(await ping()));
     window.addEventListener('online', check);
     window.addEventListener('offline', () => render(true));
     document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
     document.addEventListener('livewire:load', () => {
-        if (window.Livewire && window.Livewire.hook) window.Livewire.hook('message.failed', () => { render(true); check(); });
+        if (window.Livewire && window.Livewire.hook) {
+            window.Livewire.hook('message.failed', () => {
+                if (!navigator.onLine) {
+                    render(true);
+                }
+            });
+        }
     });
     check();
-    probeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) check(); }, 30000);
+    probeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) check(); }, 45000);
     window.addEventListener('pagehide', () => clearInterval(probeTimer), { once: true });
 
     const style = document.createElement('style');
