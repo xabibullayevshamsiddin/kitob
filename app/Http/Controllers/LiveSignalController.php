@@ -14,6 +14,25 @@ class LiveSignalController extends Controller
      */
     public function send(Request $request, LiveEvent $event): JsonResponse
     {
+        if ($event->group_id) {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['error' => 'Guruh efiriga ulanish uchun avval tizimga kiring.'], 401);
+            }
+
+            $isMember = \App\Models\GroupMember::where('group_id', $event->group_id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            $isAdmin = (method_exists($user, 'hasRole') && $user->hasRole('admin'))
+                || ($user->role === 'admin')
+                || ($event->host_user_id === $user->id);
+
+            if (!$isMember && !$isAdmin) {
+                return response()->json(['error' => 'Bu efir faqat guruh a\'zolari uchun.'], 403);
+            }
+        }
+
         $validated = $request->validate([
             'sender_id'   => 'required|string|max:80',
             'receiver_id' => 'required|string|max:80',
@@ -59,6 +78,25 @@ class LiveSignalController extends Controller
      */
     public function poll(Request $request, LiveEvent $event): JsonResponse
     {
+        if ($event->group_id) {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['error' => 'Guruh efiriga ulanish uchun avval tizimga kiring.'], 401);
+            }
+
+            $isMember = \App\Models\GroupMember::where('group_id', $event->group_id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            $isAdmin = (method_exists($user, 'hasRole') && $user->hasRole('admin'))
+                || ($user->role === 'admin')
+                || ($event->host_user_id === $user->id);
+
+            if (!$isMember && !$isAdmin) {
+                return response()->json(['error' => 'Bu efir faqat guruh a\'zolari uchun.'], 403);
+            }
+        }
+
         $peerId = (string) $request->query('peer_id', '');
         $sinceId = (int) $request->query('since_id', 0);
 

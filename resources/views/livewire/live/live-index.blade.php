@@ -272,6 +272,13 @@
                                 {{ __('site.live.perm_filter_chat') }}
                             @endif
                         </span>
+
+                        @if($event->group)
+                            <span class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-pill bg-amber-500/15 border border-amber-500/30 text-amber-400 font-medium">
+                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>{{ $event->group->name }}</span>
+                            </span>
+                        @endif
                     </div>
                 </div>
 

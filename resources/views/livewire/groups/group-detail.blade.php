@@ -65,6 +65,27 @@
         </div>
 
         <div class="flex items-center flex-wrap gap-2.5">
+            {{-- Jonli Efir tugmasi --}}
+            @if($activeGroupLive)
+                <a href="{{ route('live.show', $activeGroupLive) }}"
+                   class="px-3.5 py-2 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-mono text-xs font-bold rounded-btn transition-all shadow-[0_0_16px_rgba(244,63,94,0.45)] flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span>🔴 Efirga kirish</span>
+                </a>
+            @elseif($canStartLive)
+                <button wire:click="openLiveModal"
+                    class="px-3.5 py-2 bg-rose-600/15 hover:bg-rose-600/25 text-rose-300 border border-rose-500/30 hover:border-rose-500/60 text-xs font-mono font-medium rounded-btn transition-all flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="23 7 16 12 23 17 23 7"/>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                    <span>🔴 Jonli efir</span>
+                </button>
+            @endif
+
             @if($canManage)
                 <button wire:click="openSettingsModal"
                     class="px-3.5 py-2 bg-ink-900 hover:bg-ink-800 text-paper border border-ink-border hover:border-amber-500/40 text-xs font-mono font-medium rounded-btn transition-all flex items-center gap-2">
@@ -100,6 +121,55 @@
 
     @if ($group->description)
         <p class="text-xs sm:text-sm text-mist leading-relaxed max-w-3xl font-sans break-words whitespace-pre-line">{{ $group->description }}</p>
+    @endif
+
+    {{-- Faol Guruh Jonli Efir Banneri --}}
+    @if($activeGroupLive)
+        <div class="relative overflow-hidden rounded-panel bg-gradient-to-r from-rose-950/70 via-ink-900 to-amber-950/50 border border-rose-500/40 p-4 sm:p-5 shadow-[0_4px_25px_rgba(225,29,72,0.25)] animate-in fade-in duration-300">
+            <div class="absolute -right-10 -top-10 w-44 h-44 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-start sm:items-center gap-3.5">
+                    <div class="relative w-12 h-12 rounded-btn bg-gradient-to-br from-rose-600 via-rose-500 to-amber-500 flex items-center justify-center shrink-0 shadow-[0_0_18px_rgba(244,63,94,0.4)]">
+                        <svg class="w-6 h-6 text-white animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500 border-2 border-ink-900"></span>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-pill bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+                                Guruhda Jonli Efir
+                            </span>
+                            <span class="text-xs font-mono text-mist">• {{ $activeGroupLive->current_viewers }} tomoshabin</span>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-bold font-serif text-paper mt-1">
+                            {{ $activeGroupLive->title }}
+                        </h3>
+                        <p class="text-xs font-mono text-mist mt-0.5">
+                            Boshlovchi: <strong class="text-amber-400">{{ $activeGroupLive->hostUser?->name ?? 'Host' }}</strong>
+                            @if($activeGroupLive->started_at)
+                                • {{ $activeGroupLive->started_at->diffForHumans() }} boshlangan
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <a href="{{ route('live.show', $activeGroupLive) }}"
+                       class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-mono text-xs font-bold rounded-btn transition-all shadow-[0_0_16px_rgba(244,63,94,0.45)] flex items-center justify-center gap-2 group">
+                        <svg class="w-4 h-4 text-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                        </svg>
+                        <span>Efirga qo'shilish</span>
+                    </a>
+                </div>
+            </div>
+        </div>
     @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -980,6 +1050,85 @@
                         <span wire:loading wire:target="confirmDeleteGroup">{{ __('site.groups.deleting') }}</span>
                     </button>
                 </div>
+            </div>
+    <!-- Group Live Stream Studio Modal -->
+    @if ($showLiveModal)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="closeLiveModal"></div>
+            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+
+                <div class="flex items-center justify-between pb-3 border-b border-ink-border">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-btn bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="23 7 16 12 23 17 23 7"/>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-paper font-serif">Guruhda Jonli Efir Boshlash</h3>
+                            <p class="text-[11px] font-mono text-mist">«{{ $group->name }}» a'zolari uchun maxsus</p>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="closeLiveModal" class="p-1 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors">
+                        ✕
+                    </button>
+                </div>
+
+                <div class="p-3 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Ushbu jonli efirga faqat «{{ $group->name }}» guruhi a'zolari kira oladi va bildirishnoma ham faqat guruh a'zolariga yuboriladi.</span>
+                </div>
+
+                <form wire:submit.prevent="startGroupLiveStream" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono font-medium text-paper mb-1.5">Efir mavzusi <span class="text-rose-400">*</span></label>
+                        <input type="text" wire:model.defer="liveTitle" placeholder="Masalan: Kitob muhokamasi va savol-javob"
+                               class="w-full px-3.5 py-2.5 bg-ink-950 border border-ink-border focus:border-amber-400 rounded-btn text-sm text-paper placeholder-mist/50 outline-none transition-colors">
+                        @error('liveTitle') <span class="text-rose-400 text-xs font-mono block mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-mono font-medium text-paper mb-1.5">Tavsif (ixtiyoriy)</label>
+                        <textarea wire:model.defer="liveDescription" rows="3" placeholder="Efirda qanday mavzular ko'rilishi haqida qisqacha ma'lumot..."
+                                  class="w-full px-3.5 py-2.5 bg-ink-950 border border-ink-border focus:border-amber-400 rounded-btn text-sm text-paper placeholder-mist/50 outline-none transition-colors resize-none"></textarea>
+                        @error('liveDescription') <span class="text-rose-400 text-xs font-mono block mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-mono font-medium text-paper mb-1.5">Ishtirokchilar rejimi</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 p-2.5 rounded-btn border cursor-pointer transition-colors {{ $livePermissionMode === 'chat_only' ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' : 'bg-ink-950 border-ink-border text-mist' }}">
+                                <input type="radio" wire:model="livePermissionMode" value="chat_only" class="text-amber-500 focus:ring-0">
+                                <div>
+                                    <div class="text-xs font-mono font-bold">Chat ochiq</div>
+                                    <div class="text-[10px] text-mist">A'zolar yozib savol bera oladi</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-btn border cursor-pointer transition-colors {{ $livePermissionMode === 'view_only' ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' : 'bg-ink-950 border-ink-border text-mist' }}">
+                                <input type="radio" wire:model="livePermissionMode" value="view_only" class="text-amber-500 focus:ring-0">
+                                <div>
+                                    <div class="text-xs font-mono font-bold">Faqat tomosha</div>
+                                    <div class="text-[10px] text-mist">Chat yopiq (ma'ruza)</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-ink-border">
+                        <button type="button" wire:click="closeLiveModal"
+                            class="py-2 px-4 rounded-btn border border-ink-border hover:bg-ink-800 text-xs font-mono text-mist hover:text-paper transition-colors">
+                            Bekor qilish
+                        </button>
+                        <button type="submit" wire:loading.attr="disabled"
+                            class="py-2 px-5 rounded-btn bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-mono font-bold transition-all shadow-[0_0_15px_rgba(244,63,94,0.3)] flex items-center gap-2">
+                            <span wire:loading.remove wire:target="startGroupLiveStream">🔴 Efirni Boshlash</span>
+                            <span wire:loading wire:target="startGroupLiveStream">Boshlanmoqda...</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif

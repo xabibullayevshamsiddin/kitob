@@ -6,6 +6,7 @@ use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\GroupMessage;
+use App\Models\LiveEvent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -39,6 +40,12 @@ class GroupDetail extends Component
     public bool $showRemoveMemberModal = false;
     public ?int $memberToRemoveId = null;
     public string $memberToRemoveName = '';
+
+    // Guruh jonli efiri (Live Stream) modal holati
+    public bool $showLiveModal = false;
+    public string $liveTitle = '';
+    public string $liveDescription = '';
+    public string $livePermissionMode = 'chat_only';
 
     public function openDeleteModal(): void
     {
@@ -76,6 +83,131 @@ class GroupDetail extends Component
 
         session()->flash('success', "«{$name}» guruhi muvaffaqiyatli o'chirildi.");
         return redirect()->route('groups.index');
+    }
+
+    public function openLiveModal(): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            redirect()->route('login');
+            return;
+        }
+
+        $isMember = GroupMember::where('group_id', $this->group->id)->where('user_id', $user->id)->exists();
+        $isMod = GroupMember::where('group_id', $this->group->id)->where('user_id', $user->id)->where('role', 'moderator')->exists();
+        $isTeacher = (method_exists($user, 'hasRole') && $user->hasRole('teacher')) || ($user->role === 'teacher');
+        $canStart = $this->group->isManagedBy($user) || $isMod || ($isTeacher && $isMember);
+
+        if (!$canStart) {
+            $this->toast('error', 'Faqat guruh rahbari, moderatorlar yoki ustozlar guruhda jonli efir boshlashi mumkin.');
+            return;
+        }
+
+        // Agar allaqachon faol efir ketayotgan bo'lsa — to'g'ridan-to'g'ri unga yo'naltiramiz
+        $activeLive = LiveEvent::where('group_id', $this->group->id)
+            ->where('status', LiveEvent::STATUS_LIVE)
+            ->first();
+
+        if ($activeLive) {
+            redirect()->route('live.show', $activeLive);
+            return;
+        }
+
+        $this->liveTitle = '«' . $this->group->name . '» jonli suhbati';
+        $this->liveDescription = '';
+        $this->livePermissionMode = 'chat_only';
+        $this->showLiveModal = true;
+    }
+
+    public function closeLiveModal(): void
+    {
+        $this->showLiveModal = false;
+    }
+
+    public function startGroupLiveStream()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $isMember = GroupMember::where('group_id', $this->group->id)->where('user_id', $user->id)->exists();
+        $isMod = GroupMember::where('group_id', $this->group->id)->where('user_id', $user->id)->where('role', 'moderator')->exists();
+        $isTeacher = (method_exists($user, 'hasRole') && $user->hasRole('teacher')) || ($user->role === 'teacher');
+        $canStart = $this->group->isManagedBy($user) || $isMod || ($isTeacher && $isMember);
+
+        if (!$canStart) {
+            $this->toast('error', 'Guruhda jonli efir boshlash uchun ruxsat berilmagan.');
+            return;
+        }
+
+        $this->validate([
+            'liveTitle'          => 'required|string|min:3|max:150',
+            'liveDescription'    => 'nullable|string|max:1000',
+            'livePermissionMode' => 'required|in:both,chat_only,voice_only,view_only',
+        ], [
+            'liveTitle.required' => 'Efir mavzusini kiriting.',
+            'liveTitle.min'      => 'Efir mavzusi kamida 3 belgidan iborat bo\'lsin.',
+        ]);
+
+        // Mavjud efir bor-yo'qligini tekshirish
+        $existing = LiveEvent::where('group_id', $this->group->id)
+            ->where('status', LiveEvent::STATUS_LIVE)
+            ->first();
+
+        if ($existing) {
+            $this->showLiveModal = false;
+            return redirect()->route('live.show', $existing);
+        }
+
+        $permMode = in_array($this->livePermissionMode, ['view_only', 'voice_only'], true) ? 'view_only' : 'chat_only';
+
+        $event = LiveEvent::create([
+            'title'           => trim($this->liveTitle),
+            'description'     => trim($this->liveDescription),
+            'book_id'         => $this->group->book_id,
+            'group_id'        => $this->group->id,
+            'host_user_id'    => $user->id,
+            'permission_mode' => $permMode,
+            'status'          => LiveEvent::STATUS_LIVE,
+            'scheduled_at'    => now(),
+            'started_at'      => now(),
+        ]);
+
+        $this->showLiveModal = false;
+
+        // Eski signallarni tozalash
+        \App\Models\LiveSignal::where('live_event_id', $event->id)->delete();
+        \App\Models\LiveSignal::where('created_at', '<', now()->subMinutes(5))->delete();
+
+        // FAQAT ushbu guruhga a'zo bo'lgan foydalanuvchilarga bildirishnoma yuborish
+        $members = GroupMember::where('group_id', $this->group->id)
+            ->where('user_id', '!=', $user->id)
+            ->with('user')
+            ->get();
+
+        foreach ($members as $gm) {
+            if ($gm->user) {
+                \App\Services\NotifyUser::send(
+                    $gm->user,
+                    'live',
+                    '🔴 Guruhda jonli efir boshlandi!',
+                    '«' . $this->group->name . '» guruhida "' . $event->title . '" jonli efiri boshlandi. Qatnashish uchun kiring!',
+                    '📺',
+                    '/live/' . $event->id
+                );
+            }
+        }
+
+        // Guruh chatiga ham xabar yozish
+        GroupMessage::create([
+            'group_id' => $this->group->id,
+            'user_id'  => $user->id,
+            'message'  => '🔴 Guruhda jonli efir boshlandi: "' . $event->title . '"',
+        ]);
+
+        return redirect()->route('live.show', $event)
+            ->with('success', 'Guruh jonli efiri boshlandi! Mikrofon va kamerangizni sozlang.');
     }
 
     public function openSettingsModal(): void
@@ -495,15 +627,28 @@ class GroupDetail extends Component
         $isOwner = $user && ($this->group->created_by === $user->id);
         $topFiveIds = app(\App\Services\LeaderboardService::class)->getTopFiveIds();
 
+        $activeGroupLive = LiveEvent::where('group_id', $this->group->id)
+            ->where('status', LiveEvent::STATUS_LIVE)
+            ->with('hostUser')
+            ->latest()
+            ->first();
+
+        $isMember = $user ? $members->contains('user_id', $user->id) : false;
+        $isMod = $user ? GroupMember::where('group_id', $this->group->id)->where('user_id', $user->id)->where('role', 'moderator')->exists() : false;
+        $isTeacher = $user ? ((method_exists($user, 'hasRole') && $user->hasRole('teacher')) || ($user->role === 'teacher')) : false;
+        $canStartLive = $user && ($canManage || $isMod || ($isTeacher && $isMember));
+
         return view('livewire.groups.group-detail', [
-            'messages'     => $messages,
-            'members'      => $members,
-            'canDelete'    => $canManage,
-            'canManage'    => $canManage,
-            'canChat'      => $canChat,
-            'canSendVoice' => $canSendVoice,
-            'isOwner'      => $isOwner,
-            'topFiveIds'   => $topFiveIds,
+            'messages'        => $messages,
+            'members'         => $members,
+            'canDelete'       => $canManage,
+            'canManage'       => $canManage,
+            'canChat'         => $canChat,
+            'canSendVoice'    => $canSendVoice,
+            'isOwner'         => $isOwner,
+            'topFiveIds'      => $topFiveIds,
+            'activeGroupLive' => $activeGroupLive,
+            'canStartLive'    => $canStartLive,
         ])->layout('layouts.app', ['title' => $this->group->name]);
     }
 }

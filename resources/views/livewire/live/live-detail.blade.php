@@ -10,7 +10,7 @@
         signalSendUrl: @js(route('live.signal.send', $event)),
         signalPollUrl: @js(route('live.signal.poll', $event)),
         csrfToken: @js(csrf_token()),
-        liveIndexUrl: @js(route('live.index')),
+        liveIndexUrl: @js($event->group_id ? route('groups.show', $event->group_id) : route('live.index')),
         micOn: @js(__('site.live.mic_on')),
         micOff: @js(__('site.live.mic_off')),
         camOn: @js(__('site.live.cam_on')),
@@ -28,12 +28,18 @@
     <!-- ── 1. TOP HEADER & STATUS BAR ── -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-ink-900 border border-ink-border p-4 sm:p-5 rounded-panel shadow-soft">
         <div class="flex items-center gap-3">
-            <a href="{{ route('live.index') }}" class="p-2 rounded-btn bg-ink-950/80 border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors" title="Orqaga">
+            <a href="{{ $event->group_id ? route('groups.show', $event->group_id) : route('live.index') }}" class="p-2 rounded-btn bg-ink-950/80 border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors" title="{{ $event->group_id ? 'Guruhga qaytish' : 'Orqaga' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
             <div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <h1 class="text-base sm:text-xl font-bold font-serif text-paper truncate max-w-xl">{{ $event->title }}</h1>
+                    @if($event->group)
+                        <a href="{{ route('groups.show', $event->group) }}" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:text-amber-300 text-[11px] font-mono font-medium transition-colors">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>{{ $event->group->name }}</span>
+                        </a>
+                    @endif
                     @if($event->is_live)
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 text-[11px] font-mono font-bold uppercase tracking-wider">
                             <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>

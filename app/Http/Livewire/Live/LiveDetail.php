@@ -22,9 +22,31 @@ class LiveDetail extends Component
         'question' => 'required|string|min:2|max:300',
     ];
 
-    public function mount(LiveEvent $event): void
+    public function mount(LiveEvent $event)
     {
         $this->event = $event;
+
+        // Agar bu guruh jonli efiri bo'lsa — faqat guruh a'zolari va admin kira oladi!
+        if ($this->event->group_id) {
+            if (!Auth::check()) {
+                session()->flash('warning', 'Guruh jonli efiriga kirish uchun avval tizimga kiring.');
+                return redirect()->route('login');
+            }
+
+            $user = Auth::user();
+            $isMember = \App\Models\GroupMember::where('group_id', $this->event->group_id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            $isAdmin = (method_exists($user, 'hasRole') && $user->hasRole('admin'))
+                || ($user->role === 'admin')
+                || ($this->event->host_user_id === $user->id);
+
+            if (!$isMember && !$isAdmin) {
+                session()->flash('error', 'Ushbu jonli efir faqat «' . ($this->event->group->name ?? 'Guruh') . '» a\'zolari uchun ochiq.');
+                return redirect()->route('groups.index');
+            }
+        }
 
         if ($this->event->status === LiveEvent::STATUS_LIVE && !$this->event->started_at) {
             $this->event->update(['started_at' => $this->event->created_at ?? now()]);
@@ -94,12 +116,19 @@ class LiveDetail extends Component
             return null;
         }
 
+        $groupId = $this->event->group_id;
+
         // Foydalanuvchi talabi: o'tib ketgan / yakunlangan efirlar saytda saqlanib qolmasin
         $this->event->questions()->delete();
         \App\Models\LiveSignal::where('live_event_id', $this->event->id)->delete();
         $this->event->delete();
 
         session()->flash('success', 'Jonli efir muvaffaqiyatli yakunlandi va saytdan o\'chirildi.');
+
+        if ($groupId) {
+            return redirect()->route('groups.show', $groupId);
+        }
+
         return redirect()->route('live.index');
     }
 

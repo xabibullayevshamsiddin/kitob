@@ -149,7 +149,8 @@ class LiveIndex extends Component
         $this->showStudioModal = false;
 
         // Yangi efir — eski signallarni tozalash (eski offer/answer yangi ulanishni buzmasin)
-        \App\Models\LiveSignal::where('live_event_id', '!=', $event->id)->delete();
+        \App\Models\LiveSignal::where('live_event_id', $event->id)->delete();
+        \App\Models\LiveSignal::where('created_at', '<', now()->subMinutes(5))->delete();
 
         // Barcha boshqa foydalanuvchilarga "jonli efir boshlandi" bildirishnomasi
         \App\Models\User::where('id', '!=', Auth::id())
@@ -274,14 +275,33 @@ class LiveIndex extends Component
                 $e->delete();
             });
 
+        // Efirlar ro'yxati: Global efirlar barcha uchun, guruh efirlari esa FAQAT o'sha guruh a'zolari uchun ko'rinadi
+        $myGroupIds = Auth::check()
+            ? \App\Models\GroupMember::where('user_id', Auth::id())->pluck('group_id')->toArray()
+            : [];
+
+        $accessibleEventsScope = function ($q) use ($myGroupIds) {
+            $q->whereNull('group_id');
+            if (!empty($myGroupIds)) {
+                $q->orWhereIn('group_id', $myGroupIds);
+            }
+        };
+
         // Badge hisoblagichlari
-        $totalActiveCount = LiveEvent::whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE])->count();
-        $liveCount = LiveEvent::where('status', LiveEvent::STATUS_LIVE)->count();
-        $scheduledCount = LiveEvent::where('status', LiveEvent::STATUS_SCHEDULED)->count();
+        $totalActiveCount = LiveEvent::whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE])
+            ->where($accessibleEventsScope)
+            ->count();
+        $liveCount = LiveEvent::where('status', LiveEvent::STATUS_LIVE)
+            ->where($accessibleEventsScope)
+            ->count();
+        $scheduledCount = LiveEvent::where('status', LiveEvent::STATUS_SCHEDULED)
+            ->where($accessibleEventsScope)
+            ->count();
 
         // Efirlar ro'yxati (live_events.likes_count to'g'ridan-to'g'ri modelda mavjud)
-        $query = LiveEvent::with(['book', 'hostUser'])
-            ->whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE]);
+        $query = LiveEvent::with(['book', 'hostUser', 'group'])
+            ->whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE])
+            ->where($accessibleEventsScope);
 
         // Status filter
         if ($this->statusFilter === 'live') {

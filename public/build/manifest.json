@@ -10,7 +10,7 @@
     "src": "node_modules/gsap/index.js"
   },
   "resources/css/app.css": {
-    "file": "assets/app-8edf4966.css",
+    "file": "assets/app-a6b3ef3c.css",
     "isEntry": true,
     "src": "resources/css/app.css"
   },

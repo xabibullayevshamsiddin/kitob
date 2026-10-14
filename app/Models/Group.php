@@ -65,6 +65,19 @@ class Group extends Model
                     ->withPivot('role', 'joined_at');
     }
 
+    public function liveEvents(): HasMany
+    {
+        return $this->hasMany(LiveEvent::class);
+    }
+
+    public function activeLiveEvent(): ?LiveEvent
+    {
+        return $this->liveEvents()
+            ->where('status', LiveEvent::STATUS_LIVE)
+            ->latest()
+            ->first();
+    }
+
     // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------

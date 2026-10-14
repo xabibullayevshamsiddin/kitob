@@ -21,6 +21,7 @@ class LiveEvent extends Model
     protected $fillable = [
         'book_id',
         'host_user_id',
+        'group_id',
         'title',
         'description',
         'cover',
@@ -53,6 +54,11 @@ class LiveEvent extends Model
     public function hostUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'host_user_id');
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function questions(): HasMany
@@ -116,9 +122,27 @@ class LiveEvent extends Model
         return $query->where('status', self::STATUS_ENDED)->latest('scheduled_at');
     }
 
+    public function scopeGlobal(Builder $query): Builder
+    {
+        return $query->whereNull('group_id');
+    }
+
+    public function scopeForGroup(Builder $query, int $groupId): Builder
+    {
+        return $query->where('group_id', $groupId);
+    }
+
     // -------------------------------------------------------------------------
     // Accessors
     // -------------------------------------------------------------------------
+
+    /**
+     * Whether this event belongs to a group.
+     */
+    public function getIsGroupEventAttribute(): bool
+    {
+        return !is_null($this->group_id);
+    }
 
     /**
      * Whether the event is currently streaming.
