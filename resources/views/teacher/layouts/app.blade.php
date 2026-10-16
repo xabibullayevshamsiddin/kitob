@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'O\'qituvchi paneli' }} — Kitobxon</title>
     @include('partials.design-system')
-    <!-- Vite Bundled Scripts (Alpine.js + Collapse, Pusher, Echo, Axios) -->
-    @vite(['resources/js/app.js'])
     <style>
         [x-cloak] { display: none !important; }
         * { font-family: 'Inter', sans-serif; }

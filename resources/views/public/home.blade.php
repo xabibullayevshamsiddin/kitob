@@ -6,7 +6,6 @@
     <x-seo-meta :title="__('site.home.hero_title') . __('site.home.hero_title_bold')" :description="__('site.home.hero_subtitle')" />
 
     @include('partials.design-system')
-    @vite(['resources/js/app.js'])
 
     <!-- Google Fonts: Instrument Serif (display) & Inter (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

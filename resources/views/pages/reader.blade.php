@@ -10,11 +10,6 @@
     <title>{{ $chapter->title }} — {{ $book->title }} | Kitobxon</title>
 
     @include('partials.design-system')
-    @if(file_exists(public_path('build/manifest.json')))
-        @vite(['resources/js/app.js'])
-    @else
-        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    @endif
     <style>
         input[type="number"] {
             -moz-appearance: textfield;

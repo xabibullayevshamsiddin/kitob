@@ -13,9 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
-    <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <style>
         [x-cloak] { display: none !important; }
         .noise-bg {
@@ -129,10 +126,48 @@
                         class="px-4 py-2 rounded-btn transition-all cursor-pointer">
                     {{ __('site.faq.cat_ai') }}
                 </button>
+                <button @click="activeCat = 'general'"
+                        :class="activeCat === 'general' ? 'bg-gold text-ink-950 font-bold shadow-md shadow-gold/20' : 'bg-ink-900 text-mist hover:text-paper hover:bg-ink-800 border border-ink-border'"
+                        class="px-4 py-2 rounded-btn transition-all cursor-pointer">
+                    Umumiy
+                </button>
             </div>
 
             <!-- Accordion Ro'yxati -->
             <div class="space-y-4">
+
+                {{-- Admin panel orqali qo'shilgan FAQ savol-javoblari --}}
+                @if(isset($customFaqs) && $customFaqs->isNotEmpty())
+                    @foreach($customFaqs as $customFaq)
+                        @php
+                            $faqCardId = 'custom_' . $customFaq->id;
+                        @endphp
+                        <div x-show="matches(@js($customFaq->question), @js($customFaq->category), @js($customFaq->answer))" 
+                             class="faq-card faq-item" :class="{ 'active': openItem === '{{ $faqCardId }}' }">
+                            <button @click="toggle('{{ $faqCardId }}')" 
+                                    class="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 focus:outline-none cursor-pointer">
+                                <span class="text-sm sm:text-base font-bold text-paper flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-btn bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+                                    </span>
+                                    <span>{{ $customFaq->question }}</span>
+                                </span>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <span class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-pill text-[10px] font-mono border {{ $customFaq->category_badge_classes }}">
+                                        {{ $customFaq->category_label }}
+                                    </span>
+                                    <div class="w-8 h-8 rounded-btn bg-white/5 flex items-center justify-center text-gold text-xs shrink-0 transition-transform duration-300"
+                                         :class="{ 'rotate-180 bg-gold/20 text-gold': openItem === '{{ $faqCardId }}' }">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                                    </div>
+                                </div>
+                            </button>
+                            <div x-show="openItem === '{{ $faqCardId }}'" x-cloak class="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-paper-muted leading-relaxed border-t border-white/5 pt-4 space-y-2">
+                                <p class="whitespace-pre-line">{{ $customFaq->answer }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
                 
                 <!-- 1. Mutolaa va Kitoblar -->
                 <div x-show="matches(@js(__('site.faq.q1')), 'books', @js(__('site.faq.q1a_catalog_d') . ' ' . __('site.faq.q1a_chapters_d') . ' ' . __('site.faq.q1a_quiz_d')))" 

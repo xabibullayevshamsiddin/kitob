@@ -153,8 +153,8 @@ class LeaderboardPrivilegesTest extends TestCase
 
         Livewire::actingAs($topUser)
             ->test(ProfilePage::class, ['username' => $topUser->username])
-            ->assertSee('Reytingda #2 o\'rin', false)
-            ->assertSee('Kumush sovrindor');
+            ->assertSee('2-o\'rin', false)
+            ->assertSee('Kumush Sovrindor');
     }
 
     public function test_home_page_displays_faxriy_beshlik(): void

@@ -121,251 +121,69 @@
     };
 </script>
 
-<script>
-    (function() {
-        const _origWarn = console.warn;
-        console.warn = function(...args) {
-            if (args[0] && typeof args[0] === 'string' && args[0].indexOf('cdn.tailwindcss.com should not be used in production') !== -1) {
-                return;
-            }
-            _origWarn.apply(console, args);
-        };
-    })();
-</script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        darkMode: 'class',
-        theme: {
-            extend: {
-                fontFamily: {
-                    sans: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                    display: ['Spectral', 'Georgia', 'serif'],
-                    serif: ['Spectral', 'Georgia', 'serif'],
-                    mono: ['"DM Mono"', 'ui-monospace', 'monospace'],
-                    manrope: ['"DM Sans"', 'sans-serif'],
-                },
-                colors: {
-                    // Editorial Shkala — Dark & Light dynamic CSS variables
-                    ink: {
-                        950: 'rgb(var(--ink-950-rgb) / <alpha-value>)',
-                        900: 'rgb(var(--ink-900-rgb) / <alpha-value>)',
-                        800: 'rgb(var(--ink-800-rgb) / <alpha-value>)',
-                        700: 'rgb(var(--ink-700-rgb) / <alpha-value>)',
-                        600: 'rgb(var(--ink-600-rgb) / <alpha-value>)',
-                        border: 'rgb(var(--ink-border-rgb) / <alpha-value>)',
-                    },
-                    paper: {
-                        DEFAULT: 'rgb(var(--paper-rgb) / <alpha-value>)',
-                        50: 'rgb(var(--paper-50-rgb) / <alpha-value>)',
-                        100: 'rgb(var(--paper-100-rgb) / <alpha-value>)',
-                        200: 'rgb(var(--paper-200-rgb) / <alpha-value>)',
-                    },
-                    'paper-muted': 'rgb(var(--paper-muted-rgb) / <alpha-value>)',
-                    mist: {
-                        DEFAULT: 'rgb(var(--mist-rgb) / <alpha-value>)',
-                        600: 'rgb(var(--mist-600-rgb) / <alpha-value>)',
-                    },
-                    vermilion: { DEFAULT: '#C1392B', 600: '#C1392B', 700: '#A82E22', light: '#B83224' },
-                    gilt: { DEFAULT: '#B8860B' },
-                    gold: { DEFAULT: '#F59E0B', light: '#FBBF24' },
-                    aurora: { teal: '#2DD4BF', coral: '#FB7185' },
-                    amber: { 300: '#FCD34D', 400: '#FBBF24', 500: '#F59E0B', 600: '#D97706' },
-                    // Orqaga moslik
-                    primary: {
-                        50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
-                        400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
-                        800: '#3730a3', 900: '#1e1b4b', 950: '#0f0e2e'
-                    },
-                    accent: { 300: '#FCD34D', 400: '#FBBF24', 500: '#F59E0B', 600: '#D97706' },
-                    surface: {
-                        DEFAULT: 'rgb(var(--surface-default-rgb) / <alpha-value>)',
-                        muted: 'rgb(var(--surface-muted-rgb) / <alpha-value>)',
-                        dark: 'rgb(var(--surface-dark-rgb) / <alpha-value>)',
-                        'dark-card': 'rgb(var(--surface-dark-card-rgb) / <alpha-value>)',
-                        'dark-border': 'rgb(var(--surface-dark-border-rgb) / <alpha-value>)'
-                    },
-                    slate: {
-                        750: 'rgb(var(--slate-750-rgb) / <alpha-value>)',
-                        850: 'rgb(var(--slate-850-rgb) / <alpha-value>)',
-                    },
-                },
-                // Radius tokenlari (MASTER §3). Eski rounded-2xl/3xl qiymatlari editorial shkalaga tushirildi.
-                borderRadius: {
-                    badge: '4px', btn: '6px', input: '6px', card: '8px', panel: '12px', modal: '16px',
-                    xl: '8px', '2xl': '10px', '3xl': '12px',
-                },
-                boxShadow: {
-                    card: '0 4px 20px -2px rgba(0,0,0,0.45)',
-                    popover: '0 10px 30px -5px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
-                    'card-depth': '0 18px 40px -16px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)',
-                    spotlight: '0 0 40px -12px rgba(245,158,11,0.22)',
-                    'glow-amber': '0 0 20px rgba(245,158,11,0.25)',
-                    soft: '0 4px 20px -2px rgba(0,0,0,0.45)',
-                },
-                transitionTimingFunction: {
-                    out: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                    book: 'cubic-bezier(0.22, 1, 0.36, 1)',
-                    elastic: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-                },
-                transitionDuration: { micro: '150ms', base: '200ms', modal: '300ms', book: '550ms' },
-                animation: {
-                    'fade-in': 'ksFadeIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards',
-                    'slide-up': 'ksSlideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards',
-                    'slide-in-left': 'ksSlideInLeft 0.3s cubic-bezier(0.16,1,0.3,1) forwards',
-                    'scale-in': 'ksScaleIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards',
-                    'streak-flame': 'ksStreakFlame 0.6s cubic-bezier(0.34,1.56,0.64,1)',
-                    'pulse-slow': 'pulse 3s infinite',
-                },
-                keyframes: {
-                    ksFadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                    ksSlideUp: { '0%': { opacity: '0', transform: 'translateY(12px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                    ksSlideInLeft: { '0%': { opacity: '0', transform: 'translateX(-16px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } },
-                    ksScaleIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
-                    ksStreakFlame: {
-                        '0%': { transform: 'scale(1) rotate(0deg)' },
-                        '30%': { transform: 'scale(1.3) rotate(-6deg)', filter: 'drop-shadow(0 0 16px #F59E0B)' },
-                        '60%': { transform: 'scale(1.1) rotate(6deg)' },
-                        '100%': { transform: 'scale(1) rotate(0deg)' },
-                    },
-                },
-            }
-        }
-    }
-</script>
-
-<style type="text/tailwindcss">
-    @layer base {
-        :root, html.dark, html.force-dark {
-            --ink-950-rgb: 7 9 14;
-            --ink-900-rgb: 13 17 26;
-            --ink-800-rgb: 19 25 38;
-            --ink-700-rgb: 31 41 61;
-            --ink-600-rgb: 42 54 80;
-            --ink-border-rgb: 31 41 61;
-
-            --paper-rgb: 240 237 230;
-            --paper-50-rgb: 250 247 242;
-            --paper-100-rgb: 240 237 230;
-            --paper-200-rgb: 229 223 213;
-            --paper-muted-rgb: 201 196 184;
-
-            --mist-rgb: 139 155 173;
-            --mist-600-rgb: 82 96 113;
-
-            --surface-default-rgb: 255 255 255;
-            --surface-muted-rgb: 250 247 242;
-            --surface-dark-rgb: 13 17 26;
-            --surface-dark-card-rgb: 19 25 38;
-            --surface-dark-border-rgb: 31 41 61;
-
-            --slate-750-rgb: 26 34 54;
-            --slate-850-rgb: 13 17 26;
-
-            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-            --ease-book: cubic-bezier(0.22, 1, 0.36, 1);
-            --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        /* Editorial Literary Light Mode (soothing warm linen canvas + soft ivory cards + deep ink typography — zero eye glare) */
-        html.light:not(.force-dark) {
-            --ink-950-rgb: 243 239 231;       /* #F3EFE7: Soothing warm linen book canvas (eye-friendly, no glare) */
-            --ink-900-rgb: 249 246 240;       /* #F9F6F0: Soft warm ivory card surface (not blinding white) */
-            --ink-800-rgb: 238 233 223;       /* #EEE9DF: Muted warm stone wells & ghost pills */
-            --ink-700-rgb: 228 221 209;       /* #E4DDD1: Border & subtle hover */
-            --ink-600-rgb: 214 206 193;       /* #D6CEC1: Active / divider */
-            --ink-border-rgb: 224 217 205;    /* #E0D9CD: Refined book-cloth hairline border */
-
-            --paper-rgb: 28 25 22;            /* #1C1916: Rich literary espresso charcoal ink */
-            --paper-50-rgb: 20 18 16;
-            --paper-100-rgb: 28 25 22;
-            --paper-200-rgb: 46 41 36;
-            --paper-muted-rgb: 92 85 75;
-
-            --mist-rgb: 107 99 88;            /* #6B6358: Warm taupe metadata (high contrast, zero fatigue) */
-            --mist-600-rgb: 78 72 63;         /* #4E483F */
-
-            --surface-default-rgb: 249 246 240;
-            --surface-muted-rgb: 238 233 223;
-            --surface-dark-rgb: 249 246 240;
-            --surface-dark-card-rgb: 243 239 231;
-            --surface-dark-border-rgb: 224 217 205;
-
-            --slate-750-rgb: 234 228 218;
-            --slate-850-rgb: 243 239 231;
-        }
-
-        html {
-            -webkit-text-size-adjust: 100%;
-            overflow-x: clip;
-            max-width: 100%;
-        }
-        body {
-            font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-            font-size: 1rem; line-height: 1.65;
-            font-feature-settings: "ss01";
-            -webkit-font-smoothing: antialiased;
-            overflow-x: clip;
-            max-width: 100%;
-            position: relative;
-        }
-
-        /* Tipografik shkala (MASTER §4) — Spectral sarlavhalar kengroq line-height bilan */
-        h1, h2, h3, h4, .font-display {
-            font-family: Spectral, Georgia, serif;
-            font-feature-settings: "liga", "kern";
-            text-wrap: balance;
-        }
-        h1 { letter-spacing: -0.02em;  line-height: 1.3; }
-        h2 { letter-spacing: -0.015em; line-height: 1.35; }
-        h3 { letter-spacing: -0.01em;  line-height: 1.4; }
-        h4 { line-height: 1.45; }
-        /* Interfeys sarlavhalari (kichik label/karta yorlig'i) sans bo'lib qoladi */
-        h5, h6 { font-family: "DM Sans", ui-sans-serif, sans-serif; }
-        .font-mono, code, kbd, samp { font-variant-numeric: tabular-nums; }
-        p { text-wrap: pretty; }
-
-        /* Matn chegaradan chiqib ketishini oldini oluvchi global xavfsizlik qoidasi */
-        p, h1, h2, h3, h4, h5, h6, .ks-card, .ks-panel, [class*="rounded-panel"], [class*="rounded-card"] {
-            overflow-wrap: break-word;
-            word-break: break-word;
-        }
-
-        /* Interaktivlik: cursor + ko'rinadigan fokus */
-        a, button, [role="button"], label[for], select, summary,
-        input[type="checkbox"], input[type="radio"], input[type="submit"], input[type="file"] { cursor: pointer; }
-        button:disabled, [aria-disabled="true"] { cursor: not-allowed; }
-        :focus-visible { outline: 2px solid #F59E0B; outline-offset: 2px; border-radius: 4px; }
-        input:focus-visible, textarea:focus-visible, select:focus-visible { outline-offset: 0; }
-
-        ::selection { background: #F59E0B; color: #07090E; }
-    }
-
-    @layer components {
-        /* Tugmalar (MASTER §6.1) */
-        .ks-btn {
-            @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-btn text-sm font-medium
-                   transition-[background-color,border-color,color,transform] duration-base ease-out
-                   active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
-        }
-        .ks-btn-primary { @apply ks-btn bg-vermilion text-paper hover:bg-vermilion-700; }
-        .ks-btn-gold    { @apply ks-btn bg-amber-500 text-ink-950 hover:bg-amber-400; }
-        .ks-btn-ghost   { @apply ks-btn bg-ink-800 text-paper border border-ink-border hover:bg-ink-700; }
-        .ks-input {
-            @apply w-full rounded-input bg-ink-950 border border-ink-border px-3.5 py-2.5 text-sm text-paper
-                   placeholder:text-mist/70 transition-colors duration-base
-                   focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none;
-        }
-        .ks-card  { @apply bg-ink-900 border border-ink-border rounded-card; }
-        .ks-panel { @apply bg-ink-900 border border-ink-border rounded-panel; }
-        .ks-badge { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-badge font-mono text-[11px] font-medium uppercase tracking-[0.05em]; }
-        .ks-eyebrow { @apply font-mono text-[11px] uppercase tracking-[0.14em] text-mist; }
-        .ks-stat { @apply font-mono text-[1.75rem] font-semibold leading-none tabular-nums; }
-        .ks-rule { @apply h-px w-full bg-ink-border; }
-    }
-</style>
+{{-- Vite Bundled Styles & Scripts (Tailwind v3 + Alpine.js + Collapse, Pusher, Echo, Axios) --}}
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 
 <style>
+    :root, html.dark, html.force-dark {
+        --ink-950-rgb: 7 9 14;
+        --ink-900-rgb: 13 17 26;
+        --ink-800-rgb: 19 25 38;
+        --ink-700-rgb: 31 41 61;
+        --ink-600-rgb: 42 54 80;
+        --ink-border-rgb: 31 41 61;
+
+        --paper-rgb: 240 237 230;
+        --paper-50-rgb: 250 247 242;
+        --paper-100-rgb: 240 237 230;
+        --paper-200-rgb: 229 223 213;
+        --paper-muted-rgb: 201 196 184;
+
+        --mist-rgb: 139 155 173;
+        --mist-600-rgb: 82 96 113;
+
+        --surface-default-rgb: 255 255 255;
+        --surface-muted-rgb: 250 247 242;
+        --surface-dark-rgb: 13 17 26;
+        --surface-dark-card-rgb: 19 25 38;
+        --surface-dark-border-rgb: 31 41 61;
+
+        --slate-750-rgb: 26 34 54;
+        --slate-850-rgb: 13 17 26;
+
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-book: cubic-bezier(0.22, 1, 0.36, 1);
+        --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Editorial Literary Light Mode (soothing warm linen canvas + soft ivory cards + deep ink typography — zero eye glare) */
+    html.light:not(.force-dark) {
+        --ink-950-rgb: 243 239 231;       /* #F3EFE7: Soothing warm linen book canvas (eye-friendly, no glare) */
+        --ink-900-rgb: 249 246 240;       /* #F9F6F0: Soft warm ivory card surface (not blinding white) */
+        --ink-800-rgb: 238 233 223;       /* #EEE9DF: Muted warm stone wells & ghost pills */
+        --ink-700-rgb: 228 221 209;       /* #E4DDD1: Border & subtle hover */
+        --ink-600-rgb: 214 206 193;       /* #D6CEC1: Active / divider */
+        --ink-border-rgb: 224 217 205;    /* #E0D9CD: Refined book-cloth hairline border */
+
+        --paper-rgb: 28 25 22;            /* #1C1916: Rich literary espresso charcoal ink */
+        --paper-50-rgb: 20 18 16;
+        --paper-100-rgb: 28 25 22;
+        --paper-200-rgb: 46 41 36;
+        --paper-muted-rgb: 92 85 75;
+
+        --mist-rgb: 107 99 88;            /* #6B6358: Warm taupe metadata (high contrast, zero fatigue) */
+        --mist-600-rgb: 78 72 63;         /* #4E483F */
+
+        --surface-default-rgb: 249 246 240;
+        --surface-muted-rgb: 238 233 223;
+        --surface-dark-rgb: 249 246 240;
+        --surface-dark-card-rgb: 243 239 231;
+        --surface-dark-border-rgb: 224 217 205;
+
+        --slate-750-rgb: 234 228 218;
+        --slate-850-rgb: 243 239 231;
+    }
+
     [x-cloak] { display: none !important; }
 
     /* Signature 2: streak-olov — .is-lit klassi qo'shilganda bir marta chaqnaydi */

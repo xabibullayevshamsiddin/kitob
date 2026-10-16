@@ -2,32 +2,47 @@
 export default {
   darkMode: 'class',
   content: [
-    './resources/**/*.blade.php',
-    './resources/**/*.js',
+    './resources/views/**/*.blade.php',
+    './resources/js/**/*.js',
+    './app/**/*.php',
     './vendor/livewire/**/*.blade.php',
+  ],
+  safelist: [
+    'rounded-pill',
+    {
+      pattern: /^(bg|text|border|ring)-(amber|emerald|sky|rose|purple|indigo|violet|cyan|teal|orange|slate)-(400|500|600)(\/(10|15|20|30|40|50))?$/,
+    },
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Spectral', 'Georgia', 'serif'],
+        serif: ['Spectral', 'Georgia', 'serif'],
+        mono: ['"DM Mono"', 'ui-monospace', 'monospace'],
+        manrope: ['"DM Sans"', 'sans-serif'],
+      },
       colors: {
-        // Editorial Dark — Deep Ink shkalasi (MASTER.md §2.1)
+        // Editorial Shkala — Dark & Light dynamic CSS variables
         ink: {
-          950: '#07090E',
-          900: '#0D111A',
-          800: '#131926',
-          700: '#1F293D',
-          600: '#2A3650',
-          border: '#1F293D',
+          950: 'rgb(var(--ink-950-rgb) / <alpha-value>)',
+          900: 'rgb(var(--ink-900-rgb) / <alpha-value>)',
+          800: 'rgb(var(--ink-800-rgb) / <alpha-value>)',
+          700: 'rgb(var(--ink-700-rgb) / <alpha-value>)',
+          600: 'rgb(var(--ink-600-rgb) / <alpha-value>)',
+          border: 'rgb(var(--ink-border-rgb) / <alpha-value>)',
         },
         paper: {
-          DEFAULT: '#F0EDE6',
-          50: '#FAF7F2',
-          100: '#F0EDE6',
-          200: '#E5DFD5',
-          muted: '#C9C4B8',
+          DEFAULT: 'rgb(var(--paper-rgb) / <alpha-value>)',
+          50: 'rgb(var(--paper-50-rgb) / <alpha-value>)',
+          100: 'rgb(var(--paper-100-rgb) / <alpha-value>)',
+          200: 'rgb(var(--paper-200-rgb) / <alpha-value>)',
+          muted: 'rgb(var(--paper-muted-rgb) / <alpha-value>)',
         },
+        'paper-muted': 'rgb(var(--paper-muted-rgb) / <alpha-value>)',
         mist: {
-          DEFAULT: '#8B9BAD',
-          600: '#526071',
+          DEFAULT: 'rgb(var(--mist-rgb) / <alpha-value>)',
+          600: 'rgb(var(--mist-600-rgb) / <alpha-value>)',
         },
         vermilion: {
           DEFAULT: '#C1392B',
@@ -42,21 +57,17 @@ export default {
           DEFAULT: '#F59E0B',
           light: '#FBBF24',
         },
+        aurora: {
+          teal: '#2DD4BF',
+          coral: '#FB7185',
+        },
         amber: {
           300: '#FCD34D',
           400: '#FBBF24',
           500: '#F59E0B',
           600: '#D97706',
         },
-        aurora: {
-          teal: '#2DD4BF',
-          coral: '#FB7185',
-        },
-        slate: {
-          750: '#1A2236',
-          850: '#0D111A',
-        },
-        // Orqaga moslik (Backward compatibility)
+        // Orqaga moslik
         primary: {
           50: '#eef2ff',
           100: '#e0e7ff',
@@ -68,7 +79,7 @@ export default {
           700: '#4338ca',
           800: '#3730a3',
           900: '#1e1b4b',
-          950: '#07090E',
+          950: '#0f0e2e',
         },
         accent: {
           300: '#FCD34D',
@@ -77,20 +88,18 @@ export default {
           600: '#D97706',
         },
         surface: {
-          DEFAULT: '#ffffff',
-          muted: '#FAF7F2',
-          dark: '#0D111A',
-          'dark-card': '#131926',
-          'dark-border': '#1F293D',
+          DEFAULT: 'rgb(var(--surface-default-rgb) / <alpha-value>)',
+          muted: 'rgb(var(--surface-muted-rgb) / <alpha-value>)',
+          dark: 'rgb(var(--surface-dark-rgb) / <alpha-value>)',
+          'dark-card': 'rgb(var(--surface-dark-card-rgb) / <alpha-value>)',
+          'dark-border': 'rgb(var(--surface-dark-border-rgb) / <alpha-value>)',
+        },
+        slate: {
+          750: 'rgb(var(--slate-750-rgb) / <alpha-value>)',
+          850: 'rgb(var(--slate-850-rgb) / <alpha-value>)',
         },
       },
-      fontFamily: {
-        sans: ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Spectral', 'Georgia', 'serif'],
-        serif: ['Spectral', 'Georgia', 'serif'],
-        mono: ['"DM Mono"', 'ui-monospace', 'monospace'],
-        manrope: ['"DM Sans"', 'sans-serif'],
-      },
+      // Radius tokenlari (MASTER §3). Eski rounded-2xl/3xl qiymatlari editorial shkalaga tushirildi.
       borderRadius: {
         badge: '4px',
         btn: '6px',
@@ -98,6 +107,7 @@ export default {
         card: '8px',
         panel: '12px',
         modal: '16px',
+        pill: '9999px',
         xl: '8px',
         '2xl': '10px',
         '3xl': '12px',
@@ -144,8 +154,5 @@ export default {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
 };

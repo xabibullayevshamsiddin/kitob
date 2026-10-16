@@ -9,9 +9,6 @@
 
     @include('partials.design-system')
 
-    <!-- Vite Bundled Scripts (Alpine.js + Collapse, Pusher, Echo, Axios) -->
-    @vite(['resources/js/app.js'])
-
     @if(class_exists('Livewire\Livewire'))
         @livewireStyles
     @endif
