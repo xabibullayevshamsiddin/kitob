@@ -279,7 +279,12 @@
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       if (!rootEl || !rootEl.isConnected) return;
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const activeEl = document.activeElement;
+      if (
+        (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.isContentEditable || (e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')))) ||
+        (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT' || activeEl.isContentEditable))
+      ) {
         return;
       }
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
@@ -357,6 +362,14 @@
         totalPages = doc.numPages;
         currentPage = 1;
 
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const requestedPage = parseInt(urlParams.get('page'), 10);
+          if (!isNaN(requestedPage) && requestedPage >= 1 && requestedPage <= totalPages) {
+            currentPage = requestedPage;
+          }
+        } catch (_) {}
+
         const firstPage = await doc.getPage(1);
         cachedBaseViewport = firstPage.getViewport({ scale: 1.0 });
 
@@ -364,7 +377,7 @@
         if (sliderEl) {
           sliderEl.min = 1;
           sliderEl.max = totalPages;
-          sliderEl.value = 1;
+          sliderEl.value = currentPage;
         }
 
         await rebuildStPageFlipBook();

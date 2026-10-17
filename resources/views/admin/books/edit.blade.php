@@ -166,6 +166,153 @@
         </form>
     </div>
 
+    {{-- Kitob AI Yordamchi (RAG Indekslash va Boshqaruv) bloki --}}
+    @php
+        $aiStatus = $book->ai_index_status ?? 'none';
+        $aiChunksCount = $book->chunks()->count();
+        $aiPagesCount = $book->pages()->count();
+        $aiQuality = $book->ai_text_quality !== null ? round((float) $book->ai_text_quality * 100, 1) : null;
+        $statusMap = [
+            'ready'    => ['label' => 'Tayyor', 'class' => 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'],
+            'stale'    => ['label' => 'Eskirgan (qayta indekslang)', 'class' => 'bg-amber-500/15 text-amber-500 border-amber-500/30'],
+            'indexing' => ['label' => 'Indekslanmoqda...', 'class' => 'bg-sky-500/15 text-sky-400 border-sky-500/30'],
+            'failed'   => ['label' => 'Xato (Matn sifati past)', 'class' => 'bg-rose-500/15 text-rose-500 border-rose-500/30'],
+            'none'     => ['label' => 'Indekslanmagan', 'class' => 'bg-slate-500/15 text-slate-400 border-slate-500/30'],
+        ];
+        $currentStatusBadge = $statusMap[$aiStatus] ?? $statusMap['none'];
+    @endphp
+    <div id="ai-assistant-panel" x-data="{ indexing: false }" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-sm space-y-5 scroll-mt-20">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">
+                            AI yordamchi (Kitob ichidagi RAG chat)
+                        </h3>
+                        <span class="px-2.5 py-0.5 rounded-full border text-xs font-mono font-bold {{ $currentStatusBadge['class'] }}">
+                            {{ $currentStatusBadge['label'] }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        PDF betlari va boblarni bo'laklarga ajratib, kitob sahifasida faqat shu kitob bo'yicha javob beradigan AI yordamchini boshqarish
+                    </p>
+                </div>
+            </div>
+
+            {{-- Qayta indekslash formasi --}}
+            <form action="{{ route('admin.books.ai.index', $book->id) }}" method="POST" @submit="indexing = true" class="shrink-0">
+                @csrf
+                <input type="hidden" name="force" value="1">
+                <button type="submit"
+                        :disabled="indexing"
+                        class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-2 transition-colors shadow-md shadow-emerald-600/20">
+                    <svg x-show="!indexing" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <polyline points="1 20 1 14 7 14"/>
+                        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                    </svg>
+                    <svg x-show="indexing" x-cloak class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                        <path d="M12 2a10 10 0 0110 10"/>
+                    </svg>
+                    <span x-text="indexing ? 'Indekslanmoqda (kutib turing)...' : '{{ $aiStatus === 'ready' ? 'Qayta indekslash' : 'Hozir indekslash' }}'">
+                        {{ $aiStatus === 'ready' ? 'Qayta indekslash' : 'Hozir indekslash' }}
+                    </span>
+                </button>
+            </form>
+        </div>
+
+        {{-- Ko'rsatkichlar kartalari --}}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <span class="block text-[11px] font-mono text-slate-400">Matn sifati</span>
+                <span class="text-base font-bold text-slate-800 dark:text-white font-mono">
+                    {{ $aiQuality !== null ? $aiQuality . '%' : '—' }}
+                </span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <span class="block text-[11px] font-mono text-slate-400">Ajratilgan betlar</span>
+                <span class="text-base font-bold text-slate-800 dark:text-white font-mono">
+                    {{ $aiPagesCount }} ta
+                </span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <span class="block text-[11px] font-mono text-slate-400">Matn bo'laklari (chunks)</span>
+                <span class="text-base font-bold text-slate-800 dark:text-white font-mono">
+                    {{ $aiChunksCount }} ta
+                </span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                <span class="block text-[11px] font-mono text-slate-400">So'nggi indekslash</span>
+                <span class="text-xs font-bold text-slate-800 dark:text-white font-mono">
+                    {{ $book->ai_indexed_at ? $book->ai_indexed_at->timezone('Asia/Tashkent')->format('d.m.Y H:i') : 'Hali indekslanmagan' }}
+                </span>
+            </div>
+        </div>
+
+        {{-- Xato xabari (masalan, skanerlangan PDF bo'lsa) --}}
+        @if($aiStatus === 'failed' || !empty($book->ai_index_error))
+            <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400 flex items-start gap-2.5">
+                <svg class="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                    <p class="font-bold">{{ $book->ai_index_error ?: __('ai.low_text_quality') }}</p>
+                    @if(str_contains((string) $book->ai_index_error, 'Embedding xizmati'))
+                        <p class="text-[11px] text-rose-300/80 mt-0.5">
+                            Matnli qidiruv ishlayapti; vektorli qidiruv embedding xizmati tiklangach qayta indekslashda tiklanadi.
+                        </p>
+                    @elseif($aiStatus === 'failed' || str_contains((string) $book->ai_index_error, 'PDF matnidan'))
+                        <p class="text-[11px] text-rose-300/80 mt-0.5">
+                            Agar PDF skanerlangan rasm bo'lsa, OCR qilingan matnli PDF yuklang yoki kitobga boblar (matn) qo'shib qayta indekslang.
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        {{-- Yoqish/o'chirish va Qisqa mazmun (ai_summary) formasi --}}
+        <form action="{{ route('admin.books.ai.settings', $book->id) }}" method="POST" class="space-y-4 pt-2 border-t border-slate-200 dark:border-slate-700">
+            @csrf
+
+            <div class="flex items-center gap-3">
+                <input type="checkbox"
+                       name="ai_enabled"
+                       id="ai_enabled"
+                       value="1"
+                       {{ $book->ai_enabled ? 'checked' : '' }}
+                       class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300">
+                <label for="ai_enabled" class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    Ushbu kitob sahifasida «AI yordamchi»ni yoqish (faqat holati «Tayyor» bo'lganda kitobxonga ko'rinadi)
+                </label>
+            </div>
+
+            <div>
+                <label for="ai_summary" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Kitobning AI uchun qisqa mazmuni (ixtiyoriy — "Bu kitob nima haqida?" savollarida kontekst sifatida yordam beradi)
+                </label>
+                <textarea name="ai_summary"
+                          id="ai_summary"
+                          rows="3"
+                          placeholder="Indekslash paytida avtomatik to'ldiriladi yoki o'zingiz tahrirlashingiz mumkin..."
+                          class="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">{{ old('ai_summary', $book->ai_summary) }}</textarea>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="px-5 py-2 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold transition-colors">
+                    AI sozlamalarini saqlash
+                </button>
+            </div>
+        </form>
+    </div>
+
     {{-- Fon Musiqalari (Ambient Audio) bloki --}}
     <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-700 pb-4">

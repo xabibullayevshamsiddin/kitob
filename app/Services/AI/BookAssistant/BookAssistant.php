@@ -1,0 +1,252 @@
+<?php
+
+namespace App\Services\AI\BookAssistant;
+
+use App\Models\AiChatHistory;
+use App\Models\Book;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+
+class BookAssistant
+{
+    public function __construct(
+        protected Retriever $retriever,
+        protected RelevanceGate $relevanceGate,
+        protected PromptBuilder $promptBuilder,
+        protected ProviderManager $providers
+    ) {
+    }
+
+    /**
+     * Foydalanuvchining kitob bo'yicha savoliga javob qaytaradi.
+     *
+     * Tartib:
+     * 1. Ruxsat / holat / savol uzunligi / throttle / kunlik limit tekshiruvi
+     * 2. FAQAT shu kitobning eng mos 6 bo'lagini qidirish (Retriever)
+     * 3. RelevanceGate: mos kelmasa AI chaqirilmasdan rad javobi qaytariladi
+     * 4. LLM chaqiruvi (<bolak> teglari va oxirgi 6 suhbat navbati bilan, PII yo'q)
+     * 5. [n] manbalarni tekshirish va XSS-safe Markdown hosil qilish
+     * 6. ai_chat_histories ga saqlash (provayder xato bersa SAQLANMAYDI)
+     *
+     * @return array{
+     *     status: string,
+     *     answer: string,
+     *     answer_html: string,
+     *     sources: array<int, array<string, mixed>>,
+     *     refused: bool,
+     *     refusal_reason: string|null,
+     *     provider_called: bool,
+     *     top_score: float,
+     *     history_id: int|null
+     * }
+     */
+    public function ask(?User $user, int $bookId, string $question): array
+    {
+        // 1. Global AI o'chirgich tekshiruvi
+        if (!config('ai.enabled', true)) {
+            return $this->errorResult(trans('ai.disabled'));
+        }
+
+        // 2. Foydalanuvchi avtorizatsiyasi
+        if (!$user) {
+            return $this->errorResult(trans('ai.unauthorized'));
+        }
+
+        // 3. Kitobga ruxsatni qayta tekshirish (Livewire public property tampering himoyasi)
+        $book = Book::availableForUser($user)->find($bookId);
+        if (!$book || !$book->is_active) {
+            return $this->errorResult(trans('ai.unauthorized'));
+        }
+
+        if (!$book->ai_enabled || $book->ai_index_status !== 'ready') {
+            return $this->errorResult(trans('ai.book_not_ready'));
+        }
+
+        // 4. Savol bo'shligi va uzunligi chegarasi
+        $question = trim($question);
+        if ($question === '') {
+            return $this->errorResult(trans('ai.question_empty'));
+        }
+
+        $maxChars = (int) config('ai.max_question_chars', 500);
+        if (mb_strlen($question) > $maxChars) {
+            return $this->errorResult(trans('ai.question_too_long', ['max' => $maxChars]));
+        }
+
+        // 5. Daqiqalik throttle va kunlik limit tekshiruvi
+        $throttleKey = 'book_ai_ask:' . $user->id;
+        $perMinuteLimit = max(1, (int) config('ai.minute_throttle', 6));
+        if (RateLimiter::tooManyAttempts($throttleKey, $perMinuteLimit)) {
+            return $this->errorResult(trans('ai.rate_limited'));
+        }
+
+        $dailyLimit = max(1, (int) config('ai.daily_limit_per_user', 20));
+        $todayStart = Carbon::now('Asia/Tashkent')->startOfDay()->utc();
+        $todayUsedCount = AiChatHistory::where('user_id', $user->id)
+            ->where('created_at', '>=', $todayStart)
+            ->count();
+
+        if ($todayUsedCount >= $dailyLimit) {
+            return $this->errorResult(trans('ai.daily_limit_reached', ['limit' => $dailyLimit]));
+        }
+
+        RateLimiter::hit($throttleKey, 60);
+
+        // 6. Oxirgi 6 ta suhbat navbatini olish (faqat shu foydalanuvchi va shu kitob uchun)
+        $historyLimit = max(1, (int) config('ai.history_turns', 6));
+        $recentHistory = AiChatHistory::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->where('refused', false)
+            ->orderByDesc('id')
+            ->limit($historyLimit)
+            ->get(['message', 'response'])
+            ->reverse()
+            ->values();
+
+        $previousUserQuestion = $recentHistory->isNotEmpty()
+            ? (string) $recentHistory->last()->message
+            : null;
+
+        // 7. FAQAT shu kitobning eng mos 6 ta bo'lagini qidirish
+        $maxChunks = max(1, (int) config('ai.max_context_chunks', 6));
+        $retrieval = $this->retriever->retrieve(
+            $book->id,
+            $question,
+            $maxChunks,
+            $previousUserQuestion
+        );
+
+        // 8. RelevanceGate tekshiruvi — chegaradan past bo'lsa AI chaqirilmasdan rad javobi!
+        $gate = $this->relevanceGate->evaluate($question, $retrieval);
+        if (!$gate['passed']) {
+            $refusalText = trans('ai.off_topic', ['book' => $book->title]);
+            $history = AiChatHistory::create([
+                'user_id'           => $user->id,
+                'book_id'           => $book->id,
+                'message'           => $question,
+                'response'          => $refusalText,
+                'provider'          => 'gate',
+                'model'             => 'relevance_gate',
+                'tokens_used'       => 0,
+                'sources'           => [],
+                'refused'           => true,
+                'refusal_reason'    => 'off_topic',
+                'prompt_tokens'     => 0,
+                'completion_tokens' => 0,
+                'latency_ms'        => 0,
+                'top_score'         => $gate['top_score'],
+            ]);
+
+            return [
+                'status'          => 'refused',
+                'answer'          => $refusalText,
+                'answer_html'     => $this->renderSafeMarkdown($refusalText),
+                'sources'         => [],
+                'refused'         => true,
+                'refusal_reason'  => 'off_topic',
+                'provider_called' => false,
+                'top_score'       => $gate['top_score'],
+                'history_id'      => $history->id,
+            ];
+        }
+
+        // 9. Promt tuzish va LLM provayderga murojaat qilish
+        $messages = $this->promptBuilder->buildMessages(
+            $book,
+            $retrieval['chunks'],
+            $question,
+            $recentHistory->toArray()
+        );
+
+        $startedAt = microtime(true);
+        try {
+            $llm = $this->providers->llm();
+            $llmResponse = $llm->chat($messages);
+        } catch (\Throwable $e) {
+            Log::error('BookAssistant LLM error', [
+                'book_id' => $book->id,
+                'error'   => $e->getMessage(),
+            ]);
+
+            // MUHIM: Provayder xato bersa — xato holati qaytariladi, "javob" sifatida saqlanmaydi!
+            return $this->errorResult(trans('ai.provider_error'), $gate['top_score']);
+        }
+
+        $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
+        $rawContent = (string) ($llmResponse['content'] ?? '');
+
+        // 10. [n] manbalarni tekshirish va "topa olmadim" holatini aniqlash
+        $verified = $this->promptBuilder->verifyAndExtractSources($rawContent, $retrieval['chunks']);
+        $cleanedAnswer = $verified['cleaned_text'];
+        $isNoAnswer = $this->promptBuilder->isNoAnswerResponse($cleanedAnswer);
+
+        if ($isNoAnswer) {
+            $cleanedAnswer = trans('ai.no_answer');
+            $verified['sources'] = [];
+        }
+
+        $safeHtml = $this->renderSafeMarkdown($cleanedAnswer);
+
+        $history = AiChatHistory::create([
+            'user_id'           => $user->id,
+            'book_id'           => $book->id,
+            'message'           => $question,
+            'response'          => $cleanedAnswer,
+            'provider'          => (string) ($llmResponse['provider'] ?? config('ai.provider', 'openai')),
+            'model'             => (string) ($llmResponse['model'] ?? ''),
+            'tokens_used'       => (int) ($llmResponse['total_tokens'] ?? 0),
+            'sources'           => $verified['sources'],
+            'refused'           => $isNoAnswer,
+            'refusal_reason'    => $isNoAnswer ? 'no_answer' : null,
+            'prompt_tokens'     => (int) ($llmResponse['prompt_tokens'] ?? 0),
+            'completion_tokens' => (int) ($llmResponse['completion_tokens'] ?? 0),
+            'latency_ms'        => $latencyMs,
+            'top_score'         => $gate['top_score'],
+        ]);
+
+        return [
+            'status'          => 'ok',
+            'answer'          => $cleanedAnswer,
+            'answer_html'     => $safeHtml,
+            'sources'         => $verified['sources'],
+            'refused'         => $isNoAnswer,
+            'refusal_reason'  => $isNoAnswer ? 'no_answer' : null,
+            'provider_called' => true,
+            'top_score'       => $gate['top_score'],
+            'history_id'      => $history->id,
+        ];
+    }
+
+    /**
+     * Javob matnini XSS-xavfsiz Markdown formatiga o'giradi.
+     * <script> va xavfli havolalar to'liq olib tashlanadi.
+     */
+    public function renderSafeMarkdown(string $text): string
+    {
+        // <script>...</script> bloklarini ichidagi matni bilan birga o'chirish
+        $sanitized = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $text) ?? $text;
+
+        return (string) Str::markdown($sanitized, [
+            'html_input'         => 'strip',
+            'allow_unsafe_links' => false,
+        ]);
+    }
+
+    protected function errorResult(string $message, float $topScore = 0.0): array
+    {
+        return [
+            'status'          => 'error',
+            'answer'          => $message,
+            'answer_html'     => '<p>' . e($message) . '</p>',
+            'sources'         => [],
+            'refused'         => false,
+            'refusal_reason'  => null,
+            'provider_called' => false,
+            'top_score'       => $topScore,
+            'history_id'      => null,
+        ];
+    }
+}

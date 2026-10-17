@@ -27,12 +27,22 @@ class Book extends Model
         'published_at',
         'is_active',
         'created_by',
+        'ai_enabled',
+        'ai_index_status',
+        'ai_indexed_at',
+        'ai_summary',
+        'ai_text_quality',
+        'ai_index_error',
+        'ai_pdf_content_hash',
     ];
 
     protected $casts = [
-        'published_at' => 'datetime',
-        'is_active'    => 'boolean',
-        'week_number'  => 'integer',
+        'published_at'    => 'datetime',
+        'is_active'       => 'boolean',
+        'week_number'     => 'integer',
+        'ai_enabled'      => 'boolean',
+        'ai_indexed_at'   => 'datetime',
+        'ai_text_quality' => 'float',
     ];
 
     // -------------------------------------------------------------------------
@@ -42,6 +52,16 @@ class Book extends Model
     public function chapters(): HasMany
     {
         return $this->hasMany(BookChapter::class)->orderBy('chapter_number');
+    }
+
+    public function pages(): HasMany
+    {
+        return $this->hasMany(BookPage::class)->orderBy('page_number');
+    }
+
+    public function chunks(): HasMany
+    {
+        return $this->hasMany(BookChunk::class)->orderBy('ordinal');
     }
 
     public function audios(): HasMany

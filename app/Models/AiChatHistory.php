@@ -19,10 +19,23 @@ class AiChatHistory extends Model
         'provider',
         'model',
         'tokens_used',
+        'sources',
+        'refused',
+        'refusal_reason',
+        'prompt_tokens',
+        'completion_tokens',
+        'latency_ms',
+        'top_score',
     ];
 
     protected $casts = [
-        'tokens_used' => 'integer',
+        'tokens_used'       => 'integer',
+        'sources'           => 'array',
+        'refused'           => 'boolean',
+        'prompt_tokens'     => 'integer',
+        'completion_tokens' => 'integer',
+        'latency_ms'        => 'integer',
+        'top_score'         => 'float',
     ];
 
     // -------------------------------------------------------------------------

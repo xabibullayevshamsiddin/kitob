@@ -1,0 +1,23 @@
+
+  [30;42;1m PASS [39;49;22m[39m Tests\Feature\BookAiAssistantTest[39m
+  [32;1m✓[39;22m[39m [2mcross book isolation never leaks chunks from another book[22m[39m
+  [32;1m✓[39;22m[39m [2mrelevance gate refuses off topic and prompt injection with zero provider calls[22m[39m
+  [32;1m✓[39;22m[39m [2mprompt builder strips bolak tags and excludes user pii[22m[39m
+  [32;1m✓[39;22m[39m [2mpermissions block inactive disabled unready books and guests[22m[39m
+  [32;1m✓[39;22m[39m [2mquestion length daily limit and rate throttle are enforced[22m[39m
+  [32;1m✓[39;22m[39m [2mprovider failure returns clean error without saving or fake fallback[22m[39m
+  [32;1m✓[39;22m[39m [2minvalid citations and xss scripts are stripped from answer[22m[39m
+  [32;1m✓[39;22m[39m [2midempotent indexing reuses unchanged chunks and chapter observer marks stale[22m[39m
+  [32;1m✓[39;22m[39m [2mpdf page cache is invalidated when pdf file content changes[22m[39m
+  [32;1m✓[39;22m[39m [2membedding provider failure keeps index ready in fulltext mode with warning[22m[39m
+  [32;1m✓[39;22m[39m [2mlivewire book assistant component and history isolation[22m[39m
+  [32;1m✓[39;22m[39m [2madmin can update ai settings and reindex book[22m[39m
+  [32;1m✓[39;22m[39m [2madmin can index scanned pdf book using manual ai summary[22m[39m
+  [32;1m✓[39;22m[39m [2mindex all command returns failure if any book fails[22m[39m
+  [32;1m✓[39;22m[39m [2mindex all command skips inactive books[22m[39m
+  [32;1m✓[39;22m[39m [2mgemini llm provider formats requests and parses responses[22m[39m
+  [32;1m✓[39;22m[39m [2mgemini embedding provider embeds and normalizes vectors[22m[39m
+
+  [37;1mTests:  [39;22m[32;1m17 passed[39;22m
+  [37;1mTime:   [39;22m[39m5.38s[39m
+

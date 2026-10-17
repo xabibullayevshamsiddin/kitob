@@ -1022,6 +1022,9 @@ Route::prefix('admin')
 
         if ($req->hasFile('pdf_file')) {
             $updateData['pdf_path'] = $req->file('pdf_file')->store('books/pdf', 'public');
+            if ($book->ai_index_status === 'ready') {
+                $updateData['ai_index_status'] = 'stale';
+            }
         }
 
         if ($req->hasFile('cover_image')) {
@@ -1037,6 +1040,10 @@ Route::prefix('admin')
         $book->delete();
         return redirect()->route('admin.books.index')->with('success', 'Kitob o\'chirildi!');
     })->name('books.destroy');
+
+    // ── Kitob AI Yordamchi (RAG Indekslash va Sozlamalar) ──
+    Route::post('/books/{book}/ai/settings', [\App\Http\Controllers\Admin\BookAiController::class, 'updateSettings'])->name('books.ai.settings');
+    Route::post('/books/{book}/ai/index', [\App\Http\Controllers\Admin\BookAiController::class, 'indexBook'])->name('books.ai.index');
 
     // ── Kitob Fon Musiqalari (Ambient Audio) ──
     Route::get('/books/{book}/music', [\App\Http\Controllers\Admin\BookMusicController::class, 'index'])->name('books.music.index');

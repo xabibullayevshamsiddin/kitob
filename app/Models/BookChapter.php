@@ -17,6 +17,7 @@ class BookChapter extends Model
         'chapter_number',
         'title',
         'content',
+        'ai_summary',
         'duration_minutes',
         'is_published',
     ];
@@ -34,6 +35,11 @@ class BookChapter extends Model
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);
+    }
+
+    public function chunks(): HasMany
+    {
+        return $this->hasMany(BookChunk::class, 'chapter_id')->orderBy('ordinal');
     }
 
     public function audios(): HasMany

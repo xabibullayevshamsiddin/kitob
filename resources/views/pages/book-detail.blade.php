@@ -2,6 +2,10 @@
 
 @section('title', $book->title)
 
+@php
+    $bookAiReady = (bool) config('ai.enabled', true) && $book->ai_enabled && $book->ai_index_status === 'ready';
+@endphp
+
 @push('styles')
     <x-seo-meta 
         :title="$book->title"
@@ -11,6 +15,9 @@
         type="book"
     />
 <link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.css')) }}">
+@if($bookAiReady)
+<link rel="stylesheet" href="{{ asset('vendor/katex/katex.min.css') }}">
+@endif
 <style>
     .preserve-3d { transform-style: preserve-3d; }
     @keyframes pulseGlow {
@@ -34,6 +41,7 @@
         showDownloadModal: false,
         showReviewModal: false,
         showChatDrawer: false,
+        showAiDrawer: {{ $bookAiReady ? 'true' : 'false' }},
         activeTab: 'desc',
         totalComments: {{ (int) $totalCommentsCount }},
         selectedRating: 5,
@@ -121,6 +129,9 @@
             window.addEventListener('flipbook:themechange', (e) => {
                 if (e.detail && e.detail.theme) this.paperTheme = e.detail.theme;
             });
+            window.addEventListener('book-ai-jump-page', () => {
+                this.readerMode = '3d';
+            });
         }
     }">
 
@@ -186,6 +197,28 @@
                                 class="ks-btn-primary inline-flex items-center gap-2 shadow-lg shadow-amber-500/20">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                             <span>Mutolaa qilish</span>
+                        </button>
+                    @endif
+
+                    @if($bookAiReady)
+                        <button type="button"
+                                @click="showAiDrawer = true; $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); })"
+                                class="px-3.5 py-2 rounded-btn bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-ink-950 border border-emerald-500/40 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md"
+                                title="Ushbu kitob bo'yicha AI yordamchi bilan suhbatlashish">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+                            </svg>
+                            <span>{{ __('ai.title') }}</span>
+                        </button>
+                    @elseif(auth()->check() && auth()->user()->isAdmin())
+                        <button type="button"
+                                @click="showAiDrawer = true; $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); })"
+                                class="px-3.5 py-2 rounded-btn bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 transition-all"
+                                title="AI yordamchi holatini ko'rish">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+                            </svg>
+                            <span>{{ __('ai.title') }}</span>
                         </button>
                     @endif
 
@@ -388,6 +421,19 @@
                     </a>
                 @endif
 
+                @if($bookAiReady)
+                    <button type="button"
+                            @click="showAiDrawer = !showAiDrawer; if (showAiDrawer) { $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }); }"
+                            :class="showAiDrawer ? 'bg-emerald-500 text-ink-950 font-bold border-emerald-400' : 'ks-btn-ghost text-emerald-300 border-emerald-500/35 hover:border-emerald-400'"
+                            class="py-1.5 px-3 text-xs rounded-btn flex items-center gap-1.5 transition-all shadow-md"
+                            title="Kitob bo'yicha AI yordamchi oynasini ochish / yopish">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+                        </svg>
+                        <span>{{ __('ai.title') }}</span>
+                    </button>
+                @endif
+
                 <!-- Kitobxonlar bilan suhbatlashish (Chat Drawer toggle) -->
                 <button type="button"
                         @click="showChatDrawer = !showChatDrawer; $nextTick(() => { window.dispatchEvent(new CustomEvent('book-chat-scroll-bottom')); })"
@@ -566,6 +612,83 @@
                 <svg class="w-8 h-8 mx-auto text-amber-500 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 <p class="text-sm text-paper font-serif font-bold">Bu kitob uchun hali PDF fayl yuklanmagan.</p>
                 <p class="text-xs text-mist font-sans">Admin/teacher paneldan kitobga PDF fayl yuklaydi yoki boblar qo'shilganda avtomatik PDF yaratiladi.</p>
+            </div>
+        @endif
+
+        {{-- Kitob ichidagi AI Yordamchi (RAG) bo'limi --}}
+        @if($bookAiReady)
+            <div id="book-ai-section" x-show="showAiDrawer" x-cloak class="pt-2 scroll-mt-24">
+                @livewire('book.book-assistant', ['book' => $book], key('book-ai-'.$book->id))
+            </div>
+        @elseif(auth()->check() && auth()->user()->isAdmin())
+            @php
+                $sampleReadyBook = \App\Models\Book::where('is_active', true)
+                    ->where('ai_enabled', true)
+                    ->where('ai_index_status', 'ready')
+                    ->where('id', '!=', $book->id)
+                    ->first(['id', 'title', 'slug']);
+            @endphp
+            <div id="book-ai-section" x-show="showAiDrawer" x-cloak class="pt-2 scroll-mt-24">
+                <div class="rounded-card bg-ink-900 border border-amber-500/35 p-5 sm:p-6 space-y-4">
+                    <div class="flex items-start justify-between gap-4 flex-wrap">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-btn bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
+                                </svg>
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm sm:text-base font-bold font-serif text-paper">
+                                    «{{ $book->title }}» kitobi uchun AI yordamchi holati (faqat Adminga ko'rinadi)
+                                </h3>
+                                @if($book->ai_index_status === 'failed')
+                                    <p class="text-xs text-rose-300 leading-relaxed">
+                                        <strong>Sababi:</strong> Ushbu kitobga yuklangan PDF fayl <strong>rasm sifatida skanerlangan</strong> (ichida matn qatlami yo'q, matn sifati: 0%). Qoidaga binoan AI yordamchi yolg'on ma'lumot to'qimasligi uchun skanerlangan (matnsiz) PDF'larni avtomatik o'qimaydi.
+                                    </p>
+                                @else
+                                    <p class="text-xs text-mist leading-relaxed">
+                                        Ushbu kitob uchun AI yordamchi hali yoqilmagan yoki indekslanmagan (holati: <span class="font-mono text-amber-300">{{ $book->ai_index_status ?? 'none' }}</span>).
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 flex-wrap">
+                            @if($sampleReadyBook)
+                                <a href="{{ route('books.show', $sampleReadyBook->slug) }}#book-ai-section"
+                                   class="ks-btn-primary py-2 px-3.5 text-xs font-bold inline-flex items-center gap-1.5">
+                                    <span>Tayyor kitobda sinab ko'rish («{{ $sampleReadyBook->title }}»)</span>
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                        <polyline points="12 5 19 12 12 19"/>
+                                    </svg>
+                                </a>
+                            @endif
+                            <a href="{{ route('admin.books.edit', $book->id) }}#ai-assistant-panel"
+                               class="ks-btn-ghost py-2 px-3 text-xs text-amber-300 border-amber-500/35 hover:border-amber-400 inline-flex items-center gap-1.5">
+                                <span>Admin sozlamalari</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Skaner PDF bo'lsa ham Admin shu yerning o'zidan qisqa mazmun kiritib AI ni yoqib yuborishi mumkin --}}
+                    <form action="{{ route('admin.books.ai.settings', $book->id) }}" method="POST" class="pt-3 border-t border-ink-border space-y-3">
+                        @csrf
+                        <input type="hidden" name="ai_enabled" value="1">
+                        <input type="hidden" name="redirect_to_book" value="1">
+                        <label class="block text-xs font-semibold text-paper">
+                            Yoki shu kitobning o'zida AI ishlashi uchun kitob mazmunini (kamida 2–3 gap) kiriting va yoqing:
+                        </label>
+                        <textarea name="ai_summary" rows="3" required minlength="60"
+                                  placeholder="Masalan: Ushbu kitobda algebraik tenglamalar, funksiyalar, geometrik shakllar va amaliy masalalar yechimlari batafsil tushuntirilgan..."
+                                  class="ks-input w-full text-xs">{{ old('ai_summary', $book->ai_summary) }}</textarea>
+                        <div class="flex justify-end">
+                            <button type="submit" class="ks-btn-primary py-2 px-4 text-xs font-bold">
+                                Mazmunni saqlash va AI yordamchini yoqish
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         @endif
     </div>
@@ -819,5 +942,31 @@
 <script src="{{ asset('assets/flipbook/page-flip.browser.js') }}?v={{ filemtime(public_path('assets/flipbook/page-flip.browser.js')) }}"></script>
 <!-- Flipbook Core Engine -->
 <script src="{{ asset('assets/flipbook/flipbook.js') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.js')) }}"></script>
+@endif
+
+@if($bookAiReady)
+<script src="{{ asset('vendor/katex/katex.min.js') }}"></script>
+<script src="{{ asset('vendor/katex/auto-render.min.js') }}"></script>
+<script>
+    window.renderBookAiMath = function(rootEl) {
+        if (typeof renderMathInElement !== 'function') return;
+        const container = rootEl || document.getElementById('book-ai-section');
+        if (!container) return;
+        try {
+            renderMathInElement(container, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                throwOnError: false
+            });
+        } catch (e) {}
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+        window.renderBookAiMath();
+    });
+</script>
 @endif
 @endpush

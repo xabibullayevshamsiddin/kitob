@@ -50,7 +50,7 @@
      })"
      x-cloak
      class="ambient-music-scope relative"
-     @keydown.window.prevent.stop.m="togglePlay()"
+     @keydown.window="if ($event.key && $event.key.toLowerCase() === 'm' && !$event.ctrlKey && !$event.metaKey && !$event.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes($event.target?.tagName) && !$event.target?.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && !document.activeElement?.isContentEditable) { $event.preventDefault(); togglePlay(); }"
      @toggle-ambient-music.window="togglePlay()"
      @open-ambient-music.window="isOpen = !isOpen"
 >

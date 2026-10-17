@@ -1,0 +1,21 @@
+<?php
+
+return [
+    'title'               => 'AI yordamchi',
+    'off_topic'           => "Bu savol «:book» kitobiga aloqador emas. Kitob mazmuni haqida so'rang.",
+    'no_answer'           => "Kitobda bu haqida ma'lumot topa olmadim.",
+    'provider_error'      => "AI hozir javob bera olmadi, birozdan keyin urinib ko'ring.",
+    'disabled'            => "AI yordamchi hozircha o'chirilgan.",
+    'book_not_ready'      => "Ushbu kitob uchun AI yordamchi hali tayyor emas.",
+    'unauthorized'        => "Ushbu kitobdan foydalanish uchun ruxsatingiz yo'q.",
+    'daily_limit_reached' => "Kunlik AI savollar limitingiz (:limit ta) tugadi. Ertaga yana savol berishingiz mumkin.",
+    'rate_limited'        => "Juda tez so'rov yuboryapsiz. Iltimos, biroz kutib qayta urinib ko'ring.",
+    'question_too_long'   => "Savol matni juda uzun (maksimal :max ta belgi).",
+    'question_empty'      => "Iltimos, savolingizni kiriting.",
+    'low_text_quality'    => "Bu PDF'dan matn yaxshi chiqmadi (skaner yoki maxsus shrift)",
+    'ask_placeholder'     => "Kitob mazmuni bo'yicha savolingizni yozing...",
+    'send'                => "Yuborish",
+    'clear_history'       => "Tarixni tozalash",
+    'history_cleared'     => "Suhbat tarixi tozalandi.",
+    'sources_label'       => "Manbalar",
+];

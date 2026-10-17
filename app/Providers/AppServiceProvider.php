@@ -17,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
         if (file_exists(app_path('helpers.php'))) {
             require_once app_path('helpers.php');
         }
+
+        $this->app->singleton(\App\Services\AI\BookAssistant\ProviderManager::class, function () {
+            return new \App\Services\AI\BookAssistant\ProviderManager();
+        });
     }
 
     /**
@@ -33,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
 
         \Illuminate\Pagination\Paginator::useTailwind();
         \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.tailwind');
+
+        \App\Models\BookChapter::observe(\App\Observers\BookChapterObserver::class);
 
         // Dinamik platforma sozlamalarini yuklash
         try {
