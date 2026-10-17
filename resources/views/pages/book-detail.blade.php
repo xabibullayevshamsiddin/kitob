@@ -13,37 +13,135 @@
 <link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.css')) }}">
 <style>
     .preserve-3d { transform-style: preserve-3d; }
-    @keyframes bookFlip {
-        0%   { transform: rotateY(0deg) scaleX(1); }
-        50%  { transform: rotateY(-150deg) scaleX(0.35); }
-        100% { transform: rotateY(-360deg) scaleX(1); }
+    @keyframes pulseGlow {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
     }
-    .animate-book-flip { animation: bookFlip 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite; transform-origin: left center; }
-
-    @keyframes progressBar {
-        0%   { width: 0%; }
-        60%  { width: 75%; }
-        100% { width: 100%; }
-    }
-    .animate-progress-bar { animation: progressBar 1.2s ease-out forwards; }
+    .animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
 </style>
 @endpush
 
 @section('content')
 <div class="max-w-6xl mx-auto space-y-8 pb-16" x-data="{
         readerMode: '3d',
-        pdfLoading: true,
-        init() { setTimeout(() => { this.pdfLoading = false }, 1200) }
+        isSaved: {{ $isSaved ? 'true' : 'false' }},
+        savedCount: {{ (int) $savedCount }},
+        savingBookmark: false,
+        paperTheme: 'ivory',
+        autoPlayActive: false,
+        autoPlayDelay: 7000,
+        showShortcutsModal: false,
+        showDownloadModal: false,
+        showReviewModal: false,
+        showChatDrawer: false,
+        activeTab: 'desc',
+        totalComments: {{ (int) $totalCommentsCount }},
+        selectedRating: 5,
+        hoverRating: 0,
+        replyToId: null,
+
+        async toggleCommentLike(commentId) {
+            try {
+                const res = await fetch('/book-comments/' + commentId + '/like', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const countEl = document.getElementById('comment-likes-count-' + commentId);
+                    const iconEl = document.getElementById('comment-like-icon-' + commentId);
+                    if (countEl) countEl.innerText = data.likes_count;
+                    if (iconEl) {
+                        if (data.liked) {
+                            iconEl.classList.add('text-rose-500', 'fill-rose-500');
+                            iconEl.classList.remove('text-mist');
+                        } else {
+                            iconEl.classList.remove('text-rose-500', 'fill-rose-500');
+                            iconEl.classList.add('text-mist');
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        },
+
+        async toggleSaveBook() {
+            if (this.savingBookmark) return;
+            this.savingBookmark = true;
+            try {
+                const res = await fetch('{{ route('books.toggle-save', $book) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.isSaved = data.is_saved;
+                    this.savedCount = data.total_saved;
+                    if (window.showToast) {
+                        window.showToast(data.message, this.isSaved ? 'success' : 'info');
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+            } finally {
+                this.savingBookmark = false;
+            }
+        },
+
+        setPaperTheme(theme) {
+            this.paperTheme = theme;
+            if (window.fbSetPaperTheme) {
+                window.fbSetPaperTheme(theme);
+            }
+        },
+
+        toggleAutoPlay(delay) {
+            if (delay) this.autoPlayDelay = delay;
+            if (window.fbToggleAutoPlay) {
+                this.autoPlayActive = window.fbToggleAutoPlay(this.autoPlayDelay);
+            }
+        },
+
+        init() {
+            if (window.location.hash === '#book-comments') {
+                this.activeTab = 'comments';
+            }
+            window.addEventListener('flipbook:autoplay', (e) => {
+                this.autoPlayActive = !!(e.detail && e.detail.active);
+            });
+            window.addEventListener('flipbook:themechange', (e) => {
+                if (e.detail && e.detail.theme) this.paperTheme = e.detail.theme;
+            });
+        }
     }">
 
-    <!-- Editorial Hero Book Banner -->
-    <div class="ks-panel p-6 sm:p-10 bg-ink-900 border border-ink-border text-paper relative overflow-hidden">
+    <!-- ── 1. Editorial Hero Book Banner ── -->
+    <div class="ks-panel p-6 sm:p-10 bg-ink-900 border border-ink-border text-paper relative overflow-hidden shadow-2xl">
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
         <div class="relative z-10 flex flex-col sm:flex-row gap-8 items-center sm:items-start">
             
-            <!-- Book Cover (2:3 nisbat) -->
+            <!-- Book Cover (2:3 nisbat) with Bookmark Ribbon indicator -->
             <div class="w-36 sm:w-48 aspect-[2/3] rounded-card overflow-hidden shadow-2xl shrink-0 border border-ink-border relative group bg-ink-950">
                 <img src="{{ $book->cover_url }}" alt="{{ $book->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-transparent to-transparent pointer-events-none"></div>
+
+                <!-- Ribbon badge when saved to 'Keyinroq o'qiyman' -->
+                <div x-show="isSaved" x-cloak
+                     class="absolute top-0 right-3 w-7 h-10 bg-gradient-to-b from-amber-400 to-amber-600 shadow-lg flex items-center justify-center text-ink-950 font-bold transition-all"
+                     style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%, 0% 100%);"
+                     title="Keyinroq o'qish uchun saqlangan">
+                    <span class="text-xs">★</span>
+                </div>
             </div>
 
             <!-- Book Info & Actions -->
@@ -55,21 +153,84 @@
                     <span class="px-2.5 py-0.5 bg-ink-950 border border-ink-border text-mist text-xs font-mono rounded-badge">
                         {{ $book->genre }}
                     </span>
+                    @if($averageRating > 0)
+                        <span class="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 text-xs font-mono rounded-badge flex items-center gap-1 border border-amber-500/25">
+                            <span>⭐</span>
+                            <span class="font-bold">{{ $averageRating }}</span>
+                            <span class="text-mist text-[10px]">({{ $ratingsCount }} baho)</span>
+                        </span>
+                    @endif
+                    <button type="button"
+                            @click="activeTab = 'comments'; $nextTick(() => { document.getElementById('book-comments')?.scrollIntoView({ behavior: 'smooth' }); })"
+                            class="px-2.5 py-0.5 bg-ink-950 text-mist hover:text-paper text-xs font-mono rounded-badge flex items-center gap-1 border border-ink-border transition-colors">
+                        <span>💬</span>
+                        <span x-text="totalComments + ' ta izoh'">{{ $totalCommentsCount }} ta izoh</span>
+                    </button>
+                    <template x-if="savedCount > 0">
+                        <span class="px-2.5 py-0.5 bg-amber-500/10 text-amber-300 text-xs font-mono rounded-badge flex items-center gap-1 border border-amber-500/20">
+                            <span>📌</span>
+                            <span x-text="savedCount + ' kitobxonda saqlangan'"></span>
+                        </span>
+                    </template>
                 </div>
 
                 <h1 class="text-2xl sm:text-4xl font-bold font-serif text-paper tracking-tight leading-tight break-words">{{ $book->title }}</h1>
                 <p class="text-xs sm:text-sm text-mist font-mono break-words">Muallif: <strong class="text-paper font-sans font-semibold">{{ $book->author }}</strong></p>
                 <p class="text-xs sm:text-sm text-mist leading-relaxed max-w-2xl font-sans break-words whitespace-pre-line">{{ $book->description }}</p>
 
-                <!-- Quick Action Buttons -->
+                <!-- ── Action Buttons Toolbar ── -->
                 <div class="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
                     @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
-                        <button @click="readerMode = '3d'; window.scrollTo({ top: document.getElementById('online-reader').offsetTop - 90, behavior: 'smooth' })"
-                           class="ks-btn-primary inline-flex items-center gap-2">
+                        <button type="button"
+                                @click="readerMode = '3d'; window.scrollTo({ top: document.getElementById('online-reader').offsetTop - 80, behavior: 'smooth' })"
+                                class="ks-btn-primary inline-flex items-center gap-2 shadow-lg shadow-amber-500/20">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                             <span>Mutolaa qilish</span>
                         </button>
                     @endif
+
+                    <!-- Izoh qoldirish (Smooth scroll to comments) -->
+                    <button type="button"
+                            @click="activeTab = 'comments'; $nextTick(() => { document.getElementById('book-comments')?.scrollIntoView({ behavior: 'smooth' }); document.getElementById('comment-textarea')?.focus(); })"
+                            class="ks-btn-ghost inline-flex items-center gap-1.5 text-xs text-amber-300 border-amber-500/30 hover:border-amber-400"
+                            title="Kitobga izoh yoki baho qoldirish">
+                        <span>💬</span>
+                        <span>Izoh qoldirish</span>
+                    </button>
+
+                    <!-- Keyinroq o'qiyman (1-Click Toggle Bookmark) -->
+                    <button type="button"
+                            @click="toggleSaveBook()"
+                            :disabled="savingBookmark"
+                            :class="isSaved 
+                                ? 'bg-amber-500 text-ink-950 font-bold border-amber-400 shadow-md shadow-amber-500/20' 
+                                : 'ks-btn-ghost text-amber-400 border-amber-500/30 hover:border-amber-400'"
+                            class="px-3.5 py-2 rounded-btn text-xs font-semibold inline-flex items-center gap-2 transition-all active:scale-95"
+                            :title="isSaved ? 'Saqlanganlardan chiqarish' : 'Keyinroq o\'qish uchun saqlab qo\'yish'">
+                        <span x-show="!isSaved">📌</span>
+                        <span x-show="isSaved">✓</span>
+                        <span x-text="isSaved ? 'Saqlab qo\'yilgan' : 'Keyinroq o\'qiyman'">Keyinroq o'qiyman</span>
+                    </button>
+
+                    <!-- PDF Yuklab olish Modal / Direct Option -->
+                    @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
+                        <button type="button"
+                                @click="showDownloadModal = true"
+                                class="ks-btn-ghost inline-flex items-center gap-2 text-rose-300 border-rose-500/30 hover:border-rose-500/50"
+                                title="Kitobni PDF sifatida yuklab olish">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span>PDF yuklab olish</span>
+                        </button>
+                    @endif
+
+                    <!-- Tugmalar boshqaruvi (Shortcuts cheat sheet modal trigger) -->
+                    <button type="button"
+                            @click="showShortcutsModal = true"
+                            class="ks-btn-ghost inline-flex items-center gap-1.5 text-xs text-mist hover:text-paper"
+                            title="Klaviatura tugmalari yordami">
+                        <span>⌨️</span>
+                        <span>Tugmalar boshqaruvi</span>
+                    </button>
 
                     @if($firstAudio = $book->audios->first())
                         <button type="button"
@@ -84,12 +245,12 @@
                                     duration: {{ (int) ($firstAudio->duration ?? 0) }},
                                     shareUrl: '{{ route('books.show', $book->slug) }}'
                                 })"
-                                class="px-4 py-2 rounded-btn bg-amber-400 hover:bg-amber-300 text-ink-950 font-bold font-sans text-xs sm:text-sm inline-flex items-center gap-2 shadow-md transition-all active:scale-95"
+                                class="px-3.5 py-2 rounded-btn bg-amber-400 hover:bg-amber-300 text-ink-950 font-bold font-sans text-xs inline-flex items-center gap-1.5 shadow-md transition-all active:scale-95"
                                 title="Pastki audio pleyerda tinglash">
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
                             <span>Tinglash</span>
                             @if($book->audios->count() > 1)
-                                <span class="px-1.5 py-0.2 rounded-badge bg-ink-950/20 text-ink-950 text-[10px] font-mono font-bold">{{ $book->audios->count() }} ta</span>
+                                <span class="px-1 py-0.2 rounded-badge bg-ink-950/20 text-ink-950 text-[10px] font-mono font-bold">{{ $book->audios->count() }} ta</span>
                             @endif
                         </button>
                     @endif
@@ -101,6 +262,11 @@
                             <span>Test topshirish</span>
                             <span class="px-1.5 py-0.2 rounded-badge bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">Faol</span>
                         </a>
+                    @elseif(auth()->check() && (auth()->user()->isAdmin() || (auth()->user()->isTeacher() && (int) $book->created_by === (int) auth()->id())))
+                        <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}"
+                           class="ks-btn-ghost inline-flex items-center gap-2">
+                            <span>+ {{ "Ushbu kitobga test qo'shish" }}</span>
+                        </a>
                     @endif
 
                     @if($book->videos()->count() > 0)
@@ -109,15 +275,6 @@
                             <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                             <span>Videolar</span>
                             <span class="px-1.5 py-0.2 rounded-badge bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">{{ $book->videos()->count() }}</span>
-                        </a>
-                    @endif
-
-                    @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
-                        <a href="{{ route('books.pdf', $book->id) }}"
-                           class="ks-btn-ghost inline-flex items-center gap-2 text-rose-300 border-rose-500/30 hover:border-rose-500/50"
-                           title="Butun kitobni PDF sifatida yuklab olish">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            <span>PDF yuklab olish</span>
                         </a>
                     @endif
 
@@ -140,29 +297,18 @@
                             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                         </svg>
                     </button>
-
-                    @if(auth()->check() && $book->canUserAddQuiz(auth()->user()))
-                        @php
-                            $quizCreateRoute = auth()->user()->isAdmin()
-                                ? route('admin.quizzes.create', ['book_id' => $book->id])
-                                : route('teacher.quizzes.create', ['book_id' => $book->id]);
-                        @endphp
-                        <a href="{{ $quizCreateRoute }}"
-                           class="ks-btn-gold inline-flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span>{{ "Ushbu kitobga test qo'shish" }}</span>
-                        </a>
-                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ── 1. ONLAYN O'QISH (3D Real Kitob + PDF Tanlov) ── -->
+    <!-- ── 2. ONLAYN O'QISH & BOSHQARUV PANELI ── -->
     <div id="online-reader" class="space-y-4 scroll-mt-24">
-        <div class="flex items-center justify-between flex-wrap gap-3">
-            <div class="flex items-center gap-3">
-                <h2 class="text-lg font-bold font-serif text-paper flex items-center gap-2.5">
+        
+        <!-- Header & Top Command Shelf -->
+        <div class="flex items-center justify-between flex-wrap gap-3 bg-ink-900/90 border border-ink-border p-3 sm:p-4 rounded-card backdrop-blur-md">
+            <div class="flex items-center gap-3 flex-wrap">
+                <h2 class="text-base sm:text-lg font-bold font-serif text-paper flex items-center gap-2">
                     <span class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                     </span>
@@ -171,30 +317,30 @@
 
                 <!-- Mode switcher: 3D Real Kitob vs PDF -->
                 @if($book->pdf_path)
-                    <div class="flex items-center p-0.5 sm:p-1 rounded-btn bg-ink-900 border border-ink-border shrink-0">
+                    <div class="flex items-center p-0.5 rounded-btn bg-ink-950 border border-ink-border shrink-0">
                         <button type="button"
                                 @click="readerMode = '3d'; $nextTick(() => { if (window.initFlipbook) window.initFlipbook(); })"
                                 :class="readerMode === '3d' ? 'bg-amber-500 text-ink-950 font-bold' : 'text-mist hover:text-paper'"
-                                class="px-2.5 sm:px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
+                                class="px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
                             <span>3D Haqiqiy kitob</span>
                         </button>
                         <button type="button"
                                 @click="readerMode = 'pdf'"
                                 :class="readerMode === 'pdf' ? 'bg-ink-800 text-paper font-bold' : 'text-mist hover:text-paper'"
-                                class="px-2.5 sm:px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
+                                class="px-3 py-1 rounded-badge text-xs transition-colors flex items-center gap-1.5">
                             <span>Standart PDF</span>
                         </button>
                     </div>
 
                     <!-- Interactive Page Selector / Jumper -->
-                    <div x-show="readerMode === '3d'" class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-btn bg-ink-900 border border-ink-border">
+                    <div x-show="readerMode === '3d'" class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-btn bg-ink-950 border border-ink-border">
                         <span class="text-xs text-mist font-mono">Sahifa:</span>
                         <input type="number" 
                                 id="fb-page-input" 
                                 min="1" 
                                 value="1" 
                                 title="Sahifa raqamini yozing va Enter bosing"
-                                class="w-12 px-1 py-0.5 text-center font-mono text-xs font-bold text-amber-400 bg-ink-950 border border-ink-border rounded-badge outline-none"
+                                class="w-12 px-1 py-0.5 text-center font-mono text-xs font-bold text-amber-400 bg-ink-900 border border-ink-border rounded-badge outline-none focus:border-amber-400"
                                 onkeydown="if(event.key === 'Enter') { this.blur(); fbJumpToPageInput(); }"
                                 onchange="fbJumpToPageInput()"
                                 onfocus="this.select()">
@@ -204,34 +350,69 @@
                         <select id="fb-page-select" 
                                 onchange="if(this.value) { fbGoToPage(parseInt(this.value)); }"
                                 title="Ro'yxatdan sahifani tanlash"
-                                class="ml-1 bg-ink-950 border border-ink-border text-mist rounded-badge text-xs py-0.5 px-1.5 outline-none cursor-pointer font-sans">
+                                class="ml-1 bg-ink-900 border border-ink-border text-mist rounded-badge text-xs py-0.5 px-1.5 outline-none cursor-pointer font-sans">
                             <option value="">Tanlash ▾</option>
                         </select>
                     </div>
                 @endif
             </div>
 
-            <div class="flex items-center gap-2">
+            <!-- Top Right Action Controls -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Avto-varaqlash (Hands-free reading) -->
+                <button type="button"
+                        x-show="readerMode === '3d'"
+                        @click="toggleAutoPlay()"
+                        :class="autoPlayActive ? 'bg-emerald-500 text-ink-950 font-bold border-emerald-400' : 'ks-btn-ghost text-mist hover:text-paper'"
+                        class="py-1.5 px-3 text-xs rounded-btn flex items-center gap-1.5 transition-all"
+                        title="Avtomatik varaqlash (A klavishi)">
+                    <span x-show="!autoPlayActive">▶ Avto</span>
+                    <span x-show="autoPlayActive" class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-ink-950 animate-ping"></span>
+                        <span>To'xtatish</span>
+                    </span>
+                </button>
+
+                <!-- Qog'oz ohangi (Paper Theme Selector) -->
+                <div x-show="readerMode === '3d'" class="hidden sm:flex items-center bg-ink-950 border border-ink-border rounded-btn p-0.5">
+                    <button type="button" @click="setPaperTheme('ivory')" :class="paperTheme === 'ivory' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-mist hover:text-paper'" class="px-2 py-1 text-[11px] rounded transition-all" title="Tabiiy krem qog'oz">📜 Asl</button>
+                    <button type="button" @click="setPaperTheme('sepia')" :class="paperTheme === 'sepia' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-mist hover:text-paper'" class="px-2 py-1 text-[11px] rounded transition-all" title="Klassik sepia ohangi">🍵 Sepia</button>
+                    <button type="button" @click="setPaperTheme('night')" :class="paperTheme === 'night' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-mist hover:text-paper'" class="px-2 py-1 text-[11px] rounded transition-all" title="Tungi qorong'i mutolaa">🌙 Tun</button>
+                </div>
+
                 @if($book->pdf_path)
                     <a href="{{ route('books.flipbook', $book->id) }}"
-                        class="ks-btn-ghost py-1.5 px-3 text-xs text-amber-400 flex items-center gap-1.5">
+                        class="ks-btn-ghost py-1.5 px-3 text-xs text-amber-400 flex items-center gap-1.5"
+                        title="To'liq ekranda ochish">
                         <span>⛶ To'liq ekran</span>
                     </a>
                 @endif
-                @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
-                    <a href="{{ route('books.pdf', $book->id) }}"
-                        class="ks-btn-ghost py-1.5 px-3 text-xs text-rose-300 border-rose-500/30 hover:border-rose-500/50 flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <span>PDF</span>
-                    </a>
-                @endif
+
+                <!-- Kitobxonlar bilan suhbatlashish (Chat Drawer toggle) -->
+                <button type="button"
+                        @click="showChatDrawer = !showChatDrawer; $nextTick(() => { window.dispatchEvent(new CustomEvent('book-chat-scroll-bottom')); })"
+                        :class="showChatDrawer ? 'bg-amber-500 text-ink-950 font-bold border-amber-400' : 'ks-btn-ghost text-amber-300 border-amber-500/30 hover:border-amber-400'"
+                        class="py-1.5 px-3 text-xs rounded-btn flex items-center gap-1.5 transition-all shadow-md"
+                        title="Kitobxonlar bilan jonli suhbatlashish va izohlar">
+                    <span>💬</span>
+                    <span>Suhbat</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                </button>
+
+                <button type="button"
+                        @click="showShortcutsModal = true"
+                        class="ks-btn-ghost py-1.5 px-2.5 text-xs text-mist hover:text-paper"
+                        title="Tugmalar boshqaruvi">
+                    <span>⌨️</span>
+                </button>
             </div>
         </div>
 
         @if($book->pdf_path)
             <!-- 3D Real Kitob Varaqlash Ko'rinishi (Default) -->
             <div x-show="readerMode === '3d'" class="space-y-4">
-                <x-reader.pdf-annotations :book="$book" :annotations="$pdfAnnotations" />
+                
+                <!-- The 3D Flipbook Stage -->
                 <div id="fb-root" 
                      data-pdf-url="{{ route('books.pdf.stream', $book) }}" 
                      data-sound-url="{{ asset('sounds/oxidvideos-page-flip-1-178322.mp3') }}"
@@ -250,7 +431,7 @@
                     <button type="button" 
                             class="fb-nav-arrow fb-nav-arrow--left hidden sm:flex" 
                             onclick="fbGoPrev()" 
-                            title="Oldingi sahifaga varaqlash">
+                            title="Oldingi sahifaga varaqlash (←)">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                     </button>
 
@@ -258,7 +439,7 @@
                     <button type="button" 
                             class="fb-nav-arrow fb-nav-arrow--right hidden sm:flex" 
                             onclick="fbGoNext()" 
-                            title="Keyingi sahifaga varaqlash">
+                            title="Keyingi sahifaga varaqlash (→)">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                     </button>
 
@@ -266,33 +447,9 @@
                     <div class="fb-hardcover-casing">
                         <div class="fb-silk-ribbon" title="Xatcho'p"></div>
 
-                        <!-- The Book Spread -->
+                        <!-- The Book Spread (Powered by Nodlik/StPageFlip) -->
                         <div id="fb-spread" class="fb-book-spread">
-                            <div class="fb-page-pane fb-page-pane--left">
-                                <canvas id="fb-canvas-left" class="fb-canvas"></canvas>
-                                <div class="fb-corner-curl fb-corner-curl--bottom-left" title="Oldingi sahifa"></div>
-                            </div>
-
-                            <div class="fb-book-spine"></div>
-
-                            <div class="fb-page-pane fb-page-pane--right">
-                                <canvas id="fb-canvas-right" class="fb-canvas"></canvas>
-                                <div class="fb-corner-curl fb-corner-curl--bottom-right" title="Keyingi sahifa"></div>
-                            </div>
-
-                            <div id="fb-flip-container" class="fb-flip-container">
-                                <div id="fb-flip-leaf" class="fb-flip-leaf">
-                                    <div class="fb-flip-front">
-                                        <canvas id="fb-flip-front" class="fb-flip-canvas"></canvas>
-                                    </div>
-                                    <div class="fb-flip-back">
-                                        <canvas id="fb-flip-back" class="fb-flip-canvas"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="fb-click-zone fb-click-zone--prev" title="Oldingi sahifaga varaqlash"></div>
-                            <div class="fb-click-zone fb-click-zone--next" title="Keyingi sahifaga varaqlash"></div>
+                            <!-- Injected by flipbook.js -->
                         </div>
                     </div>
 
@@ -312,11 +469,12 @@
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
+                            <!-- Zoom Controls -->
                             <div class="hidden sm:flex items-center bg-ink-950 border border-ink-border rounded-btn overflow-hidden p-0.5">
                                 <button type="button" onclick="fbZoomOut()" title="Kichiklashtirish (-)" class="p-1 text-mist hover:text-paper transition-colors">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                                 </button>
-                                <button type="button" onclick="fbZoomReset()" id="fb-zoom-level" title="100% asl o'lchamga qaytarish" class="px-1.5 text-[11px] font-mono font-bold text-amber-400">
+                                <button type="button" onclick="fbZoomReset()" id="fb-zoom-level" title="100% asl o'lchamga qaytarish (0)" class="px-1.5 text-[11px] font-mono font-bold text-amber-400">
                                     100%
                                 </button>
                                 <button type="button" onclick="fbZoomIn()" title="Kattalashtirish (+)" class="p-1 text-mist hover:text-paper transition-colors">
@@ -324,13 +482,16 @@
                                 </button>
                             </div>
 
+                            <!-- Sound toggle -->
                             <button type="button" 
                                     id="fb-sound-btn"
                                     onclick="fbToggleSound()" 
-                                    title="Varaqlash ovozi" 
+                                    title="Varaqlash ovozi (S klavishi)" 
                                     class="ks-btn-ghost p-1.5 text-xs">
                                 🔊
                             </button>
+
+                            <!-- Next button -->
                             <button type="button" 
                                     onclick="fbGoNext()" 
                                     class="ks-btn-primary py-1.5 px-3 text-xs">
@@ -341,19 +502,47 @@
 
                 </div>
 
-                <!-- Quick Hint -->
-                <div class="flex items-center justify-center gap-4 text-xs text-mist font-mono flex-wrap">
+                <!-- Kitobxonlar jonli suhbati paneli (Reader Live Discussion Drawer) -->
+                <div x-show="showChatDrawer" x-cloak
+                     class="mt-4 rounded-card border border-amber-500/30 bg-ink-950/95 backdrop-blur-md shadow-2xl p-3 sm:p-5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-ink-border pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">💬</span>
+                            <div>
+                                <h3 class="text-sm font-bold font-serif text-paper">Kitobxonlar jonli suhbati va muhokamasi</h3>
+                                <p class="text-[11px] text-mist font-mono">Kitobni o'qiyotgan paytda birga fikr almashing va gaplashing</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="showChatDrawer = false" class="text-mist hover:text-paper font-mono px-2.5 py-1 text-xs bg-ink-900 border border-ink-border rounded-btn transition-colors">
+                            Yopish ✕
+                        </button>
+                    </div>
+                    <div>
+                        @livewire('book.book-discussion-chat', ['book' => $book, 'isDrawerMode' => true], key('drawer-chat-'.$book->id))
+                    </div>
+                </div>
+
+                <!-- Quick Hint Bar -->
+                <div class="flex items-center justify-between text-xs text-mist font-mono px-2 flex-wrap gap-2">
                     <span class="flex items-center gap-1.5 text-amber-400 font-semibold">
                         <span>🖱️ / 👆</span>
-                        <span>Mishka yoki barmoq bilan surib varaqlash</span>
+                        <span>Burchakdan tortib yoki bosing</span>
                     </span>
-                    <span>•</span>
-                    <span class="flex items-center gap-1.5">
+                    <span class="flex items-center gap-2">
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">←</kbd>
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">→</kbd>
-                        <span>Klaviatura o'qlari</span>
+                        <span>Varaqlash</span>
+                        <span class="text-ink-border">•</span>
+                        <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">A</kbd>
+                        <span>Avto</span>
+                        <span class="text-ink-border">•</span>
+                        <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">F</kbd>
+                        <span>To'liq ekran</span>
                     </span>
                 </div>
+
+                <!-- PDF Annotatsiyalar va Bet belgilari (Kitobning pastida) -->
+                <x-reader.pdf-annotations :book="$book" :annotations="$pdfAnnotations" />
             </div>
 
             <!-- Standart PDF Viewer -->
@@ -381,16 +570,238 @@
         @endif
     </div>
 
-    <!-- Kitob haqida to'liq tavsif -->
-    <div class="p-6 sm:p-8 rounded-card bg-ink-900 border border-ink-border space-y-4">
-        <div class="flex items-center gap-3 border-b border-ink-border/60 pb-3">
-            <span class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            </span>
-            <h3 class="text-base sm:text-lg font-bold font-serif text-paper">Kitob haqida to'liq tavsif va mazmuni</h3>
+    <!-- ── 3. TABS: Tavsif, Izohlar & Taqrizlar ── -->
+    <div id="book-comments" class="space-y-4 scroll-mt-20">
+        <!-- Tabs Header -->
+        <div class="flex items-center gap-2 sm:gap-4 border-b border-ink-border pb-2 overflow-x-auto">
+            <button type="button"
+                    @click="activeTab = 'desc'"
+                    :class="activeTab === 'desc' ? 'border-b-2 border-amber-400 text-amber-400 font-bold' : 'text-mist hover:text-paper font-medium'"
+                    class="pb-2 text-xs sm:text-sm font-serif flex items-center gap-1.5 transition-colors shrink-0">
+                <span>📖</span>
+                <span>Kitob tavsifi va mazmuni</span>
+            </button>
+            <button type="button"
+                    @click="activeTab = 'comments'"
+                    :class="activeTab === 'comments' ? 'border-b-2 border-amber-400 text-amber-400 font-bold' : 'text-mist hover:text-paper font-medium'"
+                    class="pb-2 text-xs sm:text-sm font-serif flex items-center gap-1.5 transition-colors shrink-0">
+                <span>💬</span>
+                <span>Kitobxonlar izohlari</span>
+                <span class="px-2 py-0.2 rounded-badge bg-amber-500/15 text-amber-400 text-xs font-mono font-bold" x-text="totalComments">{{ $totalCommentsCount }}</span>
+            </button>
+            <button type="button"
+                    @click="activeTab = 'discussions'"
+                    :class="activeTab === 'discussions' ? 'border-b-2 border-amber-400 text-amber-400 font-bold' : 'text-mist hover:text-paper font-medium'"
+                    class="pb-2 text-xs sm:text-sm font-serif flex items-center gap-1.5 transition-colors shrink-0">
+                <span>📝</span>
+                <span>Muhokamalar va tahlillar</span>
+                <span class="px-2 py-0.2 rounded-badge bg-ink-950 text-mist text-xs font-mono">{{ $discussions->count() }}</span>
+            </button>
         </div>
-        <div class="text-sm text-mist leading-relaxed font-sans break-words whitespace-pre-line">
-            {{ $book->description }}
+
+        <!-- Tab 1: Tavsif -->
+        <div x-show="activeTab === 'desc'" class="p-6 sm:p-8 rounded-card bg-ink-900 border border-ink-border space-y-4">
+            <div class="text-sm text-mist leading-relaxed font-sans break-words whitespace-pre-line">
+                {{ $book->description }}
+            </div>
+        </div>
+
+        <!-- Tab 2: Kitobxonlar suhbati & Jonli izohlari (Live Discussion & Chat) -->
+        <div x-show="activeTab === 'comments'" x-cloak class="space-y-4">
+            @livewire('book.book-discussion-chat', ['book' => $book], key('tab-chat-'.$book->id))
+        </div>
+
+        <!-- Tab 3: Fikrlar va Tahlillar (Discussions) -->
+        <div x-show="activeTab === 'discussions'" x-cloak class="space-y-4">
+            <!-- New Discussion / Review Card -->
+            <div class="p-5 sm:p-6 rounded-card bg-ink-900 border border-ink-border space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold font-serif text-paper">O'z tahlilingiz yoki taqrizingizni qoldiring</h3>
+                    <span class="text-xs text-mist font-mono">Kitobxonlar bilan kengroq baham ko'ring</span>
+                </div>
+
+                <form action="{{ route('books.discussions.store', $book) }}" method="POST" class="space-y-3">
+                    @csrf
+                    <div>
+                        <input type="text" 
+                               name="title" 
+                               required 
+                               placeholder="Mavzu yoki taqriz sarlavhasi (masalan: Ushbu kitobdan olgan asosiy xulosam)"
+                               class="ks-input w-full text-xs sm:text-sm">
+                    </div>
+                    <div>
+                        <textarea name="body" 
+                                  rows="3" 
+                                  required 
+                                  placeholder="Kitob haqidagi keng tahlilingiz, yoqqan iqtiboslar yoki savollaringiz..."
+                                  class="ks-input w-full text-xs sm:text-sm resize-y"></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="ks-btn-primary py-2 px-4 text-xs font-bold inline-flex items-center gap-2">
+                            <span>Chop etish</span>
+                            <span>➔</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Discussions List -->
+            @forelse($discussions as $disc)
+                <div class="p-5 rounded-card bg-ink-900 border border-ink-border space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <img src="{{ $disc->user->avatar_url }}" alt="{{ $disc->user->name }}" class="w-8 h-8 rounded-full border border-ink-border object-cover">
+                            <div>
+                                <h4 class="text-xs font-bold text-paper">{{ $disc->user->name }}</h4>
+                                <span class="text-[11px] text-mist font-mono">{{ $disc->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                        @if($disc->is_pinned)
+                            <span class="px-2 py-0.5 rounded-badge bg-amber-500/15 text-amber-400 text-[10px] font-mono font-bold uppercase">Tanlangan</span>
+                        @endif
+                    </div>
+
+                    <h4 class="text-sm font-bold font-serif text-amber-400">{{ $disc->title }}</h4>
+                    <p class="text-xs text-mist leading-relaxed whitespace-pre-line">{{ $disc->body }}</p>
+                </div>
+            @empty
+                <div class="p-8 rounded-card bg-ink-900 border border-ink-border text-center space-y-2">
+                    <span class="text-3xl block">📝</span>
+                    <p class="text-sm font-bold font-serif text-paper">Hali tahlillar mavjud emas.</p>
+                    <p class="text-xs text-mist">Ushbu kitob haqida birinchi bo'lib o'z tahliliy taqrizingizni yozib qoldiring!</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    <!-- ── 4. MODALS: Tugmalar boshqaruvi & PDF yuklash ── -->
+    <!-- Shortcuts Modal -->
+    <div x-show="showShortcutsModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
+         @keydown.escape.window="showShortcutsModal = false">
+        <div class="w-full max-w-md rounded-panel bg-ink-900 border border-ink-border p-6 shadow-2xl space-y-4"
+             @click.away="showShortcutsModal = false">
+            <div class="flex items-center justify-between border-b border-ink-border pb-3">
+                <h3 class="text-base font-bold font-serif text-paper flex items-center gap-2">
+                    <span>⌨️</span>
+                    <span>Tugmalar orqali boshqaruv</span>
+                </h3>
+                <button type="button" @click="showShortcutsModal = false" class="text-mist hover:text-paper text-lg font-mono">×</button>
+            </div>
+
+            <div class="space-y-2.5 text-xs text-mist">
+                <div class="flex items-center justify-between p-2 rounded-btn bg-ink-950 border border-ink-border">
+                    <span class="text-paper">Varaqlash (Keyingi / Oldingi)</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono">←</kbd>
+                        <kbd class="px-2 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono">→</kbd>
+                        <span class="text-slate-500">yoki</span>
+                        <kbd class="px-2 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono">Space</kbd>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-btn bg-ink-950 border border-ink-border">
+                    <span class="text-paper">Masshtab (Zoom +/-)</span>
+                    <div class="flex items-center gap-1">
+                        <kbd class="px-2 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono">+</kbd>
+                        <kbd class="px-2 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono">-</kbd>
+                        <kbd class="px-2 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono">0</kbd>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-btn bg-ink-950 border border-ink-border">
+                    <span class="text-paper">Avto-varaqlash (Avto-o'qish)</span>
+                    <kbd class="px-2.5 py-1 rounded bg-ink-900 border border-ink-border text-amber-400 font-mono font-bold">A</kbd>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-btn bg-ink-950 border border-ink-border">
+                    <span class="text-paper">To'liq ekran (Fullscreen)</span>
+                    <kbd class="px-2.5 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono font-bold">F</kbd>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-btn bg-ink-950 border border-ink-border">
+                    <span class="text-paper">Varaqlash ovozi (Sound FX)</span>
+                    <kbd class="px-2.5 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono font-bold">S</kbd>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-btn bg-ink-950 border border-ink-border">
+                    <span class="text-paper">Fon musiqasi (Ambient dock)</span>
+                    <kbd class="px-2.5 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono font-bold">M</kbd>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-btn bg-ink-950 border border-ink-border">
+                    <span class="text-paper">To'xtatish / Chiqish</span>
+                    <kbd class="px-2.5 py-1 rounded bg-ink-900 border border-ink-border text-paper font-mono font-bold">Esc</kbd>
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button type="button" @click="showShortcutsModal = false" class="ks-btn-primary py-1.5 px-4 text-xs font-semibold">Tushunarli</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Options Modal -->
+    <div x-show="showDownloadModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
+         @keydown.escape.window="showDownloadModal = false">
+        <div class="w-full max-w-md rounded-panel bg-ink-900 border border-ink-border p-6 shadow-2xl space-y-4"
+             @click.away="showDownloadModal = false">
+            <div class="flex items-center justify-between border-b border-ink-border pb-3">
+                <h3 class="text-base font-bold font-serif text-paper flex items-center gap-2">
+                    <span class="text-rose-400">📥</span>
+                    <span>PDF yuklab olish</span>
+                </h3>
+                <button type="button" @click="showDownloadModal = false" class="text-mist hover:text-paper text-lg font-mono">×</button>
+            </div>
+
+            <p class="text-xs text-mist leading-relaxed">
+                Kitobning elektron PDF nusxasini qurilmangizga yuklab oling va internetsiz ham istalgan PDF dasturida o'qing.
+            </p>
+
+            <div class="space-y-3">
+                @if($book->pdf_path)
+                    <a href="{{ route('books.pdf', $book->id) }}" 
+                       class="w-full p-3 rounded-btn bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-300 flex items-center justify-between transition-all group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-9 h-9 rounded-btn bg-rose-500/20 flex items-center justify-center text-rose-400 text-lg">📄</span>
+                            <div class="text-left">
+                                <h4 class="text-xs font-bold text-paper group-hover:text-rose-300">Asl PDF fayl</h4>
+                                <span class="text-[11px] text-mist font-mono">To'liq kitob matni va sahifalari</span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-rose-400 font-bold font-mono">Yuklab olish ➔</span>
+                    </a>
+
+                    <a href="{{ route('books.pdf.stream', $book->id) }}" target="_blank"
+                       class="w-full p-3 rounded-btn bg-ink-950 border border-ink-border hover:border-amber-400/40 text-mist hover:text-paper flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="w-9 h-9 rounded-btn bg-ink-900 flex items-center justify-center text-amber-400 text-lg">🌐</span>
+                            <div class="text-left">
+                                <h4 class="text-xs font-bold text-paper">Yangi oynada ochish</h4>
+                                <span class="text-[11px] text-mist font-mono">Brauzerning o'zida ko'rish</span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-amber-400 font-bold font-mono">Ochish ➔</span>
+                    </a>
+                @else
+                    <a href="{{ route('books.pdf', $book->id) }}" 
+                       class="w-full p-3 rounded-btn bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-300 flex items-center justify-between transition-all group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-9 h-9 rounded-btn bg-rose-500/20 flex items-center justify-center text-rose-400 text-lg">📄</span>
+                            <div class="text-left">
+                                <h4 class="text-xs font-bold text-paper">Generatsiya qilingan PDF</h4>
+                                <span class="text-[11px] text-mist font-mono">Barcha nashr etilgan boblar</span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-rose-400 font-bold font-mono">Yuklab olish ➔</span>
+                    </a>
+                @endif
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button type="button" @click="showDownloadModal = false" class="ks-btn-ghost py-1.5 px-4 text-xs font-semibold">Yopish</button>
+            </div>
         </div>
     </div>
 
@@ -404,6 +815,8 @@
 @if($book->pdf_path)
 <!-- PDF.js CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Nodlik/StPageFlip 3D Engine -->
+<script src="{{ asset('assets/flipbook/page-flip.browser.js') }}?v={{ filemtime(public_path('assets/flipbook/page-flip.browser.js')) }}"></script>
 <!-- Flipbook Core Engine -->
 <script src="{{ asset('assets/flipbook/flipbook.js') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.js')) }}"></script>
 @endif

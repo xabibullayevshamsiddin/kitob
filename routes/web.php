@@ -121,7 +121,19 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
 
 // FAQ
 Route::get('/faq', function () {
-    return view('public.faq');
+    $customFaqs = collect();
+    try {
+        if (\Illuminate\Support\Facades\Schema::hasTable('faqs')) {
+            $customFaqs = \App\Models\Faq::where('is_active', true)
+                ->orderBy('sort_order')
+                ->latest('id')
+                ->get();
+        }
+    } catch (\Throwable $e) {
+        $customFaqs = collect();
+    }
+
+    return view('public.faq', compact('customFaqs'));
 })->name('faq');
 
 // Shartlar va maxfiylik
@@ -253,8 +265,95 @@ Route::middleware(['auth'])->group(function () {
                 'created_at' => $annotation->created_at?->format('d.m.Y H:i'),
             ]);
 
-        return view('pages.book-detail', compact('book', 'pdfAnnotations'));
+        $isSaved = request()->user() ? request()->user()->isBookSaved($book) : false;
+        $savedCount = $book->savedByUsers()->count();
+        $discussions = $book->discussions()
+            ->with(['user', 'comments.user'])
+            ->latest()
+            ->take(20)
+            ->get();
+
+        $bookComments = $book->comments()
+            ->with(['user', 'replies.user', 'replies.likes', 'likes'])
+            ->get();
+        $averageRating = $book->averageRating();
+        $ratingsCount = $book->ratingsCount();
+        $totalCommentsCount = $book->allComments()->count();
+
+        return view('pages.book-detail', compact(
+            'book',
+            'pdfAnnotations',
+            'isSaved',
+            'savedCount',
+            'discussions',
+            'bookComments',
+            'averageRating',
+            'ratingsCount',
+            'totalCommentsCount'
+        ));
     })->name('books.show');
+
+    // Kitobni "Keyinroq o'qiyman" ro'yxatiga qo'shish / o'chirish (Toggle)
+    Route::post('/books/{book}/toggle-save', function (\App\Models\Book $book) {
+        $user = auth()->user();
+        $existing = \App\Models\UserSavedBook::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            $isSaved = false;
+            $message = "Kitob \"Keyinroq o'qiyman\" ro'yxatidan olib tashlandi.";
+        } else {
+            \App\Models\UserSavedBook::create([
+                'user_id' => $user->id,
+                'book_id' => $book->id,
+            ]);
+            $isSaved = true;
+            $message = "Kitob \"Keyinroq o'qiyman\" ro'yxatiga saqlandi!";
+        }
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success'     => true,
+                'is_saved'    => $isSaved,
+                'message'     => $message,
+                'total_saved' => \App\Models\UserSavedBook::where('book_id', $book->id)->count(),
+            ]);
+        }
+
+        return back()->with('success', $message);
+    })->name('books.toggle-save');
+
+    // Kitobga izoh qoldirish
+    Route::post('/books/{book}/comments', [\App\Http\Controllers\BookCommentController::class, 'store'])
+        ->name('books.comments.store');
+
+    // Izohni o'chirish
+    Route::delete('/book-comments/{comment}', [\App\Http\Controllers\BookCommentController::class, 'destroy'])
+        ->name('books.comments.destroy');
+
+    // Izohga like bosish / qaytarish
+    Route::post('/book-comments/{comment}/like', [\App\Http\Controllers\BookCommentController::class, 'toggleLike'])
+        ->name('books.comments.like');
+
+    // Kitob muhokamasiga yangi fikr / taqriz qo'shish
+    Route::post('/books/{book}/discussions', function (\Illuminate\Http\Request $request, \App\Models\Book $book) {
+        $validated = $request->validate([
+            'title' => 'required|string|max:160',
+            'body'  => 'required|string|max:5000',
+        ]);
+
+        \App\Models\Discussion::create([
+            'book_id' => $book->id,
+            'user_id' => auth()->id(),
+            'title'   => $validated['title'],
+            'body'    => $validated['body'],
+            'views'   => 0,
+        ]);
+
+        return back()->with('success', 'Fikr va tahlilingiz muvaffaqiyatli chop etildi!');
+    })->name('books.discussions.store');
 
     // Kitobni BRAUZERDA onlayn o'qish (PDF embed)
     Route::get('/books/{book}/read-pdf', [\App\Http\Controllers\BookPdfController::class, 'read'])
@@ -653,109 +752,20 @@ Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-    Route::get('/', function () {
-        $totalUsers    = \App\Models\User::count();
-        $totalStudents = \App\Models\User::where('role', 'student')->count();
-        $totalTeachers = \App\Models\User::where('role', 'teacher')->count();
-        $totalAdmins   = \App\Models\User::where('role', 'admin')->count();
-        $totalBooks    = \App\Models\Book::count();
-        $activeBooks   = \App\Models\Book::where('is_active', true)->count();
+    Route::get('/', [\App\Http\Controllers\Admin\AnalyticsController::class, 'dashboard'])->name('dashboard');
 
-        // Bu oy va o'tgan oygi yangi foydalanuvchilar
-        $newUsersThisMonth = \App\Models\User::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
-        $newUsersPrevMonth = \App\Models\User::whereMonth('created_at', now()->subMonth()->month)->whereYear('created_at', now()->subMonth()->year)->count();
-
-        // O'sish foizi (real dinamika)
-        if ($newUsersPrevMonth > 0) {
-            $userGrowthPct = round((($newUsersThisMonth - $newUsersPrevMonth) / $newUsersPrevMonth) * 100);
-        } else {
-            $userGrowthPct = $newUsersThisMonth > 0 ? 100 : 0;
-        }
-
-        // Foydalanuvchilar va materiallar real nisbatlari
-        $studentPct     = $totalUsers > 0 ? round(($totalStudents / $totalUsers) * 100) : 0;
-        $teacherPct     = $totalUsers > 0 ? round(($totalTeachers / $totalUsers) * 100) : 0;
-        $activeBooksPct = $totalBooks > 0 ? round(($activeBooks / $totalBooks) * 100) : 0;
-
-        // O'qilgan daqiqalar va soatlar
-        $totalReadingMinutes = (int) (\App\Models\DailyActivity::sum('minutes_read'));
-        $totalReadingHours   = round($totalReadingMinutes / 60, 1);
-
-        // Bugun faol foydalanuvchilar
-        $todayUsersCount = \App\Models\DailyActivity::whereDate('activity_date', today())->distinct('user_id')->count('user_id');
-        $onlineToday = max($todayUsersCount, 1);
-
-        $stats = [
-            'total_users'           => $totalUsers,
-            'total_students'        => $totalStudents,
-            'total_teachers'        => $totalTeachers,
-            'total_admins'          => $totalAdmins,
-            'total_books'           => $totalBooks,
-            'active_books'          => $activeBooks,
-            'new_users_this_month'  => $newUsersThisMonth,
-            'new_users_prev_month'  => $newUsersPrevMonth,
-            'user_growth_pct'       => $userGrowthPct,
-            'student_pct'           => $studentPct,
-            'teacher_pct'           => $teacherPct,
-            'active_books_pct'      => $activeBooksPct,
-            'total_reading_minutes' => $totalReadingMinutes,
-            'total_reading_hours'   => $totalReadingHours,
-            'total_quizzes'         => \App\Models\Quiz::count(),
-            'total_groups'          => \App\Models\Group::count(),
-            'total_points'          => (int) \App\Models\User::sum('total_points'),
-            'total_coins'           => (int) \App\Models\User::sum('coin_balance'),
-            'online_today'          => $onlineToday,
-        ];
-
-        $recentUsers = \App\Models\User::with('roles')->latest()->take(5)->get();
-
-        // ── GRAFIK MA'LUMOTLARI ──
-        // 1. 30 kunlik ro'yxatdan o'tish trendi
-        $signupsRaw = \App\Models\User::selectRaw('DATE(created_at) as day, COUNT(*) as cnt')
-            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
-            ->groupBy('day')->pluck('cnt', 'day');
-        $signupLabels = [];
-        $signupData = [];
-        $cumulative = max(0, \App\Models\User::where('created_at', '<', now()->subDays(29)->startOfDay())->count());
-        foreach (range(29, 0) as $i) {
-            $day = now()->subDays($i);
-            $key = $day->toDateString();
-            $signupLabels[] = $day->format('d.m');
-            $cumulative += (int) ($signupsRaw[$key] ?? 0);
-            $signupData[] = $cumulative;
-        }
-
-        // 2. 14 kunlik o'qilgan daqiqalar (DailyActivity)
-        $minutesRaw = \App\Models\DailyActivity::selectRaw('DATE(activity_date) as day, SUM(minutes_read) as m')
-            ->where('activity_date', '>=', today()->subDays(13))
-            ->groupBy('day')->pluck('m', 'day');
-        $minutesLabels = [];
-        $minutesData = [];
-        foreach (range(13, 0) as $i) {
-            $day = today()->subDays($i);
-            $minutesLabels[] = $day->format('d.m');
-            $minutesData[] = (int) ($minutesRaw[$day->toDateString()] ?? 0);
-        }
-
-        // 3. Kontent formatlari taqsimoti (boblar, audiolar, videolar, testlar)
-        $formatData = [
-            (int) \App\Models\BookChapter::count(),
-            (int) \App\Models\BookAudio::count(),
-            (int) \App\Models\BookVideo::count(),
-            (int) \App\Models\Quiz::count(),
-        ];
-
-        return view('admin.dashboard', compact(
-            'stats', 'recentUsers',
-            'signupLabels', 'signupData',
-            'minutesLabels', 'minutesData',
-            'formatData'
-        ));
-    })->name('dashboard');
+    // To'laqonli Analitika bo'limi (controller orqali, closure YO'Q)
+    Route::get('/analytics/data/{metric}', [\App\Http\Controllers\Admin\AnalyticsController::class, 'data'])
+        ->name('analytics.data');
+    Route::get('/analytics/export/{metric}', [\App\Http\Controllers\Admin\AnalyticsController::class, 'export'])
+        ->middleware('throttle:10,1')
+        ->name('analytics.export');
+    Route::get('/analytics/{tab?}', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])
+        ->name('analytics');
 
     // Foydalanuvchilar
     Route::get('/users', function () {
-        $query = \App\Models\User::with('roles')->latest();
+        $query = \App\Models\User::with(['roles', 'profile', 'createdGroups'])->latest();
         if ($search = request('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -764,6 +774,23 @@ Route::prefix('admin')
         }
         if ($role = request('role')) {
             $query->where('role', $role);
+        }
+        if (request('has_group') === 'yes') {
+            $query->has('createdGroups');
+        } elseif (request('has_group') === 'no') {
+            $query->doesntHave('createdGroups');
+        }
+        if (request('has_theme') === 'yes') {
+            $query->whereHas('profile', function ($q) {
+                $q->whereNotNull('unlocked_items')->where('unlocked_items', '!=', '[]')->where('unlocked_items', '!=', 'null');
+            });
+        } elseif (request('has_theme') === 'no') {
+            $query->where(function($q) {
+                $q->whereDoesntHave('profile')
+                  ->orWhereHas('profile', function($pq) {
+                      $pq->whereNull('unlocked_items')->orWhere('unlocked_items', '[]')->orWhere('unlocked_items', 'null');
+                  });
+            });
         }
         $users = $query->paginate(20)->withQueryString();
         return view('admin.users.index', compact('users'));
@@ -899,30 +926,7 @@ Route::prefix('admin')
     })->name('books.toggle');
 
     // Statistika
-    Route::get('/stats', function () {
-        $totalUsers    = \App\Models\User::count();
-        $totalStudents = \App\Models\User::where('role', 'student')->count();
-        $totalTeachers = \App\Models\User::where('role', 'teacher')->count();
-        $totalAdmins   = \App\Models\User::where('role', 'admin')->count();
-        $totalBooks    = \App\Models\Book::count();
-        $activeBooks   = \App\Models\Book::where('is_active', true)->count();
-
-        $stats = [
-            'total_users'     => $totalUsers,
-            'total_students'  => $totalStudents,
-            'total_teachers'  => $totalTeachers,
-            'total_admins'    => $totalAdmins,
-            'total_books'     => $totalBooks,
-            'active_books'    => $activeBooks,
-            'weekly_books'    => \App\Models\Book::where('created_at', '>=', now()->subDays(7))->count(),
-            'monthly_books'   => \App\Models\Book::where('created_at', '>=', now()->subDays(30))->count(),
-            'total_quizzes'   => \App\Models\Quiz::count(),
-            'total_groups'    => \App\Models\Group::count(),
-            'total_points'    => (int) \App\Models\User::sum('total_points'),
-            'online_today'    => max(\App\Models\DailyActivity::whereDate('activity_date', today())->distinct('user_id')->count('user_id'), 1),
-        ];
-        return view('admin.stats', compact('stats'));
-    })->name('stats');
+    Route::get('/stats', [\App\Http\Controllers\Admin\AnalyticsController::class, 'stats'])->name('stats');
 
     // Sozlamalar va Tizim diagnostikasi
     Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings');
@@ -1065,6 +1069,15 @@ Route::prefix('admin')
     Route::get('/quiz-reviews', [\App\Http\Controllers\QuizReviewController::class, 'index'])->name('quiz-reviews.index');
     Route::get('/quiz-reviews/{attempt}', [\App\Http\Controllers\QuizReviewController::class, 'show'])->name('quiz-reviews.show');
     Route::post('/quiz-reviews/{attempt}', [\App\Http\Controllers\QuizReviewController::class, 'update'])->name('quiz-reviews.update');
+
+    // ── FAQ Savol-Javoblar Boshqaruvi ──
+    Route::get('/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'index'])->name('faqs.index');
+    Route::get('/faqs/create', [\App\Http\Controllers\Admin\FaqController::class, 'create'])->name('faqs.create');
+    Route::post('/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'store'])->name('faqs.store');
+    Route::get('/faqs/{faq}/edit', [\App\Http\Controllers\Admin\FaqController::class, 'edit'])->name('faqs.edit');
+    Route::put('/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'update'])->name('faqs.update');
+    Route::patch('/faqs/{faq}/toggle', [\App\Http\Controllers\Admin\FaqController::class, 'toggle'])->name('faqs.toggle');
+    Route::delete('/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'destroy'])->name('faqs.destroy');
 });
 
 // Alias for profile.edit

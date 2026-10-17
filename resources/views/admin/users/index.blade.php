@@ -65,6 +65,26 @@
             </select>
         </div>
 
+        {{-- Group Filter --}}
+        <div class="relative">
+            <select name="has_group"
+                    class="ks-input py-2 px-3 text-xs font-mono pr-8">
+                <option value="">Guruh ochish: Barchasi</option>
+                <option value="yes" {{ request('has_group') === 'yes' ? 'selected' : '' }}>Guruh ochganlar</option>
+                <option value="no" {{ request('has_group') === 'no' ? 'selected' : '' }}>Ochmaganlar</option>
+            </select>
+        </div>
+
+        {{-- Theme Filter --}}
+        <div class="relative">
+            <select name="has_theme"
+                    class="ks-input py-2 px-3 text-xs font-mono pr-8">
+                <option value="">Profil foni: Barchasi</option>
+                <option value="yes" {{ request('has_theme') === 'yes' ? 'selected' : '' }}>Tokenga fon olganlar</option>
+                <option value="no" {{ request('has_theme') === 'no' ? 'selected' : '' }}>Standart fonlilar</option>
+            </select>
+        </div>
+
         {{-- Submit --}}
         <button type="submit"
                 class="ks-btn-primary py-2 px-4 text-xs font-mono inline-flex items-center gap-1.5 shrink-0">
@@ -74,7 +94,7 @@
             <span>Filtrlash</span>
         </button>
 
-        @if(request()->hasAny(['search', 'role']))
+        @if(request()->hasAny(['search', 'role', 'has_group', 'has_theme']))
             <a href="{{ route('admin.users.index') }}"
                class="ks-btn-ghost py-2 px-3 text-xs font-mono inline-flex items-center gap-1.5 shrink-0">
                 <span>Tozalash</span>
@@ -89,14 +109,16 @@
         <table class="w-full text-left">
             <thead>
                 <tr class="bg-ink-950/60 border-b border-ink-border text-[11px] font-mono uppercase text-mist">
-                    <th class="py-2.5 px-3.5">#</th>
-                    <th class="py-2.5 px-3.5">Foydalanuvchi</th>
-                    <th class="py-2.5 px-3.5">Email</th>
-                    <th class="py-2.5 px-3.5">Rol</th>
-                    <th class="py-2.5 px-3.5">Holat</th>
-                    <th class="py-2.5 px-3.5">Ball</th>
-                    <th class="py-2.5 px-3.5">Qo'shilgan</th>
-                    <th class="py-2.5 px-3.5 text-right">Amallar</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap">#</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap">Foydalanuvchi</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap">Email</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap">Rol</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap text-center">Guruh ochganmi?</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap text-center">Tokenga fon olganmi?</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap text-right">Tangalar / Ball</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap text-center">Holat</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap">Qo'shilgan</th>
+                    <th class="py-2.5 px-3.5 text-right whitespace-nowrap">Amallar</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-ink-border/50 text-xs">
@@ -111,9 +133,20 @@
                         $rc = $roleConfig[$role] ?? ['label' => $role, 'class' => 'bg-ink-950 text-mist border-ink-border'];
                         $isBanned = $user->isBanned();
                         $isAdminTarget = $user->isAdmin() || $user->role === 'admin';
+
+                        // Guruh
+                        $groupsCount = $user->createdGroups->count();
+                        $firstGroup = $user->createdGroups->first();
+
+                        // Profil foni
+                        $themeCatalog = \App\Services\Gamification\ProfileVisualService::THEMES;
+                        $unlockedItems = $user->profile?->unlocked_items ?? [];
+                        $activeKey = $user->profile?->profile_theme ?? $user->profile?->avatar_frame ?? $user->profile?->chat_bubble_theme;
+                        $themeMeta = $activeKey ? ($themeCatalog[$activeKey] ?? null) : null;
+                        $hasTheme = !empty($unlockedItems) || !empty($themeMeta);
                     @endphp
                     <tr class="hover:bg-ink-800/40 transition-colors group">
-                        <td class="py-2.5 px-3.5 text-mist font-mono text-[11px]">
+                        <td class="py-2.5 px-3.5 text-mist font-mono text-[11px] whitespace-nowrap">
                             {{ $users->firstItem() + $loop->index }}
                         </td>
                         <td class="py-2.5 px-3.5">
@@ -132,20 +165,79 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist">
+                        <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist whitespace-nowrap">
                             {{ $user->email }}
                         </td>
-                        <td class="py-2.5 px-3.5">
+                        <td class="py-2.5 px-3.5 whitespace-nowrap">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold border {{ $rc['class'] }}">
                                 {{ $rc['label'] }}
                             </span>
                         </td>
-                        <td class="py-2.5 px-3.5">
+
+                        {{-- Guruh ochganmi? --}}
+                        <td class="py-2.5 px-3.5 text-center whitespace-nowrap">
+                            @if($groupsCount > 0)
+                                <div class="inline-flex flex-col items-center">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span>{{ $groupsCount }} ta guruh</span>
+                                    </span>
+                                    @if($firstGroup)
+                                        <span class="text-[9px] text-mist font-mono mt-0.5 truncate max-w-[120px]" title="{{ $firstGroup->name }}">
+                                            "{{ Str::limit($firstGroup->name, 14) }}"
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-badge text-[10px] font-mono text-mist/60 bg-ink-950 border border-ink-border">
+                                    Ochmagan
+                                </span>
+                            @endif
+                        </td>
+
+                        {{-- Tokenga fon olganmi? --}}
+                        <td class="py-2.5 px-3.5 text-center whitespace-nowrap">
+                            @if($hasTheme)
+                                <div class="inline-flex flex-col items-center">
+                                    @php
+                                        $badgeText = $themeMeta['badge_text'] ?? ($activeKey ? '✨ ' . ucfirst($activeKey) : '🎨 Maxsus');
+                                        $badgeClass = $themeMeta['badge_class'] ?? 'bg-amber-500/15 text-amber-300 border border-amber-500/30';
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-semibold {{ $badgeClass }}">
+                                        <span>{{ $themeMeta['icon'] ?? '🎨' }}</span>
+                                        <span class="truncate max-w-[100px]">{{ $badgeText }}</span>
+                                    </span>
+                                    @if(count($unlockedItems) > 0)
+                                        <span class="text-[9px] text-amber-400 font-mono mt-0.5">
+                                            {{ count($unlockedItems) }} ta fon xaridi
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-badge text-[10px] font-mono text-mist/60 bg-ink-950 border border-ink-border">
+                                    Standart fon
+                                </span>
+                            @endif
+                        </td>
+
+                        {{-- Coins / Points --}}
+                        <td class="py-2.5 px-3.5 text-right whitespace-nowrap font-mono">
+                            <div class="inline-flex flex-col items-end">
+                                <span class="text-xs font-bold text-amber-400">
+                                    {{ number_format($user->coin_balance) }} 🪙
+                                </span>
+                                <span class="text-[10px] text-mist">
+                                    {{ number_format($user->total_points) }} pts
+                                </span>
+                            </div>
+                        </td>
+
+                        {{-- Status --}}
+                        <td class="py-2.5 px-3.5 text-center whitespace-nowrap">
                             @if($isBanned)
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30"
                                       title="{{ $user->ban_reason ? 'Sabab: ' . $user->ban_reason : '' }}">
                                     <span>Bloklangan</span>
-                                    <span class="opacity-80">({{ $user->ban_remaining }})</span>
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -154,13 +246,11 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="py-2.5 px-3.5 font-mono text-[11px]">
-                            <span class="text-amber-400 font-bold">{{ $user->total_points }}</span>
-                        </td>
-                        <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist">
+
+                        <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist whitespace-nowrap">
                             {{ $user->created_at->format('d.m.Y') }}
                         </td>
-                        <td class="py-2.5 px-3.5 text-right">
+                        <td class="py-2.5 px-3.5 text-right whitespace-nowrap">
                             <div class="flex items-center justify-end gap-1.5 flex-wrap">
                                 {{-- Ban / Unban --}}
                                 @if($user->id === auth()->id())

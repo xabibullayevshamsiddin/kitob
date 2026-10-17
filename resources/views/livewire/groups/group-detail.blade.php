@@ -1051,6 +1051,9 @@
                     </button>
                 </div>
             </div>
+        </div>
+    @endif
+
     <!-- Group Live Stream Studio Modal -->
     @if ($showLiveModal)
         <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">

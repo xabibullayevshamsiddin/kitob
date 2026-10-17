@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Carbon;
@@ -83,6 +84,27 @@ class Book extends Model
         return $this->hasMany(Discussion::class);
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(BookComment::class)->whereNull('parent_id')->with(['user', 'replies', 'likes'])->latest();
+    }
+
+    public function allComments(): HasMany
+    {
+        return $this->hasMany(BookComment::class);
+    }
+
+    public function averageRating(): float
+    {
+        $avg = $this->allComments()->whereNotNull('rating')->avg('rating');
+        return $avg ? round((float) $avg, 1) : 0.0;
+    }
+
+    public function ratingsCount(): int
+    {
+        return $this->allComments()->whereNotNull('rating')->count();
+    }
+
     public function liveEvents(): HasMany
     {
         return $this->hasMany(LiveEvent::class);
@@ -99,6 +121,12 @@ class Book extends Model
     public function readingProgress(): HasMany
     {
         return $this->hasMany(BookReadingProgress::class);
+    }
+
+    public function savedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_saved_books')
+                    ->withTimestamps();
     }
 
     // -------------------------------------------------------------------------

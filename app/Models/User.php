@@ -88,6 +88,23 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Bookmark::class);
     }
 
+    public function savedBookEntries(): HasMany
+    {
+        return $this->hasMany(UserSavedBook::class);
+    }
+
+    public function savedBooks(): BelongsToMany
+    {
+        return $this->belongsToMany(Book::class, 'user_saved_books')
+                    ->withTimestamps();
+    }
+
+    public function isBookSaved(int|Book $book): bool
+    {
+        $bookId = $book instanceof Book ? $book->id : $book;
+        return $this->savedBooks()->where('books.id', $bookId)->exists();
+    }
+
     public function pdfAnnotations(): HasMany
     {
         return $this->hasMany(PdfAnnotation::class);
@@ -140,6 +157,11 @@ class User extends Authenticatable implements MustVerifyEmail
                     ->withPivot('role', 'joined_at');
     }
 
+    public function createdGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'created_by');
+    }
+
     public function groupMessages(): HasMany
     {
         return $this->hasMany(GroupMessage::class);
@@ -148,6 +170,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function discussions(): HasMany
     {
         return $this->hasMany(Discussion::class);
+    }
+
+    public function bookComments(): HasMany
+    {
+        return $this->hasMany(BookComment::class);
+    }
+
+    public function likedBookComments(): BelongsToMany
+    {
+        return $this->belongsToMany(BookComment::class, 'book_comment_likes');
     }
 
     public function aiChatHistories(): HasMany

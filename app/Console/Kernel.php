@@ -20,6 +20,11 @@ class Kernel extends ConsoleKernel
             ->dailyAt('00:05')
             ->timezone('Asia/Tashkent');
 
+        // Kunlik analitika snapshotini yig'ish (Asia/Tashkent vaqti bilan har kecha 00:10 da)
+        $schedule->command('analytics:snapshot')
+            ->dailyAt('00:10')
+            ->timezone('Asia/Tashkent');
+
         // Foydalanuvchilarning 20 tadan ortiq eski bildirishnomalarini tungi avtomatik tozalash
         $schedule->command('notifications:prune')
             ->dailyAt('03:00')

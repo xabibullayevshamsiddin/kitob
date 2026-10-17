@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-<div id="fb-standalone-container" class="w-full max-w-[1700px] mx-auto space-y-3 px-1 sm:px-4 pb-8">
+<div id="fb-standalone-container" x-data="{ showChatDrawer: false }" class="w-full max-w-[1700px] mx-auto space-y-3 px-1 sm:px-4 pb-8">
 
     <!-- Top Navigation & Tools Bar -->
     <div class="flex items-center justify-between flex-wrap gap-3 border-b border-white/10 pb-3">
@@ -74,11 +74,27 @@
                 </button>
             </div>
 
+            <!-- Paper Theme Selector -->
+            <div class="hidden sm:flex items-center bg-ink-900 border border-white/10 rounded-xl p-0.5 shadow-inner">
+                <button type="button" onclick="fbSetPaperTheme('ivory')" class="px-2 py-1 text-[11px] rounded text-slate-300 hover:text-white" title="Tabiiy krem qog'oz">📜 Asl</button>
+                <button type="button" onclick="fbSetPaperTheme('sepia')" class="px-2 py-1 text-[11px] rounded text-slate-300 hover:text-white" title="Klassik sepia ohangi">🍵 Sepia</button>
+                <button type="button" onclick="fbSetPaperTheme('night')" class="px-2 py-1 text-[11px] rounded text-slate-300 hover:text-white" title="Tungi qorong'i mutolaa">🌙 Tun</button>
+            </div>
+
+            <!-- Auto-play toggle button -->
+            <button type="button" 
+                    id="fb-autoplay-btn"
+                    onclick="fbToggleAutoPlay()" 
+                    title="Avtomatik varaqlash (A klavishi)" 
+                    class="px-3 py-1.5 rounded-xl bg-ink-900 border border-white/10 hover:border-emerald-400/50 text-slate-300 hover:text-emerald-400 text-xs font-medium transition-colors flex items-center gap-1.5">
+                <span>▶ Avto</span>
+            </button>
+
             <!-- Sound toggle button -->
             <button type="button" 
                     id="fb-sound-btn"
                     onclick="fbToggleSound()" 
-                    title="Varaqlash ovozini yoqish/o'chirish" 
+                    title="Varaqlash ovozini yoqish/o'chirish (S klavishi)" 
                     class="px-3 py-1.5 rounded-xl bg-ink-900 border border-white/10 text-slate-300 hover:text-white text-xs font-medium transition-colors flex items-center gap-1.5">
                 🔊 Ovoz
             </button>
@@ -94,7 +110,7 @@
             <!-- Fullscreen -->
             <button type="button" 
                     onclick="fbToggleFullscreen()" 
-                    title="To'liq ekran (F11)" 
+                    title="To'liq ekran (F11 yoki F)" 
                     class="p-2 rounded-xl bg-ink-900 border border-white/10 text-slate-400 hover:text-white hover:border-amber-400/30 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
             </button>
@@ -106,12 +122,19 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span class="hidden sm:inline">PDF</span>
             </a>
+            <!-- Suhbat toggle button -->
+            <button type="button" 
+                    @click="showChatDrawer = !showChatDrawer; $nextTick(() => { window.dispatchEvent(new CustomEvent('book-chat-scroll-bottom')); })"
+                    :class="showChatDrawer ? 'bg-amber-500 text-ink-950 font-bold border-amber-400' : 'bg-ink-900 border-white/10 text-amber-300 hover:border-amber-400/40'"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors flex items-center gap-1.5 shadow-md">
+                <span>💬</span>
+                <span>Suhbat</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </button>
         </div>
     </div>
 
     <!-- ── Ultra-Realistic 3D Flipbook Stage ── -->
-    <x-reader.pdf-annotations :book="$book" :annotations="$pdfAnnotations" />
-
     <div id="fb-root" 
          data-pdf-url="{{ route('books.pdf.stream', $book) }}" 
          data-sound-url="{{ asset('sounds/oxidvideos-page-flip-1-178322.mp3') }}"
@@ -230,6 +253,29 @@
         <span>Sahifani bosish yoki 2 marta tez bosib yaqinlashtirish</span>
     </div>
 
+    <!-- Kitobxonlar jonli suhbati paneli (Kitobning pastida) -->
+    <div x-show="showChatDrawer" x-cloak
+         class="rounded-card border border-amber-500/30 bg-ink-950/95 backdrop-blur-md shadow-2xl p-3 sm:p-5 space-y-3">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">💬</span>
+                <div>
+                    <h3 class="text-sm font-bold font-serif text-white">Kitobxonlar jonli suhbati va muhokamasi</h3>
+                    <p class="text-[11px] text-slate-400 font-mono">Mutolaa jarayonida kitobxonlar bilan gaplashing va izohlar qoldiring</p>
+                </div>
+            </div>
+            <button type="button" @click="showChatDrawer = false" class="text-slate-400 hover:text-white font-mono px-2.5 py-1 text-xs bg-ink-900 border border-white/15 rounded-xl transition-colors">
+                Yopish ✕
+            </button>
+        </div>
+        <div>
+            @livewire('book.book-discussion-chat', ['book' => $book, 'isDrawerMode' => true], key('flipbook-chat-'.$book->id))
+        </div>
+    </div>
+
+    <!-- PDF Annotatsiyalar va Bet belgilari (Kitobning pastida) -->
+    <x-reader.pdf-annotations :book="$book" :annotations="$pdfAnnotations" />
+
     <!-- Reading Tracker & 5-minute AFK Inactivity Modal -->
     @include('components.reading-tracker', [
         'bookId' => $book->id,
@@ -246,6 +292,8 @@
 @push('scripts')
 <!-- PDF.js CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Nodlik/StPageFlip 3D Engine -->
+<script src="{{ asset('assets/flipbook/page-flip.browser.js') }}?v={{ filemtime(public_path('assets/flipbook/page-flip.browser.js')) }}"></script>
 <!-- Flipbook Core Engine -->
 <script src="{{ asset('assets/flipbook/flipbook.js') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.js')) }}"></script>
 @endpush

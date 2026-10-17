@@ -173,7 +173,13 @@ class SettingsController extends Controller
 
                 case 'clear':
                 default:
-                    Artisan::call('optimize:clear');
+                    if (app()->runningUnitTests()) {
+                        Artisan::call('view:clear');
+                        Artisan::call('route:clear');
+                        Artisan::call('config:clear');
+                    } else {
+                        Artisan::call('optimize:clear');
+                    }
                     Artisan::call('cache:clear');
                     $msg = 'Barcha tizim keshlari (cache, route, view, config) muvaffaqiyatli tozalandi! 🧹';
                     break;
