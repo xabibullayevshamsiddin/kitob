@@ -20,7 +20,7 @@ class GeminiLlmProvider implements LlmProviderInterface
         $this->apiKey = $cfg['api_key'] ?? env('GEMINI_API_KEY');
         $this->baseUrl = rtrim((string) ($cfg['base_url'] ?? 'https://generativelanguage.googleapis.com/v1beta'), '/');
         $this->model = (string) ($cfg['chat_model'] ?? 'gemini-3.8-flash');
-        $this->timeout = (int) ($cfg['timeout'] ?? 30);
+        $this->timeout = (int) ($cfg['timeout'] ?? 60);
         $this->maxOutputTokens = (int) config('ai.max_output_tokens', 700);
     }
 
@@ -89,6 +89,7 @@ class GeminiLlmProvider implements LlmProviderInterface
         $response = Http::withHeaders([
             'x-goog-api-key' => $this->apiKey,
         ])
+            ->retry(2, 500, throw: false)
             ->timeout($this->timeout)
             ->acceptJson()
             ->post($url, $payload);

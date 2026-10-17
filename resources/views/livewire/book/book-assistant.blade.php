@@ -1,7 +1,7 @@
 <div
     id="book-ai-assistant-root-{{ $bookId }}"
     x-data="{
-        qText: @entangle('question').defer,
+        charCount: 0,
         scrollToBottom() {
             const box = this.$refs.messagesBox;
             if (box) {
@@ -28,7 +28,7 @@
         }
     }"
     x-init="$nextTick(() => scrollToBottom())"
-    @book-ai-updated.window="if ($event.detail && $event.detail.bookId == {{ $bookId }}) { $nextTick(() => scrollToBottom()); }"
+    @book-ai-updated.window="if ($event.detail && $event.detail.bookId == {{ $bookId }}) { charCount = 0; if ($refs.questionInput) { $refs.questionInput.value = ''; } $nextTick(() => scrollToBottom()); }"
     class="rounded-card border border-ink-border bg-ink-900 text-paper shadow-xl overflow-hidden"
 >
     {{-- Screen-reader live announcement --}}
@@ -247,16 +247,17 @@
                 <div class="flex-1 relative">
                     <textarea
                         wire:model.defer="question"
-                        x-model="qText"
+                        x-ref="questionInput"
+                        @input="charCount = $el.value.length"
                         rows="2"
                         maxlength="{{ $maxChars }}"
                         placeholder="{{ __('ai.ask_placeholder') }}"
-                        @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); $wire.ask(); }"
+                        @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); $wire.set('question', $el.value); $wire.ask(); }"
                         class="ks-input w-full text-xs sm:text-sm pr-14 resize-none"
                     ></textarea>
                     <span
                         class="absolute bottom-2 right-2.5 text-[10px] font-mono text-mist pointer-events-none"
-                        x-text="(qText ? qText.length : 0) + '/{{ $maxChars }}'"
+                        x-text="charCount + '/{{ $maxChars }}'"
                     ></span>
                 </div>
 

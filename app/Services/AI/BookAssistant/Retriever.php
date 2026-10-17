@@ -64,7 +64,9 @@ class Retriever
 
         $limit = max(1, min(12, $limit));
         $expandedQuery = $this->buildExpandedQuery($query, $previousUserQuestion);
-        $isOverview = $this->isOverviewQuestion($query);
+        $isOverview = $this->isOverviewQuestion($query) || $this->isOverviewQuestion($expandedQuery);
+        $targetPage = $this->extractPageNumber($query) ?? $this->extractPageNumber($expandedQuery);
+        $targetChapter = $this->extractChapterNumber($query) ?? $this->extractChapterNumber($expandedQuery);
 
         $book = Book::select(['id', 'title', 'ai_indexed_at', 'ai_summary'])->find($bookId);
         if (!$book) {
@@ -162,10 +164,36 @@ class Retriever
                 $combinedScore = $lexicalScore;
             }
 
-            // Agar foydalanuvchi "Bu kitob nima haqida?" yoki "Asosiy g'oyalar nimalar?" deb umumiy savol bersa,
+            // 4. Sahifa (bet) bo'yicha aniq moslik boosti (masalan: "1-betdagi asosiy tushunchalar")
+            if ($targetPage !== null && $chunk->page_start !== null) {
+                $pStart = (int) $chunk->page_start;
+                $pEnd = (int) ($chunk->page_end ?? $chunk->page_start);
+
+                if ($targetPage >= $pStart && $targetPage <= $pEnd) {
+                    $combinedScore = max($combinedScore, 0.85);
+                } elseif (abs($targetPage - $pStart) <= 1 || abs($targetPage - $pEnd) <= 1) {
+                    $combinedScore = max($combinedScore, 0.50);
+                }
+            }
+
+            // 5. Bob (chapter) bo'yicha aniq moslik boosti (masalan: "1-bob", "Chapter 1")
+            if ($targetChapter !== null) {
+                $matchesChapter = false;
+                if ($chunk->chapter && (int) $chunk->chapter->chapter_number === $targetChapter) {
+                    $matchesChapter = true;
+                } elseif (preg_match('/\bchapter\s*' . $targetChapter . '\b/i', $searchableText) || preg_match('/\b' . $targetChapter . '\s*[-–]?\s*bob\b/iu', $searchableText)) {
+                    $matchesChapter = true;
+                }
+
+                if ($matchesChapter) {
+                    $combinedScore = max($combinedScore, 0.85);
+                }
+            }
+
+            // 6. Agar foydalanuvchi "Bu kitob nima haqida?" yoki "Asosiy g'oyalar nimalar?" deb umumiy savol bersa,
             // kitobning kirish bo'laklariga ustuvorlik beriladi
             if ($isOverview && $chunk->ordinal <= 2) {
-                $overviewBoost = 0.62 - ($chunk->ordinal * 0.06);
+                $overviewBoost = 0.65 - ($chunk->ordinal * 0.05);
                 $combinedScore = max($combinedScore, $overviewBoost);
             }
 
@@ -263,14 +291,26 @@ class Retriever
             'asosiy g‘oya',
             'asosiy goya',
             'asosiy fikr',
+            'asosiy tushuncha',
+            'asosiy mavzu',
+            'nimalar yoritilgan',
+            'nimalar haqida',
+            'nimalar bor',
+            'bu yerda nima',
+            'nimani o\'rgan',
+            'nimani organ',
             'xulosasi nima',
             'kitob haqida ayt',
             'kitob haqida gapir',
             'what is this book about',
             'main idea',
+            'main ideas',
+            'key concepts',
             'summary of the book',
             'о чем эта книга',
             'основная идея',
+            'основные идеи',
+            'главные мысли',
         ];
 
         foreach ($overviewPhrases as $phrase) {
@@ -280,6 +320,52 @@ class Retriever
         }
 
         return false;
+    }
+
+    /**
+     * Savoldan so'ralgan aniq sahifa (bet) raqamini aniqlaydi (masalan: "1-betdagi", "2-sahifa", "page 3", "3-bet").
+     */
+    public function extractPageNumber(string $query): ?int
+    {
+        $lower = mb_strtolower(trim($query));
+        $lower = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lower);
+
+        // Pattern 1: "1-bet", "1-betdagi", "12-sahifa", "5-page", "3-стр", "4 bet", "5 sahifa"
+        if (preg_match('/(?:^|[^\d])(\d{1,4})\s*[-–—]?\s*(?:bet|sahifa|page|стр|страниц)/u', $lower, $m)) {
+            $p = (int) $m[1];
+            return $p > 0 ? $p : null;
+        }
+
+        // Pattern 2: "bet: 1", "bet 2", "sahifa 3", "page 4", "p. 5", "стр 6", "страница 7"
+        if (preg_match('/(?:^|[^\p{L}])(?:bet|sahifa|page|p|стр|страниц)[a-zа-я\']*\s*[:#\.-]?\s*(\d{1,4})\b/u', $lower, $m)) {
+            $p = (int) $m[1];
+            return $p > 0 ? $p : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Savoldan so'ralgan aniq bob raqamini aniqlaydi (masalan: "1-bob", "2-bobdagi", "chapter 3", "1-glava").
+     */
+    public function extractChapterNumber(string $query): ?int
+    {
+        $lower = mb_strtolower(trim($query));
+        $lower = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lower);
+
+        // Pattern 1: "1-bob", "1-bobdagi", "2-chapter", "3-glava", "4 bob"
+        if (preg_match('/(?:^|[^\d])(\d{1,3})\s*[-–—]?\s*(?:bob|chapter|glava|глав|bo\'lim|qism)/u', $lower, $m)) {
+            $ch = (int) $m[1];
+            return $ch > 0 ? $ch : null;
+        }
+
+        // Pattern 2: "bob 1", "chapter 2", "glava 3", "глава 4"
+        if (preg_match('/(?:^|[^\p{L}])(?:bob|chapter|ch|glava|глав|bo\'lim|qism)[a-zа-я\']*\s*[:#\.-]?\s*(\d{1,3})\b/u', $lower, $m)) {
+            $ch = (int) $m[1];
+            return $ch > 0 ? $ch : null;
+        }
+
+        return null;
     }
 
     /**

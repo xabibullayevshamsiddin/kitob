@@ -49,7 +49,7 @@ return [
             'base_url'        => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
             'chat_model'      => env('GEMINI_CHAT_MODEL', 'gemini-3.8-flash'),
             'embedding_model' => env('GEMINI_EMBEDDING_MODEL', 'gemini-embedding-2'),
-            'timeout'         => (int) env('GEMINI_TIMEOUT', 30),
+            'timeout'         => (int) env('GEMINI_TIMEOUT', 60),
         ],
     ],
 
