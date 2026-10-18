@@ -8,7 +8,7 @@ return [
     'disabled'            => 'The AI assistant is currently disabled.',
     'book_not_ready'      => 'The AI assistant is not ready for this book yet.',
     'unauthorized'        => 'You do not have access to this book.',
-    'daily_limit_reached' => 'You have reached your daily limit of :limit AI questions. Please try again tomorrow.',
+    'daily_limit_reached' => 'You have reached your daily limit of :limit AI questions. Limit resets in :time_left (at 00:00).',
     'rate_limited'        => 'Too many requests. Please wait a moment and try again.',
     'question_too_long'   => 'Question is too long (maximum :max characters).',
     'question_empty'      => 'Please enter your question.',
@@ -21,4 +21,5 @@ return [
     'no_evidence'         => 'Based on the available information in the book, I cannot reliably answer this.',
     'unsupported_page'    => 'The requested page does not contain information about this topic.',
     'partial_notice'      => 'Note: This book is indexed based on a summary only.',
+    'unintelligible'      => 'Could not understand your request. Please rephrase your question more clearly.',
 ];

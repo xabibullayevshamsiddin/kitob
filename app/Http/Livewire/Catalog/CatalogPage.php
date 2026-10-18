@@ -166,18 +166,27 @@ class CatalogPage extends Component
             $this->sortBy !== 'week_desc'
         );
 
-        $showRecommendations = $userId !== null
+        $recommendationService = app(BookRecommendationService::class);
+        $canConsiderRecommendations = $userId !== null
             && $this->search === ''
             && $this->genre === ''
             && $this->format === 'all'
-            && $this->readingStatus === 'all';
-        $recommendations = $showRecommendations
-            ? app(BookRecommendationService::class)->forUser($user, 4)
+            && $this->readingStatus === 'all'
+            && ($totalBooksCount > 4 || $recommendationService->hasHistory($user));
+
+        $recommendations = $canConsiderRecommendations
+            ? $recommendationService->forUser($user, 4)
             : collect();
 
-        if ($showRecommendations && $recommendations->isNotEmpty()) {
+        // Tavsiyalar faqatgina ular barcha kitoblarning kichik qismi bo'lgandagina (subset) ko'rsatiladi.
+        // Agar tavsiyalar barcha kitoblarni qamrab olsa, kitoblar 2 marta takrorlanmasligi uchun
+        // alohida tavsiya bo'limi ko'rsatilmaydi, to'g'ridan-to'g'ri asosiy katalogda 1 marta chiqadi.
+        $showRecommendations = $recommendations->isNotEmpty() && $totalBooksCount > $recommendations->count();
+
+        if ($showRecommendations) {
             $query->whereNotIn('id', $recommendations->pluck('id'));
         }
+
         $books = $query->paginate(12);
 
         return view('livewire.catalog.catalog-page', [

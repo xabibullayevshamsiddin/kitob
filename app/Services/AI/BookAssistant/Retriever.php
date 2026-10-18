@@ -22,6 +22,11 @@ class Retriever
         'atama', 'atamalar', 'atamalari', 'ma\'nosi', 'manosi',
         'kitob', 'kitobda', 'kitobning', 'kitobdagi', 'bob', 'bobda', 'bet', 'betda', 'mengga',
         'menga', 'aytib', 'ber', 'bering', 'tushuntir', 'tushuntiring', 'iltimos',
+        // So'zlashuv, sleng va qisqartma to'ldiruvchilar (fillers)
+        'brat', 'aka', 'akaxon', 'uka', 'opajon', 'ustoz', 'xullas', 'xosh', 'xo\'sh',
+        'tezroq', 'aniqroq', 'oddiyroq', 'qisqacha', 'etvor', 'aytvor', 'yechvor', 'echvor',
+        'tushuntirvor', 'yozvor', 'tashavor', 'korsatvor', 'topvor', 'qb', 'qilib', 'qber', 'qvor',
+        'berchi', 'koraychi', 'qani', 'e', 'hey', 'salom', 'qale', 'privet', 'hello',
         'the', 'is', 'are', 'was', 'were', 'what', 'how', 'why', 'when', 'where',
         'which', 'who', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'about', 'from',
         'and', 'or', 'that', 'this', 'book', 'chapter', 'page', 'tell', 'explain', 'mean', 'does', 'words', 'word',
@@ -67,6 +72,8 @@ class Retriever
         $isOverview = $this->isOverviewQuestion($query) || $this->isOverviewQuestion($expandedQuery);
         $targetPage = $this->extractPageNumber($query) ?? $this->extractPageNumber($expandedQuery);
         $targetChapter = $this->extractChapterNumber($query) ?? $this->extractChapterNumber($expandedQuery);
+        $targetExercise = $this->extractExerciseNumber($query) ?? $this->extractExerciseNumber($expandedQuery);
+        $isPageTask = $this->isPageTaskQuery($expandedQuery, $targetPage, $targetChapter);
 
         $book = Book::select(['id', 'title', 'ai_indexed_at', 'ai_summary'])->find($bookId);
         if (!$book) {
@@ -133,7 +140,7 @@ class Retriever
 
         // 3. Leksik (BM25 + o'zak/prefiks) ballarini hisoblash
         $queryTokens = $this->tokenizeForSearch($expandedQuery);
-        $topicalTokens = $this->extractTopicalTokens($expandedQuery, $targetPage, $targetChapter);
+        $topicalTokens = $this->extractTopicalTokens($expandedQuery, $targetPage, $targetChapter, $targetExercise);
         $hasSubstantiveTopicalTokens = !empty($topicalTokens);
 
         $scoredChunks = [];
@@ -198,8 +205,8 @@ class Retriever
                 }
             }
 
-            // Agar sof sahifa/bob konspekt savoli yoki kitob pasporti/umumiy mazmun savoli bo'lsa
-            if (!$hasSubstantiveTopicalTokens && ($isTargetPage || $isTargetChapter || $isOverview)) {
+            // Agar sof sahifa/bob konspekt savoli, sahifa amaliy vazifasi (misol yechish, tarjima, qoida) yoki umumiy mazmun savoli bo'lsa
+            if ((!$hasSubstantiveTopicalTokens || $isPageTask) && ($isTargetPage || $isTargetChapter || $isOverview)) {
                 $anyTopicalMatched = true;
             }
 
@@ -209,12 +216,18 @@ class Retriever
             // MUHIM QOIDA: Agar savol begona mavzuni sahifa raqami bilan so'rasa ("50-betda Bitcoin narxi"),
             // lekin u betda Bitcoin haqida so'z bo'lmasa, HECH QANDAY boost berilmaydi va rad qilinadi!
             if ($isTargetPage || $isTargetChapter) {
-                if (!$hasSubstantiveTopicalTokens) {
-                    // Sof sahifa/bob konspekt savoli ("12-betda nimalar yozilgan?", "4-bob mazmuni")
-                    $combinedScore = max($combinedScore, $isTargetPage ? 0.65 : 0.60);
+                if (!$hasSubstantiveTopicalTokens || $isPageTask) {
+                    // Sof sahifa/bob konspekt savoli yoki sahifadagi amaliy topshiriq (misol yechish, tarjima, qoida)
+                    $combinedScore = max($combinedScore, $isTargetPage ? 0.75 : 0.65);
+                    if ($targetExercise !== null && $this->chunkContainsExerciseNumber($searchableText, $targetExercise)) {
+                        $combinedScore = min(0.98, $combinedScore + 0.18);
+                    }
                 } elseif ($hasTopicalAlignment && $contentScore >= 0.12) {
                     // Mavzu haqiqatan ham shu sahifada/bobda bor! Shuning uchun uni eng yuqoriga chiqaramiz
                     $combinedScore = min(0.98, $contentScore + 0.22);
+                    if ($targetExercise !== null && $this->chunkContainsExerciseNumber($searchableText, $targetExercise)) {
+                        $combinedScore = min(0.98, $combinedScore + 0.10);
+                    }
                 } else {
                     // Mavzu bu sahifada YO'Q (masalan, begona mavzu yoki noto'g'ri bet).
                     // Hech qanday boost berilmaydi, past contentScore saqlanadi.
@@ -253,10 +266,9 @@ class Retriever
             return $a['ordinal'] <=> $b['ordinal'];
         });
 
-        // Agar foydalanuvchi sof sahifa yoki bob so'rovini bergan bo'lsa (alohida begona mavzu so'zlari yo'q):
-        // Masalan: "5-chi betda nimalar yozilgan" yoki "4-bob mazmuni"
+        // Agar foydalanuvchi sof sahifa yoki bob so'rovini yoki sahifadagi amaliy topshiriqni (misol, tarjima) bergan bo'lsa:
         // Begona sahifalar LLM kontekstini va manba iqtiboslarini chalkashtirmasligi uchun faqat maqsadli bo'laklarni qoldiramiz.
-        if (!$hasSubstantiveTopicalTokens) {
+        if (!$hasSubstantiveTopicalTokens || $isPageTask) {
             if ($targetPage !== null) {
                 $targetPageChunks = array_values(array_filter($scoredChunks, static fn(array $c) => !empty($c['is_target_page'])));
                 if (!empty($targetPageChunks)) {
@@ -281,6 +293,8 @@ class Retriever
             'is_overview_query' => $isOverview,
             'target_page'       => $targetPage,
             'target_chapter'    => $targetChapter,
+            'target_exercise'   => $targetExercise,
+            'is_page_task'      => $isPageTask,
             'has_topical_match' => $anyTopicalMatched,
             'topical_tokens'    => array_column($topicalTokens, 'raw'),
         ];
@@ -415,14 +429,14 @@ class Retriever
         $lower = mb_strtolower(trim($query));
         $lower = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lower);
 
-        // Pattern 1: "5 chi betda", "5-chi bet", "1-bet", "1-betdagi", "12-sahifa", "5-page", "3-стр", "4 bet", "5 sahifa"
-        if (preg_match('/(?:^|[^\d])(\d{1,4})\s*(?:[-–—]?\s*(?:(?:in)?chi|inji|nchi|nji|[яе]-?я|[йя]-?й))?\s*[-–—]?\s*(?:bet|sahifa|page|стр|страниц)[a-zа-я\']*/u', $lower, $m)) {
+        // Pattern 1: "5 chi betda", "5-chi bet", "1-bet", "1-betdagi", "12-sahifa", "5-page", "3-стр", "4 bet", "5 sahifa", "2-varaq"
+        if (preg_match('/(?:^|[^\d])(\d{1,4})\s*(?:[-–—]?\s*(?:(?:in)?chi|inji|nchi|nji|[яе]-?я|[йя]-?й))?\s*[-–—]?\s*(?:bet|sahifa|page|стр|страниц|varaq|varoq)[a-zа-я\']*/u', $lower, $m)) {
             $p = (int) $m[1];
             return $p > 0 ? $p : null;
         }
 
-        // Pattern 2: "bet: 1", "bet 2", "sahifa 3", "page 4", "p. 5", "стр 6", "страница 7"
-        if (preg_match('/(?:^|[^\p{L}])(?:bet|sahifa|page|p|стр|страниц)[a-zа-я\']*\s*[:#\.-]?\s*(\d{1,4})\b/u', $lower, $m)) {
+        // Pattern 2: "bet: 1", "bet 2", "sahifa 3", "page 4", "p. 5", "стр 6", "страница 7", "varaq 8"
+        if (preg_match('/(?:^|[^\p{L}])(?:bet|sahifa|page|p|стр|страниц|varaq|varoq)[a-zа-я\']*\s*[:#\.-]?\s*(\d{1,4})\b/u', $lower, $m)) {
             $p = (int) $m[1];
             return $p > 0 ? $p : null;
         }
@@ -451,6 +465,78 @@ class Retriever
         }
 
         return null;
+    }
+
+    /**
+     * Savoldan so'ralgan misol yoki mashq raqamini aniqlaydi (masalan: "1-misol", "2-mashq", "3-masala", "exercise 4").
+     */
+    public function extractExerciseNumber(string $query): ?int
+    {
+        $lower = mb_strtolower(trim($query));
+        $lower = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lower);
+
+        // Pattern 1: "1-misol", "1-mashq", "2-masala", "3-misolni", "4-topshiriq", "exercise 5", "task 6"
+        if (preg_match('/(?:^|[^\d])(\d{1,4})\s*[-–—]?\s*(?:misol|misl|mashq|mawq|masala|topshiriq|vazifa|savol|exercise|task|problem|задач|пример|упражнен)[a-zа-я\']*/u', $lower, $m)) {
+            $n = (int) $m[1];
+            return $n > 0 ? $n : null;
+        }
+
+        // Pattern 2: "misol: 1", "misol 2", "mashq 3", "masala 4", "№ 5", "№5", "exercise 6"
+        if (preg_match('/(?:^|[^\p{L}])(?:misol|misl|mashq|mawq|masala|topshiriq|vazifa|exercise|task|problem|№)\s*[:#\.-]?\s*(\d{1,4})\b/u', $lower, $m)) {
+            $n = (int) $m[1];
+            return $n > 0 ? $n : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Savol ko'rsatilgan sahifa/bob bo'yicha amaliy topshiriq (misol yechish, tarjima, qoida) ekanligini aniqlaydi.
+     */
+    public function isPageTaskQuery(string $query, ?int $targetPage = null, ?int $targetChapter = null): bool
+    {
+        if ($targetPage === null && $targetChapter === null) {
+            return false;
+        }
+
+        $lower = mb_strtolower($query);
+        $taskPatterns = [
+            'misol', 'misl', 'mashq', 'mawq', 'masal', 'topshir', 'vazif', 'savol',
+            'yech', 'ech', 'hisobl', 'hisbl', 'bajar', 'chiqar', 'ishl', 'javob',
+            'tarjim', 'tarjm', 'perevod', 'translat', 'lugat', 'lug\'at', 'luget', 'ozbekch', 'o\'zbekch',
+            'qoid', 'qoyd', 'shart', 'tarif', 'ta\'rif', 'formul', 'fomul', 'tushunt', 'tushint',
+            'exercise', 'task', 'problem', 'solve', 'solution',
+            'упражнен', 'задач', 'пример', 'реши', 'перевод',
+        ];
+
+        foreach ($taskPatterns as $p) {
+            if (str_contains($lower, $p)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Bo'lak matnida so'ralgan misol yoki mashq raqami (masalan "1-misol", "1.", "1)", "№1", "Exercise 1") borligini tekshiradi.
+     */
+    public function chunkContainsExerciseNumber(string $text, int $exerciseNum): bool
+    {
+        $patterns = [
+            '/(?:^|[^\d])' . $exerciseNum . '\s*[-–—]?\s*(?:misol|mashq|masala|topshiriq|vazifa|exercise|task|problem|задач|пример|упражнен)/iu',
+            '/(?:misol|mashq|masala|topshiriq|vazifa|exercise|task|problem|№)\s*[:#\.-]?\s*' . $exerciseNum . '\b/iu',
+            '/(?:^|\n|\.\s+)' . $exerciseNum . '\s*[\.\)]\s+/u',
+            '/\b№\s*' . $exerciseNum . '\b/u',
+        ];
+
+        foreach ($patterns as $p) {
+            if (preg_match($p, $text)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -630,6 +716,30 @@ class Retriever
                     $matchedTokens++;
                     $tfScore = ($stemCount * 1.6) / ($stemCount + 1.4);
                     $totalTermWeight += min(0.85, $tfScore * 0.8);
+                    continue;
+                }
+            }
+
+            // 3. Imloviy xato / Fuzzy moslik (Levenshtein masofasi)
+            if (mb_strlen($raw) >= 4) {
+                $targetLen = mb_strlen($raw);
+                $maxDist = $targetLen >= 7 ? 2 : 1;
+                $wordsInChunk = preg_split('/[^\p{L}\p{N}\']+/u', $lowerChunk, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                $fuzzyFound = false;
+                foreach ($wordsInChunk as $cw) {
+                    $cwClean = trim($cw, "'");
+                    $cLen = mb_strlen($cwClean);
+                    if (abs($cLen - $targetLen) > $maxDist || $cLen < 3) {
+                        continue;
+                    }
+                    if (levenshtein($raw, $cwClean) <= $maxDist || levenshtein($stem, mb_substr($cwClean, 0, mb_strlen($stem))) <= $maxDist) {
+                        $fuzzyFound = true;
+                        break;
+                    }
+                }
+                if ($fuzzyFound) {
+                    $matchedTokens++;
+                    $totalTermWeight += 0.70;
                 }
             }
         }
@@ -659,7 +769,7 @@ class Retriever
      *
      * @return array<int, array{raw: string, stem: string}>
      */
-    public function extractTopicalTokens(string $query, ?int $targetPage = null, ?int $targetChapter = null): array
+    public function extractTopicalTokens(string $query, ?int $targetPage = null, ?int $targetChapter = null, ?int $targetExercise = null): array
     {
         $allTokens = $this->tokenizeForSearch($query);
         $structuralStems = [
@@ -671,6 +781,17 @@ class Retriever
             'kitob', 'knig', 'book', 'darslik',
             'varoq', 'varaq', 'list', 'jild',
             'muallif', 'yozuvch', 'avtor', 'nashr', 'janr',
+            // Mashq, misol, masala va yechish vazifa so'zlari
+            'misol', 'mashq', 'masal', 'topshir', 'savol', 'vazif', 'exercis', 'task', 'problem',
+            'yech', 'yechim', 'bajar', 'hisobl', 'chiqar', 'ishl', 'javob', 'solut', 'solv',
+            'primer', 'zadach', 'uprajnen', 'pravil', 'otvet', 'reshen',
+            // Tarjima va til vazifa so'zlari
+            'tarjim', 'perevod', 'translat', 'lugat', 'lug\'at', 'ozbekch', 'o\'zbekch',
+            'matn', 'juml', 'qil', 'yoz', 'korsat', 'ko\'rsat',
+            // Sleng va norasmiy murojaatlar
+            'brat', 'aka', 'akaxon', 'uka', 'ustoz', 'xullas', 'tezroq', 'aniqroq', 'oddiyroq',
+            'etvor', 'aytvor', 'yechvor', 'echvor', 'tushuntirvor', 'tushintirvor', 'yozvor', 'tashavor',
+            'korsatvor', 'topvor', 'qb', 'qvor', 'qber', 'salom', 'privet', 'hello',
         ];
 
         $topical = [];
@@ -678,7 +799,7 @@ class Retriever
             $raw = $t['raw'];
             $stem = $t['stem'];
 
-            // Raqamlar yoki so'ralgan sahifa/bob raqamini o'tkazib yuborish
+            // Raqamlar yoki so'ralgan sahifa/bob/misol raqamini o'tkazib yuborish
             if (is_numeric($raw)) {
                 continue;
             }
@@ -686,6 +807,9 @@ class Retriever
                 continue;
             }
             if ($targetChapter !== null && (string) $targetChapter === $raw) {
+                continue;
+            }
+            if ($targetExercise !== null && (string) $targetExercise === $raw) {
                 continue;
             }
 
@@ -728,6 +852,25 @@ class Retriever
             $pattern = '/(?<![\p{L}\p{N}])(' . preg_quote($raw, '/') . '|' . preg_quote($stem, '/') . '[\p{L}\p{N}]*)(?![\p{L}\p{N}])/u';
             if (preg_match($pattern, $lowerChunk)) {
                 $matches++;
+                continue;
+            }
+
+            // Imloviy xato bilan yozilgan bo'lsa (Fuzzy tekshiruv)
+            if (mb_strlen($raw) >= 4) {
+                $targetLen = mb_strlen($raw);
+                $maxDist = $targetLen >= 7 ? 2 : 1;
+                $wordsInChunk = preg_split('/[^\p{L}\p{N}\']+/u', $lowerChunk, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                foreach ($wordsInChunk as $cw) {
+                    $cwClean = trim($cw, "'");
+                    $cLen = mb_strlen($cwClean);
+                    if (abs($cLen - $targetLen) > $maxDist || $cLen < 3) {
+                        continue;
+                    }
+                    if (levenshtein($raw, $cwClean) <= $maxDist || levenshtein($stem, mb_substr($cwClean, 0, mb_strlen($stem))) <= $maxDist) {
+                        $matches++;
+                        break;
+                    }
+                }
             }
         }
 

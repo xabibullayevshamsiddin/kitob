@@ -1,8 +1,10 @@
-<div class="max-w-7xl mx-auto space-y-6 pb-16" 
+<div class="max-w-7xl mx-auto space-y-6 pb-16"
     x-data="liveStudioController({
         isHost: @js($isHost),
         userId: @js(auth()->id()),
         eventId: {{ $event->id }},
+        eventTitle: @js($event->title),
+        hostName: @js($event->hostUser?->name ?? ''),
         startedAt: {{ $event->started_at ? $event->started_at->timestamp : ($event->created_at ? $event->created_at->timestamp : now()->timestamp) }},
         serverNow: {{ now()->timestamp }},
         initialLikes: {{ (int) ($event->likes_count ?? 0) }},
@@ -10,6 +12,7 @@
         signalSendUrl: @js(route('live.signal.send', $event)),
         signalPollUrl: @js(route('live.signal.poll', $event)),
         csrfToken: @js(csrf_token()),
+        liveUrl: @js(route('live.show', $event)),
         liveIndexUrl: @js($event->group_id ? route('groups.show', $event->group_id) : route('live.index')),
         micOn: @js(__('site.live.mic_on')),
         micOff: @js(__('site.live.mic_off')),
@@ -92,19 +95,81 @@
 
 
     <!-- ── 2. TWO-COLUMN STUDIO GRID ── -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 live-studio-grid">
 
         <!-- ════ LEFT: BROADCAST VIDEO & HOST CONSOLE (8 Cols) ════ -->
-        <div class="lg:col-span-7 xl:col-span-8 space-y-5">
+        <div class="lg:col-span-7 xl:col-span-8 space-y-5 live-video-column">
+
+            <!-- 0. Placeholder when Docked Mini Mode is active (keeps page layout 100% stable) -->
+            <div x-show="isDockedMini" x-cloak
+                 class="w-full aspect-video rounded-panel bg-ink-950/70 border-2 border-dashed border-amber-500/30 flex flex-col items-center justify-center p-6 text-center space-y-3 transition-all">
+                <div class="w-12 h-12 rounded-full bg-ink-900 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-md">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M13 13h5v4h-5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-paper font-serif">Video ixcham burchakda ko‘rsatilmoqda</p>
+                    <p class="text-xs text-mist font-mono mt-0.5">Efirni kuzatgan holda sahifadagi barcha ma'lumotlar bilan ishlashingiz mumkin</p>
+                </div>
+                <button type="button" @click="restoreDockedVideo()"
+                        class="ks-btn-primary text-xs py-1.5 px-3.5 font-mono flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    <span>Asosiy ekranga qaytarish</span>
+                </button>
+            </div>
 
             <!-- Video Screen Viewport -->
-            <div class="relative w-full aspect-video rounded-panel bg-ink-950 border border-ink-border shadow-soft overflow-hidden flex items-center justify-center group"
+            <div id="liveVideoViewport" class="relative w-full aspect-video rounded-panel bg-ink-950 border border-ink-border shadow-soft overflow-hidden flex items-center justify-center group transition-all duration-300"
+                 :class="{ 'rounded-none': isVideoFullscreen, 'live-viewport-docked': isDockedMini }"
                  @click="if (!isHost && (needsUnmute || isViewerMuted)) unmuteAudio()">
                 
+                <!-- Native Picture-in-Picture Active Notice Overlay -->
+                <div x-show="isPipActive" x-cloak
+                     class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-ink-950/90 backdrop-blur-md p-6 text-center space-y-3">
+                    <div class="w-14 h-14 rounded-2xl bg-ink-900 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-xl">
+                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                            <rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor" fill-opacity="0.3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-paper font-serif">Video mini oynada ijro etilmoqda</p>
+                        <p class="text-xs text-mist font-mono mt-0.5">Boshqa dasturlar yoki sahifalarga o‘tsangiz ham efir davom etadi</p>
+                    </div>
+                    <button type="button" @click.stop="exitPip()" class="ks-btn-primary text-xs py-2 px-4 font-mono">
+                        Asosiy oynaga qaytarish
+                    </button>
+                </div>
+
+                <!-- Docked Mini Mode Compact Top Bar Overlay -->
+                <div x-show="isDockedMini" x-cloak
+                     class="absolute top-2 inset-x-2 z-40 flex items-center justify-between gap-2 px-2.5 py-1 rounded-xl bg-ink-950/90 backdrop-blur-md border border-white/10 font-mono text-[11px] shadow-lg">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="relative flex h-2 w-2 shrink-0">
+                            <span class="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping"></span>
+                            <span class="relative inline-flex h-2 w-2 rounded-full bg-rose-500"></span>
+                        </span>
+                        <span class="truncate text-paper font-semibold">{{ $event->title }}</span>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" @click.stop="restoreDockedVideo()"
+                                class="p-1 rounded text-mist hover:text-amber-300 hover:bg-white/10 transition-colors"
+                                title="Kattalashtirish (Asosiy holatga qaytish)">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                        </button>
+                        <button type="button" @click.stop="restoreDockedVideo()"
+                                class="p-1 rounded text-mist hover:text-rose-400 hover:bg-white/10 transition-colors"
+                                title="Mini oynani yopish">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Live Video Element (Webcam / Stream) -->
-                <video id="liveVideoPlayer" autoplay playsinline class="w-full h-full object-cover transition-opacity duration-300"
+                <video id="liveVideoPlayer" autoplay playsinline class="w-full h-full transition-opacity duration-300"
+                       :class="[videoFitMode === 'contain' ? 'object-contain bg-black' : 'object-cover', { 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }]"
                        :style="videoFilterStyle"
-                       :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }"
                        @loadedmetadata="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null)"
                        @playing="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null)">
                 </video>
@@ -166,7 +231,7 @@
                 </div>
 
                 <!-- Top Left Overlays (LIVE badge + Timer + Viewers count) -->
-                <div class="absolute top-4 left-4 flex items-center gap-2 z-20">
+                <div x-show="!isDockedMini" class="absolute top-4 left-4 flex items-center gap-2 z-20">
                     <div class="px-2.5 py-0.5 rounded-pill bg-[#C1392B] text-paper font-mono text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg backdrop-blur-md">
                         <span class="w-1.5 h-1.5 rounded-full bg-paper animate-ping"></span>
                         <span>LIVE</span>
@@ -193,7 +258,7 @@
                 </div>
 
                 <!-- Top Right Recording Overlay -->
-                <div x-show="isRecording" class="absolute top-4 right-4 z-20 animate-pulse">
+                <div x-show="isRecording && !isDockedMini" class="absolute top-4 right-4 z-20 animate-pulse">
                     <div class="px-2.5 py-0.5 rounded-pill bg-[#C1392B] text-paper font-mono text-xs font-bold flex items-center gap-1.5 shadow-lg">
                         <span class="w-2 h-2 rounded-full bg-paper animate-ping"></span>
                         <span>REC <span x-text="formattedRecordDuration">00:00</span></span>
@@ -201,7 +266,7 @@
                 </div>
 
                 <!-- Bottom Left Audio VU Meter -->
-                <div class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
+                <div x-show="!isDockedMini" class="absolute bottom-4 left-4 z-20 flex items-center gap-2">
                     <div class="flex items-center gap-2 bg-ink-950/80 backdrop-blur-md px-2.5 py-1 rounded-btn border border-ink-border" title="Ovoz signali kuchi">
                         <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
                         <div class="flex items-end gap-1 h-3.5">
@@ -230,7 +295,7 @@
                 </div>
 
                 <!-- Floating Hearts Container (Instagram / TikTok Live style) -->
-                <div class="absolute bottom-16 right-4 w-32 h-72 pointer-events-none z-30 overflow-hidden" aria-hidden="true">
+                <div x-show="!isDockedMini" class="absolute bottom-16 right-4 w-32 h-72 pointer-events-none z-30 overflow-hidden" aria-hidden="true">
                     <template x-for="heart in floatingHearts" :key="heart.id">
                         <div class="ks-floating-heart absolute bottom-0 right-4 select-none"
                              :style="{
@@ -247,8 +312,8 @@
                     </template>
                 </div>
 
-                <!-- Bottom Right Watermark & Interactive Like Button -->
-                <div class="absolute bottom-4 right-4 z-30 flex items-center gap-2">
+                <!-- Bottom Right Watermark & Interactive Like Button & Video Controls -->
+                <div x-show="!isDockedMini" class="absolute bottom-4 right-4 z-30 flex items-center gap-2">
                     <div class="hidden sm:flex items-center gap-1.5 bg-ink-950/80 backdrop-blur-md px-2 py-1 rounded-pill text-[10px] text-mist font-mono border border-ink-border">
                         <span>Kitobxon Studio</span>
                     </div>
@@ -276,6 +341,67 @@
                         <span class="font-bold tabular-nums text-xs" x-text="formatNumber(likesCount)">0</span>
                     </span>
                     @endauth
+
+                    <!-- Video viewing controls -->
+                    <div class="relative" @click.outside="videoSettingsOpen = false">
+                        <button type="button"
+                                @click.stop="videoSettingsOpen = !videoSettingsOpen"
+                                class="inline-flex items-center justify-center w-9 h-9 rounded-btn bg-ink-950/85 hover:bg-ink-900 backdrop-blur-md border border-ink-border text-paper shadow-lg transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
+                                :class="videoSettingsOpen ? 'text-amber-300 border-amber-400/50 bg-ink-900' : ''"
+                                aria-label="Video sozlamalari"
+                                :aria-expanded="videoSettingsOpen.toString()">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 6h16M4 12h16M4 18h16"/>
+                                <circle cx="9" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+                                <circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+                                <circle cx="10" cy="18" r="1.5" fill="currentColor" stroke="none"/>
+                            </svg>
+                        </button>
+
+                        <div x-show="videoSettingsOpen" x-cloak x-transition
+                             class="absolute bottom-full right-0 mb-2 w-60 p-1.5 rounded-panel bg-ink-950/95 border border-ink-border backdrop-blur-xl shadow-2xl font-mono text-[11px]">
+                            <div class="px-2.5 py-1.5 text-[10px] uppercase tracking-wider text-mist border-b border-ink-border/70 mb-1">
+                                Video sozlamalari
+                            </div>
+
+                            <button type="button" @click="toggleVideoFullscreen(); videoSettingsOpen = false"
+                                    x-show="canUseFullscreen || isVideoFullscreen"
+                                    class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                                    <span x-text="isVideoFullscreen ? 'To‘liq ekrandan chiqish' : 'To‘liq ekran'"></span>
+                                </span>
+                            </button>
+
+                            <button type="button" @click="activateMiniPlayer(); videoSettingsOpen = false"
+                                    class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M13 13h5v4h-5z"/></svg>
+                                    <span x-text="isPipActive ? 'Mini oynadan chiqish' : 'Mini oynada ko‘rish'"></span>
+                                </span>
+                                <span class="text-amber-300 text-[10px]" x-show="isPipActive" x-cloak>Faol</span>
+                            </button>
+
+                            <button type="button" @click="toggleDockedMini(); videoSettingsOpen = false"
+                                    class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="4" y="13" width="7" height="7" rx="1"/></svg>
+                                    <span x-text="isDockedMini ? 'Burchakdan chiqarish' : 'Burchakka qadash'"></span>
+                                </span>
+                                <span class="text-amber-300 text-[10px]" x-show="isDockedMini" x-cloak>Faol</span>
+                            </button>
+
+                            <button type="button" @click="setVideoFit(videoFitMode === 'cover' ? 'contain' : 'cover')"
+                                    class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h2M15 15h2"/></svg>
+                                    <span>Kadr rejimi</span>
+                                </span>
+                                <span class="text-amber-300" x-text="videoFitMode === 'cover' ? 'To‘ldiradi' : 'To‘liq ko‘rsatadi'"></span>
+                            </button>
+
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -390,14 +516,14 @@
                                         <span class="text-xs text-paper font-medium">Studio HD Enhancer</span>
                                         <span class="text-[9px] px-1 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono">PRO</span>
                                     </div>
-                                    <span class="text-[10px] font-mono text-amber-300" x-text="videoEnhance === 'bright' ? 'Yorqin' : (videoEnhance === 'sharp' ? 'Ultra Tiniq' : (videoEnhance === 'hd' ? 'Tiniq HD' : 'O‘chirilgan'))"></span>
+                                    <span class="text-[10px] font-mono text-amber-300" x-text="videoEnhance === 'bright' ? 'Yorqin' : (videoEnhance === 'sharp' ? 'Ultra Tiniq' : (videoEnhance === 'hd' ? 'Studio Clean' : 'O‘chirilgan'))"></span>
                                 </div>
-                                <p class="text-[10px] text-mist">Veb-kamera xiraligini yo'qotib, kontrast va tabiiy ranglarni kuchaytiradi</p>
+                                <p class="text-[10px] text-mist">Sayt tasvirni biroz oqartiradi, rangni tiklaydi va mayda shovqinni yumshatadi</p>
                                 <div class="grid grid-cols-4 gap-1.5 pt-1 font-mono text-[11px]">
                                     <button type="button" @click="setVideoEnhance('hd')"
                                         :class="videoEnhance === 'hd' ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-800 text-mist hover:text-paper'"
                                         class="py-1 px-1 rounded text-center transition-all">
-                                        Tiniq HD
+                                        Studio Clean
                                     </button>
                                     <button type="button" @click="setVideoEnhance('sharp')"
                                         :class="videoEnhance === 'sharp' ? 'bg-amber-400 text-ink-950 font-bold' : 'bg-ink-800 text-mist hover:text-paper'"
@@ -464,7 +590,7 @@
         <!-- ════ RIGHT: REAL-TIME CHAT & QUESTIONS STREAM (4-5 Cols) ════ -->
         {{-- Alo hida chat komponent: wire:poll.2s bilan avtomatik yangilanadi (umumiy chat kabi).
              WebRTC skripti bu blokda emas — polling video ulanishini BUZMAYDI. --}}
-        <div class="lg:col-span-5 xl:col-span-4 h-[650px]">
+        <div class="lg:col-span-5 xl:col-span-4 h-[650px] live-chat-column">
             @livewire('live.live-chat-panel', ['event' => $event, 'isHost' => $isHost], key('live-chat-'.$event->id))
         </div>
 
@@ -490,6 +616,46 @@
             will-change: transform, opacity;
             pointer-events: none;
         }
+
+        #liveVideoViewport:fullscreen,
+        #liveVideoViewport:-webkit-full-screen {
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            aspect-ratio: auto;
+            border-radius: 0;
+            border: 0;
+            background: #05070d;
+        }
+
+        #liveVideoViewport:fullscreen #liveVideoPlayer,
+        #liveVideoViewport:-webkit-full-screen #liveVideoPlayer {
+            object-fit: contain;
+        }
+
+        .live-viewport-docked {
+            position: fixed !important;
+            bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem)) !important;
+            left: 1rem !important;
+            width: min(90vw, 360px) !important;
+            aspect-ratio: 16 / 9 !important;
+            z-index: 55 !important;
+            border-radius: 1rem !important;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(245, 158, 11, 0.4) !important;
+        }
+        @media (max-width: 640px) {
+            .live-viewport-docked {
+                bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+                left: 0.75rem !important;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #liveVideoPlayer {
+                transition: none;
+            }
+        }
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
@@ -550,6 +716,17 @@ function liveStudioController(config) {
         isScreenSharing: false,
         isRecording: false,
         showDeviceSettings: false,
+        videoSettingsOpen: false,
+        videoFitMode: localStorage.getItem('kitob_video_fit') === 'contain' ? 'contain' : 'cover',
+        isVideoFullscreen: false,
+        canUseFullscreen: typeof document !== 'undefined' && !!(
+            document.fullscreenEnabled ||
+            document.webkitFullscreenEnabled ||
+            (typeof HTMLVideoElement !== 'undefined' && HTMLVideoElement.prototype.webkitEnterFullscreen)
+        ),
+        canUsePip: typeof document !== 'undefined' && !!document.pictureInPictureEnabled,
+        isPipActive: false,
+        isDockedMini: false,
 
         // Real-time Likes (Instagram/TikTok uslubi — cheksiz tap, batch'langan) & Viewers
         likesCount: Number(config.initialLikes || 0),
@@ -630,6 +807,27 @@ function liveStudioController(config) {
         },
 
         async initStudio() {
+            const syncFullscreenState = () => {
+                const viewport = document.getElementById('liveVideoViewport');
+                this.isVideoFullscreen = !!viewport && (
+                    document.fullscreenElement === viewport ||
+                    document.webkitFullscreenElement === viewport
+                );
+            };
+            document.addEventListener('fullscreenchange', syncFullscreenState);
+            document.addEventListener('webkitfullscreenchange', syncFullscreenState);
+
+            // Picture-in-Picture (Rasm ichida rasm) holatini kuzatish
+            const videoEl = document.getElementById('liveVideoPlayer');
+            if (videoEl) {
+                videoEl.addEventListener('enterpictureinpicture', () => {
+                    this.isPipActive = true;
+                });
+                videoEl.addEventListener('leavepictureinpicture', () => {
+                    this.isPipActive = false;
+                });
+            }
+
             // 1. Duration Synchronizer (server-clock aligned)
             const clientNow = Math.floor(Date.now() / 1000);
             const clockSkew = clientNow - serverNow;
@@ -753,6 +951,107 @@ function liveStudioController(config) {
             if (chatEl) {
                 chatEl.scrollTop = chatEl.scrollHeight;
             }
+        },
+
+        setVideoFit(mode) {
+            this.videoFitMode = mode === 'contain' ? 'contain' : 'cover';
+            try {
+                localStorage.setItem('kitob_video_fit', this.videoFitMode);
+            } catch (e) {}
+        },
+
+        async toggleVideoFullscreen() {
+            const viewport = document.getElementById('liveVideoViewport');
+            const videoEl = document.getElementById('liveVideoPlayer');
+            if (!viewport) return;
+
+            // Agar burchakka qadalgan mini rejim faol bo'lsa, to'liq ekranga o'tganda uni to'xtatamiz
+            if (this.isDockedMini) {
+                this.isDockedMini = false;
+            }
+
+            try {
+                if (document.fullscreenElement || document.webkitFullscreenElement) {
+                    if (document.exitFullscreen) {
+                        await document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                    return;
+                }
+
+                if (viewport.requestFullscreen) {
+                    await viewport.requestFullscreen();
+                } else if (viewport.webkitRequestFullscreen) {
+                    viewport.webkitRequestFullscreen();
+                } else if (videoEl && videoEl.webkitEnterFullscreen) {
+                    videoEl.webkitEnterFullscreen();
+                }
+            } catch (err) {
+                console.warn('[VIDEO] Fullscreen unavailable:', err);
+            }
+        },
+
+        async activateMiniPlayer() {
+            const videoEl = document.getElementById('liveVideoPlayer');
+
+            // 1. Agar brauzerning haqiqiy Picture-in-Picture (Rasm ichida rasm / mini oyna) imkoniyati bo'lsa:
+            if (this.canUsePip && videoEl && !videoEl.disablePictureInPicture && typeof videoEl.requestPictureInPicture === 'function') {
+                try {
+                    if (document.pictureInPictureElement) {
+                        await document.exitPictureInPicture();
+                        this.isPipActive = false;
+                        return;
+                    } else {
+                        await videoEl.requestPictureInPicture();
+                        this.isPipActive = true;
+                        return;
+                    }
+                } catch (pipErr) {
+                    console.warn('[PIP] Picture-in-Picture failed, falling back to docked mode:', pipErr);
+                }
+            }
+
+            // 2. Agar PiP mavjud bo'lmasa yoki xato bersa, burchak mini rejimiga o'tish
+            this.toggleDockedMini();
+        },
+
+        toggleDockedMini() {
+            this.isDockedMini = !this.isDockedMini;
+            this.syncLiveStateForNavigation();
+        },
+
+        restoreDockedVideo() {
+            this.isDockedMini = false;
+        },
+
+        async exitPip() {
+            if (document.pictureInPictureElement) {
+                try {
+                    await document.exitPictureInPicture();
+                } catch (e) {}
+            }
+            this.isPipActive = false;
+        },
+
+        syncLiveStateForNavigation() {
+            const state = {
+                eventId: this.eventId,
+                title: config.eventTitle || 'Jonli efir',
+                hostName: config.hostName || '',
+                liveUrl: config.liveUrl || window.location.href,
+                signalSendUrl: this.signalSendUrl,
+                signalPollUrl: this.signalPollUrl,
+                csrfToken: this.csrfToken,
+                userId: config.userId || null,
+                timestamp: Date.now()
+            };
+
+            try {
+                localStorage.setItem('kitobxon_live_state', JSON.stringify(state));
+            } catch (e) {}
+
+            window.dispatchEvent(new CustomEvent('activate-global-live-player', { detail: state }));
         },
 
         // Viewer faqat KUZATUVCHI: hostning kamera/mikrofon holatini oladi,
@@ -1387,15 +1686,65 @@ function liveStudioController(config) {
             }
         },
 
+        async optimizeCameraTrack(track) {
+            if (!track || typeof track.getCapabilities !== 'function' || typeof track.applyConstraints !== 'function') {
+                return;
+            }
+
+            try {
+                const capabilities = track.getCapabilities() || {};
+                const supported = {};
+                const enumValue = (name, preferred) => {
+                    const values = capabilities[name];
+                    if (Array.isArray(values) && values.includes(preferred)) {
+                        supported[name] = preferred;
+                    }
+                };
+                const rangeValue = (name, ratio) => {
+                    const range = capabilities[name];
+                    if (!range || !Number.isFinite(range.min) || !Number.isFinite(range.max)) {
+                        return;
+                    }
+                    supported[name] = range.min + ((range.max - range.min) * ratio);
+                };
+
+                // Keep the camera's own adaptive controls active in changing room light.
+                enumValue('exposureMode', 'continuous');
+                enumValue('whiteBalanceMode', 'continuous');
+                enumValue('focusMode', 'continuous');
+
+                // Only use hardware controls when the browser exposes a safe numeric range.
+                // A mild lift is intentional; the CSS preset handles the final preview polish.
+                rangeValue('brightness', 0.58);
+                rangeValue('contrast', 0.54);
+                rangeValue('saturation', 0.52);
+
+                if (Object.keys(supported).length > 0) {
+                    await track.applyConstraints(supported);
+                }
+
+                // Ask WebRTC encoders to preserve camera detail where supported.
+                if ('contentHint' in track) {
+                    track.contentHint = 'detail';
+                }
+            } catch (err) {
+                // Camera capability support is inconsistent across browsers and devices.
+                // Rendering and streaming must continue when a vendor rejects a hint.
+                console.debug('[CAMERA] Optional image tuning skipped:', err);
+            }
+        },
+
         get videoFilterStyle() {
             if (this.videoEnhance === 'bright') {
-                return 'filter: contrast(1.18) saturate(1.22) brightness(1.12);';
+                return 'filter: brightness(1.24) contrast(1.05) saturate(1.08) blur(0.18px);';
             }
             if (this.videoEnhance === 'sharp') {
-                return 'filter: contrast(1.25) saturate(1.10) brightness(1.02);';
+                return 'filter: brightness(1.08) contrast(1.12) saturate(1.06) blur(0.08px);';
             }
             if (this.videoEnhance === 'hd' || this.videoEnhance === true || this.videoEnhance === 'true') {
-                return 'filter: contrast(1.12) saturate(1.15) brightness(1.04);';
+                // Default low-light cleanup: lift shadows without washing out skin tones,
+                // then use a barely perceptible blur to soften webcam sensor grain.
+                return 'filter: brightness(1.16) contrast(1.08) saturate(1.12) blur(0.22px);';
             }
             return '';
         },
@@ -1542,6 +1891,7 @@ function liveStudioController(config) {
                 const newVideoStream = await this.acquireVideoStream(constraints);
                 const newVideoTrack = newVideoStream.getVideoTracks()[0];
                 if (newVideoTrack) {
+                    await this.optimizeCameraTrack(newVideoTrack);
                     newVideoTrack.enabled = this.isVideoOn;
 
                     const audioTracks = this.localStream.getAudioTracks();
@@ -1566,6 +1916,7 @@ function liveStudioController(config) {
                     });
                     const fbTrack = fallbackStream.getVideoTracks()[0];
                     if (fbTrack) {
+                        await this.optimizeCameraTrack(fbTrack);
                         fbTrack.enabled = this.isVideoOn;
                         this.localStream.addTrack(fbTrack);
                         const videoEl = document.getElementById('liveVideoPlayer');
@@ -1657,6 +2008,7 @@ function liveStudioController(config) {
                 // Haqiqiy olingan kamera aniqligi va kadr tezligini konsolga chiqarish
                 const vTrack = this.localStream.getVideoTracks()[0];
                 if (vTrack) {
+                    await this.optimizeCameraTrack(vTrack);
                     this.updateCameraStatus(vTrack);
                 }
 
@@ -1811,6 +2163,7 @@ function liveStudioController(config) {
                     const newVideoStream = await this.acquireVideoStream(this.getVideoConstraints());
                     const newVideoTrack = newVideoStream.getVideoTracks()[0];
                     if (newVideoTrack) {
+                        await this.optimizeCameraTrack(newVideoTrack);
                         newVideoTrack.enabled = this.isVideoOn;
 
                         const audioTracks = this.localStream.getAudioTracks();
@@ -1912,6 +2265,7 @@ function liveStudioController(config) {
                     const videoStream = await this.acquireVideoStream(this.getVideoConstraints());
                     const newTrack = videoStream.getVideoTracks()[0];
                     if (newTrack) {
+                        await this.optimizeCameraTrack(newTrack);
                         newTrack.enabled = true;
                         if (!this.localStream) this.localStream = new MediaStream();
                         const old = this.localStream.getVideoTracks()[0];

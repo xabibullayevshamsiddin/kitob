@@ -88,6 +88,22 @@ class LiveStreamingTest extends TestCase
         $response->assertOk();
         $response->assertSee('liveVideoPlayer');
         $response->assertSee('Fizika Jonli Efiri');
+        $response->assertSee('Mini oynada ko', false);
+    }
+
+    public function test_inline_live_mini_player_is_available_without_a_popup(): void
+    {
+        $host = $this->makeUser('mini_host');
+        $event = $this->makeLiveEvent($host, 'Mini Player Efiri');
+
+        $response = $this->get(route('live.show', $event));
+
+        $response->assertOk();
+        $response->assertSee('globalLivePlayer', false);
+        $response->assertSee('activate-global-live-player', false);
+        $response->assertSee('liveUrl:', false);
+        $response->assertDontSee('kitobxonLiveMini', false);
+        $response->assertDontSee('Oynali kamera');
     }
 
     public function test_permission_mode_settings_visible_only_to_host(): void

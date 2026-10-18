@@ -47,7 +47,7 @@ class BookAiAssistantTest extends TestCase
 
         config([
             'ai.enabled'              => true,
-            'ai.daily_limit_per_user' => 20,
+            'ai.daily_limit_per_user' => 10,
             'ai.minute_throttle'      => 6,
             'ai.max_question_chars'   => 500,
             'ai.max_context_chunks'   => 6,
@@ -453,6 +453,29 @@ class BookAiAssistantTest extends TestCase
 
         $this->assertSame('ok', $t1['status']);
         $this->assertSame('error', $t2['status']);
+
+        // D) Admin foydalanuvchiga kunlik 50 ta limit berilishi
+        $adminUser = $this->createUser(['role' => 'admin']);
+        config(['ai.daily_limit_per_user' => 2, 'ai.daily_limit_per_admin' => 50, 'ai.minute_throttle' => 100]);
+        RateLimiter::clear('book_ai_ask:' . $adminUser->id);
+
+        $a1 = $assistant->ask($adminUser, $book->id, 'Tenglama va funksiya formulalari haqida ayt');
+        $a2 = $assistant->ask($adminUser, $book->id, 'Tenglama va funksiya grafigi haqida ayt');
+        $a3 = $assistant->ask($adminUser, $book->id, 'Tenglama va funksiya yechimi haqida ayt');
+        $this->assertSame('ok', $a1['status']);
+        $this->assertSame('ok', $a2['status']);
+        $this->assertSame('ok', $a3['status'], 'Admin uchun limit 50 ta bo\'lgani sababli 3-savol o\'tishi shart!');
+
+        // E) Livewire komponentida limit tugaganda Yuborish tugmasi qulflanishi
+        config(['ai.daily_limit_per_user' => 1]);
+        $limitedUser = $this->createUser();
+        RateLimiter::clear('book_ai_ask:' . $limitedUser->id);
+        $assistant->ask($limitedUser, $book->id, 'Tenglama va funksiya nima?');
+
+        Livewire::actingAs($limitedUser)
+            ->test(\App\Http\Livewire\Book\BookAssistant::class, ['book' => $book])
+            ->assertSee('Yuborish qulflangan')
+            ->assertSee('Kunlik AI savollar limitingiz (1 ta) tugadi');
     }
 
     /**
@@ -1382,6 +1405,136 @@ class BookAiAssistantTest extends TestCase
         $this->assertNotEmpty($res['sources']);
         $this->assertSame(0, $res['sources'][0]['index']);
         $this->assertStringContainsString('Kitob pasporti', $res['sources'][0]['label']);
+    }
+
+    /**
+     * Retriever sahifadagi misol yechish, tarjima yoki mashq vazifalarini aniqlay olishi testi.
+     */
+    public function test_retriever_identifies_page_task_query_and_extracts_exercise_number(): void
+    {
+        $retriever = app(\App\Services\AI\BookAssistant\Retriever::class);
+
+        // 1. Misol raqamini aniqlash
+        $this->assertSame(1, $retriever->extractExerciseNumber('5-betdagi 1-misolni yechib ber'));
+        $this->assertSame(12, $retriever->extractExerciseNumber('12-mashqni yechib ber'));
+        $this->assertSame(3, $retriever->extractExerciseNumber('3-masala yechimi'));
+        $this->assertSame(4, $retriever->extractExerciseNumber('exercise 4'));
+        $this->assertSame(5, $retriever->extractExerciseNumber('№ 5 topshiriq'));
+
+        // 2. Sahifa vazifasini aniqlash (isPageTaskQuery)
+        $this->assertTrue($retriever->isPageTaskQuery('5-betdagi 1-misolni yechib ber', 5, null));
+        $this->assertTrue($retriever->isPageTaskQuery('3-betdagi matnni tarjima qilib ber', 3, null));
+        $this->assertTrue($retriever->isPageTaskQuery('4-betdagi qoidani tushuntirib ber', 4, null));
+
+        // 3. Topikal tokenlar tozalanishi: "misol", "yechib", "tarjima" kabi buyruq so'zlari
+        // begona mavzu sifatida hisoblanmaydi
+        $topical = $retriever->extractTopicalTokens('5-betdagi 1-misolni yechib ber', 5, null, 1);
+        $this->assertEmpty($topical);
+
+        $topicalTranslation = $retriever->extractTopicalTokens('3-betdagi matnni tarjima qilib ber', 3, null, null);
+        $this->assertEmpty($topicalTranslation);
+    }
+
+    /**
+     * Darslikdan sahifadagi misol so'ralganda (masalan "5-betdagi 1-misolni yechib ber"),
+     * Retriever sahifa bo'lagini yuqori ball bilan topishi va RelevanceGate rad etmasligi testi.
+     */
+    public function test_retriever_scores_and_passes_relevance_gate_for_page_problem_solving(): void
+    {
+        $book = Book::create([
+            'title'           => 'Algebra 8-sinf',
+            'slug'            => 'algebra-8-' . uniqid(),
+            'author'          => 'Sh.A.Alimov',
+            'genre'           => 'Darslik',
+            'week_number'     => 1,
+            'description'     => 'Algebra darsligi',
+            'is_active'       => true,
+            'ai_enabled'      => true,
+            'ai_index_status' => 'ready',
+        ]);
+
+        BookChunk::create([
+            'book_id'         => $book->id,
+            'ordinal'         => 1,
+            'page_start'      => 5,
+            'page_end'        => 5,
+            'text'            => "1. Tenglamani yeching: 2x + 5 = 15.\n2. Tenglamani yeching: 3x - 6 = 0.",
+            'token_count'     => 25,
+            'source_label'    => '5-bet',
+            'content_hash'    => hash('sha256', "1. Tenglamani yeching: 2x + 5 = 15.\n2. Tenglamani yeching: 3x - 6 = 0."),
+            'embedding_model' => 'none',
+        ]);
+
+        $retriever = app(\App\Services\AI\BookAssistant\Retriever::class);
+        $gate = app(\App\Services\AI\BookAssistant\RelevanceGate::class);
+
+        $res = $retriever->retrieve($book->id, '5-betdagi 1-misolni yechib ber');
+        $this->assertNotEmpty($res['chunks']);
+        $this->assertSame(5, $res['target_page']);
+        $this->assertSame(1, $res['target_exercise']);
+        $this->assertTrue($res['is_page_task']);
+        $this->assertTrue($res['has_topical_match']);
+        $this->assertGreaterThanOrEqual(0.70, $res['top_score']);
+
+        $gateEval = $gate->evaluate('5-betdagi 1-misolni yechib ber', $res);
+        $this->assertTrue($gateEval['passed']);
+    }
+
+    /**
+     * PromptBuilder darsliklar uchun misol yechish, ingliz tili tarjimasi va fan qoidalari
+     * bo'yicha mukammal o'qituvchi ko'rsatmalariga ega bo'lishi testi.
+     */
+    public function test_system_prompt_includes_tutor_guidelines_for_problem_solving_translation_and_rules(): void
+    {
+        $builder = app(\App\Services\AI\BookAssistant\PromptBuilder::class);
+        $book = new Book([
+            'title'  => 'Kimyo 9-sinf',
+            'author' => 'I.Asqarov',
+        ]);
+
+        $messages = $builder->buildMessages($book, [
+            [
+                'id'           => 1,
+                'source_label' => '12-bet',
+                'text'         => 'Suvning hosil bo\'lish reaksiyasi: 2H2 + O2 = 2H2O.',
+            ],
+        ], 'Suv hosil bo\'lish reaksiyasini yozib ber');
+
+        $systemPrompt = $messages[0]['content'];
+        $this->assertStringContainsString('repetitor AI yordamchisisan', $systemPrompt);
+        $this->assertStringContainsString('MISOLLAR VA MASHQLARNI YECHISH', $systemPrompt);
+        $this->assertStringContainsString('BOSQICHMA-BOSQICH', $systemPrompt);
+        $this->assertStringContainsString('LaTeX', $systemPrompt);
+        $this->assertStringContainsString('INGLIZ TILI VA CHET TILI DARSLIKLARI', $systemPrompt);
+        $this->assertStringContainsString('FAN QOIDALARI, TUSHUNCHALAR, REAKSIYALAR', $systemPrompt);
+    }
+
+    /**
+     * GroundingVerifier sahifadagi misol yechimi yoki tarjima javobini to'g'ri tasdiqlashi testi.
+     */
+    public function test_grounding_verifier_validates_solution_or_translation_for_target_page_chunk(): void
+    {
+        $verifier = app(\App\Services\AI\BookAssistant\GroundingVerifier::class);
+        $book = new Book(['title' => 'Algebra 8']);
+
+        $chunks = [
+            [
+                'id'           => 101,
+                'page_start'   => 5,
+                'page_end'     => 5,
+                'source_label' => '5-bet',
+                'text'         => '1. Tenglamani yeching: 2x + 5 = 15.',
+            ],
+        ];
+
+        // 1-misolning bosqichma-bosqich yechimi berilganda:
+        $solution = "1-misol yechimi:\n1-qadam: \$2x = 15 - 5\$\n2-qadam: \$2x = 10\$\nNatija: \$x = 5\$ [1].";
+        $res = $verifier->verify($solution, $chunks, '5-betdagi 1-misolni yechib ber', 5, $book);
+
+        $this->assertTrue($res['verified']);
+        $this->assertNotEmpty($res['sources']);
+        $this->assertSame(1, $res['sources'][0]['index']);
+        $this->assertSame('5-bet', $res['sources'][0]['label']);
     }
 }
 

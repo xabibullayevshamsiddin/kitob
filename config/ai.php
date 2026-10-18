@@ -65,12 +65,13 @@ return [
     | Cheklovlar va Xavfsizlik Parametrlari
     |--------------------------------------------------------------------------
     */
-    'daily_limit_per_user' => (int) env('AI_DAILY_LIMIT_PER_USER', 20),
-    'minute_throttle'      => (int) env('AI_MINUTE_THROTTLE', 6),
-    'max_question_chars'   => (int) env('AI_MAX_QUESTION_CHARS', 500),
-    'max_context_chunks'   => (int) env('AI_MAX_CONTEXT_CHUNKS', 6),
-    'max_output_tokens'    => (int) env('AI_MAX_OUTPUT_TOKENS', 700),
-    'history_turns'        => (int) env('AI_HISTORY_TURNS', 6),
+    'daily_limit_per_user'  => (int) env('AI_DAILY_LIMIT_PER_USER', 10),
+    'daily_limit_per_admin' => (int) env('AI_DAILY_LIMIT_PER_ADMIN', 50),
+    'minute_throttle'       => (int) env('AI_MINUTE_THROTTLE', 6),
+    'max_question_chars'    => (int) env('AI_MAX_QUESTION_CHARS', 500),
+    'max_context_chunks'    => (int) env('AI_MAX_CONTEXT_CHUNKS', 6),
+    'max_output_tokens'     => (int) env('AI_MAX_OUTPUT_TOKENS', 700),
+    'history_turns'         => (int) env('AI_HISTORY_TURNS', 6),
 
     /*
     |--------------------------------------------------------------------------

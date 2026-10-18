@@ -83,14 +83,34 @@ class BookAssistant
             return $this->errorResult(trans('ai.rate_limited'));
         }
 
-        $dailyLimit = max(1, (int) config('ai.daily_limit_per_user', 20));
-        $todayStart = Carbon::now('Asia/Tashkent')->startOfDay()->utc();
+        $isAdmin = method_exists($user, 'isAdmin') && $user->isAdmin();
+        $dailyLimit = $isAdmin
+            ? max(1, (int) config('ai.daily_limit_per_admin', 50))
+            : max(1, (int) config('ai.daily_limit_per_user', 10));
+
+        $nowTashkent = Carbon::now('Asia/Tashkent');
+        $todayStart = $nowTashkent->copy()->startOfDay()->utc();
         $todayUsedCount = AiChatHistory::where('user_id', $user->id)
             ->where('created_at', '>=', $todayStart)
             ->count();
 
         if ($todayUsedCount >= $dailyLimit) {
-            return $this->errorResult(trans('ai.daily_limit_reached', ['limit' => $dailyLimit]));
+            $resetAt = $nowTashkent->copy()->endOfDay();
+            $diffHours = (int) $nowTashkent->diffInHours($resetAt);
+            $diffMinutes = (int) ($nowTashkent->diffInMinutes($resetAt) % 60);
+
+            if ($diffHours > 0) {
+                $timeLeft = $diffMinutes > 0
+                    ? "{$diffHours} soat {$diffMinutes} daqiqa"
+                    : "{$diffHours} soat";
+            } else {
+                $timeLeft = max(1, $diffMinutes) . " daqiqa";
+            }
+
+            return $this->errorResult(trans('ai.daily_limit_reached', [
+                'limit'     => $dailyLimit,
+                'time_left' => $timeLeft,
+            ]));
         }
 
         RateLimiter::hit($throttleKey, 60);
@@ -123,7 +143,9 @@ class BookAssistant
         $gate = $this->relevanceGate->evaluate($question, $retrieval);
         if (!$gate['passed']) {
             $reason = (string) ($gate['reason'] ?? 'off_topic');
-            if ($reason === 'no_evidence') {
+            if ($reason === 'unintelligible') {
+                $refusalText = trans('ai.unintelligible');
+            } elseif ($reason === 'no_evidence') {
                 $refusalText = trans('ai.no_evidence');
             } elseif ($reason === 'unsupported_page') {
                 $refusalText = trans('ai.unsupported_page');
@@ -239,9 +261,12 @@ class BookAssistant
     {
         // 1. Oddiy foydalanuvchilar uchun matn ichidagi texnik citation qavslarini ([0], [1], [0, 1] va h.k.)
         // tozalab, matnni ravon, qisqa va chiroyli ko'rinishga keltiramiz. Manbalar pastdagi "Manbalar" bo'limida ko'rsatiladi.
-        $cleanCitations = preg_replace('/\s*\[\s*\d+(?:\s*,\s*\d+)*\s*\]/u', '', $text) ?? $text;
+        $cleanCitations = preg_replace('/(?:\s*(?:,|va|and)\s*)?\[\s*\d+(?:\s*,\s*\d+)*\s*\]/u', '', $text) ?? $text;
+        // Ortiqcha qolib ketgan vergullarni tinish belgilaridan oldin tozalash (masalan: ",." yoki ", .")
+        $cleanCitations = preg_replace('/,\s*([.!?])/u', '$1', $cleanCitations) ?? $cleanCitations;
         // Tinish belgilari oldidagi bo'sh joylarni tozalash (masalan: "Mirzaahmedov ." -> "Mirzaahmedov.")
         $cleanCitations = preg_replace('/\s+([.,;:!?])/u', '$1', $cleanCitations) ?? $cleanCitations;
+        $cleanCitations = preg_replace('/,{2,}/u', ',', $cleanCitations) ?? $cleanCitations;
 
         // 2. <script>...</script> bloklarini ichidagi matni bilan birga o'chirish
         $sanitized = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $cleanCitations) ?? $cleanCitations;

@@ -40,24 +40,7 @@
         </div>
     </div>
 
-    @if($showRecommendations && $recommendations->isNotEmpty())
-        <section class="space-y-4" aria-labelledby="catalog-recommendations-title">
-            <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <span class="ks-eyebrow">Sizning mutolaangiz asosida</span>
-                    <h2 id="catalog-recommendations-title" class="mt-1 font-display text-xl font-bold text-paper sm:text-2xl">Sizga mos kitoblar</h2>
-                </div>
-                <p class="text-xs text-mist">O‘qigan kitoblaringiz janrlariga qarab tanlandi.</p>
-            </div>
-            <div class="grid grid-cols-2 gap-3 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4">
-                @foreach($recommendations as $recommendedBook)
-                    <x-ui.book-card :book="$recommendedBook" wire:key="recommended-book-{{ $recommendedBook->id }}" />
-                @endforeach
-            </div>
-        </section>
-    @endif
-
-    <!-- Filter Bar Card -->
+    <!-- Filter Bar Card (Directly above books) -->
     <div class="ks-panel p-4 sm:p-5 space-y-4">
         
         <!-- Format Tabs (Pills) -->
@@ -153,28 +136,53 @@
         </div>
     </div>
 
-    <!-- Books Grid with Signature 3D Opening Animation (MASTER §5.2) -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-x-5 sm:gap-y-10">
-        @forelse ($books as $book)
-            <x-ui.book-card :book="$book" wire:key="book-{{ $book->id }}" />
-        @empty
-            <div class="col-span-full text-center py-20 ks-panel p-8 space-y-3">
-                <div class="w-12 h-12 rounded-full bg-ink-800 border border-ink-border text-mist flex items-center justify-center mx-auto">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
+    @if($showRecommendations && $recommendations->isNotEmpty())
+        <section class="space-y-4" aria-labelledby="catalog-recommendations-title">
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <span class="ks-eyebrow">Sizning mutolaangiz asosida</span>
+                    <h2 id="catalog-recommendations-title" class="mt-1 font-display text-xl font-bold text-paper sm:text-2xl">Sizga mos kitoblar</h2>
                 </div>
-                @if ($hasActiveFilters)
-                    <h3 class="font-display text-lg font-bold text-paper">{{ __('site.catalog.no_results_t') }}</h3>
-                    <p class="font-sans text-xs text-mist max-w-sm mx-auto">{{ __('site.catalog.no_results_s') }}</p>
-                    <button type="button" wire:click="resetFilters" class="ks-btn-ghost text-xs mt-2">
-                        {{ __('site.catalog.show_all') }}
-                    </button>
-                @else
-                    <h3 class="font-display text-lg font-bold text-paper">{{ __('site.catalog.empty') }}</h3>
-                @endif
+                <p class="text-xs text-mist">O‘qigan kitoblaringiz janrlariga qarab tanlandi.</p>
             </div>
-        @endforelse
+            <div class="grid grid-cols-2 gap-3 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4">
+                @foreach($recommendations as $recommendedBook)
+                    <x-ui.book-card :book="$recommendedBook" wire:key="recommended-book-{{ $recommendedBook->id }}" />
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <!-- Books Grid with Signature 3D Opening Animation (MASTER §5.2) -->
+    <div class="space-y-4">
+        @if($showRecommendations && $recommendations->isNotEmpty())
+            <div class="border-t border-ink-border pt-4">
+                <h2 class="font-display text-xl font-bold text-paper sm:text-2xl">Barcha kitoblar</h2>
+            </div>
+        @endif
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-x-5 sm:gap-y-10">
+            @forelse ($books as $book)
+                <x-ui.book-card :book="$book" wire:key="book-{{ $book->id }}" />
+            @empty
+                <div class="col-span-full text-center py-20 ks-panel p-8 space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-ink-800 border border-ink-border text-mist flex items-center justify-center mx-auto">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                    @if ($hasActiveFilters)
+                        <h3 class="font-display text-lg font-bold text-paper">{{ __('site.catalog.no_results_t') }}</h3>
+                        <p class="font-sans text-xs text-mist max-w-sm mx-auto">{{ __('site.catalog.no_results_s') }}</p>
+                        <button type="button" wire:click="resetFilters" class="ks-btn-ghost text-xs mt-2">
+                            {{ __('site.catalog.show_all') }}
+                        </button>
+                    @else
+                        <h3 class="font-display text-lg font-bold text-paper">{{ __('site.catalog.empty') }}</h3>
+                    @endif
+                </div>
+            @endforelse
+        </div>
     </div>
 
     @if ($books->hasPages())

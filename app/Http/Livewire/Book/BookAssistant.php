@@ -134,11 +134,16 @@ class BookAssistant extends Component
         $service = app(BookAssistantService::class);
 
         $messages = collect();
-        $remainingToday = (int) config('ai.daily_limit_per_user', 20);
-        $dailyLimit = $remainingToday;
+        $user = auth()->user();
+        $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
+        $dailyLimit = $isAdmin
+            ? (int) config('ai.daily_limit_per_admin', 50)
+            : (int) config('ai.daily_limit_per_user', 10);
+        $remainingToday = $dailyLimit;
+        $resetRemainingHuman = '';
 
-        if (auth()->check() && $book) {
-            $historyRows = AiChatHistory::where('user_id', auth()->id())
+        if ($user && $book) {
+            $historyRows = AiChatHistory::where('user_id', $user->id)
                 ->where('book_id', $book->id)
                 ->orderBy('id')
                 ->limit(40)
@@ -156,21 +161,35 @@ class BookAssistant extends Component
                 ];
             });
 
-            $todayStart = Carbon::now('Asia/Tashkent')->startOfDay()->utc();
-            $usedToday = AiChatHistory::where('user_id', auth()->id())
+            $nowTashkent = Carbon::now('Asia/Tashkent');
+            $todayStart = $nowTashkent->copy()->startOfDay()->utc();
+            $usedToday = AiChatHistory::where('user_id', $user->id)
                 ->where('created_at', '>=', $todayStart)
                 ->count();
 
             $remainingToday = max(0, $dailyLimit - $usedToday);
+
+            $resetAt = $nowTashkent->copy()->endOfDay();
+            $diffHours = (int) $nowTashkent->diffInHours($resetAt);
+            $diffMinutes = (int) ($nowTashkent->diffInMinutes($resetAt) % 60);
+
+            if ($diffHours > 0) {
+                $resetRemainingHuman = $diffMinutes > 0
+                    ? "{$diffHours} soat {$diffMinutes} daqiqa"
+                    : "{$diffHours} soat";
+            } else {
+                $resetRemainingHuman = max(1, $diffMinutes) . " daqiqa";
+            }
         }
 
         return view('livewire.book.book-assistant', [
-            'book'               => $book,
-            'messages'           => $messages,
-            'suggestedQuestions' => $this->suggestedQuestions,
-            'remainingToday'     => $remainingToday,
-            'dailyLimit'         => $dailyLimit,
-            'maxChars'           => (int) config('ai.max_question_chars', 500),
+            'book'                => $book,
+            'messages'            => $messages,
+            'suggestedQuestions'  => $this->suggestedQuestions,
+            'remainingToday'      => $remainingToday,
+            'dailyLimit'          => $dailyLimit,
+            'resetRemainingHuman' => $resetRemainingHuman,
+            'maxChars'            => (int) config('ai.max_question_chars', 500),
         ]);
     }
 }

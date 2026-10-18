@@ -137,7 +137,16 @@ class GroundingVerifier
             $chunkText = (string) ($chunk['text'] ?? '');
 
             // Bo'lak matni bilan javobning mazmuniy bog'liqligini tekshirish
-            if (!$this->isClaimSupportedByChunk($cleanedText, $citationNum, $chunkText)) {
+            $isTargetPageChunk = false;
+            if ($targetPage !== null && isset($chunk['page_start'])) {
+                $pStart = (int) $chunk['page_start'];
+                $pEnd = (int) ($chunk['page_end'] ?? $pStart);
+                if ($targetPage >= $pStart && $targetPage <= $pEnd) {
+                    $isTargetPageChunk = true;
+                }
+            }
+
+            if (!$isTargetPageChunk && !$this->isClaimSupportedByChunk($cleanedText, $citationNum, $chunkText)) {
                 $unsupportedCitations[] = $citationNum;
                 continue;
             }
@@ -166,6 +175,26 @@ class GroundingVerifier
         // Agar javob kitob matnidagi biron-bir bo'lak bilan umuman asoslanmagan bo'lsa -> rad!
         if (empty($validSources)) {
             $isGroundedWithoutExplicitCitation = $this->isAnswerGroundedInAnyChunk($cleanedText, $chunks);
+
+            // Agar aniq sahifa bo'yicha vazifa (misol yechish, tarjima) bo'lsa va LLM [n] qo'yishni unutgan bo'lsa:
+            if (!$isGroundedWithoutExplicitCitation && $targetPage !== null) {
+                foreach ($chunks as $cIdx => $c) {
+                    $pStart = (int) ($c['page_start'] ?? 0);
+                    $pEnd = (int) ($c['page_end'] ?? $pStart);
+                    if ($targetPage >= $pStart && $targetPage <= $pEnd) {
+                        $isGroundedWithoutExplicitCitation = true;
+                        $validSources[] = [
+                            'index'      => $cIdx + 1,
+                            'chunk_id'   => (int) ($c['id'] ?? 0),
+                            'page_start' => $pStart ?: null,
+                            'page_end'   => $pEnd ?: null,
+                            'chapter_id' => isset($c['chapter_id']) ? (int) $c['chapter_id'] : null,
+                            'label'      => (string) ($c['source_label'] ?? (($cIdx + 1) . "-bo'lak")),
+                        ];
+                        break;
+                    }
+                }
+            }
 
             // Shuningdek, javob kitob pasporti yoki umumiy tavsifiga asoslanganligini tekshiramiz
             if (!$isGroundedWithoutExplicitCitation && $book) {

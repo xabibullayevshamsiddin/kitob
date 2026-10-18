@@ -20,9 +20,12 @@ class BookPdfController extends Controller
             $absolute = Storage::disk('public')->path($book->pdf_path);
 
             return response()->file($absolute, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . Str::slug($book->title) . '.pdf"',
+                'Content-Type'           => 'application/pdf',
+                'Content-Disposition'    => 'inline; filename="' . Str::slug($book->title) . '.pdf"',
                 'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control'          => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma'                 => 'no-cache',
+                'Expires'                => '0',
             ]);
         }
 
@@ -103,8 +106,12 @@ class BookPdfController extends Controller
         $path = Storage::disk('public')->path($book->pdf_path);
 
         return response()->file($path, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . Str::slug($book->title) . '.pdf"',
+            'Content-Type'           => 'application/pdf',
+            'Content-Disposition'    => 'inline; filename="' . Str::slug($book->title) . '.pdf"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control'          => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'                 => 'no-cache',
+            'Expires'                => '0',
         ]);
     }
 }

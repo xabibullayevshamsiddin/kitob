@@ -25,7 +25,7 @@ Har bir savolda quyidagi zanjir qat'iy tartibda ishlaydi:
    - Foydalanuvchi tizimga kirganligi (`auth`);
    - Kitob faol (`Book::availableForUser()`) va `book->ai_enabled = true` hamda `book->ai_index_status = 'ready'` ekanligi;
    - Savol uzunligi `AI_MAX_QUESTION_CHARS` (500 belgi) dan oshmasligi;
-   - Daqiqalik (`AI_RATE_LIMIT_PER_MIN`, standart 5/daq) va kunlik (`AI_DAILY_USER_LIMIT`, standart 20/kun, `Asia/Tashkent` bo'yicha) limitdan oshmaganligi.
+   - Daqiqalik (`AI_MINUTE_THROTTLE`, standart 6/daq) va kunlik (`AI_DAILY_LIMIT_PER_USER`, standart 10/kun, `Asia/Tashkent` bo'yicha) limitdan oshmaganligi.
 2. **`Retriever::retrieve(int $bookId, ...)`**:
    - Birinchi majburiy argument sifatida `$bookId` qabul qiladi va **faqat `WHERE book_id = $bookId`** sharti bilan shu kitobning bo'laklaridan qidiradi (boshqa kitob bo'laklari hech qachon aralashmaydi).
    - Qisqa davomiy savollarda (`"2-bobchi?"`, `"Batafsilroq tushuntir"`) oxirgi savol bilan birlashtirib qidiruvni kengaytiradi.
@@ -77,7 +77,7 @@ OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 ANTHROPIC_API_KEY=
 ANTHROPIC_CHAT_MODEL=claude-3-5-haiku-latest
 
-AI_DAILY_LIMIT_PER_USER=20          # Kunlik savollar limiti (Asia/Tashkent)
+AI_DAILY_LIMIT_PER_USER=10          # Kunlik savollar limiti (Asia/Tashkent)
 AI_MINUTE_THROTTLE=6                # Daqiqalik savollar limiti (rate limit)
 AI_MAX_QUESTION_CHARS=500           # Savolning maksimal uzunligi
 AI_MAX_CONTEXT_CHUNKS=6             # Kontekstga olinadigan bo'laklar soni
@@ -137,6 +137,17 @@ AI_INDEX_LOCK_SECONDS=900
 ### AI'ni o'chirish usullari
 1. **Butun platforma bo'yicha darhol o'chirish:** `.env` faylida `AI_ENABLED=false` qilish kifoya.
 2. **Alohida bitta kitob uchun o'chirish:** Admin panelda kitob tahrirlash sahifasidan **"AI yordamchi yoqilgan"** (`ai_enabled`) bayrog'ini o'chirish.
+
+### Pedagogik Repetitor Imkoniyatlari (Darsliklar va Fanlar)
+AI yordamchi darsliklar va turli fan kitoblari (Algebra, Matematika, Geometriya, Kimyo, Fizika, Ingliz tili va b.) bilan ishlashda mohir repetitor-o'qituvchi rejimida faoliyat yuritadi:
+1. **Misol va mashqlarni yechish (`isPageTaskQuery` & `extractExerciseNumber`):**
+   - Foydalanuvchi «5-betdagi 1-misolni yechib ber» yoki «12-mashqni yech» deganda, Retriever o'sha sahifadagi tegishli misol shartini topadi va RelevanceGate orqali o'tkazadi.
+   - AI misolni shunchaki yakuniy javobi bilan cheklanmasdan, **bosqichma-bosqich (qadam-baqadam)**, o'quvchiga tushunarli qilib yechib beradi.
+   - Matematik va ilmiy formulalar chiroyli LaTeX formatida (`$...$` yoki `$$...$$`) ko'rsatiladi.
+2. **Ingliz tili va chet tili darsliklarida tarjima:**
+   - Xorijiy darsliklardagi matn, gap yoki mashqlar so'ralganda, o'zbek tiliga adabiy va aniq tarjima qilib beradi, yangi so'zlar va grammatikani tushuntiradi.
+3. **Fan qoidalari, teoremalar, reaksiyalar va shartlar:**
+   - Algebradan qoidalar, kimyodan reaksiyalar va shartlar, fizikadan qonunlar yoki matematikadan teoremalar so'ralganda, ularni kitob asosida oddiy, kitobxonga tushunarli qilib bayon etadi.
 
 ---
 

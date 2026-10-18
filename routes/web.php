@@ -1020,11 +1020,11 @@ Route::prefix('admin')
             'is_active'   => $req->has('is_active'),
         ];
 
+        $newPdfUploaded = false;
         if ($req->hasFile('pdf_file')) {
             $updateData['pdf_path'] = $req->file('pdf_file')->store('books/pdf', 'public');
-            if ($book->ai_index_status === 'ready') {
-                $updateData['ai_index_status'] = 'stale';
-            }
+            $updateData['ai_index_status'] = 'stale';
+            $newPdfUploaded = true;
         }
 
         if ($req->hasFile('cover_image')) {
@@ -1032,6 +1032,11 @@ Route::prefix('admin')
         }
 
         $book->update($updateData);
+
+        if ($newPdfUploaded) {
+            app(\App\Services\AI\BookAssistant\BookIndexer::class)->clearBookIndex($book);
+            \App\Jobs\AiIndexBookJob::dispatch($book->id, true);
+        }
 
         return redirect()->route('admin.books.index')->with('success', 'Kitob ma\'lumotlari va fayllari muvaffaqiyatli yangilandi!');
     })->name('books.update');

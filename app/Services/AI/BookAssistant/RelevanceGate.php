@@ -30,7 +30,17 @@ class RelevanceGate
             ? (float) config('ai.min_similarity', 0.22)
             : (float) config('ai.min_fulltext_score', 0.12);
 
-        // 1. Prompt injection / tizim ko'rsatmasini buzishga urinishlarni darhol rad etish
+        // 1. Mutlaqo tushunarsiz / ma'nosiz klaviatura harflari (gibberish/abrakadabra)
+        if ($this->isUnintelligibleQuery($question)) {
+            return [
+                'passed'    => false,
+                'reason'    => 'unintelligible',
+                'top_score' => 0.0,
+                'threshold' => $threshold,
+            ];
+        }
+
+        // 2. Prompt injection / tizim ko'rsatmasini buzishga urinishlarni darhol rad etish
         if ($this->isPromptInjectionAttempt($question)) {
             return [
                 'passed'    => false,
@@ -120,6 +130,53 @@ class RelevanceGate
             if (str_contains($lower, $pattern)) {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Savol mutlaqo ma'nosiz harflar to'plami (abrakadabra, klaviatura bo'ylab bosish, unlisiz harflar)
+     * ekanligini tekshiradi (masalan: "asdfghjkl", "qwertyui", "zxcvbnm", "aaaaaa").
+     */
+    public function isUnintelligibleQuery(string $question): bool
+    {
+        $clean = trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', mb_strtolower($question)) ?? '');
+        if ($clean === '') {
+            return false;
+        }
+
+        // 1. Bir xil harf ketma-ket 4+ marta takrorlangan bo'lsa (masalan: "aaaaaa", "qqqqqqq")
+        if (preg_match('/(\p{L})\1{3,}/u', $clean)) {
+            return true;
+        }
+
+        // 2. Klaviatura bo'ylab qator terish (keyboard walks)
+        $keyboardWalks = ['asdfgh', 'qwerty', 'zxcvbn', 'йцукен', 'фывапр', 'ячсмит', '123456'];
+        foreach ($keyboardWalks as $kw) {
+            if (str_contains($clean, $kw)) {
+                return true;
+            }
+        }
+
+        // 3. So'zlarning unli harflari tekshiruvi:
+        // Agar so'z kamida 5 harfdan iborat bo'lsa va unda hech qanday unli harf bo'lmasa (lotin: a,e,i,o,u,y yoki kirill: а,е,ё,и,о,у,ы,э,ю,я):
+        $words = preg_split('/\s+/u', $clean, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $longWordsCount = 0;
+        $vowellessLongWords = 0;
+
+        foreach ($words as $w) {
+            $len = mb_strlen($w);
+            if ($len >= 5 && !is_numeric($w)) {
+                $longWordsCount++;
+                if (!preg_match('/[aeiouyаеёиоуыэюяo\'o‘o’g\'g‘g’]/ui', $w)) {
+                    $vowellessLongWords++;
+                }
+            }
+        }
+
+        if ($longWordsCount > 0 && $vowellessLongWords === $longWordsCount) {
+            return true;
         }
 
         return false;

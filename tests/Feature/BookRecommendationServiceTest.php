@@ -92,4 +92,97 @@ class BookRecommendationServiceTest extends TestCase
             ->assertSee('Sizga mos kitoblar')
             ->assertSee($recommended->title);
     }
+
+    public function test_catalog_does_not_show_empty_message_when_books_exist_for_fresh_user(): void
+    {
+        $user = User::create([
+            'name' => 'Fresh User',
+            'username' => 'fresh_' . uniqid(),
+            'email' => uniqid() . '@example.test',
+            'password' => bcrypt('password'),
+        ]);
+
+        $book1 = $this->makeBook('Algebra 8-sinf', 'Darslik');
+        $book2 = $this->makeBook('Geometriya 9-sinf', 'Darslik');
+
+        $this->actingAs($user)
+            ->get('/catalog')
+            ->assertOk()
+            ->assertDontSee('Hozircha kitoblar mavjud emas')
+            ->assertSee($book1->title)
+            ->assertSee($book2->title);
+    }
+
+    public function test_catalog_does_not_hide_books_from_main_list_when_recommendations_exist(): void
+    {
+        $user = User::create([
+            'name' => 'Reader Two',
+            'username' => 'reader2_' . uniqid(),
+            'email' => uniqid() . '@example.test',
+            'password' => bcrypt('password'),
+        ]);
+
+        $readBook = $this->makeBook('O‘qilgan kitob', 'Ilmiy');
+        $chapter = BookChapter::create([
+            'book_id' => $readBook->id,
+            'chapter_number' => 1,
+            'title' => 'Bob 1',
+            'content' => 'Matn',
+            'is_published' => true,
+        ]);
+        BookReadingProgress::create([
+            'user_id' => $user->id,
+            'book_id' => $readBook->id,
+            'chapter_id' => $chapter->id,
+            'last_position' => 10,
+            'percent_complete' => 20,
+        ]);
+
+        $recommended = $this->makeBook('Tavsiya ilmiy', 'Ilmiy');
+
+        $this->actingAs($user)
+            ->get('/catalog')
+            ->assertOk()
+            ->assertSee('Sizga mos kitoblar')
+            ->assertSee('Barcha kitoblar')
+            ->assertDontSee('Hozircha kitoblar mavjud emas')
+            ->assertSee($recommended->title)
+            ->assertSee($readBook->title);
+    }
+
+    public function test_catalog_does_not_duplicate_books_when_all_books_would_be_in_recommendations(): void
+    {
+        $user = User::create([
+            'name' => 'History User',
+            'username' => 'hist_' . uniqid(),
+            'email' => uniqid() . '@example.test',
+            'password' => bcrypt('password'),
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('reading_sessions')->insert([
+            'user_id' => $user->id,
+            'book_id' => null,
+            'minutes_read' => 15,
+            'session_date' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $book1 = $this->makeBook('Algebra Kitob', 'Darslik');
+        $book2 = $this->makeBook('Geometriya Kitob', 'Darslik');
+
+        $response = $this->actingAs($user)->get('/catalog');
+
+        $response->assertOk();
+        // Since all available books (2) are recommendations candidates,
+        // it must not split into duplicate sections
+        $response->assertDontSee('Sizga mos kitoblar');
+        $response->assertDontSee('Hozircha kitoblar mavjud emas');
+
+        // Verify each book card is rendered exactly once (not in recommendations and main list)
+        $this->assertSame(1, substr_count($response->getContent(), 'wire:key="book-' . $book1->id . '"'));
+        $this->assertSame(0, substr_count($response->getContent(), 'wire:key="recommended-book-' . $book1->id . '"'));
+        $this->assertSame(1, substr_count($response->getContent(), 'wire:key="book-' . $book2->id . '"'));
+        $this->assertSame(0, substr_count($response->getContent(), 'wire:key="recommended-book-' . $book2->id . '"'));
+    }
 }

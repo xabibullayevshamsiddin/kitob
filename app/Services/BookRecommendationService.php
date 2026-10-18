@@ -59,4 +59,10 @@ class BookRecommendationService
             ->take($limit)
             ->values();
     }
+
+    public function hasHistory(User $user): bool
+    {
+        return DB::table('book_reading_progress')->where('user_id', $user->id)->exists()
+            || DB::table('reading_sessions')->where('user_id', $user->id)->exists();
+    }
 }

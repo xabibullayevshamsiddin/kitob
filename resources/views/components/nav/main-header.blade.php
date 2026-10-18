@@ -366,10 +366,10 @@
                 </style>
 
                 {{-- Bildirishnomalar --}}
-                <a href="{{ route('notifications') }}" class="hidden md:inline-flex relative p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base" title="{{ __('site.nav.notifications') }}">
+                <a href="{{ route('notifications') }}" class="header-notification-btn hidden md:inline-flex relative p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-all duration-base focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70" title="{{ __('site.nav.notifications') }}">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                     @if(auth()->user()->unreadNotifications->count() > 0)
-                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-vermilion rounded-full ring-2 ring-ink-900"></span>
+                        <span class="header-notification-dot absolute top-1.5 right-1.5 w-2 h-2 bg-vermilion rounded-full ring-2 ring-ink-900"></span>
                     @endif
                 </a>
 
@@ -888,5 +888,76 @@ html:not(.light) #site-header [class*="shadow-popover"] {
     background-color: #131926 !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     color: #F0EDE6 !important;
+}
+
+/* Transparent home header: dropdowns and notification hover share the hero's glass surface. */
+html.dark #site-header.is-hero-header .header-dropdown-menu,
+html:not(.light) #site-header.is-hero-header .header-dropdown-menu,
+html.dark #site-header.is-hero-header [class*="shadow-popover"],
+html:not(.light) #site-header.is-hero-header [class*="shadow-popover"] {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035) 48%, rgba(3, 12, 24, 0.44)),
+        rgba(7, 18, 32, 0.76) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #f8fafc !important;
+    backdrop-filter: blur(18px) saturate(135%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(135%) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 18px 42px rgba(1, 10, 22, 0.34),
+        0 0 0 1px rgba(7, 25, 43, 0.22) !important;
+}
+
+html.dark #site-header.is-hero-header .header-dropdown-menu a:hover,
+html.dark #site-header.is-hero-header .header-dropdown-menu button:hover,
+html:not(.light) #site-header.is-hero-header .header-dropdown-menu a:hover,
+html:not(.light) #site-header.is-hero-header .header-dropdown-menu button:hover {
+    background-color: rgba(255, 255, 255, 0.13) !important;
+    color: #ffffff !important;
+}
+
+html.dark #site-header.is-hero-header .header-dropdown-menu > div:first-child,
+html:not(.light) #site-header.is-hero-header .header-dropdown-menu > div:first-child {
+    border-color: rgba(255, 255, 255, 0.13) !important;
+}
+
+html.dark #site-header.is-hero-header .header-dropdown-menu .text-mist,
+html:not(.light) #site-header.is-hero-header .header-dropdown-menu .text-mist {
+    color: rgba(226, 232, 240, 0.76) !important;
+}
+
+html.dark #site-header.is-hero-header .header-notification-btn,
+html:not(.light) #site-header.is-hero-header .header-notification-btn {
+    color: rgba(241, 245, 249, 0.86) !important;
+    background-color: rgba(255, 255, 255, 0.055) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+html.dark #site-header.is-hero-header .header-notification-btn:hover,
+html:not(.light) #site-header.is-hero-header .header-notification-btn:hover,
+html.dark #site-header.is-hero-header .header-notification-btn:focus-visible,
+html:not(.light) #site-header.is-hero-header .header-notification-btn:focus-visible {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.32) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 20px rgba(3, 15, 30, 0.22);
+}
+
+html.dark #site-header.is-hero-header .header-notification-dot,
+html:not(.light) #site-header.is-hero-header .header-notification-dot {
+    box-shadow: 0 0 0 2px rgba(7, 18, 32, 0.72) !important;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    html.dark #site-header.is-hero-header .header-dropdown-menu,
+    html:not(.light) #site-header.is-hero-header .header-dropdown-menu,
+    html.dark #site-header.is-hero-header .header-notification-btn,
+    html:not(.light) #site-header.is-hero-header .header-notification-btn {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(10, 24, 42, 0.96) !important;
+    }
 }
 </style>

@@ -8,7 +8,7 @@ return [
     'disabled'            => "AI yordamchi hozircha o'chirilgan.",
     'book_not_ready'      => "Ushbu kitob uchun AI yordamchi hali tayyor emas.",
     'unauthorized'        => "Ushbu kitobdan foydalanish uchun ruxsatingiz yo'q.",
-    'daily_limit_reached' => "Kunlik AI savollar limitingiz (:limit ta) tugadi. Ertaga yana savol berishingiz mumkin.",
+    'daily_limit_reached' => "Kunlik AI savollar limitingiz (:limit ta) tugadi. Limit qayta tiklanishiga :time_left qoldi (soat 00:00 da yangilanadi).",
     'rate_limited'        => "Juda tez so'rov yuboryapsiz. Iltimos, biroz kutib qayta urinib ko'ring.",
     'question_too_long'   => "Savol matni juda uzun (maksimal :max ta belgi).",
     'question_empty'      => "Iltimos, savolingizni kiriting.",
@@ -21,4 +21,5 @@ return [
     'no_evidence'         => "Kitobdagi mavjud ma’lumotlar asosida bunga ishonchli javob bera olmayman.",
     'unsupported_page'    => "Kitobning so'ralgan sahifasida bu mavzu haqida ma'lumot topilmadi.",
     'partial_notice'      => "Eslatma: Ushbu kitob faqat qisqa konspekt asosida indekslangan.",
+    'unintelligible'      => "So'rovingizni to'liq tushunib bo'lmadi. Iltimos, kitob yuzasidan savolingizni aniqroq so'zlar bilan yozing.",
 ];

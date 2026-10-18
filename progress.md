@@ -8,3 +8,34 @@
 - Added learner notification/latest-result indication and feature coverage for submission, validation, review, and points.
 - Validation passed: 4 new written-answer feature tests, all 6 existing quiz-timer tests, Blade view cache, PHP syntax checks, route listing, and `git diff --check`.
 - No unrelated dirty files were reverted or overwritten; no production/local application database migration was run.
+- New phase started: home transparent header dropdown and notification hover polish.
+- Updated `main-header.blade.php` so hero-state dropdowns, menu-item hover, notification hover/focus, and unread indicator use the same translucent glass treatment.
+- Validation passed: `git diff --check`, `php artisan view:cache`, and `RoleAndPublicPagesTest` (9 tests).
+- New phase started: live camera preview cleanup for low-light webcams.
+- Updated the live `Studio Clean` preset to lift low-light shadows, preserve natural color, and gently soften webcam sensor grain; reduced the aggressive sharpening preset.
+- Validation passed: `php artisan view:cache`, `git diff --check`, and `LiveStreamingTest` (12 tests).
+- Debugging review found the prior filter-only change affected rendered pixels but not camera capture settings; capability-aware track tuning is now the next fix.
+- Added capability-aware `optimizeCameraTrack()` for continuous exposure, white balance, focus, safe brightness/contrast/saturation ranges, and WebRTC detail hint across all camera acquisition paths.
+- Final validation passed: `php artisan view:cache`, `git diff --check`, and `LiveStreamingTest` (12 tests).
+- New phase started: remove mirror-camera mode and keep the live mini-player visible across page navigation.
+- Removed the mirror-camera setting, state, and presentation transform from the live viewer controls.
+- Added a persistent mini-player window using the existing live detail route with `?mini=1`; it runs as a viewer and keeps its own WebRTC connection while the original tab navigates elsewhere.
+- Added compact mini-window CSS in the shared app layout and a LiveStreamingTest covering the mini-player mode.
+- Final validation passed: `git diff --check`, `php artisan view:cache`, and `LiveStreamingTest` (13 tests).
+- Read-only localhost verification passed: `/Kitob/public/live/47` returned HTTP 200 with the global live player and signal markup present, while the old popup marker was absent.
+- Browser automation is unavailable in this environment, so a literal Chrome click/screenshot flow could not be executed; the route output and automated feature tests were verified instead.
+- New phase started: replace the popup with an inline global floating player that survives normal page navigation.
+- Removed the popup/`window.open` mini-player flow and added `global-live-player.blade.php` to app and dashboard layouts.
+- The inline player persists event metadata in `kitobxon_live_state`, reconnects as a `viewer_mini_*` WebRTC peer after page navigation, supports close/open-live actions, audio unmute, and fit mode.
+- Updated the live settings action to activate the global player instead of opening a browser window.
+- Final validation passed: `git diff --check`, `php artisan view:cache`, and `LiveStreamingTest` (13 tests).
+- Restored the video settings gear inside the persistent mini-player; only the duplicate mini-window action is hidden there.
+- Revalidated: `git diff --check`, `php artisan view:cache`, and `LiveStreamingTest` (13 tests).
+- Restored the mini-mode menu action with context-aware labels and replaced the unclear gear path with a clean tuning-sliders icon.
+- Revalidated again: `git diff --check`, `php artisan view:cache`, and `LiveStreamingTest` (13 tests).
+- Fixed the mini-player menu label and click action by rendering the mode-specific label server-side and routing the action through `handleMiniPlayerAction()`.
+- Revalidated once more: `git diff --check`, `php artisan view:cache`, and `LiveStreamingTest` (13 tests).
+- New phase started: live video viewing controls for fullscreen, PiP, fit mode, and host mirror.
+- Added a video settings popover with fullscreen, browser-supported Picture-in-Picture, contain/cover fit mode, and host-only mirrored camera preview.
+- Fullscreen state now follows browser fullscreen events and the chosen fit/mirror preferences persist locally; screen sharing disables camera mirroring.
+- Final validation passed: `php artisan view:cache`, `git diff --check`, and `LiveStreamingTest` (12 tests).
