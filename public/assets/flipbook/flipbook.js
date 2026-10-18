@@ -425,8 +425,8 @@
 
     // Prepare clean DOM structure inside #fb-spread
     spreadEl.innerHTML = `
-      <div id="fb-stf-host" class="fb-stf-host" style="width:${bookTotalW}px;height:${pageH}px;">
-        <div id="fb-stf-book" class="fb-stf-book" style="width:${bookTotalW}px;height:${pageH}px;"></div>
+      <div id="fb-stf-host" class="fb-stf-host" style="width:${bookTotalW}px;height:${pageH}px;overflow:hidden;opacity:0;transition:opacity 0.25s ease;">
+        <div id="fb-stf-book" class="fb-stf-book" style="width:${bookTotalW}px;height:${pageH}px;overflow:hidden;"></div>
       </div>
       <div class="fb-book-spine"></div>
     `;
@@ -511,6 +511,12 @@
     });
 
     pageFlipInstance.loadFromHTML(bookEl.querySelectorAll('.fb-stf-page'));
+
+    // Reveal book smoothly once StPageFlip has wrapped and positioned pages
+    const hostEl = document.getElementById('fb-stf-host');
+    if (hostEl) {
+      hostEl.style.opacity = '1';
+    }
 
     // Enforce soft paper curling density on all pages
     try {

@@ -61,7 +61,7 @@ class BookAssistant
             return $this->errorResult(trans('ai.unauthorized'));
         }
 
-        if (!$book->ai_enabled || $book->ai_index_status !== 'ready') {
+        if (!$book->ai_enabled || !in_array($book->ai_index_status, ['ready', 'partial'], true)) {
             return $this->errorResult(trans('ai.book_not_ready'));
         }
 
@@ -122,7 +122,15 @@ class BookAssistant
         // 8. RelevanceGate tekshiruvi — chegaradan past bo'lsa AI chaqirilmasdan rad javobi!
         $gate = $this->relevanceGate->evaluate($question, $retrieval);
         if (!$gate['passed']) {
-            $refusalText = trans('ai.off_topic', ['book' => $book->title]);
+            $reason = (string) ($gate['reason'] ?? 'off_topic');
+            if ($reason === 'no_evidence') {
+                $refusalText = trans('ai.no_evidence');
+            } elseif ($reason === 'unsupported_page') {
+                $refusalText = trans('ai.unsupported_page');
+            } else {
+                $refusalText = trans('ai.off_topic', ['book' => $book->title]);
+            }
+
             $history = AiChatHistory::create([
                 'user_id'           => $user->id,
                 'book_id'           => $book->id,
@@ -133,7 +141,7 @@ class BookAssistant
                 'tokens_used'       => 0,
                 'sources'           => [],
                 'refused'           => true,
-                'refusal_reason'    => 'off_topic',
+                'refusal_reason'    => $reason,
                 'prompt_tokens'     => 0,
                 'completion_tokens' => 0,
                 'latency_ms'        => 0,
@@ -146,7 +154,7 @@ class BookAssistant
                 'answer_html'     => $this->renderSafeMarkdown($refusalText),
                 'sources'         => [],
                 'refused'         => true,
-                'refusal_reason'  => 'off_topic',
+                'refusal_reason'  => $reason,
                 'provider_called' => false,
                 'top_score'       => $gate['top_score'],
                 'history_id'      => $history->id,
@@ -178,15 +186,18 @@ class BookAssistant
         $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
         $rawContent = (string) ($llmResponse['content'] ?? '');
 
-        // 10. [n] manbalarni tekshirish va "topa olmadim" holatini aniqlash
-        $verified = $this->promptBuilder->verifyAndExtractSources($rawContent, $retrieval['chunks']);
-        $cleanedAnswer = $verified['cleaned_text'];
-        $isNoAnswer = $this->promptBuilder->isNoAnswerResponse($cleanedAnswer);
+        // 10. Manba va faktik dalillarni qat'iy tekshirish (GroundingVerifier)
+        $verified = $this->promptBuilder->verifyAndExtractSources(
+            $rawContent,
+            $retrieval['chunks'],
+            $question,
+            $retrieval['target_page'] ?? null,
+            $book
+        );
 
-        if ($isNoAnswer) {
-            $cleanedAnswer = trans('ai.no_answer');
-            $verified['sources'] = [];
-        }
+        $cleanedAnswer = $verified['cleaned_text'];
+        $isRefused = !$verified['verified'] || $verified['is_no_answer'];
+        $refusalReason = $isRefused ? ($verified['refusal_reason'] ?: 'no_evidence') : null;
 
         $safeHtml = $this->renderSafeMarkdown($cleanedAnswer);
 
@@ -195,12 +206,12 @@ class BookAssistant
             'book_id'           => $book->id,
             'message'           => $question,
             'response'          => $cleanedAnswer,
-            'provider'          => (string) ($llmResponse['provider'] ?? config('ai.provider', 'openai')),
+            'provider'          => (string) ($llmResponse['provider'] ?? config('ai.provider', 'gemini')),
             'model'             => (string) ($llmResponse['model'] ?? ''),
             'tokens_used'       => (int) ($llmResponse['total_tokens'] ?? 0),
             'sources'           => $verified['sources'],
-            'refused'           => $isNoAnswer,
-            'refusal_reason'    => $isNoAnswer ? 'no_answer' : null,
+            'refused'           => $isRefused,
+            'refusal_reason'    => $refusalReason,
             'prompt_tokens'     => (int) ($llmResponse['prompt_tokens'] ?? 0),
             'completion_tokens' => (int) ($llmResponse['completion_tokens'] ?? 0),
             'latency_ms'        => $latencyMs,
@@ -208,12 +219,12 @@ class BookAssistant
         ]);
 
         return [
-            'status'          => 'ok',
+            'status'          => $isRefused ? 'refused' : 'ok',
             'answer'          => $cleanedAnswer,
             'answer_html'     => $safeHtml,
             'sources'         => $verified['sources'],
-            'refused'         => $isNoAnswer,
-            'refusal_reason'  => $isNoAnswer ? 'no_answer' : null,
+            'refused'         => $isRefused,
+            'refusal_reason'  => $refusalReason,
             'provider_called' => true,
             'top_score'       => $gate['top_score'],
             'history_id'      => $history->id,
@@ -226,8 +237,14 @@ class BookAssistant
      */
     public function renderSafeMarkdown(string $text): string
     {
-        // <script>...</script> bloklarini ichidagi matni bilan birga o'chirish
-        $sanitized = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $text) ?? $text;
+        // 1. Oddiy foydalanuvchilar uchun matn ichidagi texnik citation qavslarini ([0], [1], [0, 1] va h.k.)
+        // tozalab, matnni ravon, qisqa va chiroyli ko'rinishga keltiramiz. Manbalar pastdagi "Manbalar" bo'limida ko'rsatiladi.
+        $cleanCitations = preg_replace('/\s*\[\s*\d+(?:\s*,\s*\d+)*\s*\]/u', '', $text) ?? $text;
+        // Tinish belgilari oldidagi bo'sh joylarni tozalash (masalan: "Mirzaahmedov ." -> "Mirzaahmedov.")
+        $cleanCitations = preg_replace('/\s+([.,;:!?])/u', '$1', $cleanCitations) ?? $cleanCitations;
+
+        // 2. <script>...</script> bloklarini ichidagi matni bilan birga o'chirish
+        $sanitized = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $cleanCitations) ?? $cleanCitations;
 
         return (string) Str::markdown($sanitized, [
             'html_input'         => 'strip',

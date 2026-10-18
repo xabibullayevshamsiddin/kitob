@@ -3,7 +3,7 @@
 @section('title', $book->title)
 
 @php
-    $bookAiReady = (bool) config('ai.enabled', true) && $book->ai_enabled && $book->ai_index_status === 'ready';
+    $bookAiReady = (bool) config('ai.enabled', true) && $book->ai_enabled && in_array($book->ai_index_status, ['ready', 'partial'], true);
 @endphp
 
 @push('styles')
@@ -129,8 +129,16 @@
             window.addEventListener('flipbook:themechange', (e) => {
                 if (e.detail && e.detail.theme) this.paperTheme = e.detail.theme;
             });
-            window.addEventListener('book-ai-jump-page', () => {
-                this.readerMode = '3d';
+            window.addEventListener('book-ai-jump-page', (e) => {
+                const p = (e.detail && e.detail.page) ? parseInt(e.detail.page, 10) : 1;
+                if (typeof window.fbGoToPage === 'function') {
+                    setTimeout(() => window.fbGoToPage(p), 180);
+                }
+                const pdfFrame = document.getElementById('bookPdfFrame');
+                if (pdfFrame && pdfFrame.src) {
+                    const base = pdfFrame.src.split('#')[0];
+                    pdfFrame.src = base + '#page=' + p + '&view=FitH&pagemode=none';
+                }
             });
         }
     }">
@@ -592,10 +600,10 @@
             </div>
 
             <!-- Standart PDF Viewer -->
-            <div x-show="readerMode === 'pdf'" x-cloak class="relative rounded-card overflow-hidden border border-ink-border bg-ink-900">
+            <div x-show="readerMode === 'pdf'" x-cloak style="display: none;" class="relative rounded-card overflow-hidden border border-ink-border bg-ink-900">
                 <iframe id="bookPdfFrame"
-                    src="{{ route('books.pdf.read', $book->id) }}#view=FitH&pagemode=none"
-                    class="w-full h-[75vh] min-h-[500px] bg-white"
+                    :src="readerMode === 'pdf' ? '{{ route('books.pdf.read', $book->id) }}#view=FitH&pagemode=none' : ''"
+                    class="w-full h-[75vh] min-h-[500px] bg-ink-950"
                     title="{{ $book->title }} — onlayn o'qish"
                     allowfullscreen></iframe>
             </div>
@@ -603,7 +611,7 @@
             <div class="relative rounded-card overflow-hidden border border-ink-border bg-ink-900">
                 <iframe id="bookPdfFrame"
                     src="{{ route('books.pdf.read', $book->id) }}#view=FitH&pagemode=none"
-                    class="w-full h-[75vh] min-h-[500px] bg-white"
+                    class="w-full h-[75vh] min-h-[500px] bg-ink-950"
                     title="{{ $book->title }} — onlayn o'qish"
                     allowfullscreen></iframe>
             </div>

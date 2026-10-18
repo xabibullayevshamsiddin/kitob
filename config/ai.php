@@ -47,9 +47,16 @@ return [
         'gemini' => [
             'api_key'         => env('GEMINI_API_KEY'),
             'base_url'        => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
-            'chat_model'      => env('GEMINI_CHAT_MODEL', 'gemini-3.8-flash'),
+            'chat_model'      => env('GEMINI_CHAT_MODEL', 'gemini-flash-lite-latest'),
             'embedding_model' => env('GEMINI_EMBEDDING_MODEL', 'gemini-embedding-2'),
             'timeout'         => (int) env('GEMINI_TIMEOUT', 60),
+        ],
+
+        'groq' => [
+            'api_key'    => env('GROQ_API_KEY'),
+            'base_url'   => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+            'chat_model' => env('GROQ_CHAT_MODEL', 'llama-3.3-70b-versatile'),
+            'timeout'    => (int) env('GROQ_TIMEOUT', 30),
         ],
     ],
 
@@ -89,5 +96,35 @@ return [
     'chunk_overlap_ratio'    => (float) env('AI_CHUNK_OVERLAP_RATIO', 0.15),
     'index_batch_size'       => (int) env('AI_INDEX_BATCH_SIZE', 15),
     'pdftotext_bin'          => env('PDFTOTEXT_BIN', 'pdftotext'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | OCR (Optical Character Recognition) Skanerlangan PDF Sozlamalari
+    |--------------------------------------------------------------------------
+    */
+    'ocr' => [
+        'enabled'         => env('AI_OCR_ENABLED', true),
+        'engine'          => env('AI_OCR_ENGINE', 'auto'), // auto, python, tesseract
+        'uv_bin'          => env('UV_BIN', 'uv'),
+        'python_bin'      => env('PYTHON_BIN', 'python'),
+        'tesseract_bin'   => env('TESSERACT_BIN', 'tesseract'),
+        'pdftoppm_bin'    => env('PDFTOPPM_BIN', 'pdftoppm'),
+        'languages'       => env('AI_OCR_LANGUAGES', 'uzb+rus+eng'),
+        'dpi'             => (int) env('AI_OCR_DPI', 150),
+        'timeout_seconds' => (int) env('AI_OCR_TIMEOUT_SECONDS', 600),
+        'max_pages'       => (int) env('AI_OCR_MAX_PAGES', 50),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Navbat (Queue) va Katta Kitoblarni Fon Rejimida Indekslash
+    |--------------------------------------------------------------------------
+    */
+    'queue' => [
+        'enabled'      => env('AI_QUEUE_INDEXING', false),
+        'connection'   => env('AI_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'sync')),
+        'queue_name'   => env('AI_QUEUE_NAME', 'default'),
+        'lock_seconds' => (int) env('AI_INDEX_LOCK_SECONDS', 900),
+    ],
 
 ];

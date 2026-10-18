@@ -133,8 +133,12 @@ class Retriever
 
         // 3. Leksik (BM25 + o'zak/prefiks) ballarini hisoblash
         $queryTokens = $this->tokenizeForSearch($expandedQuery);
+        $topicalTokens = $this->extractTopicalTokens($expandedQuery, $targetPage, $targetChapter);
+        $hasSubstantiveTopicalTokens = !empty($topicalTokens);
+
         $scoredChunks = [];
         $maxMysqlFt = !empty($mysqlFulltextScores) ? max($mysqlFulltextScores) : 0.0;
+        $anyTopicalMatched = false;
 
         foreach ($chunks as $chunk) {
             // Qat'iy himoya: hech qachon boshqa kitobning bo'lagi o'tib ketmasin
@@ -155,44 +159,71 @@ class Retriever
             $vecScore = round((float) ($vectorScores[$cid] ?? 0.0), 4);
 
             if ($hasVectorMode) {
-                $combinedScore = max(
+                $contentScore = max(
                     ($vecScore * 0.72) + ($lexicalScore * 0.28),
                     $vecScore,
                     $lexicalScore * 0.85
                 );
             } else {
-                $combinedScore = $lexicalScore;
+                $contentScore = $lexicalScore;
             }
 
-            // 4. Sahifa (bet) bo'yicha aniq moslik boosti (masalan: "1-betdagi asosiy tushunchalar")
+            // Haqiqiy mavzuga moslikni tekshiramiz (so'ralgan kalit so'zlar bo'lakda bormi?)
+            $matchedTopicalCount = $this->countMatchedTopicalTokens($topicalTokens, $searchableText);
+            $hasTopicalAlignment = !$hasSubstantiveTopicalTokens
+                || $matchedTopicalCount > 0
+                || ($hasVectorMode && $vecScore >= 0.20);
+
+            if ($hasTopicalAlignment && $contentScore >= 0.12) {
+                $anyTopicalMatched = true;
+            }
+
+            // Sahifa (bet) mosligini tekshirish
+            $isTargetPage = false;
             if ($targetPage !== null && $chunk->page_start !== null) {
                 $pStart = (int) $chunk->page_start;
                 $pEnd = (int) ($chunk->page_end ?? $chunk->page_start);
-
                 if ($targetPage >= $pStart && $targetPage <= $pEnd) {
-                    $combinedScore = max($combinedScore, 0.85);
-                } elseif (abs($targetPage - $pStart) <= 1 || abs($targetPage - $pEnd) <= 1) {
-                    $combinedScore = max($combinedScore, 0.50);
+                    $isTargetPage = true;
                 }
             }
 
-            // 5. Bob (chapter) bo'yicha aniq moslik boosti (masalan: "1-bob", "Chapter 1")
+            // Bob (chapter) mosligini tekshirish
+            $isTargetChapter = false;
             if ($targetChapter !== null) {
-                $matchesChapter = false;
                 if ($chunk->chapter && (int) $chunk->chapter->chapter_number === $targetChapter) {
-                    $matchesChapter = true;
+                    $isTargetChapter = true;
                 } elseif (preg_match('/\bchapter\s*' . $targetChapter . '\b/i', $searchableText) || preg_match('/\b' . $targetChapter . '\s*[-–]?\s*bob\b/iu', $searchableText)) {
-                    $matchesChapter = true;
-                }
-
-                if ($matchesChapter) {
-                    $combinedScore = max($combinedScore, 0.85);
+                    $isTargetChapter = true;
                 }
             }
 
-            // 6. Agar foydalanuvchi "Bu kitob nima haqida?" yoki "Asosiy g'oyalar nimalar?" deb umumiy savol bersa,
-            // kitobning kirish bo'laklariga ustuvorlik beriladi
-            if ($isOverview && $chunk->ordinal <= 2) {
+            // Agar sof sahifa/bob konspekt savoli yoki kitob pasporti/umumiy mazmun savoli bo'lsa
+            if (!$hasSubstantiveTopicalTokens && ($isTargetPage || $isTargetChapter || $isOverview)) {
+                $anyTopicalMatched = true;
+            }
+
+            $combinedScore = $contentScore;
+
+            // 4. Sahifa yoki bob bo'yicha boost:
+            // MUHIM QOIDA: Agar savol begona mavzuni sahifa raqami bilan so'rasa ("50-betda Bitcoin narxi"),
+            // lekin u betda Bitcoin haqida so'z bo'lmasa, HECH QANDAY boost berilmaydi va rad qilinadi!
+            if ($isTargetPage || $isTargetChapter) {
+                if (!$hasSubstantiveTopicalTokens) {
+                    // Sof sahifa/bob konspekt savoli ("12-betda nimalar yozilgan?", "4-bob mazmuni")
+                    $combinedScore = max($combinedScore, $isTargetPage ? 0.65 : 0.60);
+                } elseif ($hasTopicalAlignment && $contentScore >= 0.12) {
+                    // Mavzu haqiqatan ham shu sahifada/bobda bor! Shuning uchun uni eng yuqoriga chiqaramiz
+                    $combinedScore = min(0.98, $contentScore + 0.22);
+                } else {
+                    // Mavzu bu sahifada YO'Q (masalan, begona mavzu yoki noto'g'ri bet).
+                    // Hech qanday boost berilmaydi, past contentScore saqlanadi.
+                    $combinedScore = $contentScore;
+                }
+            }
+
+            // 5. Agar foydalanuvchi "Bu kitob nima haqida?" deb umumiy savol bersa va alohida begona mavzu aytmasa
+            if ($isOverview && !$hasSubstantiveTopicalTokens && $chunk->ordinal <= 2) {
                 $overviewBoost = 0.65 - ($chunk->ordinal * 0.05);
                 $combinedScore = max($combinedScore, $overviewBoost);
             }
@@ -208,8 +239,10 @@ class Retriever
                 'text'          => (string) $chunk->text,
                 'source_label'  => $chunk->source_label,
                 'score'         => round($combinedScore, 4),
+                'content_score' => round($contentScore, 4),
                 'vector_score'  => $vecScore,
                 'lexical_score' => $lexicalScore,
+                'is_target_page'=> $isTargetPage,
             ];
         }
 
@@ -220,6 +253,23 @@ class Retriever
             return $a['ordinal'] <=> $b['ordinal'];
         });
 
+        // Agar foydalanuvchi sof sahifa yoki bob so'rovini bergan bo'lsa (alohida begona mavzu so'zlari yo'q):
+        // Masalan: "5-chi betda nimalar yozilgan" yoki "4-bob mazmuni"
+        // Begona sahifalar LLM kontekstini va manba iqtiboslarini chalkashtirmasligi uchun faqat maqsadli bo'laklarni qoldiramiz.
+        if (!$hasSubstantiveTopicalTokens) {
+            if ($targetPage !== null) {
+                $targetPageChunks = array_values(array_filter($scoredChunks, static fn(array $c) => !empty($c['is_target_page'])));
+                if (!empty($targetPageChunks)) {
+                    $scoredChunks = $targetPageChunks;
+                }
+            } elseif ($targetChapter !== null) {
+                $targetChapterChunks = array_values(array_filter($scoredChunks, static fn(array $c) => ($c['score'] ?? 0) >= 0.60));
+                if (!empty($targetChapterChunks)) {
+                    $scoredChunks = $targetChapterChunks;
+                }
+            }
+        }
+
         $topChunks = array_slice($scoredChunks, 0, $limit);
         $topScore = !empty($topChunks) ? (float) $topChunks[0]['score'] : 0.0;
 
@@ -229,6 +279,10 @@ class Retriever
             'mode'              => $hasVectorMode ? 'hybrid' : 'fulltext',
             'expanded_query'    => $expandedQuery,
             'is_overview_query' => $isOverview,
+            'target_page'       => $targetPage,
+            'target_chapter'    => $targetChapter,
+            'has_topical_match' => $anyTopicalMatched,
+            'topical_tokens'    => array_column($topicalTokens, 'raw'),
         ];
     }
 
@@ -311,6 +365,37 @@ class Retriever
             'основная идея',
             'основные идеи',
             'главные мысли',
+            'necha varoq',
+            'necha varoqli',
+            'nechta varoq',
+            'varoqlar soni',
+            'necha bet',
+            'necha betli',
+            'nechta bet',
+            'betlar soni',
+            'necha sahifa',
+            'necha sahifali',
+            'nechta sahifa',
+            'sahifalar soni',
+            'necha bob',
+            'nechta bob',
+            'boblar soni',
+            'qanday boblar',
+            'muallifi kim',
+            'kim yozgan',
+            'muallif haqida',
+            'avtori kim',
+            'qachon yozilgan',
+            'qachon nashr',
+            'nashr yili',
+            'how many pages',
+            'page count',
+            'how many chapters',
+            'who wrote',
+            'who is the author',
+            'сколько страниц',
+            'сколько глав',
+            'кто автор',
         ];
 
         foreach ($overviewPhrases as $phrase) {
@@ -323,15 +408,15 @@ class Retriever
     }
 
     /**
-     * Savoldan so'ralgan aniq sahifa (bet) raqamini aniqlaydi (masalan: "1-betdagi", "2-sahifa", "page 3", "3-bet").
+     * Savoldan so'ralgan aniq sahifa (bet) raqamini aniqlaydi (masalan: "5 chi betda", "1-betdagi", "2-sahifa", "page 3", "3-bet").
      */
     public function extractPageNumber(string $query): ?int
     {
         $lower = mb_strtolower(trim($query));
         $lower = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lower);
 
-        // Pattern 1: "1-bet", "1-betdagi", "12-sahifa", "5-page", "3-стр", "4 bet", "5 sahifa"
-        if (preg_match('/(?:^|[^\d])(\d{1,4})\s*[-–—]?\s*(?:bet|sahifa|page|стр|страниц)/u', $lower, $m)) {
+        // Pattern 1: "5 chi betda", "5-chi bet", "1-bet", "1-betdagi", "12-sahifa", "5-page", "3-стр", "4 bet", "5 sahifa"
+        if (preg_match('/(?:^|[^\d])(\d{1,4})\s*(?:[-–—]?\s*(?:(?:in)?chi|inji|nchi|nji|[яе]-?я|[йя]-?й))?\s*[-–—]?\s*(?:bet|sahifa|page|стр|страниц)[a-zа-я\']*/u', $lower, $m)) {
             $p = (int) $m[1];
             return $p > 0 ? $p : null;
         }
@@ -346,15 +431,15 @@ class Retriever
     }
 
     /**
-     * Savoldan so'ralgan aniq bob raqamini aniqlaydi (masalan: "1-bob", "2-bobdagi", "chapter 3", "1-glava").
+     * Savoldan so'ralgan aniq bob raqamini aniqlaydi (masalan: "1 chi bob", "1-bob", "2-bobdagi", "chapter 3", "1-glava").
      */
     public function extractChapterNumber(string $query): ?int
     {
         $lower = mb_strtolower(trim($query));
         $lower = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lower);
 
-        // Pattern 1: "1-bob", "1-bobdagi", "2-chapter", "3-glava", "4 bob"
-        if (preg_match('/(?:^|[^\d])(\d{1,3})\s*[-–—]?\s*(?:bob|chapter|glava|глав|bo\'lim|qism)/u', $lower, $m)) {
+        // Pattern 1: "1 chi bob", "1-bob", "1-bobdagi", "2-chapter", "3-glava", "4 bob"
+        if (preg_match('/(?:^|[^\d])(\d{1,3})\s*(?:[-–—]?\s*(?:(?:in)?chi|inji|nchi|nji|[яе]-?я|[йя]-?й))?\s*[-–—]?\s*(?:bob|chapter|glava|глав|bo\'lim|qism)[a-zа-я\']*/u', $lower, $m)) {
             $ch = (int) $m[1];
             return $ch > 0 ? $ch : null;
         }
@@ -459,8 +544,7 @@ class Retriever
      */
     public function tokenizeForSearch(string $text): array
     {
-        $lower = mb_strtolower($text);
-        $lower = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lower);
+        $lower = $this->normalizeTextForMatching($text);
         $rawWords = preg_split('/[^\p{L}\p{N}\']+/u', $lower, -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
         $tokens = [];
@@ -519,8 +603,7 @@ class Retriever
             return 0.0;
         }
 
-        $lowerChunk = mb_strtolower($chunkText);
-        $lowerChunk = str_replace(['o‘', 'oʼ', 'o`', 'g‘', 'gʼ', 'g`'], ["o'", "o'", "o'", "g'", "g'", "g'"], $lowerChunk);
+        $lowerChunk = $this->normalizeTextForMatching($chunkText);
 
         $matchedTokens = 0;
         $totalTermWeight = 0.0;
@@ -568,5 +651,118 @@ class Retriever
         }
 
         return round(max(0.0, min(1.0, $score)), 4);
+    }
+
+    /**
+     * Savoldan umumiy/tuzilmaviy (bet, bob, nima, qanday va h.k.) so'zlardan tozalangan
+     * haqiqiy mavzuga oid kalit so'zlarni ajratadi.
+     *
+     * @return array<int, array{raw: string, stem: string}>
+     */
+    public function extractTopicalTokens(string $query, ?int $targetPage = null, ?int $targetChapter = null): array
+    {
+        $allTokens = $this->tokenizeForSearch($query);
+        $structuralStems = [
+            'bet', 'sahif', 'page', 'bob', 'chapt', 'glav', 'qism', 'bo\'lim',
+            'bolim', 'malumot', 'ma\'lumot', 'haq', 'tushunt', 'ayt', 'ber', 'nima', 'qand',
+            'qays', 'kim', 'qach', 'yozil', 'ibor', 'mavz', 'fikr', 'goya', 'g\'oya', 'g‘oya',
+            'uchr', 'soz', 'atama', 'mano', 'natij', 'nech', 'qanch', 'deyil', 'keltir',
+            'chi', 'inchi', 'inji', 'nchi', 'nji', 'qanaq', 'borm', 'mavjud',
+            'kitob', 'knig', 'book', 'darslik',
+            'varoq', 'varaq', 'list', 'jild',
+            'muallif', 'yozuvch', 'avtor', 'nashr', 'janr',
+        ];
+
+        $topical = [];
+        foreach ($allTokens as $t) {
+            $raw = $t['raw'];
+            $stem = $t['stem'];
+
+            // Raqamlar yoki so'ralgan sahifa/bob raqamini o'tkazib yuborish
+            if (is_numeric($raw)) {
+                continue;
+            }
+            if ($targetPage !== null && (string) $targetPage === $raw) {
+                continue;
+            }
+            if ($targetChapter !== null && (string) $targetChapter === $raw) {
+                continue;
+            }
+
+            // Tuzilmaviy so'zlarni o'tkazib yuborish
+            $isStructural = false;
+            foreach ($structuralStems as $s) {
+                if (str_starts_with($stem, $s) || str_starts_with($raw, $s)) {
+                    $isStructural = true;
+                    break;
+                }
+            }
+            if ($isStructural) {
+                continue;
+            }
+
+            $topical[] = $t;
+        }
+
+        return $topical;
+    }
+
+    /**
+     * Berilgan bo'lak matnida so'ralgan mavzuga oid kalit so'zlardan nechtasi uchrashini hisoblaydi.
+     *
+     * @param  array<int, array{raw: string, stem: string}>  $topicalTokens
+     */
+    public function countMatchedTopicalTokens(array $topicalTokens, string $chunkText): int
+    {
+        if (empty($topicalTokens)) {
+            return 0;
+        }
+
+        $lowerChunk = $this->normalizeTextForMatching($chunkText);
+        $matches = 0;
+
+        foreach ($topicalTokens as $t) {
+            $raw = $this->normalizeTextForMatching($t['raw']);
+            $stem = $this->normalizeTextForMatching($t['stem']);
+
+            $pattern = '/(?<![\p{L}\p{N}])(' . preg_quote($raw, '/') . '|' . preg_quote($stem, '/') . '[\p{L}\p{N}]*)(?![\p{L}\p{N}])/u';
+            if (preg_match($pattern, $lowerChunk)) {
+                $matches++;
+            }
+        }
+
+        return $matches;
+    }
+
+    /**
+     * Matnni harflar, apostroflar va kirill/lotin transliteratsiyasi bo'yicha me'yorlashtiradi.
+     */
+    public function normalizeTextForMatching(string $text): string
+    {
+        $lower = mb_strtolower($text);
+        $lower = str_replace(
+            ['o‘', 'oʼ', 'o`', 'o’', 'g‘', 'gʼ', 'g`', 'g’', 'ʻ', 'ʼ', '’', '`', '‘'],
+            ["o'", "o'", "o'", "o'", "g'", "g'", "g'", "g'", "'", "'", "'", "'", "'"],
+            $lower
+        );
+
+        return $this->transliterateCyrillicToLatin($lower);
+    }
+
+    /**
+     * O'zbek kirill yozuvidagi so'zlarni lotin yozuviga transliteratsiya qiladi
+     * (kirillcha so'rov berilganda ham lotincha kitob matnini topa olish uchun).
+     */
+    public function transliterateCyrillicToLatin(string $text): string
+    {
+        $cyrToLat = [
+            'ў' => "o'", 'ғ' => "g'", 'ш' => 'sh', 'ч' => 'ch', 'ю' => 'yu', 'я' => 'ya', 'ё' => 'yo', 'ж' => 'j',
+            'ц' => 'ts', 'щ' => 'sh', 'э' => 'e', 'х' => 'x', 'ҳ' => 'h', 'қ' => 'q',
+            'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'з' => 'z', 'и' => 'i',
+            'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r',
+            'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f', 'ъ' => "'", 'ь' => '', 'ы' => 'i',
+        ];
+
+        return strtr($text, $cyrToLat);
     }
 }

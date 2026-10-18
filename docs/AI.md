@@ -63,28 +63,75 @@ Loyiha `config/ai.php` orqali boshqariladi:
 
 ```dotenv
 AI_ENABLED=true
-AI_PROVIDER=openai                  # openai | anthropic
-AI_CHAT_MODEL=gpt-4o-mini           # yoki claude-3-5-haiku-latest
-AI_EMBEDDING_PROVIDER=openai        # openai | null
-AI_EMBEDDING_MODEL=text-embedding-3-small
+AI_PROVIDER=gemini                  # gemini | openai | anthropic
+AI_EMBEDDING_PROVIDER=gemini        # gemini | openai | none
+
+GEMINI_API_KEY=
+GEMINI_CHAT_MODEL=gemini-3.8-flash
+GEMINI_EMBEDDING_MODEL=gemini-embedding-2
 
 OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
+OPENAI_CHAT_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 
-AI_DAILY_USER_LIMIT=20              # Kunlik savollar limiti (Asia/Tashkent)
-AI_RATE_LIMIT_PER_MIN=5             # Daqiqalik savollar limiti
+ANTHROPIC_API_KEY=
+ANTHROPIC_CHAT_MODEL=claude-3-5-haiku-latest
+
+AI_DAILY_LIMIT_PER_USER=20          # Kunlik savollar limiti (Asia/Tashkent)
+AI_MINUTE_THROTTLE=6                # Daqiqalik savollar limiti (rate limit)
 AI_MAX_QUESTION_CHARS=500           # Savolning maksimal uzunligi
-AI_RETRIEVAL_CHUNKS=6               # Kontekstga olinadigan bo'laklar soni
-AI_MIN_SIMILARITY=0.30              # Vektor rejimi uchun minimal o'xshashlik bo'sag'asi
-AI_MIN_FULLTEXT_SCORE=0.22          # FULLTEXT/leksik rejim uchun minimal bo'sag'a
-AI_MAX_HISTORY_TURNS=6              # Suhbat tarixidan olinadigan xabarlar soni
+AI_MAX_CONTEXT_CHUNKS=6             # Kontekstga olinadigan bo'laklar soni
+AI_MIN_SIMILARITY=0.22              # Vektor rejimi uchun minimal o'xshashlik bo'sag'asi
+AI_MIN_FULLTEXT_SCORE=0.12          # FULLTEXT/leksik rejim uchun minimal bo'sag'a
+AI_HISTORY_TURNS=6                  # Suhbat tarixidan olinadigan xabarlar soni
 AI_MAX_OUTPUT_TOKENS=700            # AI javobining maksimal token hajmi
-AI_TIMEOUT_SECONDS=25               # HTTP so'rov kutish vaqti (soniya)
+
+# OCR Sozlamalari (Skanerlangan rasmli PDF fayllar uchun)
+AI_OCR_ENABLED=true
+TESSERACT_BIN=tesseract
+PDFTOPPM_BIN=pdftoppm
+AI_OCR_LANGUAGES=uzb+rus+eng
+AI_OCR_DPI=150
+AI_OCR_TIMEOUT_SECONDS=300
+
+# Fon (Queue) orqali indekslash (Katta kitoblar uchun)
+AI_QUEUE_INDEXING=false
+AI_QUEUE_CONNECTION=sync
+AI_QUEUE_NAME=default
+AI_INDEX_LOCK_SECONDS=900
 ```
 
+### Hostingda OCR va Queue o'rnatish talablari (Render, Ubuntu, VPS):
+
+1. **OCR Vositalari:**
+   Ubuntu/Debian serverlarda:
+   ```bash
+   apt-get update && apt-get install -y poppler-utils tesseract-ocr tesseract-ocr-uzb tesseract-ocr-rus
+   ```
+   Docker / Render `Dockerfile` ichida:
+   ```dockerfile
+   RUN apt-get update && apt-get install -y \
+       poppler-utils \
+       tesseract-ocr \
+       tesseract-ocr-uzb \
+       tesseract-ocr-rus \
+       && rm -rf /var/lib/apt/lists/*
+   ```
+
+2. **Laravel Queue Worker (Katta kitoblarni fon rejimida indekslash):**
+   Render yoki supervisor'da queue worker servisini ishga tushirish:
+   ```bash
+   php artisan queue:work --timeout=600 --tries=2
+   ```
+
+### GroundingVerifier va Manbalarni Tekshirish:
+- Har bir javobdagi `[n]` havolalari faqat yuborilgan haqiqiy bo'laklarga tayanadi.
+- AI manba raqamini unutsa yoki keltirmasa, birinchi chunk avtomatik biriktirilmaydi (`chunks[0]` soxta biriktirish olib tashlangan).
+- Savolda so'ralmagan sahifa keltirilsa yoki faktik da'vo matnda tasdiqlanmasa, verifier javobni rad etib: *"Kitobdagi mavjud ma’lumotlar asosida bunga ishonchli javob bera olmayman"* xabarini qaytaradi.
+
 ### Embedding kaliti bo'lmaganda ishlash (`NullEmbeddingProvider`)
-- Agar `AI_EMBEDDING_PROVIDER=null` bo'lsa yoki `OPENAI_API_KEY` kiritilmagan bo'lsa, tizim avtomatik ravishda `NullEmbeddingProvider` ga o'tadi.
-- Bu holatda indekslash to'xtab qolmaydi (`embedding_mode = 'fulltext'`), qidiruv esa MySQL `FULLTEXT` indeksi va leksik/stemmer algoritmi yordamida ishlaydi.
+- Agar `AI_EMBEDDING_PROVIDER=none` bo'lsa yoki API kalit kiritilmagan bo'lsa, tizim avtomatik ravishda `NullEmbeddingProvider` ga o'tadi.
+- Bu holatda indekslash to'xtab qolmaydi (`embedding_mode = 'fulltext_only'`), qidiruv esa MySQL `FULLTEXT` indeksi va leksik/stemmer algoritmi yordamida ishlaydi.
 - Admin panelda ushbu holat haqida ogohlantirish ko'rsatiladi.
 
 ### AI'ni o'chirish usullari

@@ -915,7 +915,7 @@ Route::prefix('admin')
 
     // Kitoblar
     Route::get('/books', function () {
-        $books = \App\Models\Book::latest()->paginate(20);
+        $books = \App\Models\Book::withCount('chunks')->latest()->paginate(20);
         return view('admin.books.index', compact('books'));
     })->name('books.index');
 
@@ -1044,6 +1044,8 @@ Route::prefix('admin')
     // ── Kitob AI Yordamchi (RAG Indekslash va Sozlamalar) ──
     Route::post('/books/{book}/ai/settings', [\App\Http\Controllers\Admin\BookAiController::class, 'updateSettings'])->name('books.ai.settings');
     Route::post('/books/{book}/ai/index', [\App\Http\Controllers\Admin\BookAiController::class, 'indexBook'])->name('books.ai.index');
+    Route::get('/books/{book}/ai/status', [\App\Http\Controllers\Admin\BookAiController::class, 'status'])->name('books.ai.status');
+    Route::match(['post', 'delete'], '/books/{book}/ai/clear', [\App\Http\Controllers\Admin\BookAiController::class, 'clearIndex'])->name('books.ai.clear');
 
     // ── Kitob Fon Musiqalari (Ambient Audio) ──
     Route::get('/books/{book}/music', [\App\Http\Controllers\Admin\BookMusicController::class, 'index'])->name('books.music.index');

@@ -43,7 +43,8 @@ class ProviderManager
             'openai'    => new OpenAiLlmProvider(),
             'anthropic' => new AnthropicLlmProvider(),
             'gemini'    => new GeminiLlmProvider(),
-            default     => throw new AiProviderException("Noma'lum AI LLM provayderi: «{$name}». Qo'llab-quvvatlanadiganlar: gemini, openai, anthropic."),
+            'groq'      => new \App\Services\AI\BookAssistant\Providers\GroqLlmProvider(),
+            default     => throw new AiProviderException("Noma'lum AI LLM provayderi: «{$name}». Qo'llab-quvvatlanadiganlar: gemini, groq, openai, anthropic."),
         };
     }
 

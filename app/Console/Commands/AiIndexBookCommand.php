@@ -19,12 +19,12 @@ class AiIndexBookCommand extends Command
                             {book? : Indekslanadigan kitob ID raqami yoki slug nomi}
                             {--all : Barcha faol kitoblarni indekslash}
                             {--force : O\'zgarmagan matn va bo\'laklarni ham noldan qayta indekslash}
+                            {--clear : Kitobning AI indeksini va barcha bo\'laklarini tozalash}
+                            {--queue : Indekslashni Laravel Queue orqali fonda bajarish}
                             {--query=* : Indekslangan kitob bo\'yicha sinov savollarini tekshirish (Retriever + RelevanceGate)}';
 
     /**
      * The console command description.
-     *
-     * @var string
      */
     protected $description = 'Kitob PDF betlari va boblarini AI yordamchi (RAG) uchun bo\'laklarga ajratish va indekslash';
 
@@ -33,6 +33,8 @@ class AiIndexBookCommand extends Command
         $bookArg = $this->argument('book');
         $all = (bool) $this->option('all');
         $force = (bool) $this->option('force');
+        $clear = (bool) $this->option('clear');
+        $useQueue = (bool) $this->option('queue');
         $queries = (array) $this->option('query');
 
         if (!$bookArg && !$all) {
@@ -60,6 +62,22 @@ class AiIndexBookCommand extends Command
             return self::SUCCESS;
         }
 
+        if ($clear) {
+            foreach ($books as $b) {
+                $res = $indexer->clearBookIndex($b);
+                $this->info("[#{$b->id}] «{$b->title}» kitobining AI indeksi tozalandi ({$res['deleted_chunks']} ta bo'lak, {$res['deleted_pages']} ta bet o'chirildi).");
+            }
+            return self::SUCCESS;
+        }
+
+        if ($useQueue) {
+            foreach ($books as $b) {
+                \App\Jobs\AiIndexBookJob::dispatch($b->id, $force);
+                $this->info("[#{$b->id}] «{$b->title}» indekslash navbatiga (Queue) qo'yildi.");
+            }
+            return self::SUCCESS;
+        }
+
         $rows = [];
         $hasFailure = false;
 
@@ -73,7 +91,7 @@ class AiIndexBookCommand extends Command
 
             $elapsed = round(microtime(true) - $startedAt, 2);
 
-            if ($result['status'] !== 'ready') {
+            if (!in_array($result['status'], ['ready', 'partial'], true)) {
                 $hasFailure = true;
             } else {
                 // CLI orqali indekslanganda sinov uchun ai_enabled = true qilib qo'yamiz (agar hali yoqilmagan bo'lsa)

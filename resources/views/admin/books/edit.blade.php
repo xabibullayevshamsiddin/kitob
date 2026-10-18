@@ -174,6 +174,7 @@
         $aiQuality = $book->ai_text_quality !== null ? round((float) $book->ai_text_quality * 100, 1) : null;
         $statusMap = [
             'ready'    => ['label' => 'Tayyor', 'class' => 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'],
+            'partial'  => ['label' => 'Qisman (faqat konspekt)', 'class' => 'bg-amber-500/15 text-amber-500 border-amber-500/30'],
             'stale'    => ['label' => 'Eskirgan (qayta indekslang)', 'class' => 'bg-amber-500/15 text-amber-500 border-amber-500/30'],
             'indexing' => ['label' => 'Indekslanmoqda...', 'class' => 'bg-sky-500/15 text-sky-400 border-sky-500/30'],
             'failed'   => ['label' => 'Xato (Matn sifati past)', 'class' => 'bg-rose-500/15 text-rose-500 border-rose-500/30'],
@@ -204,33 +205,52 @@
                 </div>
             </div>
 
-            {{-- Qayta indekslash formasi --}}
-            <form action="{{ route('admin.books.ai.index', $book->id) }}" method="POST" @submit="indexing = true" class="shrink-0">
-                @csrf
-                <input type="hidden" name="force" value="1">
-                <button type="submit"
-                        :disabled="indexing"
-                        class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-2 transition-colors shadow-md shadow-emerald-600/20">
-                    <svg x-show="!indexing" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="23 4 23 10 17 10"/>
-                        <polyline points="1 20 1 14 7 14"/>
-                        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-                    </svg>
-                    <svg x-show="indexing" x-cloak class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
-                        <path d="M12 2a10 10 0 0110 10"/>
-                    </svg>
-                    <span x-text="indexing ? 'Indekslanmoqda (kutib turing)...' : '{{ $aiStatus === 'ready' ? 'Qayta indekslash' : 'Hozir indekslash' }}'">
-                        {{ $aiStatus === 'ready' ? 'Qayta indekslash' : 'Hozir indekslash' }}
-                    </span>
-                </button>
-            </form>
+            {{-- Indekslash va O'chirish formalari --}}
+            <div class="flex items-center gap-2 flex-wrap shrink-0">
+                <form action="{{ route('admin.books.ai.index', $book->id) }}" method="POST" @submit="indexing = true; $el.querySelector('[name=ai_summary]').value = document.getElementById('ai_summary')?.value || ''">
+                    @csrf
+                    <input type="hidden" name="force" value="1">
+                    <input type="hidden" name="ai_summary" value="">
+                    <button type="submit"
+                            :disabled="indexing"
+                            class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-2 transition-colors shadow-md shadow-emerald-600/20">
+                        <svg x-show="!indexing" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                        </svg>
+                        <svg x-show="indexing" x-cloak class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+                            <path d="M12 2a10 10 0 0110 10"/>
+                        </svg>
+                        <span x-text="indexing ? 'Indekslanmoqda (kutib turing)...' : '{{ $aiStatus === 'ready' ? 'Qayta indekslash' : 'Hozir indekslash' }}'">
+                            {{ $aiStatus === 'ready' ? 'Qayta indekslash' : 'Hozir indekslash' }}
+                        </span>
+                    </button>
+                </form>
+
+                @if($aiStatus !== 'none' || $aiChunksCount > 0)
+                    <form action="{{ route('admin.books.ai.clear', $book->id) }}" method="POST" onsubmit="return confirm('Haqiqatan ham «{{ addslashes($book->title) }}» kitobining AI indeksini va barcha bo\'laklarini o\'chirmoqchimisiz? AI yordamchi o\'chiriladi.')">
+                        @csrf
+                        <button type="submit"
+                                :disabled="indexing"
+                                class="px-3.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                                title="Faqat shu kitobning AI bo'laklari va indeksini tozalash">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                            <span>Indeksni o'chirish</span>
+                        </button>
+                    </form>
+                @endif
+            </div>
         </div>
 
         {{-- Ko'rsatkichlar kartalari --}}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                <span class="block text-[11px] font-mono text-slate-400">Matn sifati</span>
+                <span class="block text-[11px] font-mono text-slate-400" title="PDF yoki OCR orqali o'qilgan matnning tozalik darajasi (100% = toza raqamli matn)">Matn sifati (aniqligi)</span>
                 <span class="text-base font-bold text-slate-800 dark:text-white font-mono">
                     {{ $aiQuality !== null ? $aiQuality . '%' : '—' }}
                 </span>
@@ -255,23 +275,41 @@
             </div>
         </div>
 
-        {{-- Xato xabari (masalan, skanerlangan PDF bo'lsa) --}}
+        {{-- Xato yoki ogohlantirish xabari --}}
         @if($aiStatus === 'failed' || !empty($book->ai_index_error))
-            <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400 flex items-start gap-2.5">
+            @php
+                $isAmberBox = ($aiStatus === 'partial' || $aiStatus === 'ready');
+                $boxClasses = $isAmberBox
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    : 'bg-rose-500/10 border-rose-500/30 text-rose-400';
+                $boxSubClasses = $isAmberBox
+                    ? 'text-amber-300/90'
+                    : 'text-rose-300/80';
+            @endphp
+            <div class="p-4 rounded-xl {{ $boxClasses }} border text-xs flex items-start gap-2.5">
                 <svg class="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    @if($isAmberBox)
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    @else
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    @endif
                 </svg>
-                <div>
+                <div class="space-y-1">
                     <p class="font-bold">{{ $book->ai_index_error ?: __('ai.low_text_quality') }}</p>
                     @if(str_contains((string) $book->ai_index_error, 'Embedding xizmati'))
-                        <p class="text-[11px] text-rose-300/80 mt-0.5">
+                        <p class="text-[11px] {{ $boxSubClasses }} mt-0.5">
                             Matnli qidiruv ishlayapti; vektorli qidiruv embedding xizmati tiklangach qayta indekslashda tiklanadi.
                         </p>
-                    @elseif($aiStatus === 'failed' || str_contains((string) $book->ai_index_error, 'PDF matnidan'))
-                        <p class="text-[11px] text-rose-300/80 mt-0.5">
-                            Agar PDF skanerlangan rasm bo'lsa, OCR qilingan matnli PDF yuklang yoki kitobga boblar (matn) qo'shib qayta indekslang.
+                    @elseif($aiStatus === 'failed' || str_contains((string) $book->ai_index_error, 'PDF matnidan') || str_contains((string) $book->ai_index_error, 'skaner'))
+                        <p class="text-[11px] {{ $boxSubClasses }} mt-1 leading-relaxed">
+                            <strong>Sabab:</strong> Ushbu PDF bosma sahifalar nusxasi (skaner) bo'lib, ichida raqamli matn qatlami bo'lmagan. Tizim RapidOCR orqali matnni o'qishga harakat qiladi yoki konspekt orqali ishlaydi.
+                        </p>
+                        <p class="text-[11px] {{ $boxSubClasses }} mt-0.5 leading-relaxed">
+                            <strong>Tavsiya:</strong> Kitobni qayta indekslash («Qayta indekslash» tugmasi) bosing, yoki pastdagi «Kitobning AI uchun qisqa mazmuni» maydoniga konspekt yozib saqlang.
                         </p>
                     @endif
                 </div>
@@ -290,7 +328,7 @@
                        {{ $book->ai_enabled ? 'checked' : '' }}
                        class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300">
                 <label for="ai_enabled" class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    Ushbu kitob sahifasida «AI yordamchi»ni yoqish (faqat holati «Tayyor» bo'lganda kitobxonga ko'rinadi)
+                    Ushbu kitob sahifasida «AI yordamchi»ni yoqish (faqat holati «Tayyor» yoki «Qisman» bo'lganda kitobxonga ko'rinadi)
                 </label>
             </div>
 

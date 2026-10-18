@@ -1,9 +1,20 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ mobileMenu: false }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="bg-ink-950 text-paper" style="background-color: #07090E; color-scheme: dark;" x-data="{ mobileMenu: false }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <style>
+        html, body {
+            background-color: #07090E !important;
+            color: #F0EDE6;
+        }
+        html.light:not(.force-dark), html.light:not(.force-dark) body {
+            background-color: #F3EFE7 !important;
+            color: #1C1916;
+        }
+    </style>
 
     <x-seo-meta :title="trim($__env->yieldContent('title'))" />
 

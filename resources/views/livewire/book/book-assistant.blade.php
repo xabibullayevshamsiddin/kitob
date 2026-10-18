@@ -19,12 +19,16 @@
             }
             window.dispatchEvent(new CustomEvent('book-ai-jump-page', { detail: { page: p } }));
             if (typeof window.fbGoToPage === 'function') {
-                setTimeout(() => window.fbGoToPage(p), 220);
-            } else {
-                const url = new URL(window.location.href);
-                url.searchParams.set('page', String(p));
-                window.history.replaceState({}, '', url.toString());
+                setTimeout(() => window.fbGoToPage(p), 180);
             }
+            const pdfFrame = document.getElementById('bookPdfFrame');
+            if (pdfFrame && pdfFrame.src) {
+                const base = pdfFrame.src.split('#')[0];
+                pdfFrame.src = base + '#page=' + p + '&view=FitH&pagemode=none';
+            }
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', String(p));
+            window.history.replaceState({}, '', url.toString());
         }
     }"
     x-init="$nextTick(() => scrollToBottom())"
@@ -194,18 +198,34 @@
                                             @php
                                                 $targetPage = (int) ($src['page_start'] ?? 1);
                                                 $chipLabel = (string) ($src['label'] ?? ($targetPage . '-bet'));
+                                                $pdfUrl = route('books.pdf.read', $bookId) . '#page=' . max(1, $targetPage) . '&view=FitH';
                                             @endphp
-                                            <button
-                                                type="button"
-                                                @click="jumpToBookPage({{ $targetPage > 0 ? $targetPage : 1 }})"
-                                                class="px-2.5 py-0.5 rounded-badge bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-ink-950 border border-amber-500/30 text-[11px] font-mono font-bold inline-flex items-center gap-1 transition-all"
-                                                title="Flipbook'da {{ $chipLabel }}ga o'tish"
-                                            >
-                                                <span>[{{ $src['index'] ?? $loop->iteration }}] {{ $chipLabel }}</span>
-                                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                                    <polyline points="9 18 15 12 9 6"/>
-                                                </svg>
-                                            </button>
+                                            <div class="inline-flex items-center rounded-badge border border-amber-500/35 bg-amber-500/15 overflow-hidden text-[11px] font-mono shadow-sm">
+                                                <button
+                                                    type="button"
+                                                    @click="jumpToBookPage({{ $targetPage > 0 ? $targetPage : 1 }})"
+                                                    class="px-2.5 py-0.5 hover:bg-amber-500 text-amber-300 hover:text-ink-950 font-bold inline-flex items-center gap-1 transition-all"
+                                                    title="Saytda o'qish: {{ $chipLabel }}ga o'tish"
+                                                >
+                                                    <span>{{ !empty($src['index']) ? '[' . $src['index'] . '] ' : '' }}{{ $chipLabel }}</span>
+                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                                        <polyline points="9 18 15 12 9 6"/>
+                                                    </svg>
+                                                </button>
+                                                <a
+                                                    href="{{ $pdfUrl }}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="px-1.5 py-0.5 border-l border-amber-500/30 text-amber-400 hover:text-white hover:bg-amber-500/30 transition-colors inline-flex items-center"
+                                                    title="PDF faylni to'g'ridan-to'g'ri {{ $targetPage }}-betda ochish"
+                                                >
+                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                                                        <polyline points="15 3 21 3 21 9"/>
+                                                        <line x1="10" y1="14" x2="21" y2="3"/>
+                                                    </svg>
+                                                </a>
+                                            </div>
                                         @endforeach
                                     </div>
                                 @endif
@@ -243,7 +263,7 @@
     {{-- Input Form --}}
     @auth
         <form wire:submit.prevent="ask" class="p-3.5 sm:p-4 bg-ink-950 border-t border-ink-border space-y-2">
-            <div class="flex items-end gap-2">
+            <div class="flex items-stretch gap-2.5">
                 <div class="flex-1 relative">
                     <textarea
                         wire:model.defer="question"
@@ -265,7 +285,7 @@
                     type="submit"
                     wire:loading.attr="disabled"
                     wire:target="ask"
-                    class="ks-btn-primary py-2.5 px-4 text-xs font-bold inline-flex items-center gap-1.5 shrink-0 h-10"
+                    class="ks-btn-primary px-4 sm:px-5 text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 shrink-0 self-stretch"
                 >
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="22" y1="2" x2="11" y2="13"/>

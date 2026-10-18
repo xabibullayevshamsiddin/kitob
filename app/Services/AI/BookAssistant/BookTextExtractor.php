@@ -60,9 +60,38 @@ class BookTextExtractor
         $extraction = $this->extractRawPagesFromFile($pdfFullPath);
         $rawPages = $extraction['pages'];
         $extractorName = $extraction['extractor'];
+        $pageSource = 'pdf';
+
+        // Skanerlangan yoki matnsiz PDF holatini tekshirish
+        $totalRawChars = 0;
+        $uniqueHashes = [];
+        foreach ($rawPages as $rp) {
+            $t = trim((string) $rp);
+            $totalRawChars += mb_strlen($t);
+            if ($t !== '') {
+                $uniqueHashes[md5(mb_strtolower($t))] = true;
+            }
+        }
+        $avgRawChars = !empty($rawPages) ? ($totalRawChars / count($rawPages)) : 0;
+        $isWatermarkRepetitive = count($rawPages) >= 4 && count($uniqueHashes) <= 2;
+
+        // Agar matn yo'q bo'lsa yoki skanerlangan rasm bo'lsa (avg chars < 40 yoki faqat takroriy watermark)
+        if (empty($rawPages) || $avgRawChars < 40 || $isWatermarkRepetitive) {
+            if (config('ai.ocr.enabled', true) && $this->isOcrAvailable()) {
+                $ocrRes = $this->extractViaOcr($pdfFullPath);
+                if (!empty($ocrRes['pages'])) {
+                    $rawPages = $ocrRes['pages'];
+                    $extractorName = $this->isPythonOcrAvailable() ? 'rapid_ocr' : 'tesseract_ocr';
+                    $pageSource = 'ocr';
+                }
+            }
+        }
 
         if (empty($rawPages)) {
-            $msg = trans('ai.low_text_quality');
+            $msg = $this->isOcrAvailable()
+                ? "Skanerlangan PDF'dan matnni o'qib bo'lmadi (sahifalar bo'sh yoki xira)."
+                : trans('ai.low_text_quality') . " (Skanerlangan PDF. Matnni tanish uchun serverda RapidOCR yoki Poppler va Tesseract OCR o'rnatilgan bo'lishi lozim).";
+
             $book->update([
                 'ai_text_quality' => 0.0,
                 'ai_index_status' => 'failed',
@@ -91,7 +120,7 @@ class BookTextExtractor
                 'book_id'       => $book->id,
                 'page_number'   => $pageNum,
                 'text'          => $cleanedText,
-                'source'        => 'pdf',
+                'source'        => $pageSource,
                 'quality_score' => $pageScore,
                 'created_at'    => $now,
                 'updated_at'    => $now,
@@ -441,4 +470,334 @@ class BookTextExtractor
 
         return null;
     }
+
+    /**
+     * Serverda RapidOCR (Python/uv) yoki Poppler (pdftoppm) va Tesseract OCR o'rnatilganligini tekshiradi.
+     */
+    public function isOcrAvailable(): bool
+    {
+        if ($this->isPythonOcrAvailable()) {
+            return true;
+        }
+
+        $pdftoppm = (string) config('ai.ocr.pdftoppm_bin', 'pdftoppm');
+        $tesseract = (string) config('ai.ocr.tesseract_bin', 'tesseract');
+
+        return $this->isBinaryCallable($pdftoppm, ['-v'])
+            && $this->isBinaryCallable($tesseract, ['--version']);
+    }
+
+    /**
+     * Python RapidOCR skripti va uv/python vositasi mavjudligini tekshiradi.
+     */
+    public function isPythonOcrAvailable(): bool
+    {
+        $engine = (string) config('ai.ocr.engine', 'auto');
+        if ($engine === 'tesseract') {
+            return false;
+        }
+
+        $script = app_path('Services/AI/BookAssistant/Scripts/ocr_pdf.py');
+        if (!is_file($script)) {
+            return false;
+        }
+
+        return $this->resolvePythonOrUvCommand() !== null;
+    }
+
+    /**
+     * Python RapidOCR skriptini chaqirish uchun buyruq prefiksini aniqlaydi.
+     *
+     * @return array<int, string>|null
+     */
+    public function resolvePythonOrUvCommand(): ?array
+    {
+        $uvBin = (string) config('ai.ocr.uv_bin', 'uv');
+        $candidates = array_filter([
+            $uvBin,
+            'C:\\Users\\ASUS\\.local\\bin\\uv.exe',
+            getenv('LOCALAPPDATA') ? (getenv('LOCALAPPDATA') . '\\Programs\\uv\\uv.exe') : null,
+            getenv('USERPROFILE') ? (getenv('USERPROFILE') . '\\.local\\bin\\uv.exe') : null,
+        ]);
+
+        foreach ($candidates as $cand) {
+            if ($this->isBinaryCallable($cand, ['--version'])) {
+                return [
+                    $cand,
+                    'run',
+                    '--offline',
+                    '--with', 'rapidocr-onnxruntime',
+                    '--with', 'pymupdf',
+                    'python',
+                ];
+            }
+        }
+
+        $pythonBin = (string) config('ai.ocr.python_bin', 'python');
+        $pyCandidates = array_filter([
+            $pythonBin,
+            'C:\\Users\\ASUS\\.local\\bin\\python.exe',
+        ]);
+
+        foreach ($pyCandidates as $cand) {
+            if ($this->isBinaryCallable($cand, ['--version'])) {
+                return [$cand];
+            }
+        }
+
+        return null;
+    }
+
+    protected function isBinaryCallable(string $binary, array $args): bool
+    {
+        if (is_file($binary)) {
+            return true;
+        }
+
+        try {
+            $p = new Process(array_merge([$binary], $args));
+            $p->setTimeout(5);
+            $p->run();
+
+            return $p->getExitCode() === 0 || !empty($p->getOutput()) || !empty($p->getErrorOutput());
+        } catch (\Throwable $e) {
+            // Windows fallback: check via where.exe if Process execution threw a system/temp exception
+            if (PHP_OS_FAMILY === 'Windows' && !str_contains($binary, ' ') && !str_contains($binary, '\\') && !str_contains($binary, '/')) {
+                $out = @shell_exec("where.exe " . escapeshellarg($binary) . " 2>nul");
+                return !empty(trim((string) $out));
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * Tesseract serverida o'rnatilgan tillar ro'yxatini oladi.
+     *
+     * @return string[]
+     */
+    public function getAvailableTesseractLanguages(): array
+    {
+        $bin = (string) config('ai.ocr.tesseract_bin', 'tesseract');
+        try {
+            $p = new Process([$bin, '--list-langs']);
+            $p->setTimeout(8);
+            $p->run();
+            if (!$p->isSuccessful()) {
+                return ['eng'];
+            }
+            $lines = preg_split('/\r?\n/', trim($p->getOutput())) ?: [];
+            $langs = [];
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line !== '' && !str_contains($line, 'List of available languages')) {
+                    $langs[] = $line;
+                }
+            }
+            return $langs ?: ['eng'];
+        } catch (\Throwable $e) {
+            return ['eng'];
+        }
+    }
+
+    /**
+     * Sozlangan OCR tillarini serverdagi mavjud tillar bilan solishtiradi.
+     *
+     * @return array{lang_string: string, warnings: array}
+     */
+    public function resolveOcrLanguages(): array
+    {
+        $configured = (string) config('ai.ocr.languages', 'uzb+rus+eng');
+        $configuredList = explode('+', $configured);
+        $available = $this->getAvailableTesseractLanguages();
+
+        $valid = [];
+        $warnings = [];
+
+        foreach ($configuredList as $lang) {
+            $lang = trim($lang);
+            if ($lang === '') {
+                continue;
+            }
+            if (in_array($lang, $available, true)) {
+                $valid[] = $lang;
+            } else {
+                $warnings[] = "Tesseract til paketi «{$lang}» serverda o'rnatilmagan.";
+            }
+        }
+
+        if (empty($valid)) {
+            $valid = in_array('eng', $available, true) ? ['eng'] : (array) ($available[0] ?? 'eng');
+        }
+
+        return [
+            'lang_string' => implode('+', $valid),
+            'warnings'    => $warnings,
+        ];
+    }
+
+    /**
+     * OCR yordamida skanerlangan PDF fayldan betma-bet matn ajratadi.
+     * RapidOCR mavjud bo'lsa undan, aks holda Poppler va Tesseract OCR'dan foydalanadi.
+     *
+     * @return array{pages: string[], warnings: array}
+     */
+    public function extractViaOcr(string $pdfFullPath, ?callable $onProgress = null): array
+    {
+        if ($this->isPythonOcrAvailable()) {
+            return $this->extractViaPythonOcr($pdfFullPath, $onProgress);
+        }
+
+        $pdftoppm = (string) config('ai.ocr.pdftoppm_bin', 'pdftoppm');
+        $tesseract = (string) config('ai.ocr.tesseract_bin', 'tesseract');
+        $dpi = (int) config('ai.ocr.dpi', 150);
+        $timeout = (int) config('ai.ocr.timeout_seconds', 300);
+
+        $langRes = $this->resolveOcrLanguages();
+        $langString = $langRes['lang_string'];
+
+        $tmpDir = storage_path('app/temp_ocr_' . uniqid());
+        if (!is_dir($tmpDir)) {
+            @mkdir($tmpDir, 0755, true);
+        }
+
+        $pages = [];
+
+        try {
+            // 1. PDF sahifalarini PNG formatiga o'tkazish
+            $renderProcess = new Process([
+                $pdftoppm,
+                '-png',
+                '-r', (string) $dpi,
+                $pdfFullPath,
+                $tmpDir . DIRECTORY_SEPARATOR . 'page'
+            ]);
+            $renderProcess->setTimeout($timeout);
+            $renderProcess->run();
+
+            // 2. Hosil bo'lgan rasmlarni tartiblash
+            $imageFiles = glob($tmpDir . DIRECTORY_SEPARATOR . 'page-*.png') ?: [];
+            natsort($imageFiles);
+            $imageFiles = array_values($imageFiles);
+
+            $totalImages = count($imageFiles);
+            foreach ($imageFiles as $idx => $imgFile) {
+                if ($onProgress) {
+                    $onProgress('ocr', $idx + 1, $totalImages);
+                }
+
+                $ocrProcess = new Process([
+                    $tesseract,
+                    $imgFile,
+                    'stdout',
+                    '-l', $langString
+                ]);
+                $ocrProcess->setTimeout(60);
+                $ocrProcess->run();
+
+                $pages[] = $ocrProcess->isSuccessful() ? (string) $ocrProcess->getOutput() : '';
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('OCR extraction failed', ['error' => $e->getMessage()]);
+        } finally {
+            $this->cleanDirectory($tmpDir);
+        }
+
+        return [
+            'pages'    => $pages,
+            'warnings' => $langRes['warnings'],
+        ];
+    }
+
+    protected function cleanDirectory(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        $files = glob($dir . DIRECTORY_SEPARATOR . '*') ?: [];
+        foreach ($files as $f) {
+            if (is_file($f)) {
+                @unlink($f);
+            }
+        }
+        @rmdir($dir);
+    }
+
+    /**
+     * Python RapidOCR (ONNX Runtime + PyMuPDF) orqali skanerlangan PDF fayldan matn ajratadi.
+     *
+     * @return array{pages: string[], warnings: array}
+     */
+    public function extractViaPythonOcr(string $pdfFullPath, ?callable $onProgress = null): array
+    {
+        $cmdPrefix = $this->resolvePythonOrUvCommand();
+        if (!$cmdPrefix) {
+            return [
+                'pages'    => [],
+                'warnings' => ["Python yoki uv vositasi topilmadi."],
+            ];
+        }
+
+        $script = app_path('Services/AI/BookAssistant/Scripts/ocr_pdf.py');
+        $maxPages = (int) config('ai.ocr.max_pages', 50);
+        $timeout = (int) config('ai.ocr.timeout_seconds', 600);
+
+        $cmd = array_merge($cmdPrefix, [
+            $script,
+            $pdfFullPath,
+            '--max-pages', (string) $maxPages,
+        ]);
+
+        $pages = [];
+        $warnings = [];
+
+        try {
+            $process = new Process($cmd);
+            $process->setTimeout($timeout);
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                $err = $process->getErrorOutput() ?: $process->getOutput();
+                \Illuminate\Support\Facades\Log::warning('Python OCR failed', ['error' => $err]);
+                $warnings[] = "Python OCR xatolik: " . \Illuminate\Support\Str::limit($err, 150);
+            } else {
+                $rawOut = trim($process->getOutput());
+                $data = json_decode($rawOut, true);
+                if (is_array($data) && !empty($data['pages'])) {
+                    foreach ($data['pages'] as $p) {
+                        $pages[] = (string) ($p['text'] ?? '');
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback via exec in case Process pipes fail on Windows
+            try {
+                $commandStr = implode(' ', array_map('escapeshellarg', $cmd));
+                $outputLines = [];
+                $exitCode = 0;
+                @exec($commandStr, $outputLines, $exitCode);
+                $rawOut = trim(implode("\n", $outputLines));
+                if ($exitCode === 0 && !empty($rawOut)) {
+                    $data = json_decode($rawOut, true);
+                    if (is_array($data) && !empty($data['pages'])) {
+                        foreach ($data['pages'] as $p) {
+                            $pages[] = (string) ($p['text'] ?? '');
+                        }
+                    }
+                } else {
+                    \Illuminate\Support\Facades\Log::error('Python OCR exception', ['error' => $e->getMessage()]);
+                    $warnings[] = "Python OCR ijro xatosi: " . $e->getMessage();
+                }
+            } catch (\Throwable $e2) {
+                \Illuminate\Support\Facades\Log::error('Python OCR exception', ['error' => $e2->getMessage()]);
+                $warnings[] = "Python OCR ijro xatosi: " . $e2->getMessage();
+            }
+        }
+
+        return [
+            'pages'    => $pages,
+            'warnings' => $warnings,
+        ];
+    }
 }
+

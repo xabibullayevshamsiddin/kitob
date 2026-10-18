@@ -18,4 +18,7 @@ return [
     'clear_history'       => "Tarixni tozalash",
     'history_cleared'     => "Suhbat tarixi tozalandi.",
     'sources_label'       => "Manbalar",
+    'no_evidence'         => "Kitobdagi mavjud ma’lumotlar asosida bunga ishonchli javob bera olmayman.",
+    'unsupported_page'    => "Kitobning so'ralgan sahifasida bu mavzu haqida ma'lumot topilmadi.",
+    'partial_notice'      => "Eslatma: Ushbu kitob faqat qisqa konspekt asosida indekslangan.",
 ];

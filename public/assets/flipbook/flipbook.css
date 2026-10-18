@@ -100,13 +100,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--fb-paper-tone);
+  background: #0d121d;
   border-radius: 6px;
   max-width: 100%;
   cursor: grab;
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none;
+  overflow: hidden;
   box-shadow:
     -3px 2px 0 #ede8df,
     -6px 4px 0 #ded8cc,
@@ -176,6 +177,16 @@
   pointer-events: none;
 }
 
+/* Prevent unmounted page DOM nodes from expanding layout or flashing before StPageFlip */
+#fb-stf-book > .fb-stf-page {
+  display: none !important;
+}
+.stf__item .fb-stf-page,
+.stf__block .fb-stf-page,
+.fb-stf-page.stf__item {
+  display: block !important;
+}
+
 .fb-stf-page {
   background: var(--fb-paper-tone);
   overflow: hidden;
@@ -242,7 +253,7 @@
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.7), inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
-/* Page loading skeleton inside unrendered pages */
+/* Page loading skeleton inside unrendered pages (dark sleek card, zero white glare) */
 .fb-stf-page-loader {
   position: absolute;
   inset: 0;
@@ -251,10 +262,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: #64748b;
+  color: #8b9bad;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.75rem;
-  background: linear-gradient(135deg, #faf8f5 0%, #f3efe6 100%);
+  background: #0f1422;
   z-index: 1;
   transition: opacity 0.2s ease;
 }

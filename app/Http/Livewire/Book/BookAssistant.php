@@ -54,7 +54,7 @@ class BookAssistant extends Component
 
         // Public property ($this->bookId) brauzerdan o'zgartirilgan bo'lsa ham ruxsatni qayta tekshiramiz
         $book = Book::availableForUser(auth()->user())->find($this->bookId);
-        if (!$book || !$book->is_active || !$book->ai_enabled || $book->ai_index_status !== 'ready') {
+        if (!$book || !$book->is_active || !$book->ai_enabled || !in_array($book->ai_index_status, ['ready', 'partial'], true)) {
             $msg = trans('ai.book_not_ready');
             $this->errorMessage = $msg;
             $this->toastError($msg);

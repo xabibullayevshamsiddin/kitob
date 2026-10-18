@@ -18,4 +18,7 @@ return [
     'clear_history'       => 'Clear history',
     'history_cleared'     => 'Conversation history cleared.',
     'sources_label'       => 'Sources',
+    'no_evidence'         => 'Based on the available information in the book, I cannot reliably answer this.',
+    'unsupported_page'    => 'The requested page does not contain information about this topic.',
+    'partial_notice'      => 'Note: This book is indexed based on a summary only.',
 ];

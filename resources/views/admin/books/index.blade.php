@@ -81,6 +81,7 @@
                     <th class="py-2.5 px-3.5">Janr</th>
                     <th class="py-2.5 px-3.5">Hafta</th>
                     <th class="py-2.5 px-3.5 text-center">Holat</th>
+                    <th class="py-2.5 px-3.5 text-center">AI Holati</th>
                     <th class="py-2.5 px-3.5 text-right">Amallar</th>
                 </tr>
             </thead>
@@ -149,6 +150,61 @@
                             <p class="text-[9px] mt-0.5 font-mono {{ $book->is_active ? 'text-amber-400' : 'text-mist' }}">
                                 {{ $book->is_active ? 'Faol' : 'Nofaol' }}
                             </p>
+                        </td>
+
+                        {{-- AI Holati & Alohida Indekslash --}}
+                        <td class="py-2.5 px-3.5 text-center">
+                            @php
+                                $aiStatus = $book->ai_index_status ?? 'none';
+                                $chunksCount = $book->chunks_count ?? $book->chunks()->count();
+                            @endphp
+                            <div class="inline-flex flex-col items-center gap-1">
+                                @if($aiStatus === 'ready')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" title="AI yordamchi faol ({{ $chunksCount }} ta bo'lak)">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                        <span>Tayyor ({{ $chunksCount }})</span>
+                                    </span>
+                                @elseif($aiStatus === 'partial')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30" title="Qisman indekslangan (faqat konspekt, {{ $chunksCount }} ta bo'lak)">
+                                        <span>Konspekt ({{ $chunksCount }})</span>
+                                    </span>
+                                @elseif($aiStatus === 'failed')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30" title="Matn sifati past yoki skaner PDF">
+                                        <span>⚠️ Skaner</span>
+                                    </span>
+                                @elseif($aiStatus === 'indexing')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                                        <span>Jarayonda...</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono bg-ink-950 text-mist border border-ink-border">
+                                        <span>Yo'q</span>
+                                    </span>
+                                @endif
+
+                                <div class="inline-flex items-center gap-1.5">
+                                    <form method="POST" action="{{ route('admin.books.ai.index', $book->id) }}">
+                                        @csrf
+                                        <input type="hidden" name="force" value="1">
+                                        <button type="submit"
+                                                class="text-[10px] font-mono text-amber-400 hover:text-amber-300 underline transition-colors"
+                                                title="Faqat shu kitobni alohida indekslash">
+                                            {{ $aiStatus === 'ready' ? '↻ Qayta' : '⚡ Indekslash' }}
+                                        </button>
+                                    </form>
+
+                                    @if($aiStatus === 'ready' || $chunksCount > 0 || $aiStatus === 'failed')
+                                        <form method="POST" action="{{ route('admin.books.ai.clear', $book->id) }}" onsubmit="return confirm('Faqat «{{ addslashes($book->title) }}» kitobining AI indeksini o\'chirmoqchimisiz?')">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="text-[10px] font-mono text-rose-400 hover:text-rose-300 underline transition-colors"
+                                                    title="Faqat shu kitobning AI indeksini tozalash">
+                                                ✕ O'chirish
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
 
                         {{-- Actions --}}

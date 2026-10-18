@@ -96,7 +96,32 @@ class GeminiLlmProvider implements LlmProviderInterface
 
         if (!$response->successful()) {
             $errMsg = $response->json('error.message') ?: ('HTTP ' . $response->status());
-            throw new AiProviderException('Gemini xatosi: ' . $errMsg);
+
+            // Agar Quota exceeded, 429 yoki 404 bo'lsa, mavjud zaxira modellarni sinab ko'ramiz
+            if (str_contains($errMsg, 'Quota exceeded') || in_array($response->status(), [429, 404], true)) {
+                $fallbacks = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
+                foreach ($fallbacks as $fbModel) {
+                    if ($fbModel === $model) {
+                        continue;
+                    }
+                    $fallbackUrl = $this->baseUrl . '/models/' . urlencode($fbModel) . ':generateContent?key=' . urlencode($this->apiKey);
+                    $fbResponse = Http::withHeaders(['x-goog-api-key' => $this->apiKey])
+                        ->timeout($this->timeout)
+                        ->acceptJson()
+                        ->post($fallbackUrl, $payload);
+
+                    if ($fbResponse->successful()) {
+                        $response = $fbResponse;
+                        $model = $fbModel;
+                        break;
+                    }
+                }
+            }
+
+            if (!$response->successful()) {
+                $errMsg = $response->json('error.message') ?: ('HTTP ' . $response->status());
+                throw new AiProviderException('Gemini xatosi: ' . $errMsg);
+            }
         }
 
         $data = $response->json();

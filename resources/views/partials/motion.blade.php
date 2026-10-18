@@ -274,6 +274,8 @@
     :root { --ks-ease: cubic-bezier(0.16, 1, 0.3, 1); --ks-teal: #2DD4BF; --ks-coral: #FB7185; }
 
     /* ── Sahifa kirish / chiqish ── */
+    html, html.ks-pre, html.ks-leave { background-color: #07090E; }
+    html.light:not(.force-dark), html.light:not(.force-dark).ks-pre, html.light:not(.force-dark).ks-leave { background-color: #F3EFE7; }
     html.ks-motion body { transition: opacity .5s ease; }
     html.ks-pre body { opacity: 0; }
     html.ks-leave body { opacity: 0; transition-duration: .17s; }
