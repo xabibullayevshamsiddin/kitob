@@ -149,7 +149,7 @@
 
                         <span class="inline-flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-mist/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            <span>{{ $user->created_at->format('d.m.Y') }} da a'zo bo'lgan</span>
+                            <span>{{ __('site.profile.joined_date', ['date' => $user->created_at->format('d.m.Y')]) }}</span>
                         </span>
                     </div>
                 </div>
@@ -166,7 +166,7 @@
                             <span>{{ __('site.profile.streak') }}</span>
                         </span>
                         @if(($user->streak?->freeze_count ?? 0) > 0)
-                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25" title="Muzlatgich himoyasi faol">
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25" title="{{ __('site.profile.streak_freeze_active') }}">
                                 🧊 {{ $user->streak->freeze_count }}
                             </span>
                         @endif
@@ -217,6 +217,9 @@
         <button wire:click="setTab('books')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'books' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
             {{ __('site.profile.tab_books') }} ({{ count($readingProgresses) }})
         </button>
+        <button wire:click="setTab('saved')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'saved' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
+            {{ __('site.profile.tab_saved') }} ({{ count($savedBooks) }})
+        </button>
         <button wire:click="setTab('badges')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'badges' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
             {{ __('site.profile.tab_badges') }} ({{ count($badges) }})
         </button>
@@ -225,7 +228,7 @@
                 {{ __('site.profile.tab_notes') }} ({{ count($notes) }})
             </button>
             <button wire:click="setTab('shop')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 flex items-center gap-1.5 {{ $activeTab === 'shop' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-amber-400/80 hover:text-amber-400 hover:bg-ink-900 border border-amber-500/20' }}">
-                <span>🛍️ Tanga do'koni</span>
+                <span>🛍️ {{ __('site.profile.tab_shop') }}</span>
             </button>
         @endif
     </div>
@@ -333,6 +336,70 @@
         </div>
     @endif
 
+    <!-- Tab: Saved Books (Saqlangan kitoblar) -->
+    @if ($activeTab === 'saved')
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @forelse ($savedBooks as $savedBook)
+                <div class="p-3.5 rounded-panel bg-ink-900 border border-ink-border flex gap-3.5 hover:border-amber-500/30 transition-all group">
+                    <a href="{{ route('books.show', $savedBook->slug) }}" class="shrink-0 block">
+                        <img src="{{ $savedBook->cover_url }}" alt="{{ $savedBook->title }}" class="w-16 h-24 rounded object-cover border border-ink-border group-hover:scale-105 transition-transform">
+                    </a>
+                    <div class="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between gap-1">
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-amber-400 truncate">{{ $savedBook->genre }}</span>
+                                @if($isOwner)
+                                    <button type="button" 
+                                            wire:click="unsaveBook({{ $savedBook->id }})"
+                                            class="text-mist hover:text-rose-400 p-1 -mr-1 -mt-1 transition-colors"
+                                            title="{{ __('site.saved_books.remove_from_saved') }}">
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                @endif
+                            </div>
+                            <a href="{{ route('books.show', $savedBook->slug) }}" class="block">
+                                <h4 class="text-xs sm:text-sm font-semibold text-paper hover:text-amber-400 transition-colors truncate">{{ $savedBook->title }}</h4>
+                            </a>
+                            <p class="text-[11px] text-mist truncate font-sans">{{ $savedBook->author }}</p>
+                        </div>
+                        <div class="pt-2 flex items-center justify-between border-t border-ink-border/50">
+                            <div class="flex items-center gap-2 text-[10px] text-mist font-mono">
+                                <span>{{ $savedBook->chapters_count ?? 0 }} {{ __('site.books.chapters_count_suffix') }}</span>
+                                @if(($savedBook->audios_count ?? 0) > 0)
+                                    <span>• 🎵 Audio</span>
+                                @endif
+                            </div>
+                            <a href="{{ route('books.show', $savedBook->slug) }}" class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold font-mono flex items-center gap-0.5">
+                                <span>{{ __('site.books.read_cta') }}</span>
+                                <span>→</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full py-12 text-center p-8 rounded-panel bg-ink-900 border border-ink-border space-y-3">
+                    <div class="w-12 h-12 mx-auto rounded-btn bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <h3 class="text-sm font-bold text-paper font-serif">{{ __('site.profile.empty_saved') }}</h3>
+                    <p class="text-xs text-mist font-sans max-w-sm mx-auto">
+                        @if($isOwner)
+                            {{ __('site.saved_books.owner_empty_desc') }}
+                        @else
+                            {{ __('site.saved_books.other_empty_desc') }}
+                        @endif
+                    </p>
+                    @if($isOwner)
+                        <a href="{{ route('books.catalog') }}" class="ks-btn-primary inline-flex items-center gap-2 text-xs py-2 px-4 mt-2">
+                            <span>{{ __('site.saved_books.go_to_catalog') }}</span>
+                            <span>→</span>
+                        </a>
+                    @endif
+                </div>
+            @endforelse
+        </div>
+    @endif
+
     <!-- Tab 3: Badges -->
     @if ($activeTab === 'badges')
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
@@ -415,13 +482,12 @@
                 <div>
                     <h3 class="text-base font-bold text-paper font-serif flex items-center gap-2">
                         <span>🛍️</span>
-                        <span>Kitobxon Tangalar Do‘koni</span>
+                        <span>{{ __('site.profile.shop_title') }}</span>
                     </h3>
-                    <p class="text-xs text-mist font-sans mt-1">Kitob o‘qib, testlar yechib jamg‘argan tangalaringizni profil vizual fonlari, VIP chat bezaklari va foydali vositalarga almashtiring.</p>
+                    <p class="text-xs text-mist font-sans mt-1">{{ __('site.profile.shop_subtitle') }}</p>
                 </div>
                 <div class="flex items-center gap-2 px-3.5 py-2 rounded-btn bg-ink-800 border border-ink-border text-amber-400 font-mono font-bold text-sm shrink-0">
-                    <span>🪙 Balansingiz:</span>
-                    <span>{{ number_format($user->coin_balance) }} tanga</span>
+                    <span>🪙 {{ __('site.profile.your_balance', ['coins' => number_format($user->coin_balance)]) }}</span>
                 </div>
             </div>
 
@@ -431,15 +497,15 @@
                     <div>
                         <h4 class="text-sm font-bold text-paper flex items-center gap-2">
                             <span>🎨</span>
-                            <span>Profil va Chat Vizual Ko‘rinishi</span>
+                            <span>{{ __('site.profile.visual_appearance_title') }}</span>
                         </h4>
-                        <p class="text-xs text-mist mt-0.5">Profilingizga boshqalar kirganida ko‘rinadigan fon hamda umumiy chatda xabarlaringiz qaysi uslubda chiqishini tanlang.</p>
+                        <p class="text-xs text-mist mt-0.5">{{ __('site.profile.visual_appearance_subtitle') }}</p>
                     </div>
 
                     @if($activeTheme)
                         <button type="button" wire:click="unequipShopTheme"
                                 class="text-[11px] font-mono text-mist hover:text-rose-400 transition underline self-start sm:self-auto">
-                            Maxsus bezakni yechish (Standartga qaytish)
+                            {{ __('site.profile.unequip_theme') }}
                         </button>
                     @endif
                 </div>
@@ -453,17 +519,17 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>🛍️</span>
-                                <span>Do‘kon Foni</span>
+                                <span>{{ __('site.profile.opt_shop_theme') }}</span>
                             </span>
                             @if($currentPref === 'shop')
                                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
-                            Tangaga xarid qilingan rangli profil foni, avatar aurası va VIP chat effekti.
+                            {{ __('site.profile.opt_shop_desc') }}
                         </p>
                         <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
-                            Faol: {{ $activeTheme ? ($visualCatalog[$activeTheme]['name'] ?? ucfirst($activeTheme)) : 'Tanlanmagan' }}
+                            {{ __('site.profile.active_theme', ['theme' => $activeTheme ? ($visualCatalog[$activeTheme]['name'] ?? ucfirst($activeTheme)) : __('site.profile.not_selected')]) }}
                         </div>
                     </button>
 
@@ -474,17 +540,17 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>🏆</span>
-                                <span>Reyting Foni</span>
+                                <span>{{ __('site.profile.opt_rank_theme') }}</span>
                             </span>
                             @if($currentPref === 'rank')
                                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
-                            Reytingdagi o‘rningizga mos chempionlik foni (Top 1 Oltin, Kumush, Bronza yoki Liderlar aurası).
+                            {{ __('site.profile.opt_rank_desc') }}
                         </p>
                         <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
-                            O‘rningiz: {{ $userRank ? "#{$userRank}-o‘rin" : 'Ball yetarli emas' }}
+                            {{ $userRank ? __('site.profile.your_rank', ['rank' => "#{$userRank}"]) : __('site.profile.insufficient_points') }}
                         </div>
                     </button>
 
@@ -495,17 +561,17 @@
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>👤</span>
-                                <span>Standart Ko‘rinish</span>
+                                <span>{{ __('site.profile.opt_default_theme') }}</span>
                             </span>
                             @if($currentPref === 'default')
                                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
-                            Sokin, qo‘shimcha porlash va auralarsiz klassik kitobxon ko‘rinishi.
+                            {{ __('site.profile.opt_default_desc') }}
                         </p>
                         <div class="text-[10px] font-mono text-mist mt-2">
-                            Oddiy sokin holat
+                            {{ __('site.profile.default_quiet_state') }}
                         </div>
                     </button>
                 </div>
@@ -514,11 +580,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                     <!-- Profile Header Live Preview -->
                     <div class="p-3.5 rounded-card bg-ink-950/70 border border-ink-border/60 flex flex-col justify-between">
-                        <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">Profil Bosh Qismi Namunasi:</span>
+                        <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">{{ __('site.profile.preview_header') }}</span>
                         <div class="rounded-btn overflow-hidden border relative p-3 flex flex-col justify-between min-h-[96px] {{ $profileVisual['card_border'] }} {{ $profileVisual['banner_gradient'] }}">
                             <div class="absolute inset-0 pointer-events-none animate-ambient-breathe" style="background: {{ $profileVisual['banner_ambient'] }};"></div>
                             <div class="relative z-10 flex items-center justify-between">
-                                <span class="text-[10px] font-mono text-paper/80 font-bold uppercase tracking-wider">Profil Foni</span>
+                                <span class="text-[10px] font-mono text-paper/80 font-bold uppercase tracking-wider">{{ __('site.profile.preview_cover') }}</span>
                                 @if($profileVisual['badge_text'])
                                     <span class="{{ $profileVisual['badge_class'] }} text-[9px] px-2 py-0.5">{{ $profileVisual['badge_text'] }}</span>
                                 @endif
@@ -537,7 +603,7 @@
 
                     <!-- Chat Message Live Preview -->
                     <div class="p-3.5 rounded-card bg-ink-950/70 border border-ink-border/60 flex flex-col justify-between">
-                        <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">Umumiy Chatda Xabaringiz:</span>
+                        <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">{{ __('site.profile.preview_chat') }}</span>
                         <div class="flex items-start gap-2.5">
                             <x-ui.avatar :user="$user" size="sm" :rank="$userRank" />
                             <div class="flex flex-col items-start min-w-0">
@@ -546,10 +612,10 @@
                                     @if($previewStyle['badge_text'])
                                         <span class="{{ $previewStyle['badge_class'] }}">{{ $previewStyle['badge_text'] }}</span>
                                     @endif
-                                    <span class="text-[10px] font-mono text-mist">Hozir</span>
+                                    <span class="text-[10px] font-mono text-mist">{{ __('site.profile.preview_now') }}</span>
                                 </div>
                                 <div class="px-3 py-1.5 rounded-card text-xs leading-relaxed border {{ $previewStyle['bubble_class'] }}">
-                                    Salom hammaga! Profilimga yangi vizual fon o‘rnatdim 📖✨
+                                    {{ __('site.profile.preview_message') }}
                                 </div>
                             </div>
                         </div>
@@ -566,18 +632,18 @@
                             <span class="text-2xl">🧊</span>
                             <span class="px-2.5 py-0.5 rounded-pill bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-mono font-bold">50 tanga</span>
                         </div>
-                        <h4 class="text-sm font-bold text-paper">Streak Freeze (Muzlatgich)</h4>
+                        <h4 class="text-sm font-bold text-paper">{{ __('site.profile.freeze_title') }}</h4>
                         <p class="text-xs text-mist leading-relaxed font-sans">
-                            Bir kun kitob o‘qishga ulgurmasangiz ham, kunlik ketma-ketligingiz (streak) uzilmaydi va saqlanib qoladi!
+                            {{ __('site.profile.freeze_desc') }}
                         </p>
                         <div class="text-[11px] font-mono text-mist pt-1">
-                            Sizda mavjud: <strong class="text-sky-400">{{ (int) ($user->streak?->freeze_count ?? 0) }}/5 dona</strong>
+                            {{ __('site.profile.freeze_owned', ['count' => (int) ($user->streak?->freeze_count ?? 0)]) }}
                         </div>
                     </div>
                     <button wire:click="buyStreakFreeze" wire:loading.attr="disabled"
                             class="w-full min-h-11 rounded-btn bg-sky-500/15 border border-sky-500/30 hover:bg-sky-500/25 text-sky-300 font-mono text-xs font-bold transition flex items-center justify-center gap-1.5">
-                        <span wire:loading.remove wire:target="buyStreakFreeze">Muzlatgich sotib olish (50 🪙)</span>
-                        <span wire:loading wire:target="buyStreakFreeze">Xarid qilinmoqda...</span>
+                        <span wire:loading.remove wire:target="buyStreakFreeze">{{ __('site.profile.freeze_buy_btn') }}</span>
+                        <span wire:loading wire:target="buyStreakFreeze">{{ __('site.profile.purchasing') }}</span>
                     </button>
                 </div>
 
@@ -594,16 +660,16 @@
                                     <span class="text-2xl">{{ $item['icon'] }}</span>
                                     <div>
                                         <h4 class="text-sm font-bold text-paper">{{ $item['name'] }}</h4>
-                                        <span class="text-[10px] font-mono text-mist">Profil Foni + Chat</span>
+                                        <span class="text-[10px] font-mono text-mist">{{ __('site.profile.item_type_label') }}</span>
                                     </div>
                                 </div>
                                 @if($isOwned)
                                     <span class="px-2 py-0.5 rounded-pill bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono font-bold shrink-0">
-                                        ✓ Sizda mavjud
+                                        {{ __('site.profile.owned_badge') }}
                                     </span>
                                 @else
                                     <span class="px-2.5 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold shrink-0">
-                                        {{ $item['price'] }} tanga
+                                        {{ __('site.profile.price_coins', ['price' => $item['price']]) }}
                                     </span>
                                 @endif
                             </div>
@@ -617,7 +683,7 @@
                                 <div class="absolute inset-0 pointer-events-none" style="background: {{ $item['banner_ambient'] }};"></div>
                                 <div class="relative z-10 flex items-center justify-between">
                                     <span class="{{ $item['badge_class'] }} text-[9px] px-2 py-0.5">{{ $item['badge_text'] }}</span>
-                                    <span class="text-[10px] font-mono text-paper/70 font-semibold">Jonli fon</span>
+                                    <span class="text-[10px] font-mono text-paper/70 font-semibold">{{ __('site.profile.live_theme_badge') }}</span>
                                 </div>
                                 <div class="relative z-10 h-0.5 w-full {{ $item['card_accent_line'] }} rounded-full"></div>
                             </div>
@@ -631,11 +697,11 @@
                                         ? 'bg-ink-800 border border-ink-border hover:bg-ink-700 text-paper'
                                         : 'bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-300') }}">
                             @if($isActive)
-                                <span>✓ Profilga o‘rnatilgan va faol</span>
+                                <span>{{ __('site.profile.theme_active') }}</span>
                             @elseif($isOwned)
-                                <span>🔄 Profilga faollashtirish (0 🪙)</span>
+                                <span>{{ __('site.profile.theme_activate') }}</span>
                             @else
-                                <span>Xarid qilish va o‘rnatish ({{ $item['price'] }} 🪙)</span>
+                                <span>{{ __('site.profile.theme_buy', ['price' => $item['price']]) }}</span>
                             @endif
                         </button>
                     </div>

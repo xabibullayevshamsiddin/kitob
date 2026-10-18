@@ -85,16 +85,16 @@
                         🎵
                     </span>
                     <div>
-                        <h4 class="text-xs font-bold font-serif text-paper">Mutolaa Fon Musiqasi</h4>
+                        <h4 class="text-xs font-bold font-serif text-paper">{{ __('site.ambient_music.title') }}</h4>
                         <span class="text-[10px] font-mono text-mist block">
-                            {{ $bookMusics->isNotEmpty() ? $bookMusics->count() . ' ta trek' : 'Ambient ohanglar' }}
+                            {{ $bookMusics->isNotEmpty() ? __('site.ambient_music.tracks_count', ['count' => $bookMusics->count()]) : __('site.ambient_music.ambient_tones') }}
                         </span>
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button @click="isOpen = false" 
                             class="p-1 rounded-btn text-mist hover:text-paper hover:bg-white/5 transition-colors text-xs" 
-                            title="Yopish">
+                            title="{{ __('site.ambient_music.close') }}">
                         ✕
                     </button>
                 </div>
@@ -106,14 +106,14 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-badge bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0"
                               x-text="`${currentIndex + 1}/${tracks.length}`"></span>
-                        <p class="text-xs font-bold text-paper truncate font-sans" x-text="currentTrack ? currentTrack.title : 'Yuklanmoqda...'"></p>
+                        <p class="text-xs font-bold text-paper truncate font-sans" x-text="currentTrack ? currentTrack.title : @js(__('site.ambient_music.loading'))"></p>
                     </div>
                     <div class="flex items-center gap-2 mt-1 font-mono text-[10px] text-mist">
                         <span x-text="formatTime(currentTime)">00:00</span>
                         <span>/</span>
                         <span x-text="formatTime(duration)">--:--</span>
-                        <span x-show="isPlaying" class="text-emerald-400 font-semibold">• Ijro etilmoqda</span>
-                        <span x-show="!isPlaying" class="text-mist">• To'xtatilgan</span>
+                        <span x-show="isPlaying" class="text-emerald-400 font-semibold">{{ __('site.ambient_music.playing') }}</span>
+                        <span x-show="!isPlaying" class="text-mist">{{ __('site.ambient_music.paused') }}</span>
                     </div>
                 </div>
 
@@ -145,7 +145,7 @@
                 <button @click="toggleLoop()" 
                         class="p-2 rounded-xl transition-colors text-xs font-mono"
                         :class="isLooping ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper hover:bg-white/5'"
-                        :title="isLooping ? 'Aylanma ijro: Bitta trek takrorlanadi' : 'Aylanma ijro: O\'chirilgan'">
+                        :title="isLooping ? @js(__('site.ambient_music.loop_one')) : @js(__('site.ambient_music.loop_off'))">
                     <span x-show="!isLooping">🔁</span>
                     <span x-show="isLooping" class="font-bold">🔂</span>
                 </button>
@@ -155,14 +155,14 @@
                     <!-- Prev -->
                     <button @click="prevTrack()" 
                             class="p-2.5 rounded-xl bg-ink-900 border border-ink-border text-paper hover:text-amber-400 hover:border-amber-400/40 transition-colors"
-                            title="Oldingi musiqa">
+                            title="{{ __('site.ambient_music.prev') }}">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
                     </button>
 
                     <!-- Play / Pause Button -->
                     <button @click="togglePlay()" 
                             class="p-3.5 rounded-2xl bg-amber-500 text-ink-950 hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/30 active:scale-95 font-bold"
-                            :title="isPlaying ? 'Musiqani to\'xtatish (Pauza)' : 'Musiqani yoqish (Ijro)'">
+                            :title="isPlaying ? @js(__('site.ambient_music.pause')) : @js(__('site.ambient_music.play'))">
                         <svg x-show="!isPlaying" class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         <svg x-show="isPlaying" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </button>
@@ -170,7 +170,7 @@
                     <!-- Next -->
                     <button @click="nextTrack()" 
                             class="p-2.5 rounded-xl bg-ink-900 border border-ink-border text-paper hover:text-amber-400 hover:border-amber-400/40 transition-colors"
-                            title="Keyingi musiqa">
+                            title="{{ __('site.ambient_music.next') }}">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="m6 18 8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
                     </button>
                 </div>
@@ -179,7 +179,7 @@
                 <button @click="showPlaylist = !showPlaylist"
                         class="p-2 rounded-xl transition-colors text-xs font-mono"
                         :class="showPlaylist ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper hover:bg-white/5'"
-                        title="Pleylistni ko'rish">
+                        title="{{ __('site.ambient_music.view_playlist') }}">
                     📜
                 </button>
             </div>
@@ -188,7 +188,7 @@
             <div class="flex items-center gap-3 pt-1 border-t border-ink-border/50 text-xs">
                 <button @click="toggleMute()" 
                         class="text-mist hover:text-amber-400 transition-colors text-sm shrink-0"
-                        :title="isMuted ? 'Ovozni yoqish' : 'Ovozni o\'chirish'">
+                        :title="isMuted ? @js(__('site.ambient_music.unmute')) : @js(__('site.ambient_music.mute'))">
                     <span x-show="!isMuted && volume > 0.5">🔊</span>
                     <span x-show="!isMuted && volume <= 0.5 && volume > 0">🔉</span>
                     <span x-show="isMuted || volume == 0">🔇</span>
@@ -211,7 +211,7 @@
                  x-transition:enter-start="opacity-0 max-h-0"
                  x-transition:enter-end="opacity-100 max-h-60"
                  class="space-y-1.5 pt-2 border-t border-ink-border max-h-48 overflow-y-auto pr-1 font-sans">
-                <p class="text-[10px] font-mono text-mist uppercase font-semibold">Pleylist treklari:</p>
+                <p class="text-[10px] font-mono text-mist uppercase font-semibold">{{ __('site.ambient_music.playlist_tracks') }}</p>
                 <template x-for="(t, idx) in tracks" :key="t.id || idx">
                     <div @click="selectTrack(idx)"
                          class="p-2 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-colors"
@@ -230,7 +230,7 @@
             </div>
 
             <p class="text-[9px] text-center text-mist/70 font-mono">
-                Maslahat: Klaviaturadagi <kbd class="px-1 py-0.5 rounded bg-ink-900 border border-ink-border text-paper">M</kbd> tugmasi orqali musiqani yoqish/o'chirish mumkin
+                {{ __('site.ambient_music.tip') }}
             </p>
         </div>
 
@@ -248,17 +248,17 @@
 
             <div class="text-left hidden sm:block">
                 <span class="block text-xs font-semibold leading-tight truncate max-w-[140px]"
-                      x-text="isPlaying ? (currentTrack ? currentTrack.title : 'Musiqa ijro...') : 'Fon musiqasi'"></span>
+                      x-text="isPlaying ? (currentTrack ? currentTrack.title : @js(__('site.ambient_music.playing_short'))) : @js(__('site.ambient_music.ambient_short'))"></span>
                 <span class="block text-[9px] font-mono"
                       :class="isPlaying ? 'text-ink-900 font-bold' : 'text-mist'"
-                      x-text="isPlaying ? 'Tinglanmoqda' : 'Yoqish uchun bosing'"></span>
+                      x-text="isPlaying ? @js(__('site.ambient_music.listening')) : @js(__('site.ambient_music.click_to_play'))"></span>
             </div>
 
             <!-- Quick Play/Pause Mini Toggle Button -->
             <span @click.stop="togglePlay()" 
                   class="ml-1 w-6 h-6 rounded-full flex items-center justify-center text-xs transition-colors"
                   :class="isPlaying ? 'bg-ink-950/20 text-ink-950 hover:bg-ink-950/40' : 'bg-amber-500 text-ink-950 hover:bg-amber-400 font-bold'"
-                  :title="isPlaying ? 'Pauza' : 'Ijro'">
+                  :title="isPlaying ? @js(__('site.ambient_music.pause_short')) : @js(__('site.ambient_music.play_short'))">
                 <span x-show="!isPlaying">▶</span>
                 <span x-show="isPlaying">⏸</span>
             </span>

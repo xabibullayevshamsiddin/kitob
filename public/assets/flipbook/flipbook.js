@@ -227,6 +227,14 @@
 
     if (!spreadEl) return;
 
+    try {
+      const savedTheme = localStorage.getItem('kitob_paper_theme');
+      if (savedTheme) {
+        currentPaperTheme = savedTheme;
+      }
+    } catch (_) {}
+    fbSetPaperTheme(currentPaperTheme);
+
     if (rootEl === initializedRoot && pdfDoc && pageFlipInstance) {
       try {
         pageFlipInstance.update();
@@ -910,26 +918,55 @@
   }
 
   function fbToggleFullscreen() {
-    if (!rootEl) return;
-    const target = rootEl.closest('.fb-stage-wrapper') || rootEl;
+    const target =
+      document.getElementById('fb-standalone-container') ||
+      (rootEl && rootEl.closest('.fb-stage-wrapper')) ||
+      rootEl;
+    if (!target) return;
+
     if (!document.fullscreenElement) {
       if (target.requestFullscreen) {
-        target.requestFullscreen();
+        target.requestFullscreen().catch(() => {});
       } else if (target.webkitRequestFullscreen) {
         target.webkitRequestFullscreen();
       }
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {});
       }
     }
   }
+
+  // Synchronize active classes on paper theme buttons
+  function updateThemeButtons(activeTheme) {
+    document.querySelectorAll('[data-paper-theme-btn]').forEach((btn) => {
+      const btnTheme = btn.getAttribute('data-paper-theme-btn');
+      if (btnTheme === activeTheme) {
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-pressed', 'true');
+      } else {
+        btn.classList.remove('is-active');
+        btn.setAttribute('aria-pressed', 'false');
+      }
+    });
+  }
+
+  document.addEventListener('fullscreenchange', () => {
+    updateThemeButtons(currentPaperTheme);
+    if (pageFlipInstance) {
+      setTimeout(() => {
+        try {
+          pageFlipInstance.update();
+        } catch (_) {}
+      }, 100);
+    }
+  });
 
   function fbToggleSound() {
     soundEnabled = !soundEnabled;
     const soundBtns = document.querySelectorAll('#fb-sound-btn');
     soundBtns.forEach((btn) => {
-      btn.textContent = soundEnabled ? '🔊 Ovoz yoqilgan' : "🔇 Ovoz o'chirilgan";
+      btn.textContent = soundEnabled ? '🔊 Ovoz' : "🔇 Ovoz o'chiq";
     });
   }
 
@@ -970,20 +1007,26 @@
 
   function fbSetPaperTheme(theme) {
     currentPaperTheme = theme || 'ivory';
-    const stage = (rootEl && rootEl.closest('.fb-stage-wrapper')) || rootEl;
-    if (stage) {
-      stage.setAttribute('data-paper-theme', currentPaperTheme);
+    try {
+      localStorage.setItem('kitob_paper_theme', currentPaperTheme);
+    } catch (_) {}
+
+    const stages = document.querySelectorAll('.fb-stage-wrapper');
+    if (stages.length > 0) {
+      stages.forEach((s) => s.setAttribute('data-paper-theme', currentPaperTheme));
+    } else if (rootEl) {
+      rootEl.setAttribute('data-paper-theme', currentPaperTheme);
     }
 
     if (currentPaperTheme === 'sepia') {
-      document.documentElement.style.setProperty('--fb-paper-tone', '#f5eedc');
+      document.documentElement.style.setProperty('--fb-paper-tone', '#f4ebd0');
     } else if (currentPaperTheme === 'night') {
-      document.documentElement.style.setProperty('--fb-paper-tone', '#1a2233');
-    } else if (currentPaperTheme === 'white') {
-      document.documentElement.style.setProperty('--fb-paper-tone', '#ffffff');
+      document.documentElement.style.setProperty('--fb-paper-tone', '#0f1420');
     } else {
       document.documentElement.style.setProperty('--fb-paper-tone', '#faf8f5');
     }
+
+    updateThemeButtons(currentPaperTheme);
 
     window.dispatchEvent(
       new CustomEvent('flipbook:themechange', { detail: { theme: currentPaperTheme } })

@@ -435,4 +435,69 @@ class LiveStreamingTest extends TestCase
         $response->assertSee('25'); // Stream likes count
         $response->assertSee('9');  // Live viewers count
     }
+
+    public function test_user_can_toggle_single_like_and_toggle_follow(): void
+    {
+        $host = $this->makeUser('youtube_host');
+        $event = $this->makeLiveEvent($host, 'YouTube Style Event');
+
+        $viewer = $this->makeUser('youtube_viewer');
+        $this->actingAs($viewer);
+
+        // 1. Toggle Like ON
+        $res = Livewire::test(LiveDetail::class, ['event' => $event])
+            ->call('toggleLike');
+
+        $this->assertEquals(1, $event->fresh()->likes_count);
+        $this->assertDatabaseHas('live_event_likes', [
+            'live_event_id' => $event->id,
+            'user_id'       => $viewer->id,
+        ]);
+
+        // 2. Toggle Like OFF (same user clicks again - removes like)
+        Livewire::test(LiveDetail::class, ['event' => $event])
+            ->call('toggleLike');
+
+        $this->assertEquals(0, $event->fresh()->likes_count);
+        $this->assertDatabaseMissing('live_event_likes', [
+            'live_event_id' => $event->id,
+            'user_id'       => $viewer->id,
+        ]);
+
+        // 3. Toggle Follow host ON
+        Livewire::test(LiveDetail::class, ['event' => $event])
+            ->call('toggleFollow');
+
+        $this->assertDatabaseHas('follows', [
+            'follower_id'  => $viewer->id,
+            'following_id' => $host->id,
+        ]);
+
+        // 4. Toggle Follow host OFF
+        Livewire::test(LiveDetail::class, ['event' => $event])
+            ->call('toggleFollow');
+
+        $this->assertDatabaseMissing('follows', [
+            'follower_id'  => $viewer->id,
+            'following_id' => $host->id,
+        ]);
+    }
+
+    public function test_guests_can_view_stream_page_with_action_bar(): void
+    {
+        $host = $this->makeUser('guest_view_host');
+        $event = $this->makeLiveEvent($host, 'Guest View Event');
+        $event->update([
+            'status'      => LiveEvent::STATUS_LIVE,
+            'likes_count' => 12,
+        ]);
+
+        // Guest visits live stream
+        $response = $this->get(route('live.show', $event));
+        $response->assertOk();
+        $response->assertSee('Guest View Event');
+        $response->assertSee('Ulashish');
+        $response->assertSee('Chatni yopish');
+        $response->assertSee('Obuna bo‘lish');
+    }
 }

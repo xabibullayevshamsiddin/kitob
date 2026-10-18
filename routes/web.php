@@ -2,7 +2,7 @@
 
 use App\Http\Livewire\Dashboard;
 use App\Http\Livewire\Auth\OnboardingWizard;
-use App\Http\Livewire\Ai\AiChat;
+use App\Http\Controllers\AiChatRedirectController;
 use App\Http\Livewire\Catalog\CatalogPage;
 use App\Http\Livewire\Groups\GroupDetail;
 use App\Http\Livewire\Groups\GroupList;
@@ -180,6 +180,9 @@ Route::get('/books/{book}/audios-json', function ($bookId) {
 // Kitoblar katalogi (login shart emas — hamma ko'ra oladi)
 Route::get('/catalog', CatalogPage::class)->name('books.catalog');
 
+// Legacy AI Chat 301 Permanent Redirect -> Katalog sahifasiga yo'naltirish
+Route::get('/ai-chat', AiChatRedirectController::class);
+
 // Reyting sahifasi (hamma ko'ra oladi)
 Route::get('/leaderboard', LeaderboardPage::class)->name('leaderboard');
 
@@ -228,9 +231,6 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
     Route::get('/dashboard', Dashboard::class)
         ->middleware('staff.redirect')
         ->name('dashboard');
-
-    // AI Chatbot (faqat student — login kerak)
-    Route::get('/ai-chat', AiChat::class)->name('ai-chat');
 });
 
 /*

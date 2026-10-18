@@ -165,7 +165,15 @@
             @endif
 
             <!-- Composer form -->
-            <form wire:submit.prevent="sendMessage" class="space-y-2">
+            <form wire:submit.prevent="sendMessage" class="space-y-2"
+                  x-data="{
+                      isMobile: window.innerWidth < 640,
+                      init() {
+                          window.addEventListener('resize', () => {
+                              this.isMobile = window.innerWidth < 640;
+                          }, { passive: true });
+                      }
+                  }">
                 <div class="flex items-center justify-between gap-2 text-xs">
                     <!-- Page Tag Selector -->
                     <div class="flex items-center gap-1.5">
@@ -203,7 +211,10 @@
                               required 
                               minlength="1"
                               maxlength="2000"
-                              placeholder="{{ $replyToId ? $replyToUserName . 'ga javob yozish...' : 'Kitob haqida fikringiz, savolingiz yoki taassurotingizni yozing (barcha kitobxonlar ko\'radi)...' }}"
+                              placeholder="{{ $replyToId ? $replyToUserName . 'ga javob...' : 'Fikringizni yozing...' }}"
+                              :placeholder="isMobile 
+                                  ? '{{ $replyToId ? $replyToUserName . 'ga javob...' : 'Fikringizni yozing...' }}' 
+                                  : '{{ $replyToId ? $replyToUserName . 'ga javob yozish...' : 'Fikr yoki savolingizni yozing...' }}'"
                               class="ks-input flex-1 text-xs sm:text-sm resize-none pr-10 min-h-[50px]"></textarea>
 
                     <button type="submit" 

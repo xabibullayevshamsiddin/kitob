@@ -51,35 +51,56 @@
                 </select>
             </div>
 
-            <!-- Zoom Controls with Percentage -->
+            <!-- Shrift & Masshtab (Font & Zoom) Controls -->
             <div class="flex items-center bg-ink-900 border border-white/10 rounded-xl overflow-hidden p-0.5 shadow-inner">
                 <button type="button" 
                         onclick="fbZoomOut()" 
-                        title="Kichiklashtirish (klaviaturada: -)" 
-                        class="p-2 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                        title="Shrift va sahifani kichiklashtirish (A- / klaviaturada: -)" 
+                        class="px-2 sm:px-2.5 py-1 text-xs font-mono font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
+                    A-
                 </button>
                 <button type="button" 
                         onclick="fbZoomReset()" 
                         id="fb-zoom-level" 
                         title="100% asl o'lchamga qaytarish" 
-                        class="px-2.5 text-xs font-mono font-bold text-amber-400 hover:text-amber-300">
+                        class="px-2 text-xs font-mono font-bold text-amber-400 hover:text-amber-300">
                     100%
                 </button>
                 <button type="button" 
                         onclick="fbZoomIn()" 
-                        title="Kattalashtirish (klaviaturada: +)" 
-                        class="p-2 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        title="Shrift va sahifani kattalashtirish (A+ / klaviaturada: +)" 
+                        class="px-2 sm:px-2.5 py-1 text-xs font-mono font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
+                    A+
                 </button>
             </div>
 
             <!-- Paper Theme Selector -->
-            <div class="hidden sm:flex items-center bg-ink-900 border border-white/10 rounded-xl p-0.5 shadow-inner">
-                <button type="button" onclick="fbSetPaperTheme('ivory')" class="px-2 py-1 text-[11px] rounded text-slate-300 hover:text-white" title="Tabiiy krem qog'oz">📜 Asl</button>
-                <button type="button" onclick="fbSetPaperTheme('sepia')" class="px-2 py-1 text-[11px] rounded text-slate-300 hover:text-white" title="Klassik sepia ohangi">🍵 Sepia</button>
-                <button type="button" onclick="fbSetPaperTheme('night')" class="px-2 py-1 text-[11px] rounded text-slate-300 hover:text-white" title="Tungi qorong'i mutolaa">🌙 Tun</button>
+            <div class="flex items-center bg-ink-900 border border-white/10 rounded-xl p-0.5 shadow-inner">
+                <button type="button" 
+                        data-paper-theme-btn="ivory"
+                        onclick="fbSetPaperTheme('ivory')" 
+                        class="px-2.5 py-1 text-[11px] rounded transition-all text-slate-300 hover:text-white" 
+                        title="Tabiiy krem qog'oz">📜 Asl</button>
+                <button type="button" 
+                        data-paper-theme-btn="sepia"
+                        onclick="fbSetPaperTheme('sepia')" 
+                        class="px-2.5 py-1 text-[11px] rounded transition-all text-slate-300 hover:text-white" 
+                        title="Klassik sepia ohangi">🍵 Sepia</button>
+                <button type="button" 
+                        data-paper-theme-btn="night"
+                        onclick="fbSetPaperTheme('night')" 
+                        class="px-2.5 py-1 text-[11px] rounded transition-all text-slate-300 hover:text-white" 
+                        title="Tungi qorong'i mutolaa">🌙 Tun</button>
             </div>
+
+            @if($book->chapters()->exists())
+            <!-- Text Mode Link with Custom Font Families -->
+            <a href="{{ route('reader.show', [$book, $book->chapters->first()]) }}" 
+               title="Matnli mutolaa rejimiga o'tish (Shrift turi va o'lchamini erkin o'zgartirish)" 
+               class="hidden md:flex px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold items-center gap-1.5 transition-all">
+                <span>🔤 Shriftlar</span>
+            </a>
+            @endif
 
             <!-- Auto-play toggle button -->
             <button type="button" 

@@ -156,4 +156,19 @@ class ReaderAnnotationsTest extends TestCase
             ->assertDontSee('This note belongs only to the reader.')
             ->assertDontSee('Private passage');
     }
+
+    public function test_reader_page_renders_bionic_reading_controls(): void
+    {
+        [$user, $book, $chapter] = $this->makeReaderFixture();
+
+        $response = $this->actingAs($user)->get(route('reader.show', [
+            'book' => $book->id,
+            'chapter' => $chapter->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Bionic');
+        $response->assertSee('toggleBionic()');
+        $response->assertSee('bionic-bold');
+    }
 }

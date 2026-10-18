@@ -8,6 +8,11 @@
         startedAt: {{ $event->started_at ? $event->started_at->timestamp : ($event->created_at ? $event->created_at->timestamp : now()->timestamp) }},
         serverNow: {{ now()->timestamp }},
         initialLikes: {{ (int) ($event->likes_count ?? 0) }},
+        initialLiked: @js((bool) $hasLiked),
+        initialFollowing: @js((bool) $isFollowingHost),
+        initialFollowers: {{ (int) $hostFollowersCount }},
+        isGuest: @js(!auth()->check()),
+        loginUrl: @js(route('login')),
         permissionMode: @js($event->permission_mode),
         signalSendUrl: @js(route('live.signal.send', $event)),
         signalPollUrl: @js(route('live.signal.poll', $event)),
@@ -80,6 +85,7 @@
             @if($isHost || $canManage)
                 @if($event->status === 'live')
                     <button wire:click="endLiveStream" wire:confirm="{{ __('site.live.end_confirm', ['title' => '']) }}"
+                        @click="try { localStorage.removeItem('kitobxon_live_state'); } catch(e) {}"
                         class="px-3.5 py-1.5 bg-[#C1392B] hover:bg-[#a63024] text-paper font-mono font-bold text-xs uppercase tracking-wider rounded-btn transition-all">
                         {{ __('site.live.end') }}
                     </button>
@@ -95,10 +101,10 @@
 
 
     <!-- ── 2. TWO-COLUMN STUDIO GRID ── -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 live-studio-grid">
+    <div class="live-studio-grid" :class="chatOpen ? 'chat-is-open' : 'chat-is-closed'">
 
-        <!-- ════ LEFT: BROADCAST VIDEO & HOST CONSOLE (8 Cols) ════ -->
-        <div class="lg:col-span-7 xl:col-span-8 space-y-5 live-video-column">
+        <!-- ════ LEFT: BROADCAST VIDEO & HOST CONSOLE ════ -->
+        <div class="space-y-5 live-video-column">
 
             <!-- 0. Placeholder when Docked Mini Mode is active (keeps page layout 100% stable) -->
             <div x-show="isDockedMini" x-cloak
@@ -121,7 +127,9 @@
 
             <!-- Video Screen Viewport -->
             <div id="liveVideoViewport" class="relative w-full aspect-video rounded-panel bg-ink-950 border border-ink-border shadow-soft overflow-hidden flex items-center justify-center group transition-all duration-300"
-                 :class="{ 'rounded-none': isVideoFullscreen, 'live-viewport-docked': isDockedMini }"
+                 :class="{ 'rounded-none': isVideoFullscreen, 'live-viewport-docked': isDockedMini, 'is-docked-dragging': isDockedDragging }"
+                 :style="viewportStyle"
+                 @pointerdown="if (isDockedMini) startDockedDrag($event)"
                  @click="if (!isHost && (needsUnmute || isViewerMuted)) unmuteAudio()">
                 
                 <!-- Native Picture-in-Picture Active Notice Overlay -->
@@ -144,22 +152,27 @@
 
                 <!-- Docked Mini Mode Compact Top Bar Overlay -->
                 <div x-show="isDockedMini" x-cloak
-                     class="absolute top-2 inset-x-2 z-40 flex items-center justify-between gap-2 px-2.5 py-1 rounded-xl bg-ink-950/90 backdrop-blur-md border border-white/10 font-mono text-[11px] shadow-lg">
-                    <div class="flex items-center gap-1.5 min-w-0">
+                     class="absolute top-2 inset-x-2 z-40 flex items-center justify-between gap-2 px-2.5 py-1 rounded-xl bg-ink-950/90 backdrop-blur-md border border-white/10 font-mono text-[11px] shadow-lg cursor-grab active:cursor-grabbing select-none"
+                     @pointerdown="startDockedDrag($event)">
+                    <div class="flex items-center gap-1.5 min-w-0 pointer-events-none">
                         <span class="relative flex h-2 w-2 shrink-0">
                             <span class="absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 animate-ping"></span>
                             <span class="relative inline-flex h-2 w-2 rounded-full bg-rose-500"></span>
                         </span>
                         <span class="truncate text-paper font-semibold">{{ $event->title }}</span>
+                        <span class="text-[8px] font-mono px-1 py-0.2 rounded bg-white/10 text-mist flex items-center gap-0.5">
+                            <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M5 12l4-4M5 12l4 4M19 12l-4-4M19 12l-4 4"/></svg>
+                            <span>suring</span>
+                        </span>
                     </div>
-                    <div class="flex items-center gap-1 shrink-0">
+                    <div class="flex items-center gap-1 shrink-0" @pointerdown.stop @mousedown.stop>
                         <button type="button" @click.stop="restoreDockedVideo()"
-                                class="p-1 rounded text-mist hover:text-amber-300 hover:bg-white/10 transition-colors"
+                                class="p-1 rounded text-mist hover:text-amber-300 hover:bg-white/10 transition-colors cursor-pointer"
                                 title="Kattalashtirish (Asosiy holatga qaytish)">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                         </button>
                         <button type="button" @click.stop="restoreDockedVideo()"
-                                class="p-1 rounded text-mist hover:text-rose-400 hover:bg-white/10 transition-colors"
+                                class="p-1 rounded text-mist hover:text-rose-400 hover:bg-white/10 transition-colors cursor-pointer"
                                 title="Mini oynani yopish">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
                         </button>
@@ -167,11 +180,12 @@
                 </div>
 
                 <!-- Live Video Element (Webcam / Stream) -->
-                <video id="liveVideoPlayer" autoplay playsinline class="w-full h-full transition-opacity duration-300"
-                       :class="[videoFitMode === 'contain' ? 'object-contain bg-black' : 'object-cover', { 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }]"
-                       :style="videoFilterStyle"
-                       @loadedmetadata="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null)"
-                       @playing="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null)">
+                <video id="liveVideoPlayer" autoplay playsinline
+                       class="w-full h-full transition-all duration-300 bg-black"
+                       :class="{ 'opacity-0': !isVideoOn, 'opacity-100': isVideoOn }"
+                       :style="videoElementStyle"
+                       @loadedmetadata="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null); applyVideoFitStyles();"
+                       @playing="updateCameraStatus(localStream ? localStream.getVideoTracks()[0] : null); applyVideoFitStyles();">
                 </video>
 
                 <!-- Dedicated Audio Element for WebRTC audio stream playback -->
@@ -318,30 +332,6 @@
                         <span>Kitobxon Studio</span>
                     </div>
 
-                    <!-- Like Button (Instagram/TikTok Live uslubi — istalgancha bosish mumkin) -->
-                    @auth
-                    <button type="button"
-                            @click.stop="burstLike()"
-                            class="group/like relative flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink-950/85 hover:bg-ink-900 backdrop-blur-md shadow-lg transition-all active:scale-90 cursor-pointer border border-rose-500/40 hover:border-rose-400 text-paper"
-                            title="Jonli efirga like bosish">
-                        <span class="transition-transform group-hover/like:scale-125 flex items-center justify-center text-rose-400">
-                            <svg class="w-4.5 h-4.5 fill-current text-rose-500 transition-colors" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </span>
-                        <span class="font-bold font-mono min-w-[18px] text-left tabular-nums text-xs text-paper"
-                              x-text="formatNumber(likesCount)">0</span>
-                    </button>
-                    @else
-                    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink-950/85 backdrop-blur-md border border-ink-border text-paper font-mono"
-                          title="Like bosish uchun tizimga kiring">
-                        <svg class="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                        <span class="font-bold tabular-nums text-xs" x-text="formatNumber(likesCount)">0</span>
-                    </span>
-                    @endauth
-
                     <!-- Video viewing controls -->
                     <div class="relative" @click.outside="videoSettingsOpen = false">
                         <button type="button"
@@ -377,33 +367,263 @@
                                     class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left">
                                 <span class="flex items-center gap-2">
                                     <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M13 13h5v4h-5z"/></svg>
-                                    <span x-text="isPipActive ? 'Mini oynadan chiqish' : 'Mini oynada ko‘rish'"></span>
-                                </span>
-                                <span class="text-amber-300 text-[10px]" x-show="isPipActive" x-cloak>Faol</span>
-                            </button>
-
-                            <button type="button" @click="toggleDockedMini(); videoSettingsOpen = false"
-                                    class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left">
-                                <span class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="4" y="13" width="7" height="7" rx="1"/></svg>
-                                    <span x-text="isDockedMini ? 'Burchakdan chiqarish' : 'Burchakka qadash'"></span>
+                                    <span x-text="isDockedMini ? 'Mini oynadan chiqish' : 'Mini oynada ko‘rish'"></span>
                                 </span>
                                 <span class="text-amber-300 text-[10px]" x-show="isDockedMini" x-cloak>Faol</span>
                             </button>
 
-                            <button type="button" @click="setVideoFit(videoFitMode === 'cover' ? 'contain' : 'cover')"
-                                    class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left">
+                            <button type="button" @click="cycleVideoFit()"
+                                    class="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded-btn text-paper hover:bg-white/10 transition-colors text-left cursor-pointer"
+                                    title="Kadr rejimini almashtirish">
                                 <span class="flex items-center gap-2">
                                     <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h2M15 15h2"/></svg>
                                     <span>Kadr rejimi</span>
                                 </span>
-                                <span class="text-amber-300" x-text="videoFitMode === 'cover' ? 'To‘ldiradi' : 'To‘liq ko‘rsatadi'"></span>
+                                <span class="text-amber-300 font-mono text-xs font-semibold" x-text="videoFitMode === 'cover' ? 'To‘ldirish (Zoom)' : (videoFitMode === 'contain' ? 'To‘liq kadr (16:9)' : 'Kinoteatr (21:9)')"></span>
                             </button>
 
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- ── VIDEO OSTIDAGI MA'LUMOT PANELI (YouTube uslubi) ── -->
+            @php
+                $hostUser = $event->hostUser;
+                $hostRoleLabel = null;
+                if ($hostUser) {
+                    $isHostAdmin = (method_exists($hostUser, 'hasRole') && $hostUser->hasRole('admin')) || ($hostUser->role ?? null) === 'admin';
+                    $hostRoleLabel = $isHostAdmin ? 'Admin' : 'Ustoz';
+                }
+            @endphp
+            <section class="live-info-bar space-y-3" aria-label="Efir haqida">
+                <h2 class="text-base sm:text-lg font-bold font-serif text-paper leading-snug break-words">{{ $event->title }}</h2>
+
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <!-- Muallif + Obuna (YouTube Style) -->
+                    <div class="flex items-center gap-3 min-w-0">
+                        <a href="{{ $hostUser ? route('profile.show', $hostUser->username) : '#' }}" class="shrink-0">
+                            <img src="{{ $hostUser?->avatar_url ?? 'https://ui-avatars.com/api/?name=Kitobxon&background=1e293b&color=fff' }}"
+                                 alt="{{ $hostUser?->name ?? 'Ustoz' }}"
+                                 class="w-10 h-10 rounded-full object-cover border border-ink-border hover:ring-2 hover:ring-amber-400/50 transition-all">
+                        </a>
+                        <div class="min-w-0 flex flex-col justify-center">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <a href="{{ $hostUser ? route('profile.show', $hostUser->username) : '#' }}" class="text-sm sm:text-base font-bold text-paper hover:text-amber-400 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
+                                    {{ $hostUser?->name ?? 'Ustoz' }}
+                                </a>
+                                @if($hostRoleLabel)
+                                    <span class="shrink-0 px-1.5 py-0.5 rounded bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[9px] font-mono uppercase tracking-wider font-bold">{{ $hostRoleLabel }}</span>
+                                @endif
+
+                                <!-- YouTube-style Obuna bo'lish tugmasi to'g'ridan-to'g'ri nikning yonida -->
+                                @if($isOwnStream)
+                                    <span class="shrink-0 px-2.5 py-0.5 rounded-full bg-ink-800 text-mist border border-ink-border text-[10px] font-mono font-medium">Siz muallifsiz</span>
+                                @elseif($hostUser)
+                                    <button type="button" @click="toggleFollow()"
+                                            :disabled="followBusy"
+                                            class="shrink-0 px-3.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 shadow-sm"
+                                            :class="isFollowing 
+                                                ? 'bg-ink-800 hover:bg-ink-700 text-mist hover:text-paper border border-ink-border' 
+                                                : 'bg-white hover:bg-neutral-200 text-neutral-900 font-extrabold'">
+                                        <!-- Obuna bo'lingan: Qo'ng'iroqcha -->
+                                        <svg x-show="isFollowing" x-cloak width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="text-amber-400 shrink-0">
+                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" fill="none"/>
+                                        </svg>
+                                        <!-- Obuna bo'lish: Plus ikonkasi -->
+                                        <svg x-show="!isFollowing" x-cloak width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        <span x-text="isFollowing ? @js(__('site.live.subscribed')) : @js(__('site.live.subscribe'))">{{ $isFollowingHost ? __('site.live.subscribed') : __('site.live.subscribe') }}</span>
+                                    </button>
+                                @endif
+                            </div>
+                            <p class="text-[11px] text-mist font-mono flex items-center gap-1.5 mt-0.5">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-mist/70">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                                <span x-text="@js(__('site.live.followers_count', ['count' => '___CNT___'])).replace('___CNT___', formatNumber(followersCount))">{{ __('site.live.followers_count', ['count' => $hostFollowersCount]) }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Amallar: Like, Ulashish, Chat, Yana -->
+                    <div class="relative flex items-center gap-2 flex-wrap shrink-0">
+                        <!-- Like tugmasi -->
+                        <button type="button" @click="toggleLike()"
+                                :disabled="likeBusy"
+                                class="live-pill transition-all active:scale-95 group"
+                                :class="hasLiked ? 'live-pill--liked' : ''"
+                                :aria-pressed="hasLiked.toString()"
+                                :title="hasLiked ? 'Like olib tashlash (L)' : 'Like bosish (L)'">
+                            <!-- Bosilmagan: Outline Thumbs Up -->
+                            <svg x-show="!hasLiked" x-cloak width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="live-btn-icon text-mist group-hover:text-paper group-hover:-translate-y-0.5 transition-all">
+                                <path d="M7 10v12"/>
+                                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>
+                            </svg>
+                            <!-- Bosilgan: To'ldirilgan Thumbs Up (Rose rangda) -->
+                            <svg x-show="hasLiked" x-cloak width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" class="live-btn-icon text-rose-400 scale-110 transition-transform">
+                                <path d="M7 10v12"/>
+                                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>
+                            </svg>
+                            <span class="font-semibold tabular-nums" :class="hasLiked ? 'text-rose-200' : ''" x-text="formatNumber(likesCount)">{{ (int) ($event->likes_count ?? 0) }}</span>
+                        </button>
+
+                        <!-- Ulashish -->
+                        <div class="relative" @click.outside="shareOpen = false">
+                            <button type="button" @click="shareStream()" class="live-pill transition-all active:scale-95 group" title="Ulashish">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="live-btn-icon text-mist group-hover:text-paper group-hover:translate-x-0.5 transition-all">
+                                    <path d="m15 4 6 6-6 6"/>
+                                    <path d="M21 10H8a5 5 0 0 0-5 5v3"/>
+                                </svg>
+                                <span>Ulashish</span>
+                            </button>
+                            <div x-show="shareOpen" x-cloak x-transition
+                                 class="live-menu right-0 md:right-auto md:left-0 w-64">
+                                <div class="px-3 py-2 text-[10px] uppercase tracking-wider text-mist border-b border-ink-border/70 font-mono">Efirni ulashish</div>
+                                <div class="p-2 flex items-center gap-2">
+                                    <input type="text" readonly :value="shareUrl" @focus="$event.target.select()"
+                                           class="flex-1 min-w-0 px-2 py-1.5 rounded-btn bg-ink-900 border border-ink-border text-[11px] text-mist font-mono focus:outline-none focus:border-amber-400">
+                                    <button type="button" @click="copyShareLink()"
+                                            class="shrink-0 px-2.5 py-1.5 rounded-btn text-[11px] font-mono font-bold transition-colors"
+                                            :class="shareCopied ? 'bg-emerald-500 text-ink-950' : 'bg-amber-400 text-ink-950 hover:bg-amber-300'"
+                                            x-text="shareCopied ? 'Nusxalandi' : 'Nusxa'"></button>
+                                </div>
+                                <div class="grid grid-cols-4 gap-1 p-2 pt-0">
+                                    <a :href="'https://t.me/share/url?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText)" target="_blank" rel="noopener" class="live-share-tile">
+                                        <span class="live-share-icon bg-[#229ED9]"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></span>
+                                        <span>Telegram</span>
+                                    </a>
+                                    <a :href="'https://wa.me/?text=' + encodeURIComponent(shareText + ' ' + shareUrl)" target="_blank" rel="noopener" class="live-share-tile">
+                                        <span class="live-share-icon bg-[#25D366]"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1s-.5-.1-.7.1-.8 1-1 1.2-.4.2-.7.1a8.2 8.2 0 0 1-4-3.5c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.9.4 3.6 3.6 0 0 0 1.3 3.3 14.4 14.4 0 0 0 5.5 4.9c2 .9 2.8 1 3.9.8a3.3 3.3 0 0 0 2.1-1.5 2.7 2.7 0 0 0 .2-1.5c-.1-.1-.3-.2-.6-.3zM12 21.8a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4A9.8 9.8 0 1 1 12 21.8zM12 0a12 12 0 0 0-10.3 18L0 24l6.2-1.6A12 12 0 1 0 12 0z"/></svg></span>
+                                        <span>WhatsApp</span>
+                                    </a>
+                                    <a :href="'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl)" target="_blank" rel="noopener" class="live-share-tile">
+                                        <span class="live-share-icon bg-[#1877F2]"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 8V6c0-.9.6-1 1-1h3V1h-4c-3.9 0-5 2.9-5 5v2H6v4h3v11h5V12h3.5l.5-4z"/></svg></span>
+                                        <span>Facebook</span>
+                                    </a>
+                                    <a :href="'https://twitter.com/intent/tweet?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText)" target="_blank" rel="noopener" class="live-share-tile">
+                                        <span class="live-share-icon bg-black border border-white/20"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.2 2h3.4l-7.4 8.5L23 22h-6.8l-5.3-7-6.1 7H1.4l7.9-9L1 2h7l4.8 6.4L18.2 2zm-1.2 18h1.9L7.1 3.9H5.1L17 20z"/></svg></span>
+                                        <span>X</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chatni ochish / yopish -->
+                        <button type="button" @click="toggleChat()" class="live-pill transition-all active:scale-95 group"
+                                :class="chatOpen ? '' : 'live-pill--accent'"
+                                :title="chatOpen ? 'Chatni yashirish (C)' : 'Chatni ko‘rsatish (C)'">
+                            <!-- Chat ochiq paytda -->
+                            <svg x-show="chatOpen" x-cloak width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="live-btn-icon text-mist group-hover:text-paper">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            <!-- Chat yopiq paytda -->
+                            <svg x-show="!chatOpen" x-cloak width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="live-btn-icon text-amber-400">
+                                <path d="M8 9h8"/>
+                                <path d="M8 13h5"/>
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            <span x-text="chatOpen ? 'Chatni yopish' : 'Chatni ochish'">Chatni yopish</span>
+                        </button>
+
+                        <!-- Yana (⋯) -->
+                        <div class="relative" @click.outside="moreOpen = false">
+                            <button type="button" @click="moreOpen = !moreOpen" class="live-pill live-pill--icon transition-all active:scale-95 group" aria-label="Boshqa amallar">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="live-btn-icon text-mist group-hover:text-paper">
+                                    <circle cx="5" cy="12" r="2"/>
+                                    <circle cx="12" cy="12" r="2"/>
+                                    <circle cx="19" cy="12" r="2"/>
+                                </svg>
+                            </button>
+                            <div x-show="moreOpen" x-cloak x-transition class="live-menu right-0 w-60 p-1.5 font-mono text-[11px]">
+                                <button type="button" @click="activateMiniPlayer(); moreOpen = false" class="live-menu-item">
+                                    <span class="flex items-center gap-2">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="live-menu-icon text-amber-400/90"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M13 13h5v4h-5z"/></svg>
+                                        <span>Mini oynada ko‘rish</span>
+                                    </span>
+                                    <kbd>I</kbd>
+                                </button>
+                                <button type="button" x-show="canUseFullscreen" @click="toggleVideoFullscreen(); moreOpen = false" class="live-menu-item">
+                                    <span class="flex items-center gap-2">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="live-menu-icon text-mist"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                                        <span>To‘liq ekran</span>
+                                    </span>
+                                    <kbd>F</kbd>
+                                </button>
+                                <button type="button" @click="cycleVideoFit(); moreOpen = false" class="live-menu-item cursor-pointer">
+                                    <span class="flex items-center gap-2">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="live-menu-icon text-mist"><path d="M3 7V5a2 2 0 0 1 2-2h2m12 0h2a2 2 0 0 1 2 2v2m0 10v2a2 2 0 0 1-2 2h-2m-12 0H5a2 2 0 0 1-2-2v-2"/></svg>
+                                        <span>Kadr: <span class="text-amber-300 font-mono font-semibold" x-text="videoFitMode === 'cover' ? 'To‘ldirish (Zoom)' : (videoFitMode === 'contain' ? 'To‘liq kadr (16:9)' : 'Kinoteatr (21:9)')"></span></span>
+                                    </span>
+                                </button>
+                                <button type="button" @click="copyShareLink(); moreOpen = false" class="live-menu-item">
+                                    <span class="flex items-center gap-2">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="live-menu-icon text-mist"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                        <span>Havolani nusxalash</span>
+                                    </span>
+                                </button>
+                                <div class="mt-1 pt-2 px-2.5 pb-1 border-t border-ink-border/70 text-[10px] text-mist leading-relaxed">
+                                    Tezkor tugmalar: <kbd>L</kbd> like, <kbd>C</kbd> chat, <kbd>F</kbd> to‘liq ekran, <kbd>I</kbd> mini oyna @if(!$isHost) , <kbd>M</kbd> ovoz @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mehmonlar uchun kirish taklifi -->
+                        <div x-show="authPrompt" x-cloak x-transition @click.outside="authPrompt = ''"
+                             class="live-menu right-0 top-full w-64 p-3 space-y-2">
+                            <p class="text-xs text-paper font-semibold" x-text="authPrompt"></p>
+                            <p class="text-[11px] text-mist">Hisobingizga kiring va efir muallifini qo‘llab-quvvatlang.</p>
+                            <div class="flex items-center gap-2 pt-1">
+                                <a :href="loginUrl" class="ks-btn-primary text-xs py-1.5 px-3 font-mono">Kirish</a>
+                                <button type="button" @click="authPrompt = ''" class="text-[11px] text-mist hover:text-paper font-mono">Keyinroq</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tavsif qutisi -->
+                <div class="live-desc-box rounded-panel bg-ink-900 border border-ink-border p-3.5 sm:p-4 text-xs sm:text-sm"
+                     :class="descExpanded ? '' : 'cursor-pointer hover:bg-ink-800/80'"
+                     @click="if (!descExpanded) descExpanded = true">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-paper">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span><span class="tabular-nums" x-text="formatNumber(Math.round(animatedViewerCount))">0</span> kishi tomosha qilmoqda</span>
+                        </span>
+                        <span class="text-mist">•</span>
+                        <span>Efir <span x-text="startedAgoLabel"></span> boshlangan</span>
+                        @if($event->group)
+                            <span class="text-mist">•</span>
+                            <a href="{{ route('groups.show', $event->group) }}" @click.stop class="text-amber-400 hover:text-amber-300">#{{ $event->group->name }}</a>
+                        @endif
+                        @if($event->book)
+                            <span class="text-mist">•</span>
+                            <span class="text-amber-400">📖 {{ $event->book->title }}</span>
+                        @endif
+                    </div>
+
+                    @if($event->description)
+                        <p class="mt-2 text-mist leading-relaxed whitespace-pre-line break-words"
+                           :class="descExpanded ? '' : 'live-clamp-2'">{{ $event->description }}</p>
+                    @endif
+
+                    <div x-show="descExpanded" x-cloak class="mt-3 pt-3 border-t border-ink-border/70 space-y-1.5 text-[11px] text-mist font-mono">
+                        <p>🗓 Rejalashtirilgan vaqt: {{ $event->scheduled_at?->timezone('Asia/Tashkent')->format('d M Y, H:i') ?? '—' }}</p>
+                        <p>💬 Chat rejimi: {{ in_array($event->permission_mode, ['view_only', 'voice_only']) ? 'Faqat tomosha' : 'Yozma chat ochiq' }}</p>
+                        <p>⚠️ Jonli efirlar yozib olinmaydi — efir tugagach saytdan butunlay o‘chiriladi.</p>
+                    </div>
+
+                    <button type="button" @click.stop="descExpanded = !descExpanded"
+                            class="mt-2 text-xs font-semibold text-paper hover:text-amber-300"
+                            x-text="descExpanded ? 'Kamroq' : '...yana'">...yana</button>
+                </div>
+            </section>
 
             <!-- ── HOST TOOLBAR (Ustoz / Admin Uskunalari) ── -->
             @if($isHost)
@@ -587,16 +807,76 @@
 
         </div>
 
-        <!-- ════ RIGHT: REAL-TIME CHAT & QUESTIONS STREAM (4-5 Cols) ════ -->
-        {{-- Alo hida chat komponent: wire:poll.2s bilan avtomatik yangilanadi (umumiy chat kabi).
+        <!-- ════ RIGHT: REAL-TIME CHAT & QUESTIONS STREAM ════ -->
+        {{-- Alohida chat komponent: wire:poll.2s bilan avtomatik yangilanadi (umumiy chat kabi).
              WebRTC skripti bu blokda emas — polling video ulanishini BUZMAYDI. --}}
-        <div class="lg:col-span-5 xl:col-span-4 h-[650px] live-chat-column">
+        <div class="live-chat-column"
+             x-show="chatOpen"
+             x-cloak
+             x-transition:enter="transition-opacity duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
             @livewire('live.live-chat-panel', ['event' => $event, 'isHost' => $isHost], key('live-chat-'.$event->id))
         </div>
 
     </div>
 
     <style>
+        /* ── TWO-COLUMN STUDIO GRID & CHAT RESPONSIVENESS ── */
+        .live-studio-grid {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 1.25rem !important;
+            width: 100% !important;
+            align-items: start !important;
+        }
+
+        @media (min-width: 1024px) {
+            .live-studio-grid.chat-is-open {
+                grid-template-columns: minmax(0, 1fr) 380px !important;
+            }
+            .live-studio-grid.chat-is-closed {
+                grid-template-columns: minmax(0, 1fr) !important;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .live-studio-grid.chat-is-open {
+                grid-template-columns: minmax(0, 1fr) 420px !important;
+            }
+        }
+
+        .live-video-column {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+
+        .live-chat-column {
+            min-width: 0 !important;
+            width: 100% !important;
+            height: 620px;
+            max-height: 80vh;
+        }
+
+        @media (min-width: 1024px) {
+            .live-chat-column {
+                position: sticky !important;
+                top: 5rem !important;
+                height: min(720px, calc(100vh - 6.5rem)) !important;
+                max-height: calc(100vh - 6.5rem) !important;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .live-chat-column {
+                height: 520px !important;
+                max-height: 70vh !important;
+            }
+        }
+
         @keyframes ksFloatHeart {
             0% {
                 opacity: 1;
@@ -630,23 +910,53 @@
 
         #liveVideoViewport:fullscreen #liveVideoPlayer,
         #liveVideoViewport:-webkit-full-screen #liveVideoPlayer {
-            object-fit: contain;
+            /* Object-fit rejimini foydalanuvchi tanlagan videoFitMode bo'yicha dinamik saqlash */
         }
 
         .live-viewport-docked {
             position: fixed !important;
-            bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem)) !important;
-            left: 1rem !important;
-            width: min(90vw, 360px) !important;
+            bottom: max(1.25rem, env(safe-area-inset-bottom, 1.25rem)) !important;
+            right: 1.25rem !important;
+            left: auto !important;
+            width: min(92vw, 360px) !important;
             aspect-ratio: 16 / 9 !important;
-            z-index: 55 !important;
+            z-index: 60 !important;
             border-radius: 1rem !important;
-            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(245, 158, 11, 0.4) !important;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(245, 158, 11, 0.4) !important;
+            touch-action: none !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            cursor: grab;
+            will-change: transform;
+        }
+        .live-viewport-docked,
+        .live-viewport-docked * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-user-drag: none !important;
+        }
+        .live-viewport-docked ::selection {
+            background: transparent !important;
+            color: inherit !important;
+        }
+        .live-viewport-docked ::-moz-selection {
+            background: transparent !important;
+            color: inherit !important;
+        }
+        .live-viewport-docked.is-docked-dragging {
+            cursor: grabbing !important;
+            transition: none !important;
         }
         @media (max-width: 640px) {
             .live-viewport-docked {
                 bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
-                left: 0.75rem !important;
+                right: 0.75rem !important;
+                left: auto !important;
+                width: calc(100vw - 1.5rem) !important;
             }
         }
 
@@ -654,6 +964,210 @@
             #liveVideoPlayer {
                 transition: none;
             }
+        }
+
+        /* ── YouTube-Style Action Pills & Menus ── */
+        .live-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 2.375rem;
+            padding: 0 0.95rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            line-height: 1;
+            color: #f6f3eb;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .live-pill svg,
+        .live-btn-icon {
+            width: 1.125rem !important; /* 18px */
+            height: 1.125rem !important;
+            min-width: 1.125rem !important;
+            min-height: 1.125rem !important;
+            max-width: 1.125rem !important;
+            max-height: 1.125rem !important;
+            flex-shrink: 0 !important;
+            vertical-align: middle;
+            pointer-events: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease, fill 0.15s ease;
+        }
+        .live-pill svg[style*="display: none"],
+        .live-pill svg[x-cloak],
+        .live-btn-icon[style*="display: none"],
+        .live-btn-icon[x-cloak] {
+            display: none !important;
+        }
+        .live-pill:hover .live-btn-icon,
+        .live-pill:hover svg {
+            transform: scale(1.1);
+        }
+        .live-pill:active .live-btn-icon,
+        .live-pill:active svg {
+            transform: scale(0.92);
+        }
+        .live-pill--liked .live-btn-icon,
+        .live-pill--liked svg {
+            filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.5));
+        }
+        .live-menu-icon {
+            width: 1rem !important; /* 16px */
+            height: 1rem !important;
+            min-width: 1rem !important;
+            min-height: 1rem !important;
+            flex-shrink: 0 !important;
+            vertical-align: middle;
+        }
+        .live-pill:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.22);
+        }
+        .live-pill:active {
+            transform: scale(0.96);
+        }
+        .live-pill:focus-visible {
+            outline: 2px solid #f59e0b;
+            outline-offset: 2px;
+        }
+        .live-pill:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .live-pill--icon {
+            width: 2.375rem;
+            padding: 0;
+        }
+        .live-pill--primary {
+            background: #f6f3eb;
+            color: #0c111d;
+            border-color: #f6f3eb;
+            font-weight: 700;
+        }
+        .live-pill--primary:hover {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 4px 14px rgba(255, 255, 255, 0.18);
+        }
+        .live-pill--muted {
+            background: rgba(255, 255, 255, 0.06);
+            color: #a8b0bd;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .live-pill--muted:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+        }
+        .live-pill--liked {
+            background: rgba(244, 63, 94, 0.18);
+            color: #fda4af;
+            border-color: rgba(244, 63, 94, 0.4);
+        }
+        .live-pill--liked:hover {
+            background: rgba(244, 63, 94, 0.28);
+            border-color: rgba(244, 63, 94, 0.55);
+            color: #ffffff;
+        }
+        .live-pill--accent {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.35);
+        }
+        .live-pill--accent:hover {
+            background: rgba(245, 158, 11, 0.25);
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        .live-menu {
+            position: absolute;
+            top: calc(100% + 0.45rem);
+            z-index: 50;
+            border-radius: 0.875rem;
+            background: #0f1523;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            overflow: hidden;
+        }
+        .live-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            color: #d1d5db;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.12s ease, color 0.12s ease;
+            text-align: left;
+        }
+        .live-menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+        .live-menu-item kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.25rem;
+            height: 1.25rem;
+            padding: 0 0.3rem;
+            font-size: 0.6875rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            color: #9ca3af;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.25rem;
+        }
+
+        .live-share-tile {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #e5e7eb;
+            text-decoration: none;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+        .live-share-tile:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .live-share-tile svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .live-desc-box {
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .live-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
     </style>
@@ -717,7 +1231,7 @@ function liveStudioController(config) {
         isRecording: false,
         showDeviceSettings: false,
         videoSettingsOpen: false,
-        videoFitMode: localStorage.getItem('kitob_video_fit') === 'contain' ? 'contain' : 'cover',
+        videoFitMode: ['cover', 'contain', 'cinema'].includes(localStorage.getItem('kitob_video_fit')) ? localStorage.getItem('kitob_video_fit') : 'cover',
         isVideoFullscreen: false,
         canUseFullscreen: typeof document !== 'undefined' && !!(
             document.fullscreenEnabled ||
@@ -727,8 +1241,47 @@ function liveStudioController(config) {
         canUsePip: typeof document !== 'undefined' && !!document.pictureInPictureEnabled,
         isPipActive: false,
         isDockedMini: false,
+        dockedDragX: 0,
+        dockedDragY: 0,
+        isDockedDragging: false,
+        dockedHasMoved: false,
+        dockedDragStartX: 0,
+        dockedDragStartY: 0,
+        dockedInitialX: 0,
+        dockedInitialY: 0,
+        dockedMinX: -9999,
+        dockedMaxX: 9999,
+        dockedMinY: -9999,
+        dockedMaxY: 9999,
+        _onDockedMove: null,
+        _onDockedUp: null,
 
-        // Real-time Likes (Instagram/TikTok uslubi — cheksiz tap, batch'langan) & Viewers
+        // YouTube-style Info Bar, Guest Support, Likes & Follow
+        hasLiked: Boolean(config.initialLiked || false),
+        isFollowing: Boolean(config.initialFollowing || false),
+        followersCount: Number(config.initialFollowers || 0),
+        isGuest: Boolean(config.isGuest),
+        loginUrl: config.loginUrl || '/login',
+        likeBusy: false,
+        followBusy: false,
+        chatOpen: (function() {
+            try {
+                const stored = localStorage.getItem('kitob_live_chat_open');
+                return stored === null ? true : stored === 'true';
+            } catch(e) {
+                return true;
+            }
+        })(),
+        shareOpen: false,
+        shareCopied: false,
+        moreOpen: false,
+        descExpanded: false,
+        authPrompt: '',
+        shareUrl: config.liveUrl || (typeof window !== 'undefined' ? window.location.href : ''),
+        shareText: config.eventTitle ? ('🔴 Jonli efir: ' + config.eventTitle + ' — Tomosha qiling!') : '🔴 Jonli efir — Tomosha qiling!',
+        startedAgoLabel: 'hozirgina',
+
+        // Real-time Likes & Viewers
         likesCount: Number(config.initialLikes || 0),
         pendingLikes: 0,
         likeBatchTimer: null,
@@ -828,18 +1381,41 @@ function liveStudioController(config) {
                 });
             }
 
+            // Kadr rejimini darhol qo'llash
+            this.$nextTick(() => {
+                this.setVideoFit(this.videoFitMode);
+            });
+
             // 1. Duration Synchronizer (server-clock aligned)
             const clientNow = Math.floor(Date.now() / 1000);
             const clockSkew = clientNow - serverNow;
             const updateTimer = () => {
                 const nowSec = Math.floor(Date.now() / 1000) - clockSkew;
                 this.durationSeconds = Math.max(0, nowSec - startedAt);
+                this.updateStartedAgo();
             };
             updateTimer();
             this.durationInterval = setInterval(updateTimer, 1000);
 
             // 2. Setup WebRTC Signaling (BroadcastChannel + HTTP Polling fallback)
             this.setupSignaling();
+
+            // Efir holatini brauzer xotirasiga saqlash (boshqa sahifalarga o'tganda mini pleyer davom etishi uchun)
+            this.saveLiveStateToStorage();
+
+            window.addEventListener('beforeunload', () => {
+                if (!this.streamEnded) {
+                    this.saveLiveStateToStorage();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                const link = e.target.closest('a[href]');
+                if (!link || !link.href) return;
+                if (!this.streamEnded && link.hostname === window.location.hostname) {
+                    this.saveLiveStateToStorage();
+                }
+            }, { passive: true });
 
             // 3. Role-specific startup
             if (this.isHost) {
@@ -927,6 +1503,40 @@ function liveStudioController(config) {
                     window.Livewire.hook('message.processed', () => this.scrollChat());
                 }
             });
+
+            // Chatni ochish/yopish eventini tinglash (chat panelidagi 'X' tugmasi uchun)
+            window.addEventListener('toggle-live-chat', () => this.toggleChat());
+
+            // Tezkor tugmalar (L: like, C: chat, F: to'liq ekran, I: mini oyna, M: ovoz)
+            window.addEventListener('keydown', (e) => {
+                const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable) || (e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]'))) {
+                    return;
+                }
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+                const key = e.key ? e.key.toLowerCase() : '';
+                if (key === 'l') {
+                    e.preventDefault();
+                    this.toggleLike();
+                } else if (key === 'c') {
+                    e.preventDefault();
+                    this.toggleChat();
+                } else if (key === 'f') {
+                    e.preventDefault();
+                    if (this.canUseFullscreen) {
+                        this.toggleVideoFullscreen();
+                    }
+                } else if (key === 'i') {
+                    e.preventDefault();
+                    this.activateMiniPlayer();
+                } else if (key === 'm') {
+                    if (!this.isHost) {
+                        e.preventDefault();
+                        this.toggleViewerMute();
+                    }
+                }
+            });
         },
 
         reconnect() {
@@ -954,10 +1564,19 @@ function liveStudioController(config) {
         },
 
         setVideoFit(mode) {
-            this.videoFitMode = mode === 'contain' ? 'contain' : 'cover';
+            const valid = ['cover', 'contain', 'cinema'];
+            this.videoFitMode = valid.includes(mode) ? mode : 'cover';
             try {
                 localStorage.setItem('kitob_video_fit', this.videoFitMode);
             } catch (e) {}
+            this.applyVideoFitStyles();
+        },
+
+        cycleVideoFit() {
+            const modes = ['cover', 'contain', 'cinema'];
+            const idx = modes.indexOf(this.videoFitMode);
+            const next = modes[(idx + 1) % modes.length];
+            this.setVideoFit(next);
         },
 
         async toggleVideoFullscreen() {
@@ -992,37 +1611,105 @@ function liveStudioController(config) {
             }
         },
 
-        async activateMiniPlayer() {
-            const videoEl = document.getElementById('liveVideoPlayer');
-
-            // 1. Agar brauzerning haqiqiy Picture-in-Picture (Rasm ichida rasm / mini oyna) imkoniyati bo'lsa:
-            if (this.canUsePip && videoEl && !videoEl.disablePictureInPicture && typeof videoEl.requestPictureInPicture === 'function') {
-                try {
-                    if (document.pictureInPictureElement) {
-                        await document.exitPictureInPicture();
-                        this.isPipActive = false;
-                        return;
-                    } else {
-                        await videoEl.requestPictureInPicture();
-                        this.isPipActive = true;
-                        return;
-                    }
-                } catch (pipErr) {
-                    console.warn('[PIP] Picture-in-Picture failed, falling back to docked mode:', pipErr);
-                }
-            }
-
-            // 2. Agar PiP mavjud bo'lmasa yoki xato bersa, burchak mini rejimiga o'tish
-            this.toggleDockedMini();
-        },
-
-        toggleDockedMini() {
+        activateMiniPlayer() {
             this.isDockedMini = !this.isDockedMini;
-            this.syncLiveStateForNavigation();
+            if (!this.isDockedMini) {
+                this.dockedDragX = 0;
+                this.dockedDragY = 0;
+            }
+            this.saveLiveStateToStorage();
         },
 
         restoreDockedVideo() {
             this.isDockedMini = false;
+            this.dockedDragX = 0;
+            this.dockedDragY = 0;
+        },
+
+        startDockedDrag(e) {
+            if (!this.isDockedMini) return;
+            if (e.target.closest('button, a, input, select, textarea')) return;
+            if (e.button !== undefined && e.button !== 0) return;
+
+            this.isDockedDragging = true;
+            this.dockedHasMoved = false;
+            this.dockedDragStartX = e.clientX;
+            this.dockedDragStartY = e.clientY;
+            this.dockedInitialX = this.dockedDragX;
+            this.dockedInitialY = this.dockedDragY;
+
+            const viewport = document.getElementById('liveVideoViewport');
+            if (viewport) {
+                const rect = viewport.getBoundingClientRect();
+                const pad = 10;
+                this.dockedMinX = this.dockedInitialX + (pad - rect.left);
+                this.dockedMaxX = this.dockedInitialX + (window.innerWidth - rect.width - pad - rect.left);
+                this.dockedMinY = this.dockedInitialY + (pad - rect.top);
+                this.dockedMaxY = this.dockedInitialY + (window.innerHeight - rect.height - pad - rect.top);
+            }
+
+            this._onDockedMove = (evt) => this.onDockedDrag(evt);
+            this._onDockedUp = (evt) => this.stopDockedDrag(evt);
+
+            window.addEventListener('pointermove', this._onDockedMove, { passive: false });
+            window.addEventListener('pointerup', this._onDockedUp);
+            window.addEventListener('pointercancel', this._onDockedUp);
+
+            if (e.cancelable) e.preventDefault();
+        },
+
+        onDockedDrag(e) {
+            if (!this.isDockedDragging) return;
+            const dx = e.clientX - this.dockedDragStartX;
+            const dy = e.clientY - this.dockedDragStartY;
+
+            if (!this.dockedHasMoved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+                this.dockedHasMoved = true;
+            }
+
+            let targetX = this.dockedInitialX + dx;
+            let targetY = this.dockedInitialY + dy;
+
+            targetX = Math.max(this.dockedMinX, Math.min(this.dockedMaxX, targetX));
+            targetY = Math.max(this.dockedMinY, Math.min(this.dockedMaxY, targetY));
+
+            this.dockedDragX = Math.round(targetX);
+            this.dockedDragY = Math.round(targetY);
+
+            if (e.cancelable) e.preventDefault();
+        },
+
+        stopDockedDrag(e) {
+            if (!this.isDockedDragging) return;
+            this.isDockedDragging = false;
+
+            if (this._onDockedMove) window.removeEventListener('pointermove', this._onDockedMove);
+            if (this._onDockedUp) {
+                window.removeEventListener('pointerup', this._onDockedUp);
+                window.removeEventListener('pointercancel', this._onDockedUp);
+            }
+            this._onDockedMove = null;
+            this._onDockedUp = null;
+
+            if (!this.dockedHasMoved && !this.isHost && (this.needsUnmute || this.isViewerMuted)) {
+                this.unmuteAudio();
+            }
+        },
+
+        async toggleNativePip() {
+            const videoEl = document.getElementById('liveVideoPlayer');
+            if (!videoEl || typeof videoEl.requestPictureInPicture !== 'function') return;
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                    this.isPipActive = false;
+                } else {
+                    await videoEl.requestPictureInPicture();
+                    this.isPipActive = true;
+                }
+            } catch (e) {
+                console.warn('[PIP] Native PiP error:', e);
+            }
         },
 
         async exitPip() {
@@ -1034,7 +1721,8 @@ function liveStudioController(config) {
             this.isPipActive = false;
         },
 
-        syncLiveStateForNavigation() {
+        saveLiveStateToStorage() {
+            if (this.streamEnded || this.isHost) return;
             const state = {
                 eventId: this.eventId,
                 title: config.eventTitle || 'Jonli efir',
@@ -1134,6 +1822,7 @@ function liveStudioController(config) {
         showStreamEnded() {
             if (this.streamEnded) return;
             this.streamEnded = true;
+            try { localStorage.removeItem('kitobxon_live_state'); } catch (e) {}
             console.log('[LIVE] Efir tugadi — overlay ko\'rsatilmoqda');
             // Barcha polling/heartbeat/WebRTC ni to'xtatish
             if (this.pollInterval) clearInterval(this.pollInterval);
@@ -1731,6 +2420,66 @@ function liveStudioController(config) {
                 // Camera capability support is inconsistent across browsers and devices.
                 // Rendering and streaming must continue when a vendor rejects a hint.
                 console.debug('[CAMERA] Optional image tuning skipped:', err);
+            }
+        },
+
+        get videoElementStyle() {
+            let fit = 'contain';
+            let scale = '1';
+
+            if (this.videoFitMode === 'cover') {
+                fit = 'cover';
+                scale = '1.18';
+            } else if (this.videoFitMode === 'cinema') {
+                fit = 'cover';
+                scale = '1';
+            } else {
+                fit = 'contain';
+                scale = '1';
+            }
+
+            return 'object-fit: ' + fit + ' !important; transform: scale(' + scale + '); transform-origin: center center; background-color: #000; transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1), object-fit 0.3s ease; ' + this.videoFilterStyle;
+        },
+
+        get viewportStyle() {
+            if (this.isDockedMini) {
+                return 'transform: translate3d(' + this.dockedDragX + 'px, ' + this.dockedDragY + 'px, 0); ' + (this.isDockedDragging ? 'transition: none !important;' : '');
+            }
+            if (this.videoFitMode === 'cinema') {
+                return 'aspect-ratio: 21 / 9 !important; transition: aspect-ratio 0.35s cubic-bezier(0.2, 0, 0, 1);';
+            }
+            return 'aspect-ratio: 16 / 9 !important; transition: aspect-ratio 0.35s cubic-bezier(0.2, 0, 0, 1);';
+        },
+
+        applyVideoFitStyles() {
+            const videoEl = document.getElementById('liveVideoPlayer');
+            const viewport = document.getElementById('liveVideoViewport');
+            if (!videoEl) return;
+
+            let fit = 'contain';
+            let scale = '1';
+            if (this.videoFitMode === 'cover') {
+                fit = 'cover';
+                scale = '1.18';
+            } else if (this.videoFitMode === 'cinema') {
+                fit = 'cover';
+                scale = '1';
+            } else {
+                fit = 'contain';
+                scale = '1';
+            }
+
+            videoEl.style.setProperty('object-fit', fit, 'important');
+            videoEl.style.setProperty('transform', 'scale(' + scale + ')', 'important');
+            videoEl.style.setProperty('transform-origin', 'center center', 'important');
+            videoEl.style.setProperty('transition', 'transform 0.35s cubic-bezier(0.2, 0, 0, 1), object-fit 0.3s ease', 'important');
+
+            if (viewport && !this.isDockedMini) {
+                if (this.videoFitMode === 'cinema') {
+                    viewport.style.setProperty('aspect-ratio', '21 / 9', 'important');
+                } else {
+                    viewport.style.setProperty('aspect-ratio', '16 / 9', 'important');
+                }
             }
         },
 
@@ -2413,30 +3162,142 @@ function liveStudioController(config) {
             }
         },
 
-        // ── REAL-TIME LIKES (Instagram/TikTok Live uslubi: cheksiz tap) & VIEWER COUNT ──
-        burstLike() {
-            // Optimistic UI: har tap = +1 like va suzuvchi yurak (server javobini kutmasdan)
-            this.likesCount++;
-            this.pendingLikes++;
-            this.spawnFloatingHeart(true);
+        // ── YOUTUBE-STYLE LIKES (1 LIKE PER USER), FOLLOW, SHARE & CHAT TOGGLE ──
+        async toggleLike() {
+            if (this.isGuest) {
+                this.authPrompt = "Like bosish uchun hisobingizga kiring";
+                return;
+            }
+            if (this.likeBusy) return;
+            this.likeBusy = true;
 
-            // Batch/debounce: taplarni 800ms to'playmiz, so'ng BITTA so'rov bilan yuboramiz,
-            // aks holda ko'p odam tez bosganda server haddan tashqari ko'p so'rov oladi.
-            if (this.likeBatchTimer) return;
-            this.likeBatchTimer = setTimeout(() => {
-                const batch = this.pendingLikes;
-                this.pendingLikes = 0;
-                this.likeBatchTimer = null;
-                if (batch < 1) return;
+            const previousState = this.hasLiked;
+            const previousTotal = this.likesCount;
+            this.hasLiked = !previousState;
+            this.likesCount = Math.max(0, previousTotal + (this.hasLiked ? 1 : -1));
+            if (this.hasLiked) {
+                this.spawnFloatingHeart(true);
+            }
+
+            try {
                 const comp = this.$wire || (window.Livewire && this.$el ? window.Livewire.find(this.$el.closest('[wire\\:id]')?.getAttribute('wire:id')) : null);
                 if (comp && typeof comp.call === 'function') {
-                    comp.call('sendLikes', batch);
+                    const res = await comp.call('toggleLike');
+                    if (res && typeof res.liked !== 'undefined') {
+                        this.hasLiked = Boolean(res.liked);
+                        if (typeof res.total === 'number') {
+                            this.likesCount = Number(res.total);
+                        }
+                    }
                 }
-            }, 800);
+            } catch (e) {
+                console.error('toggleLike error:', e);
+                this.hasLiked = previousState;
+                this.likesCount = previousTotal;
+            } finally {
+                this.likeBusy = false;
+            }
         },
 
         sendLike() {
-            this.burstLike();
+            this.toggleLike();
+        },
+
+        burstLike() {
+            this.toggleLike();
+        },
+
+        async toggleFollow() {
+            if (this.isGuest) {
+                this.authPrompt = @js(__('site.live.subscribe_login_prompt'));
+                return;
+            }
+            if (this.followBusy) return;
+            this.followBusy = true;
+
+            const previousState = this.isFollowing;
+            const previousCount = this.followersCount;
+            this.isFollowing = !previousState;
+            this.followersCount = Math.max(0, previousCount + (this.isFollowing ? 1 : -1));
+
+            try {
+                const comp = this.$wire || (window.Livewire && this.$el ? window.Livewire.find(this.$el.closest('[wire\\:id]')?.getAttribute('wire:id')) : null);
+                if (comp && typeof comp.call === 'function') {
+                    const res = await comp.call('toggleFollow');
+                    if (res && typeof res.following !== 'undefined') {
+                        this.isFollowing = Boolean(res.following);
+                        if (typeof res.count === 'number') {
+                            this.followersCount = Number(res.count);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('toggleFollow error:', e);
+                this.isFollowing = previousState;
+                this.followersCount = previousCount;
+            } finally {
+                this.followBusy = false;
+            }
+        },
+
+        toggleChat() {
+            this.chatOpen = !this.chatOpen;
+            try {
+                localStorage.setItem('kitob_live_chat_open', this.chatOpen ? 'true' : 'false');
+            } catch (e) {}
+            if (this.chatOpen) {
+                this.$nextTick(() => {
+                    this.scrollChat();
+                });
+            }
+        },
+
+        async shareStream() {
+            if (typeof navigator !== 'undefined' && navigator.share) {
+                try {
+                    await navigator.share({
+                        title: config.eventTitle || 'Jonli efir',
+                        text: this.shareText,
+                        url: this.shareUrl
+                    });
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') return;
+                }
+            }
+            this.shareOpen = !this.shareOpen;
+        },
+
+        async copyShareLink() {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(this.shareUrl);
+                } else {
+                    const input = document.createElement('input');
+                    input.value = this.shareUrl;
+                    document.body.appendChild(input);
+                    input.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(input);
+                }
+                this.shareCopied = true;
+                setTimeout(() => { this.shareCopied = false; }, 2200);
+            } catch (e) {
+                console.warn('Copy link error:', e);
+            }
+        },
+
+        updateStartedAgo() {
+            const s = Math.max(0, this.durationSeconds || 0);
+            if (s < 60) {
+                this.startedAgoLabel = 'hozirgina';
+            } else if (s < 3600) {
+                this.startedAgoLabel = Math.floor(s / 60) + ' daqiqa oldin';
+            } else {
+                const h = Math.floor(s / 3600);
+                const m = Math.floor((s % 3600) / 60);
+                this.startedAgoLabel = h + ' soat ' + (m > 0 ? (m + ' daqiqa ') : '') + 'oldin';
+            }
         },
 
         broadcastViewerCount() {

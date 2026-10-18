@@ -17,7 +17,7 @@ class CatalogPage extends Component
     public string $genre = '';
     public string $search = '';
     public string $format = 'all'; // 'all', 'pdf', 'audio', 'video', 'quiz'
-    public string $readingStatus = 'all'; // 'all', 'reading', 'finished'
+    public string $readingStatus = 'all'; // 'all', 'reading', 'finished', 'saved'
     public string $sortBy = 'week_desc'; // 'week_desc', 'week_asc', 'popular', 'title_asc', 'chapters_desc'
 
     protected $queryString = [
@@ -97,6 +97,7 @@ class CatalogPage extends Component
 
         $readingCount = $userId ? Book::availableForUser($user)->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '<', 90))->count() : 0;
         $finishedCount = $userId ? Book::availableForUser($user)->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '>=', 90))->count() : 0;
+        $savedBooksCount = $userId ? Book::availableForUser($user)->whereHas('savedByUsers', fn ($q) => $q->where('users.id', $userId))->count() : 0;
 
         $query = Book::availableForUser($user)
             ->withCount(['chapters', 'audios', 'videos', 'quizzes']);
@@ -123,6 +124,8 @@ class CatalogPage extends Component
                 $query->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '<', 90));
             } elseif ($this->readingStatus === 'finished') {
                 $query->whereHas('readingProgress', fn ($rp) => $rp->where('user_id', $userId)->where('percent_complete', '>=', 90));
+            } elseif ($this->readingStatus === 'saved') {
+                $query->whereHas('savedByUsers', fn ($q) => $q->where('users.id', $userId));
             }
         }
 
@@ -201,6 +204,7 @@ class CatalogPage extends Component
             'quizBooksCount'    => $quizBooksCount,
             'readingCount'      => $readingCount,
             'finishedCount'     => $finishedCount,
+            'savedBooksCount'   => $savedBooksCount,
             'hasActiveFilters'  => $hasActiveFilters,
         ])->layout('layouts.app', ['title' => 'Kitoblar katalogi']);
     }

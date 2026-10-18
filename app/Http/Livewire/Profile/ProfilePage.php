@@ -122,6 +122,20 @@ class ProfilePage extends Component
         $this->activeTab = $tab;
     }
 
+    public function unsaveBook(int $bookId): void
+    {
+        if (Auth::id() !== $this->user->id) {
+            return;
+        }
+
+        \App\Models\UserSavedBook::where('user_id', $this->user->id)
+            ->where('book_id', $bookId)
+            ->delete();
+
+        $this->user->unsetRelation('savedBooks');
+        $this->toastInfo("Kitob saqlanganlar ro'yxatidan olib tashlandi.");
+    }
+
     public function buyStreakFreeze(): void
     {
         if (Auth::id() !== $this->user->id) return;
@@ -291,6 +305,10 @@ class ProfilePage extends Component
         $notes = $isOwner
             ? $this->user->notes()->with(['book', 'chapter'])->latest()->take(12)->get()
             : collect();
+        $savedBooks = $this->user->savedBooks()
+            ->withCount(['chapters', 'audios', 'videos'])
+            ->latest('user_saved_books.created_at')
+            ->get();
 
         // Dinamik hisob-kitoblar
         $totalReadingMinutes = max(
@@ -305,6 +323,7 @@ class ProfilePage extends Component
             'current_streak'  => (int) ($this->user->streak?->current_streak ?? 0),
             'books_finished'  => BookReadingProgress::where('user_id', $this->user->id)->where('percent_complete', '>=', 90)->count(),
             'books_reading'   => BookReadingProgress::where('user_id', $this->user->id)->where('percent_complete', '<', 90)->count(),
+            'saved_books'     => $this->user->savedBooks()->count(),
             'quizzes_passed'  => QuizAttempt::where('user_id', $this->user->id)->where('percent', '>=', (int) setting('quiz_passing_percent', 70))->count(),
             'groups_count'    => GroupMember::where('user_id', $this->user->id)->count(),
             'messages_count'  => GlobalChatMessage::where('user_id', $this->user->id)->notDeleted()->count(),
@@ -323,6 +342,7 @@ class ProfilePage extends Component
             'activeTab'         => $this->activeTab,
             'isFollowing'       => $this->isFollowing,
             'readingProgresses' => $readingProgresses,
+            'savedBooks'        => $savedBooks,
             'activities'        => $activities,
             'badges'            => $badges,
             'notes'             => $notes,

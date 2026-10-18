@@ -113,8 +113,8 @@
             <button @click="toggleTheme($event)" 
                     type="button"
                     class="header-theme-btn relative inline-flex items-center justify-center w-8 h-8 rounded-btn border border-ink-border bg-ink-800 text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base select-none shrink-0 group focus:outline-none"
-                    :title="theme === 'dark' ? 'Yorug\' rejim (Light mode)' : 'Tungi rejim (Dark mode)'"
-                    :aria-label="theme === 'dark' ? 'Light mode' : 'Dark mode'">
+                    :title="theme === 'dark' ? '{{ addslashes(__('site.theme.light')) }}' : '{{ addslashes(__('site.theme.dark')) }}'"
+                    :aria-label="theme === 'dark' ? '{{ addslashes(__('site.theme.light')) }}' : '{{ addslashes(__('site.theme.dark')) }}'">
                 {{-- Concentric Pulse Shockwave Rings (Blinkit style) --}}
                 <span class="theme-pulse-halo theme-pulse-halo-1" aria-hidden="true"></span>
                 <span class="theme-pulse-halo theme-pulse-halo-2" aria-hidden="true"></span>
@@ -470,7 +470,7 @@
                                 <span class="flex items-center gap-2.5">
                                     <svg x-show="theme === 'dark'" class="w-4 h-4 text-amber-400 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                                     <svg x-show="theme === 'light'" class="w-4 h-4 text-amber-600 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                                    <span x-text="theme === 'dark' ? 'Yorug\' rejim' : 'Tungi rejim'"></span>
+                                    <span x-text="theme === 'dark' ? '{{ addslashes(__('site.theme.light')) }}' : '{{ addslashes(__('site.theme.dark')) }}'"></span>
                                 </span>
                                 <span class="px-1.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold"
                                       :class="theme === 'light' ? 'bg-amber-500/15 text-amber-800 border border-amber-500/30' : 'bg-ink-950 text-amber-400 border border-ink-border'"
@@ -591,16 +591,16 @@
 
             {{-- Mavzu almashtirgich (mobil) --}}
             <div class="pt-3 mt-1 flex items-center justify-between border-t border-ink-border/50">
-                <span class="ks-eyebrow">Mavzu / Theme</span>
+                <span class="ks-eyebrow">{{ __('site.theme.theme') }}</span>
                 <button @click="toggleTheme($event)" type="button" data-theme-toggle 
                         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-btn border border-ink-border bg-ink-800 text-paper text-xs font-mono transition-all duration-200 hover:bg-ink-700 active:scale-95">
                     <span x-show="theme === 'dark'" class="flex items-center gap-1.5 text-amber-400">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                        <span>Yorug' rejim</span>
+                        <span>{{ __('site.theme.light') }}</span>
                     </span>
                     <span x-show="theme === 'light'" class="flex items-center gap-1.5 text-amber-600">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                        <span>Tungi rejim</span>
+                        <span>{{ __('site.theme.dark') }}</span>
                     </span>
                 </button>
             </div>

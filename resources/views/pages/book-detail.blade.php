@@ -158,7 +158,7 @@
                 <div x-show="isSaved" x-cloak
                      class="absolute top-0 right-3 w-7 h-10 bg-gradient-to-b from-amber-400 to-amber-600 shadow-lg flex items-center justify-center text-ink-950 font-bold transition-all"
                      style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%, 0% 100%);"
-                     title="Keyinroq o'qish uchun saqlangan">
+                     title="{{ __('site.saved_books.ribbon_title') }}">
                     <span class="text-xs">★</span>
                 </div>
             </div>
@@ -188,7 +188,7 @@
                     <template x-if="savedCount > 0">
                         <span class="px-2.5 py-0.5 bg-amber-500/10 text-amber-300 text-xs font-mono rounded-badge flex items-center gap-1 border border-amber-500/20">
                             <span>📌</span>
-                            <span x-text="savedCount + ' kitobxonda saqlangan'"></span>
+                            <span x-text="@js(__('site.saved_books.saved_by_readers', ['count' => '___CNT___'])).replace('___CNT___', savedCount)"></span>
                         </span>
                     </template>
                 </div>
@@ -204,7 +204,7 @@
                                 @click="readerMode = '3d'; window.scrollTo({ top: document.getElementById('online-reader').offsetTop - 80, behavior: 'smooth' })"
                                 class="ks-btn-primary inline-flex items-center gap-2 shadow-lg shadow-amber-500/20">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                            <span>Mutolaa qilish</span>
+                            <span>{{ __('site.books.read_cta') }}</span>
                         </button>
                     @endif
 
@@ -212,7 +212,7 @@
                         <button type="button"
                                 @click="showAiDrawer = true; $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); })"
                                 class="px-3.5 py-2 rounded-btn bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-ink-950 border border-emerald-500/40 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md"
-                                title="Ushbu kitob bo'yicha AI yordamchi bilan suhbatlashish">
+                                title="{{ __('site.books.ai_assistant_tooltip') }}">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
                             </svg>
@@ -222,7 +222,7 @@
                         <button type="button"
                                 @click="showAiDrawer = true; $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); })"
                                 class="px-3.5 py-2 rounded-btn bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 transition-all"
-                                title="AI yordamchi holatini ko'rish">
+                                title="{{ __('site.books.ai_assistant_tooltip') }}">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
                             </svg>
@@ -234,9 +234,9 @@
                     <button type="button"
                             @click="activeTab = 'comments'; $nextTick(() => { document.getElementById('book-comments')?.scrollIntoView({ behavior: 'smooth' }); document.getElementById('comment-textarea')?.focus(); })"
                             class="ks-btn-ghost inline-flex items-center gap-1.5 text-xs text-amber-300 border-amber-500/30 hover:border-amber-400"
-                            title="Kitobga izoh yoki baho qoldirish">
+                            title="{{ __('site.books.leave_comment') }}">
                         <span>💬</span>
-                        <span>Izoh qoldirish</span>
+                        <span>{{ __('site.books.leave_comment') }}</span>
                     </button>
 
                     <!-- Keyinroq o'qiyman (1-Click Toggle Bookmark) -->
@@ -247,10 +247,10 @@
                                 ? 'bg-amber-500 text-ink-950 font-bold border-amber-400 shadow-md shadow-amber-500/20' 
                                 : 'ks-btn-ghost text-amber-400 border-amber-500/30 hover:border-amber-400'"
                             class="px-3.5 py-2 rounded-btn text-xs font-semibold inline-flex items-center gap-2 transition-all active:scale-95"
-                            :title="isSaved ? 'Saqlanganlardan chiqarish' : 'Keyinroq o\'qish uchun saqlab qo\'yish'">
+                            :title="isSaved ? @js(__('site.saved_books.remove_title')) : @js(__('site.saved_books.save_title'))">
                         <span x-show="!isSaved">📌</span>
                         <span x-show="isSaved">✓</span>
-                        <span x-text="isSaved ? 'Saqlab qo\'yilgan' : 'Keyinroq o\'qiyman'">Keyinroq o'qiyman</span>
+                        <span x-text="isSaved ? @js(__('site.saved_books.saved_btn')) : @js(__('site.saved_books.save_btn'))">{{ __('site.saved_books.save_btn') }}</span>
                     </button>
 
                     <!-- PDF Yuklab olish Modal / Direct Option -->
@@ -406,8 +406,8 @@
                         @click="toggleAutoPlay()"
                         :class="autoPlayActive ? 'bg-emerald-500 text-ink-950 font-bold border-emerald-400' : 'ks-btn-ghost text-mist hover:text-paper'"
                         class="py-1.5 px-3 text-xs rounded-btn flex items-center gap-1.5 transition-all"
-                        title="Avtomatik varaqlash (A klavishi)">
-                    <span x-show="!autoPlayActive">▶ Avto</span>
+                        title="{{ __('site.books.flipbook_auto_title') }}">
+                    <span x-show="!autoPlayActive">▶ {{ __('site.books.flipbook_auto_label') }}</span>
                     <span x-show="autoPlayActive" class="flex items-center gap-1">
                         <span class="w-2 h-2 rounded-full bg-ink-950 animate-ping"></span>
                         <span>To'xtatish</span>
@@ -485,7 +485,7 @@
                     <button type="button" 
                             class="fb-nav-arrow fb-nav-arrow--left hidden sm:flex" 
                             onclick="fbGoPrev()" 
-                            title="Oldingi sahifaga varaqlash (←)">
+                            title="{{ __('site.books.flipbook_prev_title') }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                     </button>
 
@@ -493,7 +493,7 @@
                     <button type="button" 
                             class="fb-nav-arrow fb-nav-arrow--right hidden sm:flex" 
                             onclick="fbGoNext()" 
-                            title="Keyingi sahifaga varaqlash (→)">
+                            title="{{ __('site.books.flipbook_next_title') }}">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                     </button>
 
@@ -523,24 +523,43 @@
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
-                            <!-- Zoom Controls -->
+                            <!-- Shrift & Masshtab (Font & Zoom) Controls -->
                             <div class="hidden sm:flex items-center bg-ink-950 border border-ink-border rounded-btn overflow-hidden p-0.5">
-                                <button type="button" onclick="fbZoomOut()" title="Kichiklashtirish (-)" class="p-1 text-mist hover:text-paper transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                                <button type="button" onclick="fbZoomOut()" title="Shrift va sahifani kichiklashtirish (A- / -)" class="px-1.5 py-0.5 text-xs font-mono font-bold text-mist hover:text-paper transition-colors">
+                                    A-
                                 </button>
                                 <button type="button" onclick="fbZoomReset()" id="fb-zoom-level" title="100% asl o'lchamga qaytarish (0)" class="px-1.5 text-[11px] font-mono font-bold text-amber-400">
                                     100%
                                 </button>
-                                <button type="button" onclick="fbZoomIn()" title="Kattalashtirish (+)" class="p-1 text-mist hover:text-paper transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <button type="button" onclick="fbZoomIn()" title="Shrift va sahifani kattalashtirish (A+ / +)" class="px-1.5 py-0.5 text-xs font-mono font-bold text-mist hover:text-paper transition-colors">
+                                    A+
                                 </button>
+                            </div>
+
+                            <!-- Paper Theme Selector -->
+                            <div class="hidden sm:flex items-center bg-ink-950 border border-ink-border rounded-btn p-0.5">
+                                <button type="button" 
+                                        data-paper-theme-btn="ivory"
+                                        onclick="fbSetPaperTheme('ivory')" 
+                                        class="px-1.5 py-0.5 text-[10px] rounded transition-all text-mist hover:text-paper" 
+                                        title="Tabiiy krem qog'oz">📜 Asl</button>
+                                <button type="button" 
+                                        data-paper-theme-btn="sepia"
+                                        onclick="fbSetPaperTheme('sepia')" 
+                                        class="px-1.5 py-0.5 text-[10px] rounded transition-all text-mist hover:text-paper" 
+                                        title="Klassik sepia ohangi">🍵 Sepia</button>
+                                <button type="button" 
+                                        data-paper-theme-btn="night"
+                                        onclick="fbSetPaperTheme('night')" 
+                                        class="px-1.5 py-0.5 text-[10px] rounded transition-all text-mist hover:text-paper" 
+                                        title="Tungi qorong'i mutolaa">🌙 Tun</button>
                             </div>
 
                             <!-- Sound toggle -->
                             <button type="button" 
                                     id="fb-sound-btn"
                                     onclick="fbToggleSound()" 
-                                    title="Varaqlash ovozi (S klavishi)" 
+                                    title="{{ __('site.books.flipbook_sound_title') }}" 
                                     class="ks-btn-ghost p-1.5 text-xs">
                                 🔊
                             </button>
@@ -580,18 +599,18 @@
                 <div class="flex items-center justify-between text-xs text-mist font-mono px-2 flex-wrap gap-2">
                     <span class="flex items-center gap-1.5 text-amber-400 font-semibold">
                         <span>🖱️ / 👆</span>
-                        <span>Burchakdan tortib yoki bosing</span>
+                        <span>{{ __('site.books.flipbook_corner_hint') }}</span>
                     </span>
                     <span class="flex items-center gap-2">
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">←</kbd>
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">→</kbd>
-                        <span>Varaqlash</span>
+                        <span>{{ __('site.books.flipbook_flip_label') }}</span>
                         <span class="text-ink-border">•</span>
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">A</kbd>
-                        <span>Avto</span>
+                        <span>{{ __('site.books.flipbook_auto_label') }}</span>
                         <span class="text-ink-border">•</span>
                         <kbd class="px-1.5 py-0.5 rounded-badge bg-ink-900 border border-ink-border text-paper text-[10px]">F</kbd>
-                        <span>To'liq ekran</span>
+                        <span>{{ __('site.books.flipbook_fullscreen_title') }}</span>
                     </span>
                 </div>
 
@@ -618,8 +637,8 @@
         @else
             <div class="p-10 rounded-card bg-ink-900 border border-ink-border text-center space-y-2">
                 <svg class="w-8 h-8 mx-auto text-amber-500 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                <p class="text-sm text-paper font-serif font-bold">Bu kitob uchun hali PDF fayl yuklanmagan.</p>
-                <p class="text-xs text-mist font-sans">Admin/teacher paneldan kitobga PDF fayl yuklaydi yoki boblar qo'shilganda avtomatik PDF yaratiladi.</p>
+                <p class="text-sm text-paper font-serif font-bold">{{ __('site.books.no_pdf_uploaded') }}</p>
+                <p class="text-xs text-mist font-sans">{{ __('site.books.no_pdf_hint') }}</p>
             </div>
         @endif
 
@@ -688,7 +707,7 @@
                             Yoki shu kitobning o'zida AI ishlashi uchun kitob mazmunini (kamida 2–3 gap) kiriting va yoqing:
                         </label>
                         <textarea name="ai_summary" rows="3" required minlength="60"
-                                  placeholder="Masalan: Ushbu kitobda algebraik tenglamalar, funksiyalar, geometrik shakllar va amaliy masalalar yechimlari batafsil tushuntirilgan..."
+                                  placeholder="Kitobning qisqa mazmuni (kamida 2-3 gap)..."
                                   class="ks-input w-full text-xs">{{ old('ai_summary', $book->ai_summary) }}</textarea>
                         <div class="flex justify-end">
                             <button type="submit" class="ks-btn-primary py-2 px-4 text-xs font-bold">
@@ -757,14 +776,14 @@
                         <input type="text" 
                                name="title" 
                                required 
-                               placeholder="Mavzu yoki taqriz sarlavhasi (masalan: Ushbu kitobdan olgan asosiy xulosam)"
+                               placeholder="Mavzu yoki taqriz sarlavhasi..."
                                class="ks-input w-full text-xs sm:text-sm">
                     </div>
                     <div>
                         <textarea name="body" 
                                   rows="3" 
                                   required 
-                                  placeholder="Kitob haqidagi keng tahlilingiz, yoqqan iqtiboslar yoki savollaringiz..."
+                                  placeholder="Kitob haqida fikr yoki tahlilingizni yozing..."
                                   class="ks-input w-full text-xs sm:text-sm resize-y"></textarea>
                     </div>
                     <div class="flex justify-end">

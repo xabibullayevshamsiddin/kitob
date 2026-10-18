@@ -469,24 +469,108 @@
 
 /* ── Paper Tone Themes ── */
 .fb-stage-wrapper[data-paper-theme="sepia"] {
-  --fb-paper-tone: #f4ecd8;
+  --fb-paper-tone: #f4ebd0;
+  background: radial-gradient(circle at 50% 30%, #1f1b14 0%, #0d0c09 85%);
+}
+.fb-stage-wrapper[data-paper-theme="sepia"] .fb-book-spread {
+  box-shadow:
+    -3px 2px 0 #ded2b3,
+    -6px 4px 0 #ccbe9a,
+    3px 2px 0 #ded2b3,
+    6px 4px 0 #ccbe9a,
+    0 14px 30px rgba(0, 0, 0, 0.55) !important;
+}
+.fb-stage-wrapper[data-paper-theme="sepia"] .fb-stf-page {
+  background: #f4ebd0 !important;
 }
 .fb-stage-wrapper[data-paper-theme="sepia"] .fb-stf-page-inner {
-  filter: sepia(0.24) brightness(0.97) contrast(1.02);
+  background: #f4ebd0 !important;
+  filter: sepia(0.68) contrast(0.94) brightness(0.92) hue-rotate(-8deg) !important;
+}
+.fb-stage-wrapper[data-paper-theme="sepia"] .fb-stf-endpaper-inner {
+  background: radial-gradient(circle at 50% 45%, #f4ebd0 0%, #e5d7b5 100%) !important;
+  border-color: rgba(180, 150, 95, 0.4) !important;
+}
+.fb-stage-wrapper[data-paper-theme="sepia"] .fb-stf-endpaper-ornament {
+  color: rgba(120, 85, 40, 0.75) !important;
+  border-color: rgba(180, 150, 95, 0.45) !important;
 }
 
 .fb-stage-wrapper[data-paper-theme="night"] {
-  --fb-paper-tone: #182030;
-  background: radial-gradient(circle at 50% 30%, #0d121d 0%, #05070c 85%);
+  --fb-paper-tone: #0f1420;
+  background: radial-gradient(circle at 50% 30%, #0c101a 0%, #04060a 85%);
+}
+.fb-stage-wrapper[data-paper-theme="night"] .fb-book-spread {
+  background: #090d15 !important;
+  box-shadow:
+    -3px 2px 0 #1e2638,
+    -6px 4px 0 #131926,
+    3px 2px 0 #1e2638,
+    6px 4px 0 #131926,
+    0 18px 40px rgba(0, 0, 0, 0.9) !important;
+}
+.fb-stage-wrapper[data-paper-theme="night"] .fb-stf-page {
+  background: #0f1420 !important;
 }
 .fb-stage-wrapper[data-paper-theme="night"] .fb-stf-page-inner {
-  filter: invert(0.88) hue-rotate(180deg) contrast(0.95);
+  background: #ffffff !important; /* Inverts to clean dark charcoal #121212 without white margins */
+  filter: invert(0.90) hue-rotate(180deg) contrast(0.96) brightness(0.94) !important;
+}
+.fb-stage-wrapper[data-paper-theme="night"] .fb-stf-endpaper-inner {
+  background: radial-gradient(circle at 50% 45%, #151d2d 0%, #0b0f19 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  filter: none !important;
+}
+.fb-stage-wrapper[data-paper-theme="night"] .fb-stf-endpaper-ornament {
+  color: rgba(226, 232, 240, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.fb-stage-wrapper[data-paper-theme="night"] .fb-stf-endpaper-ornament span {
+  color: rgba(245, 158, 11, 0.7) !important;
+}
+.fb-stage-wrapper[data-paper-theme="night"] .fb-stf-spine-lighting {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.55) 0%, transparent 22%) !important;
+  box-shadow: none !important;
+}
+.fb-stage-wrapper[data-paper-theme="night"] .fb-book-spine {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(0, 0, 0, 0.65) 100%
+  ) !important;
 }
 
+.fb-stage-wrapper[data-paper-theme="ivory"],
 .fb-stage-wrapper[data-paper-theme="white"] {
-  --fb-paper-tone: #ffffff;
+  --fb-paper-tone: #faf8f5;
 }
+.fb-stage-wrapper[data-paper-theme="ivory"] .fb-stf-page-inner,
 .fb-stage-wrapper[data-paper-theme="white"] .fb-stf-page-inner {
   filter: none;
 }
+
+/* ── Active Paper Theme Button Highlight ── */
+[data-paper-theme-btn].is-active {
+  background-color: rgba(245, 158, 11, 0.22) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Fullscreen Stage Support ── */
+#fb-standalone-container:fullscreen {
+  background: #070a12;
+  padding: 0.75rem 1rem 1rem;
+  overflow-y: auto;
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+}
+#fb-standalone-container:fullscreen .fb-stage-wrapper {
+  min-height: calc(100vh - 7.5rem);
+  border-radius: 1rem;
+}
+
 

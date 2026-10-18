@@ -24,11 +24,11 @@
                         {{ __('ai.title') }}
                     </h3>
                     <span class="px-2 py-0.5 rounded-badge bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold uppercase tracking-wider">
-                        Faqat shu kitob bo'yicha
+                        {{ __('ai.book_scope_badge') }}
                     </span>
                 </div>
                 <p class="text-[11px] text-mist font-mono truncate">
-                    «{{ $book ? $book->title : '' }}» matniga asoslangan aniq javoblar va bet ko'rsatkichlari
+                    {{ __('ai.book_subtitle', ['book' => $book ? $book->title : '']) }}
                 </p>
             </div>
         </div>
@@ -75,14 +75,14 @@
                 <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            <span>Tayyor savollar:</span>
+            <span>{{ __('ai.suggested_questions') }}</span>
         </span>
         @foreach($suggestedQuestions as $sq)
             <button
                 type="button"
                 @if($remainingToday <= 0)
                     disabled
-                    title="Kunlik limit tugagan. Qayta tiklanishiga {{ $resetRemainingHuman }} qoldi"
+                    title="{{ __('ai.limit_depleted_tooltip', ['time' => $resetRemainingHuman]) }}"
                     class="px-2.5 py-1 rounded-badge bg-ink-950/60 border border-ink-border/60 text-xs text-mist/40 font-sans shrink-0 inline-flex items-center gap-1.5 opacity-50 cursor-not-allowed"
                 @else
                     wire:click="ask({{ json_encode($sq) }})"
@@ -114,7 +114,7 @@
                 </div>
                 <p class="text-sm font-serif font-bold text-paper">{{ __('ai.unauthorized') }}</p>
                 <a href="{{ route('login') }}" class="ks-btn-primary inline-flex items-center gap-2 text-xs py-2 px-4">
-                    <span>Tizimga kirish</span>
+                    <span>{{ __('site.auth.login') }}</span>
                 </a>
             </div>
         @else
@@ -127,10 +127,10 @@
                         </svg>
                     </div>
                     <h4 class="text-sm font-bold font-serif text-paper">
-                        Kitob bo'yicha istalgan savolingizni bering
+                        {{ __('ai.starter_title') }}
                     </h4>
                     <p class="text-xs text-mist leading-relaxed">
-                        AI yordamchi faqat ushbu kitobning sahifalari va boblariga tayanib javob beradi hamda javob topilgan aniq bet raqamini ko'rsatadi.
+                        {{ __('ai.starter_desc') }}
                     </p>
                 </div>
             @else
@@ -163,7 +163,7 @@
                                                 <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
                                             @endif
                                         </svg>
-                                        <span>{{ $msg['refused'] ? 'Cheklov / Kitob doirasi' : __('ai.title') }}</span>
+                                        <span>{{ $msg['refused'] ? __('ai.refused_badge') : __('ai.title') }}</span>
                                     </span>
                                 </div>
 
@@ -185,7 +185,7 @@
                                         @foreach($msg['sources'] as $src)
                                             @php
                                                 $targetPage = (int) ($src['page_start'] ?? 1);
-                                                $chipLabel = (string) ($src['label'] ?? ($targetPage . '-bet'));
+                                                $chipLabel = (string) ($src['label'] ?? __('ai.page_num', ['page' => $targetPage]));
                                                 $pdfUrl = route('books.pdf.read', $bookId) . '#page=' . max(1, $targetPage) . '&view=FitH';
                                             @endphp
                                             <div class="inline-flex items-center rounded-badge border border-amber-500/35 bg-amber-500/15 overflow-hidden text-[11px] font-mono shadow-sm">
@@ -193,7 +193,7 @@
                                                     type="button"
                                                     @click="jumpToBookPage({{ $targetPage > 0 ? $targetPage : 1 }})"
                                                     class="px-2.5 py-0.5 hover:bg-amber-500 text-amber-300 hover:text-ink-950 font-bold inline-flex items-center gap-1 transition-all"
-                                                    title="Saytda o'qish: {{ $chipLabel }}ga o'tish"
+                                                    title="{{ __('ai.jump_to_page', ['page' => $chipLabel]) }}"
                                                 >
                                                     <span>{{ !empty($src['index']) ? '[' . $src['index'] . '] ' : '' }}{{ $chipLabel }}</span>
                                                     <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -205,7 +205,7 @@
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     class="px-1.5 py-0.5 border-l border-amber-500/30 text-amber-400 hover:text-white hover:bg-amber-500/30 transition-colors inline-flex items-center"
-                                                    title="PDF faylni to'g'ridan-to'g'ri {{ $targetPage }}-betda ochish"
+                                                    title="{{ __('ai.open_pdf_page', ['page' => $targetPage]) }}"
                                                 >
                                                     <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                                         <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
@@ -230,9 +230,9 @@
                         x-data="{
                             step: 0,
                             steps: [
-                                'Kitob sahifalaridan mos bo‘laklar qidirilmoqda...',
-                                'Matn va faktlar tekshirilmoqda...',
-                                'Aniq javob va bet ko‘rsatkichlari shakllantirilmoqda...'
+                                @js(__('ai.thinking_step_1')),
+                                @js(__('ai.thinking_step_2')),
+                                @js(__('ai.thinking_step_3'))
                             ],
                             stepInterval: null,
                             start() {
@@ -252,7 +252,7 @@
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
                                 </span>
-                                <span>AI o‘ylamoqda</span>
+                                <span>{{ __('ai.thinking') }}</span>
                             </span>
 
                             {{-- 3 Wave Bouncing Dots --}}
@@ -309,14 +309,14 @@
                     </div>
                     <div class="min-w-0">
                         <p class="font-bold text-rose-200">
-                            Kunlik AI savollar limitingiz ({{ $dailyLimit }} ta) tugadi
+                            {{ __('ai.limit_locked_title', ['limit' => $dailyLimit]) }}
                         </p>
                         <p class="text-[11px] text-mist flex items-center gap-1.5 mt-0.5">
                             <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                 <circle cx="12" cy="12" r="10"/>
                                 <polyline points="12 6 12 12 16 14"/>
                             </svg>
-                            <span>Limit qayta tiklanishiga: <strong class="text-amber-400 font-mono">{{ $resetRemainingHuman }}</strong> qoldi (soat 00:00 da)</span>
+                            <span>{!! __('ai.limit_resets_in', ['time' => '<strong class="text-amber-400 font-mono">' . e($resetRemainingHuman) . '</strong>']) !!}</span>
                         </p>
                     </div>
                 </div>
@@ -325,7 +325,7 @@
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
                     </svg>
-                    <span>Yuborish qulflangan</span>
+                    <span>{{ __('ai.locked_badge') }}</span>
                 </span>
             </div>
         @endif
@@ -344,7 +344,7 @@
                         @input="charCount = $el.value.length"
                         rows="2"
                         maxlength="{{ $maxChars }}"
-                        placeholder="{{ $remainingToday <= 0 ? 'Kunlik limit tugadi. Qayta tiklanishiga ' . $resetRemainingHuman . ' qoldi...' : __('ai.ask_placeholder') }}"
+                        placeholder="{{ $remainingToday <= 0 ? __('ai.limit_depleted_placeholder', ['time' => $resetRemainingHuman]) : __('ai.ask_placeholder') }}"
                         @if($remainingToday <= 0)
                             disabled
                         @else
@@ -362,7 +362,7 @@
                     type="button"
                     @if($remainingToday <= 0)
                         disabled
-                        title="Kunlik limit tugagan. Qayta tiklanishiga: {{ $resetRemainingHuman }} qoldi"
+                        title="{{ __('ai.limit_depleted_tooltip', ['time' => $resetRemainingHuman]) }}"
                         class="px-4 sm:px-5 rounded-btn bg-ink-850/80 border border-ink-border/60 text-mist/40 text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 shrink-0 self-stretch cursor-not-allowed shadow-none"
                     @else
                         @click="submitQuestion()"
@@ -377,7 +377,7 @@
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0110 0v4"/>
                         </svg>
-                        <span>Qulflangan</span>
+                        <span>{{ __('ai.locked_button') }}</span>
                     @else
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <line x1="22" y1="2" x2="11" y2="13"/>

@@ -105,6 +105,16 @@
                         {{ $finishedCount }}
                     </span>
                 </button>
+
+                <button type="button" wire:click="setReadingStatus('saved')"
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'saved' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}"
+                    title="{{ __('site.saved_books.filter_title') }}">
+                    <svg class="w-3.5 h-3.5 {{ $readingStatus === 'saved' ? 'text-ink-950' : 'text-amber-400' }}" viewBox="0 0 24 24" fill="{{ $readingStatus === 'saved' ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                    <span>{{ __('site.catalog.saved') }}</span>
+                    <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'saved' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                        {{ $savedBooksCount }}
+                    </span>
+                </button>
             @endauth
         </div>
 
@@ -140,10 +150,10 @@
         <section class="space-y-4" aria-labelledby="catalog-recommendations-title">
             <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <span class="ks-eyebrow">Sizning mutolaangiz asosida</span>
-                    <h2 id="catalog-recommendations-title" class="mt-1 font-display text-xl font-bold text-paper sm:text-2xl">Sizga mos kitoblar</h2>
+                    <span class="ks-eyebrow">{{ __('site.catalog.based_on_reading') }}</span>
+                    <h2 id="catalog-recommendations-title" class="mt-1 font-display text-xl font-bold text-paper sm:text-2xl">{{ __('site.catalog.recommended_for_you') }}</h2>
                 </div>
-                <p class="text-xs text-mist">O‘qigan kitoblaringiz janrlariga qarab tanlandi.</p>
+                <p class="text-xs text-mist">{{ __('site.catalog.based_on_genres') }}</p>
             </div>
             <div class="grid grid-cols-2 gap-3 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4">
                 @foreach($recommendations as $recommendedBook)
@@ -157,7 +167,7 @@
     <div class="space-y-4">
         @if($showRecommendations && $recommendations->isNotEmpty())
             <div class="border-t border-ink-border pt-4">
-                <h2 class="font-display text-xl font-bold text-paper sm:text-2xl">Barcha kitoblar</h2>
+                <h2 class="font-display text-xl font-bold text-paper sm:text-2xl">{{ __('site.catalog.all_books') }}</h2>
             </div>
         @endif
 
@@ -171,7 +181,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
                     </div>
-                    @if ($hasActiveFilters)
+                    @if ($readingStatus === 'saved')
+                        <h3 class="font-display text-lg font-bold text-paper">{{ __('site.saved_books.empty_title') }}</h3>
+                        <p class="font-sans text-xs text-mist max-w-sm mx-auto">{{ __('site.saved_books.empty_hint') }}</p>
+                        <button type="button" wire:click="resetFilters" class="ks-btn-ghost text-xs mt-2">
+                            {{ __('site.catalog.show_all') }}
+                        </button>
+                    @elseif ($hasActiveFilters)
                         <h3 class="font-display text-lg font-bold text-paper">{{ __('site.catalog.no_results_t') }}</h3>
                         <p class="font-sans text-xs text-mist max-w-sm mx-auto">{{ __('site.catalog.no_results_s') }}</p>
                         <button type="button" wire:click="resetFilters" class="ks-btn-ghost text-xs mt-2">

@@ -18,7 +18,7 @@ class LeaderboardPage extends Component
 
     public string $period = 'all_time'; // 'all_time', 'monthly', 'weekly', 'today'
 
-    public string $sortBy = 'points'; // 'points', 'reading_time', 'streak'
+    public string $sortBy = 'points'; // 'points', 'reading_time', 'streak', 'followers'
 
     public string $search = '';
 
@@ -41,7 +41,7 @@ class LeaderboardPage extends Component
 
     public function setSortBy(string $sortBy): void
     {
-        $this->sortBy = in_array($sortBy, ['points', 'reading_time', 'streak']) ? $sortBy : 'points';
+        $this->sortBy = in_array($sortBy, ['points', 'reading_time', 'streak', 'followers']) ? $sortBy : 'points';
         $this->resetPage();
     }
 
@@ -56,9 +56,12 @@ class LeaderboardPage extends Component
 
         $usersQuery = User::query()
             ->with(['streak', 'profile'])
-            ->withCount(['quizAttempts as quizzes_passed' => function ($q) {
-                $q->where('percent', '>=', 70);
-            }]);
+            ->withCount([
+                'followers',
+                'quizAttempts as quizzes_passed' => function ($q) {
+                    $q->where('percent', '>=', 70);
+                }
+            ]);
 
         if (!empty($this->search)) {
             $s = '%' . trim($this->search) . '%';
@@ -93,6 +96,7 @@ class LeaderboardPage extends Component
                 $startDate ? 0 : (int) ($user->total_reading_minutes ?? 0)
             );
             $streak = (int) ($user->streak?->current_streak ?? 0);
+            $followers = (int) ($user->followers_count ?? 0);
 
             // Fallback for period points if user has overall total_points but no specific transactions
             if ($startDate && $points === 0 && $user->total_points > 0) {
@@ -111,6 +115,7 @@ class LeaderboardPage extends Component
             $user->display_points = $points;
             $user->display_minutes = $minutes;
             $user->display_streak = $streak;
+            $user->display_followers = $followers;
 
             return $user;
         });
@@ -119,6 +124,7 @@ class LeaderboardPage extends Component
         $sortedUsers = match ($this->sortBy) {
             'reading_time' => $allUsers->sortByDesc('display_minutes')->values(),
             'streak'       => $allUsers->sortByDesc('display_streak')->values(),
+            'followers'    => $allUsers->sortByDesc('display_followers')->values(),
             default        => $allUsers->sortByDesc('display_points')->values(),
         };
 
@@ -135,7 +141,13 @@ class LeaderboardPage extends Component
                     $myUser = $u;
                     if ($index > 0) {
                         $prevUser = $sortedUsers[$index - 1];
-                        $pointsToNext = max(1, ($prevUser->display_points - $u->display_points) + 1);
+                        $diffMetric = match ($this->sortBy) {
+                            'reading_time' => ($prevUser->display_minutes - $u->display_minutes),
+                            'streak'       => ($prevUser->display_streak - $u->display_streak),
+                            'followers'    => ($prevUser->display_followers - $u->display_followers),
+                            default        => ($prevUser->display_points - $u->display_points),
+                        };
+                        $pointsToNext = max(1, $diffMetric + 1);
                     }
                     break;
                 }

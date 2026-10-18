@@ -48,7 +48,13 @@
             @if($myRank && $myRank > 1 && $pointsToNext)
                 <div class="mt-4 pt-3 border-t border-ink-border flex items-center justify-between text-xs text-mist font-mono">
                     <span>{{ __('site.leaderboard.to_next', ['rank' => $myRank - 1]) }}</span>
-                    <span class="font-bold text-amber-400">{{ __('site.leaderboard.points_needed', ['points' => number_format($pointsToNext)]) }}</span>
+                    <span class="font-bold text-amber-400">
+                        @if($sortBy === 'followers')
+                            {{ __('site.leaderboard.followers_needed', ['points' => number_format($pointsToNext)]) }}
+                        @else
+                            {{ __('site.leaderboard.points_needed', ['points' => number_format($pointsToNext)]) }}
+                        @endif
+                    </span>
                 </div>
             @elseif($myRank === 1)
                 <div class="mt-4 pt-3 border-t border-ink-border flex items-center justify-between text-xs text-amber-400 font-mono font-bold">
@@ -110,6 +116,10 @@
                     class="px-2.5 sm:px-3 py-1 rounded-badge font-bold transition-colors whitespace-nowrap {{ $sortBy === 'streak' ? 'bg-ink-800 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper' }}">
                     {{ __('site.leaderboard.sort_streak') }}
                 </button>
+                <button type="button" wire:click="setSortBy('followers')"
+                    class="px-2.5 sm:px-3 py-1 rounded-badge font-bold transition-colors whitespace-nowrap {{ $sortBy === 'followers' ? 'bg-ink-800 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper' }}">
+                    {{ __('site.leaderboard.sort_followers') }}
+                </button>
             </div>
         </div>
 
@@ -146,6 +156,8 @@
                             <span class="text-paper font-bold block truncate">{{ number_format($top3[1]->display_minutes) }} <span class="hidden sm:inline">{{ __('site.leaderboard.min_short') }}</span></span>
                         @elseif($sortBy === 'streak')
                             <span class="text-amber-500 font-bold block truncate">{{ $top3[1]->display_streak }} <span class="hidden sm:inline">{{ __('site.leaderboard.days') }}</span></span>
+                        @elseif($sortBy === 'followers')
+                            <span class="text-slate-800 dark:text-[#E2E8F0] font-bold block truncate">{{ number_format($top3[1]->display_followers) }} <span class="hidden sm:inline">{{ __('site.leaderboard.followers_short') }}</span></span>
                         @else
                             <span class="text-slate-800 dark:text-[#E2E8F0] font-bold block truncate">{{ number_format($top3[1]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
                         @endif
@@ -173,6 +185,8 @@
                             <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-gradient-to-r from-amber-500 to-amber-600 text-white dark:bg-[#F59E0B] dark:text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ number_format($top3[0]->display_minutes) }} <span class="hidden sm:inline">{{ __('site.leaderboard.min_short') }}</span></span>
                         @elseif($sortBy === 'streak')
                             <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-gradient-to-r from-amber-500 to-amber-600 text-white dark:bg-[#F59E0B] dark:text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ $top3[0]->display_streak }} <span class="hidden sm:inline">{{ __('site.leaderboard.days') }}</span></span>
+                        @elseif($sortBy === 'followers')
+                            <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-gradient-to-r from-amber-500 to-amber-600 text-white dark:bg-[#F59E0B] dark:text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ number_format($top3[0]->display_followers) }} <span class="hidden sm:inline">{{ __('site.leaderboard.followers_short') }}</span></span>
                         @else
                             <span class="px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-badge bg-gradient-to-r from-amber-500 to-amber-600 text-white dark:bg-[#F59E0B] dark:text-ink-950 font-bold inline-block shadow-md truncate max-w-full">{{ number_format($top3[0]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
                         @endif
@@ -200,6 +214,8 @@
                             <span class="text-paper font-bold block truncate">{{ number_format($top3[2]->display_minutes) }} <span class="hidden sm:inline">{{ __('site.leaderboard.min_short') }}</span></span>
                         @elseif($sortBy === 'streak')
                             <span class="text-amber-500 font-bold block truncate">{{ $top3[2]->display_streak }} <span class="hidden sm:inline">{{ __('site.leaderboard.days') }}</span></span>
+                        @elseif($sortBy === 'followers')
+                            <span class="text-amber-800 dark:text-[#D97706] font-bold block truncate">{{ number_format($top3[2]->display_followers) }} <span class="hidden sm:inline">{{ __('site.leaderboard.followers_short') }}</span></span>
                         @else
                             <span class="text-amber-800 dark:text-[#D97706] font-bold block truncate">{{ number_format($top3[2]->display_points) }} <span class="hidden sm:inline">{{ __('site.leaderboard.points_short') }}</span></span>
                         @endif
@@ -273,11 +289,23 @@
                     </div>
 
                     <!-- Metrics in DM Mono -->
-                    <div class="flex items-center gap-2 sm:gap-8 shrink-0 font-mono">
+                    <div class="flex items-center gap-2 sm:gap-6 shrink-0 font-mono">
                         <div class="hidden sm:block text-right">
-                            <span class="text-xs font-bold text-paper block">{{ number_format($u->display_minutes) }}</span>
-                            <span class="text-[10px] text-mist block">{{ __('site.leaderboard.minutes') }}</span>
+                            @if($sortBy === 'followers')
+                                <span class="text-xs font-bold text-paper block">{{ number_format($u->display_points) }}</span>
+                                <span class="text-[10px] text-mist block">{{ __('site.leaderboard.points_short') }}</span>
+                            @else
+                                <span class="text-xs font-bold text-paper block">{{ number_format($u->display_minutes) }}</span>
+                                <span class="text-[10px] text-mist block">{{ __('site.leaderboard.minutes') }}</span>
+                            @endif
                         </div>
+
+                        @if($sortBy !== 'followers' && $u->display_followers > 0)
+                            <div class="hidden lg:block text-right">
+                                <span class="text-xs font-bold text-paper block">{{ number_format($u->display_followers) }}</span>
+                                <span class="text-[10px] text-mist block">{{ __('site.leaderboard.followers_short') }}</span>
+                            </div>
+                        @endif
 
                         @if($u->display_streak > 0)
                             <div class="hidden md:flex items-center gap-1 text-xs font-bold text-amber-500 shrink-0" title="Ketma-ketlik">
@@ -287,10 +315,17 @@
                         @endif
 
                         <div class="text-right min-w-[56px] sm:min-w-[70px]">
-                            <span class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 block">
-                                {{ number_format($u->display_points) }}
-                            </span>
-                            <span class="text-[9px] sm:text-[10px] text-mist block">{{ __('site.leaderboard.points_short') }}</span>
+                            @if($sortBy === 'followers')
+                                <span class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 block">
+                                    {{ number_format($u->display_followers) }}
+                                </span>
+                                <span class="text-[9px] sm:text-[10px] text-mist block">{{ __('site.leaderboard.followers_short') }}</span>
+                            @else
+                                <span class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 block">
+                                    {{ number_format($u->display_points) }}
+                                </span>
+                                <span class="text-[9px] sm:text-[10px] text-mist block">{{ __('site.leaderboard.points_short') }}</span>
+                            @endif
                         </div>
                     </div>
                 </div>

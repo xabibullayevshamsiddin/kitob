@@ -57,8 +57,13 @@
                 </span>
             </div>
         </div>
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2">
             <span class="text-xs text-mist font-mono">{{ $messages->count() }} ta xabar</span>
+            <button type="button" @click="$dispatch('toggle-live-chat')"
+                    class="p-1 rounded text-mist hover:text-paper hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Chatni yopish">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
         </div>
     </div>
 

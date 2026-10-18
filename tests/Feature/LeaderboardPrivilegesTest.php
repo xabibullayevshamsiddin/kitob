@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Livewire\Chat\GlobalChat;
 use App\Http\Livewire\Groups\GroupList;
+use App\Http\Livewire\Leaderboard\LeaderboardPage;
 use App\Http\Livewire\Profile\ProfilePage;
 use App\Models\Book;
 use App\Models\GlobalChatMessage;
@@ -214,5 +215,36 @@ class LeaderboardPrivilegesTest extends TestCase
         $this->actingAs($regularUser)
             ->get(route('books.show', $futureBook->slug))
             ->assertStatus(403);
+    }
+
+    public function test_leaderboard_page_can_sort_by_followers(): void
+    {
+        $userPoints = User::factory()->create([
+            'username'     => 'points_king_' . uniqid(),
+            'name'         => 'Points King',
+            'total_points' => 9999,
+        ]);
+
+        $userPopular = User::factory()->create([
+            'username'     => 'popular_star_' . uniqid(),
+            'name'         => 'Popular Star',
+            'total_points' => 10,
+        ]);
+
+        $fan1 = User::factory()->create(['username' => 'fan1_' . uniqid()]);
+        $fan2 = User::factory()->create(['username' => 'fan2_' . uniqid()]);
+
+        // fan1 and fan2 follow userPopular
+        $userPopular->followers()->attach([$fan1->id, $fan2->id]);
+
+        Livewire::test(LeaderboardPage::class)
+            ->set('period', 'all_time')
+            ->call('setSortBy', 'followers')
+            ->assertSet('sortBy', 'followers')
+            ->assertViewHas('top3', function ($top3) use ($userPopular) {
+                return $top3->first()->id === $userPopular->id && $top3->first()->display_followers === 2;
+            })
+            ->assertSee('Obunachilar')
+            ->assertSee('Popular Star');
     }
 }

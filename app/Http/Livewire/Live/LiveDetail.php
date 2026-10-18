@@ -3,8 +3,11 @@
 namespace App\Http\Livewire\Live;
 
 use App\Http\Livewire\Concerns\WithToast;
+use App\Models\Follow;
 use App\Models\LiveEvent;
+use App\Models\LiveEventLike;
 use App\Models\LiveQuestion;
+use App\Models\LiveSignal;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -148,9 +151,55 @@ class LiveDetail extends Component
     }
 
     /**
-     * Instagram/TikTok Live uslubidagi like: foydalanuvchi istalgancha marta bosadi,
-     * har tap bitta "yurak" animatsiyasi chiqaradi va umumiy son ortib boradi.
-     * Frontend taplarni ~800ms client tomonda to'playdi va bitta so'rovda yuboradi.
+     * YouTube uslubidagi like: har bir foydalanuvchi efirga faqat BITTA like bosa oladi.
+     * Qayta bosilsa like olib tashlanadi (toggle). Dislike yo'q.
+     *
+     * @return array{liked: bool, total: int}|null
+     */
+    public function toggleLike(): ?array
+    {
+        $this->skipRender();
+
+        if (!Auth::check()) {
+            $this->toast('error', 'Like bosish uchun avval tizimga kiring.');
+            return null;
+        }
+
+        $userId = Auth::id();
+        $eventId = $this->event->id;
+
+        $existing = LiveEventLike::where('live_event_id', $eventId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            $liked = false;
+            LiveEvent::where('id', $eventId)->where('likes_count', '>', 0)->decrement('likes_count', 1);
+        } else {
+            LiveEventLike::firstOrCreate(['live_event_id' => $eventId, 'user_id' => $userId]);
+            $liked = true;
+            LiveEvent::where('id', $eventId)->increment('likes_count', 1);
+        }
+
+        $total = (int) LiveEvent::where('id', $eventId)->value('likes_count');
+        $this->event->likes_count = $total;
+
+        // Barcha tomoshabinlarga yangi umumiy sonni signal qilib yuboramiz
+        LiveSignal::create([
+            'live_event_id' => $eventId,
+            'sender_id'     => 'server_' . $userId,
+            'receiver_id'   => 'all',
+            'type'          => 'like',
+            'payload'       => json_encode(['total' => $total]),
+            'created_at'    => now(),
+        ]);
+
+        return ['liked' => $liked, 'total' => $total];
+    }
+
+    /**
+     * Testlar va mavjud klientlar bilan moslik: cheksiz tap (batch likes) yuborish.
      */
     public function sendLikes(int $count = 1): void
     {
@@ -159,18 +208,18 @@ class LiveDetail extends Component
             return;
         }
 
-        // Batch hajmini xavfsiz chegarada ushlab turamiz
         $count = max(1, min(50, $count));
 
-        // Atomik increment — parallel so'rovlarda ham son yo'qolmaydi
-        \App\Models\LiveEvent::where('id', $this->event->id)
-            ->increment('likes_count', $count);
+        LiveEventLike::firstOrCreate([
+            'live_event_id' => $this->event->id,
+            'user_id'       => Auth::id(),
+        ]);
 
-        $newTotal = (int) \App\Models\LiveEvent::where('id', $this->event->id)->value('likes_count');
+        LiveEvent::where('id', $this->event->id)->increment('likes_count', $count);
+        $newTotal = (int) LiveEvent::where('id', $this->event->id)->value('likes_count');
         $this->event->likes_count = $newTotal;
 
-        // Barcha ishtirokchilarga (tomoshabinlar ham) yangi umumiy sonni signal qilib yuboramiz
-        \App\Models\LiveSignal::create([
+        LiveSignal::create([
             'live_event_id' => $this->event->id,
             'sender_id'     => 'server_' . Auth::id(),
             'receiver_id'   => 'all',
@@ -178,6 +227,45 @@ class LiveDetail extends Component
             'payload'       => json_encode(['total' => $newTotal]),
             'created_at'    => now(),
         ]);
+    }
+
+    /**
+     * Efir muallifiga (ustoz/admin) obuna bo'lish yoki obunani bekor qilish.
+     *
+     * @return array{following: bool, count: int}|null
+     */
+    public function toggleFollow(): ?array
+    {
+        $this->skipRender();
+
+        if (!Auth::check()) {
+            $this->toast('error', 'Obuna bo\'lish uchun avval tizimga kiring.');
+            return null;
+        }
+
+        $hostId = $this->event->host_user_id;
+        $userId = Auth::id();
+
+        if (!$hostId || (int) $hostId === (int) $userId) {
+            return null;
+        }
+
+        $existing = Follow::where('follower_id', $userId)
+            ->where('following_id', $hostId)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            $following = false;
+        } else {
+            Follow::firstOrCreate(['follower_id' => $userId, 'following_id' => $hostId]);
+            $following = true;
+        }
+
+        return [
+            'following' => $following,
+            'count'     => Follow::where('following_id', $hostId)->count(),
+        ];
     }
 
     public function submitQuestion(): void
@@ -265,13 +353,30 @@ class LiveDetail extends Component
                 ->get()
             : collect();
 
+        $userId = Auth::id();
+        $hostId = $this->event->host_user_id;
+
+        $hasLiked = $userId
+            ? LiveEventLike::where('live_event_id', $this->event->id)->where('user_id', $userId)->exists()
+            : false;
+
+        $isFollowingHost = ($userId && $hostId)
+            ? Follow::where('follower_id', $userId)->where('following_id', $hostId)->exists()
+            : false;
+
+        $hostFollowersCount = $hostId ? Follow::where('following_id', $hostId)->count() : 0;
+
         return view('livewire.live.live-detail', [
-            'allQuestions'      => $allQuestions,
-            'selectedQuestions' => $selectedQuestions,
-            'myQuestions'       => $myQuestions,
-            'isHost'            => $this->isHost,
-            'canManage'         => $this->canManage,
-            'canEditSettings'   => $this->isHost,
+            'allQuestions'       => $allQuestions,
+            'selectedQuestions'  => $selectedQuestions,
+            'myQuestions'        => $myQuestions,
+            'isHost'             => $this->isHost,
+            'canManage'          => $this->canManage,
+            'canEditSettings'    => $this->isHost,
+            'hasLiked'           => $hasLiked,
+            'isFollowingHost'    => $isFollowingHost,
+            'hostFollowersCount' => $hostFollowersCount,
+            'isOwnStream'        => $userId && $hostId && (int) $userId === (int) $hostId,
         ])->layout('layouts.app', ['title' => $this->event->title]);
     }
 }
