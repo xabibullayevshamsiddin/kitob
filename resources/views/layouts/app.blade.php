@@ -106,7 +106,7 @@
     <x-global-live-player />
 
     <!-- ── Page Content ── -->
-    <main class="relative pt-4 sm:pt-6 pb-28 sm:pb-20 px-3 sm:px-6 min-h-[calc(100vh-72px)]">
+    <main class="pt-4 sm:pt-6 pb-28 sm:pb-20 px-3 sm:px-6 min-h-[calc(100vh-72px)]">
         <div class="max-w-7xl mx-auto">
             {{ $slot ?? '' }}
             @yield('content')

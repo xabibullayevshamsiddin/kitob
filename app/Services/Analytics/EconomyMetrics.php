@@ -4,6 +4,8 @@ namespace App\Services\Analytics;
 
 use App\Models\CoinTransaction;
 use App\Models\PointTransaction;
+use App\Models\ShopItem;
+use App\Models\ShopPurchase;
 use App\Models\User;
 use App\Models\UserStreak;
 use Carbon\Carbon;
@@ -300,6 +302,67 @@ class EconomyMetrics
                 'std_dev'     => round($stdDev, 1),
                 'count'       => count($items),
                 'items'       => $items,
+            ];
+        });
+    }
+
+    /**
+     * Do'kon va o'yin iqtisodiyoti ko'rsatkichlari:
+     * - aylanmadagi tanga
+     * - chiqarilgan va sarflangan tanga
+     * - almashtirish hajmi
+     * - eng ko'p sotilgan buyumlar
+     */
+    public function getShopEconomyMetrics(bool $forceRefresh = false): array
+    {
+        $cacheKey = 'analytics:economy:shop_metrics';
+        $ttl = (int) config('analytics.cache_ttl', 300);
+
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
+
+        return Cache::remember($cacheKey, $ttl, function () {
+            $circulation = (int) User::sum('coin_balance');
+            $issuedTotal = (int) CoinTransaction::where('coins', '>', 0)->sum('coins');
+            $spentTotal = abs((int) CoinTransaction::where('coins', '<', 0)->sum('coins'));
+            $exchangeCoins = (int) CoinTransaction::where('source', 'exchange')->sum('coins');
+            $purchasesCount = (int) ShopPurchase::count();
+            $refundsCount = (int) CoinTransaction::where('source', 'refund')->count();
+            $refundedCoins = (int) CoinTransaction::where('source', 'refund')->sum('coins');
+
+            $topItems = ShopItem::select(['id', 'key', 'category', 'slot', 'name', 'price_coins', 'rarity', 'is_active'])
+                ->withCount(['purchases as units_sold' => function ($q) {
+                    $q->select(DB::raw('COALESCE(SUM(quantity), 0)'));
+                }])
+                ->withSum('purchases as total_revenue', 'price_paid')
+                ->orderByDesc('units_sold')
+                ->take(10)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id'            => $item->id,
+                        'key'           => $item->key,
+                        'name'          => $item->name_text,
+                        'category'      => $item->category,
+                        'price_coins'   => (int) $item->price_coins,
+                        'rarity'        => $item->rarity,
+                        'is_active'     => (bool) $item->is_active,
+                        'units_sold'    => (int) ($item->units_sold ?? 0),
+                        'total_revenue' => (int) ($item->total_revenue ?? 0),
+                    ];
+                })
+                ->toArray();
+
+            return [
+                'circulation'     => $circulation,
+                'issued_total'    => $issuedTotal,
+                'spent_total'     => $spentTotal,
+                'exchange_coins'  => $exchangeCoins,
+                'purchases_count' => $purchasesCount,
+                'refunds_count'   => $refundsCount,
+                'refunded_coins'  => $refundedCoins,
+                'top_items'       => $topItems,
             ];
         });
     }

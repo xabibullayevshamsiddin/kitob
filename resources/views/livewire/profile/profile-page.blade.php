@@ -95,7 +95,26 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <div class="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
-                                <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-paper tracking-tight font-serif break-words">{{ $user->name }}</h1>
+                                @php
+                                    $equippedTitle = $user->equipped_title;
+                                    $equippedNameColor = $user->equipped_name_color;
+                                @endphp
+                                <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight font-serif break-words {{ $equippedNameColor ? '' : 'text-paper' }}"
+                                    @if($equippedNameColor) style="color: {{ $equippedNameColor }}; text-shadow: 0 0 20px {{ $equippedNameColor }}40;" @endif>
+                                    {{ $user->name }}
+                                </h1>
+
+                                @if($equippedTitle)
+                                    @php
+                                        $titleColor = $equippedTitle->payload['badge_color'] ?? '#FBBF24';
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold shadow-md select-none transition-transform hover:scale-105"
+                                          style="background-color: {{ $titleColor }}18; color: {{ $titleColor }}; border: 1.5px solid {{ $titleColor }}60;">
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                        <span>{{ $equippedTitle->name_text }}</span>
+                                    </span>
+                                @endif
+
                                 @if($isTopFive)
                                     <x-ui.rank-badge :rank="$userRank" size="md" />
                                 @endif
@@ -227,8 +246,13 @@
             <button wire:click="setTab('notes')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'notes' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
                 {{ __('site.profile.tab_notes') }} ({{ count($notes) }})
             </button>
-            <button wire:click="setTab('shop')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 flex items-center gap-1.5 {{ $activeTab === 'shop' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-amber-400/80 hover:text-amber-400 hover:bg-ink-900 border border-amber-500/20' }}">
-                <span>🛍️ {{ __('site.profile.tab_shop') }}</span>
+            <button wire:click="setTab('shop')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 flex items-center gap-1.5 {{ $activeTab === 'shop' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper hover:bg-ink-900 border border-transparent' }}" title="{{ __('site.profile.tab_shop') }}">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                <span>{{ __('shop.tabs.inventory') }}</span>
+                <span class="sr-only">{{ __('site.profile.tab_shop') }}</span>
+                @if(isset($userItems) && count($userItems) > 0)
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-mono">{{ count($userItems) }}</span>
+                @endif
             </button>
         @endif
     </div>
@@ -481,13 +505,21 @@
             <div class="p-5 sm:p-6 rounded-panel bg-ink-900 border border-ink-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h3 class="text-base font-bold text-paper font-serif flex items-center gap-2">
-                        <span>🛍️</span>
-                        <span>{{ __('site.profile.shop_title') }}</span>
+                        <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                        <span>{{ __('shop.tabs.inventory') }}</span>
                     </h3>
-                    <p class="text-xs text-mist font-sans mt-1">{{ __('site.profile.shop_subtitle') }}</p>
+                    <p class="text-xs text-mist font-sans mt-1">Siz xarid qilgan profil mavzulari, avatar auralari va unvonlar to‘plami.</p>
                 </div>
-                <div class="flex items-center gap-2 px-3.5 py-2 rounded-btn bg-ink-800 border border-ink-border text-amber-400 font-mono font-bold text-sm shrink-0">
-                    <span>🪙 {{ __('site.profile.your_balance', ['coins' => number_format($user->coin_balance)]) }}</span>
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <div class="flex items-center gap-2 px-3.5 py-2 rounded-btn bg-ink-800 border border-ink-border text-amber-400 font-mono font-bold text-xs shrink-0">
+                        <svg class="w-4 h-4 text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/></svg>
+                        <span>{{ number_format($user->coin_balance) }} tanga</span>
+                    </div>
+                    <a href="{{ route('shop.index') }}" class="ks-btn-gold inline-flex items-center gap-1.5 !px-4 !py-2 text-xs font-mono font-bold shadow-md">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                        <span>{{ __('shop.open_shop') ?? 'Do‘konga o‘tish' }}</span>
+                        <span>→</span>
+                    </a>
                 </div>
             </div>
 
@@ -623,89 +655,200 @@
                 </div>
             </div>
 
-            <!-- Products Catalog Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Streak Freeze Card -->
-                <div class="p-5 rounded-panel bg-ink-900 border border-ink-border flex flex-col justify-between space-y-4 hover:border-sky-500/40 transition">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-2xl">🧊</span>
-                            <span class="px-2.5 py-0.5 rounded-pill bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-mono font-bold">50 tanga</span>
-                        </div>
-                        <h4 class="text-sm font-bold text-paper">{{ __('site.profile.freeze_title') }}</h4>
-                        <p class="text-xs text-mist leading-relaxed font-sans">
-                            {{ __('site.profile.freeze_desc') }}
-                        </p>
-                        <div class="text-[11px] font-mono text-mist pt-1">
-                            {{ __('site.profile.freeze_owned', ['count' => (int) ($user->streak?->freeze_count ?? 0)]) }}
-                        </div>
+            <!-- Inventory Items & Consumables Section -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-sm font-bold text-paper font-serif flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                            <span>Mavjud buyumlarim</span>
+                        </h4>
+                        <p class="text-xs text-mist mt-0.5">Xarid qilingan buyumlarni shu yerdan kiyishingiz yoki almashtirishingiz mumkin.</p>
                     </div>
-                    <button wire:click="buyStreakFreeze" wire:loading.attr="disabled"
-                            class="w-full min-h-11 rounded-btn bg-sky-500/15 border border-sky-500/30 hover:bg-sky-500/25 text-sky-300 font-mono text-xs font-bold transition flex items-center justify-center gap-1.5">
-                        <span wire:loading.remove wire:target="buyStreakFreeze">{{ __('site.profile.freeze_buy_btn') }}</span>
-                        <span wire:loading wire:target="buyStreakFreeze">{{ __('site.profile.purchasing') }}</span>
-                    </button>
+                    <a href="{{ route('shop.index') }}" class="text-xs font-mono text-amber-400 hover:text-amber-300 transition flex items-center gap-1">
+                        <span>Yangi buyumlar olish</span>
+                        <span>→</span>
+                    </a>
                 </div>
 
-                <!-- 7 Visual Profile & Chat Themes -->
-                @foreach($visualCatalog as $item)
-                    @php
-                        $isOwned = $profile?->hasUnlockedItem($item['id']) ?? false;
-                        $isActive = ($activeTheme === $item['id']) && ($currentPref === 'shop');
-                    @endphp
-                    <div class="p-5 rounded-panel bg-ink-900 border flex flex-col justify-between space-y-4 transition-all duration-300 {{ $isActive ? $item['card_border'] . ' ' . $item['card_glow'] : 'border-ink-border hover:border-ink-border/80' }}">
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-2xl">{{ $item['icon'] }}</span>
-                                    <div>
-                                        <h4 class="text-sm font-bold text-paper">{{ $item['name'] }}</h4>
-                                        <span class="text-[10px] font-mono text-mist">{{ __('site.profile.item_type_label') }}</span>
+                @if($userItems->isEmpty() && ($user->streak?->freeze_count ?? 0) === 0)
+                    <div class="p-8 rounded-panel bg-ink-900 border border-ink-border text-center space-y-3">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-ink-800 border border-ink-border flex items-center justify-center text-mist">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                        </div>
+                        <h4 class="text-sm font-bold text-paper">{{ __('shop.inventory_empty') }}</h4>
+                        <p class="text-xs text-mist max-w-md mx-auto">{{ __('shop.inventory_empty_sub') }}</p>
+                        <div class="pt-2">
+                            <a href="{{ route('shop.index') }}" class="ks-btn-gold inline-flex items-center gap-1.5 !px-4 !py-2 text-xs font-mono font-bold">
+                                <span>{{ __('shop.open_shop') }}</span>
+                                <span>→</span>
+                            </a>
+                        </div>
+                    </div>
+                @else
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {{-- Streak Freeze Consumable Card if present --}}
+                        @if(($user->streak?->freeze_count ?? 0) > 0)
+                            <div class="p-4 rounded-panel bg-ink-900 border border-sky-500/30 flex flex-col justify-between space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-8 h-8 rounded-btn bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                        </div>
+                                        <div>
+                                            <h5 class="text-xs font-bold text-paper">{{ __('shop.items.streak_freeze_name') }}</h5>
+                                            <span class="text-[10px] font-mono text-mist">{{ __('shop.categories.consumable') }}</span>
+                                        </div>
                                     </div>
+                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-sky-500/15 border border-sky-500/30 text-sky-300">
+                                        {{ $user->streak->freeze_count }}/5 dona
+                                    </span>
                                 </div>
-                                @if($isOwned)
-                                    <span class="px-2 py-0.5 rounded-pill bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono font-bold shrink-0">
-                                        {{ __('site.profile.owned_badge') }}
-                                    </span>
+                                <p class="text-[11px] text-mist leading-relaxed">
+                                    {{ __('shop.items.streak_freeze_desc') }}
+                                </p>
+                                <div class="text-[10px] font-mono text-sky-400/80 pt-1 border-t border-ink-border/50">
+                                    Avtomatik faol (kun o‘tkazib yuborilganda sarflanadi)
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Acquired Items --}}
+                        @foreach($userItems as $uItem)
+                            @php
+                                $sItem = $uItem->shopItem;
+                                if (!$sItem) continue;
+                                // Streak freeze yuqorida alohida karta sifatida ko'rsatilgani uchun bu yerda takrorlamaymiz
+                                if ($sItem->key === 'streak_freeze') continue;
+                                $isEquipped = in_array($sItem->id, $equippedItemIds, true);
+                            @endphp
+                            <div class="p-4 rounded-panel bg-ink-900 border transition-all flex flex-col justify-between space-y-3 {{ $isEquipped ? 'border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.12)]' : 'border-ink-border hover:border-ink-border/80' }}">
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-mono px-2 py-0.5 rounded bg-ink-800 border border-ink-border text-mist">
+                                                {{ $sItem->category_label }}
+                                            </span>
+                                            <span class="text-[10px] font-mono uppercase font-bold {{ $sItem->rarity_color }}">
+                                                {{ $sItem->rarity_label }}
+                                            </span>
+                                        </div>
+                                        @if($isEquipped)
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                                                ✓ {{ __('shop.equipped') }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <div>
+                                        <h5 class="text-xs font-bold text-paper">{{ $sItem->name_text }}</h5>
+                                        <p class="text-[11px] text-mist line-clamp-2 mt-0.5 leading-relaxed">{{ $sItem->description_text }}</p>
+                                    </div>
+
+                                    {{-- Aniq Vizual Ko'rgazma (Live Visual Preview & Effect) --}}
+                                    @if($sItem->slot === 'title')
+                                        @php
+                                            $bColor = $sItem->payload['badge_color'] ?? '#A78BFA';
+                                        @endphp
+                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                            <span class="text-[10px] font-mono text-mist uppercase">Nishon:</span>
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold"
+                                                  style="background-color: {{ $bColor }}20; color: {{ $bColor }}; border: 1.5px solid {{ $bColor }}60;">
+                                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                                <span>{{ $sItem->name_text }}</span>
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                            ✦ Ismingiz yonida va chatda ushbu faxriy unvon nishoni ko‘rinadi.
+                                        </p>
+                                    @elseif($sItem->slot === 'name_color')
+                                        @php
+                                            $nColor = $sItem->payload['color'] ?? '#F59E0B';
+                                        @endphp
+                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                            <span class="text-[10px] font-mono text-mist uppercase">Ism rangi:</span>
+                                            <span class="text-xs font-serif font-bold" style="color: {{ $nColor }}; text-shadow: 0 0 12px {{ $nColor }}50;">
+                                                {{ $user->name }}
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                            ✦ Profil, chat va sharhlarda ismingiz shu rangda porlab turadi.
+                                        </p>
+                                    @elseif($sItem->slot === 'accent')
+                                        @php
+                                            $aColor = $sItem->payload['color'] ?? '#10B981';
+                                        @endphp
+                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                            <span class="text-[10px] font-mono text-mist uppercase">Sayt urg‘usi:</span>
+                                            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold" style="background-color: {{ $aColor }}; color: #07090E;">
+                                                Tugma namunasi
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                            ✦ Butun saytdagi asosiy tugmalar va aksentlar shu rangga o‘tadi.
+                                        </p>
+                                    @elseif($sItem->slot === 'reader_palette')
+                                        @php
+                                            $bgDark = $sItem->payload['bg_dark'] ?? '#121212';
+                                            $txDark = $sItem->payload['text_dark'] ?? '#fff';
+                                        @endphp
+                                        <div class="p-2 rounded-btn border flex items-center justify-between" style="background-color: {{ $bgDark }}; color: {{ $txDark }}; border-color: {{ $txDark }}33;">
+                                            <span class="text-[10px] font-mono opacity-80 uppercase">Mutolaa foni:</span>
+                                            <span class="text-xs font-serif font-bold">Aa Kitob sahifasi</span>
+                                        </div>
+                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                            ✦ Kitobxon o‘quvchisida sahifa foni va matn rangi shunga o‘zgaradi.
+                                        </p>
+                                    @elseif($sItem->slot === 'highlight_color')
+                                        @php
+                                            $hColor = $sItem->payload['color'] ?? '#84CC16';
+                                        @endphp
+                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                            <span class="text-[10px] font-mono text-mist uppercase">Belgilash:</span>
+                                            <span class="px-2 py-0.5 rounded text-[11px] font-mono text-white font-bold" style="background-color: {{ $hColor }};">
+                                                Iqtibos belgisi
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                            ✦ Kitob ichida belgilangan matnlar va qaydlar shu rangda yonadi.
+                                        </p>
+                                    @elseif($sItem->category === 'bundle')
+                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                            <span class="text-[10px] font-mono text-mist uppercase">To‘plam:</span>
+                                            <span class="text-[11px] font-mono font-bold text-amber-300">
+                                                Profil + Avatar + Chat
+                                            </span>
+                                        </div>
+                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                            ✦ Profil foni, avatar ramkasi va chat pufakchasini o‘zgartiradi.
+                                        </p>
+                                    @endif
+                                </div>
+
+                                @if(!$sItem->is_consumable)
+                                    <div>
+                                        @if($isEquipped)
+                                            <button type="button" wire:click="unequipItem('{{ $sItem->category === 'bundle' ? 'all' : ($sItem->slot ?? 'all') }}')" wire:loading.attr="disabled"
+                                                    class="w-full py-1.5 rounded-btn text-xs font-mono font-medium border border-ink-border hover:border-rose-500/40 hover:text-rose-400 text-mist transition">
+                                                {{ __('shop.unequip') }}
+                                            </button>
+                                        @else
+                                            <button type="button" wire:click="equipItem('{{ $sItem->key }}')" wire:loading.attr="disabled"
+                                                    class="w-full py-1.5 rounded-btn text-xs font-mono font-bold bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-300 transition">
+                                                {{ __('shop.equip') }}
+                                            </button>
+                                        @endif
+                                    </div>
                                 @else
-                                    <span class="px-2.5 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold shrink-0">
-                                        {{ __('site.profile.price_coins', ['price' => $item['price']]) }}
-                                    </span>
+                                    <div class="text-[10px] font-mono text-mist pt-1 border-t border-ink-border/50 flex items-center justify-between">
+                                        <span>Miqdor: <strong class="text-amber-400">{{ $uItem->quantity }} ta</strong></span>
+                                        <span class="text-mist/70">Avtomatik sarflanadi</span>
+                                    </div>
                                 @endif
                             </div>
-
-                            <p class="text-xs text-mist leading-relaxed font-sans min-h-[36px]">
-                                {{ $item['description'] }}
-                            </p>
-
-                            <!-- Theme mini banner preview swatch -->
-                            <div class="rounded-btn overflow-hidden border {{ $item['card_border'] }} relative h-16 p-2 flex flex-col justify-between {{ $item['banner_gradient'] }}">
-                                <div class="absolute inset-0 pointer-events-none" style="background: {{ $item['banner_ambient'] }};"></div>
-                                <div class="relative z-10 flex items-center justify-between">
-                                    <span class="{{ $item['badge_class'] }} text-[9px] px-2 py-0.5">{{ $item['badge_text'] }}</span>
-                                    <span class="text-[10px] font-mono text-paper/70 font-semibold">{{ __('site.profile.live_theme_badge') }}</span>
-                                </div>
-                                <div class="relative z-10 h-0.5 w-full {{ $item['card_accent_line'] }} rounded-full"></div>
-                            </div>
-                        </div>
-
-                        <button wire:click="setProfileTheme('{{ $item['id'] }}')" wire:loading.attr="disabled"
-                                class="w-full min-h-11 rounded-btn font-mono text-xs font-bold transition flex items-center justify-center gap-1.5
-                                {{ $isActive
-                                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
-                                    : ($isOwned
-                                        ? 'bg-ink-800 border border-ink-border hover:bg-ink-700 text-paper'
-                                        : 'bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-300') }}">
-                            @if($isActive)
-                                <span>{{ __('site.profile.theme_active') }}</span>
-                            @elseif($isOwned)
-                                <span>{{ __('site.profile.theme_activate') }}</span>
-                            @else
-                                <span>{{ __('site.profile.theme_buy', ['price' => $item['price']]) }}</span>
-                            @endif
-                        </button>
+                        @endforeach
                     </div>
-                @endforeach
+                @endif
             </div>
         </div>
     @endif

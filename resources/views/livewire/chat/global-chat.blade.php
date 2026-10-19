@@ -109,6 +109,13 @@
                             <span class="{{ $badgeClass }}">{{ $badgeText }}</span>
                         @endif
 
+                        @if($senderTitle = $msg->user?->equipped_title)
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold"
+                                  style="background-color: {{ $senderTitle->payload['badge_color'] ?? '#FBBF24' }}20; color: {{ $senderTitle->payload['badge_color'] ?? '#FBBF24' }}; border: 1px solid {{ $senderTitle->payload['badge_color'] ?? '#FBBF24' }}50;">
+                                {{ $senderTitle->name_text }}
+                            </span>
+                        @endif
+
                         @if($senderRank && ($chatStyle['mode'] ?? '') !== 'rank')
                             <x-ui.rank-badge :rank="$senderRank" size="xs" :compact="true" />
                         @endif

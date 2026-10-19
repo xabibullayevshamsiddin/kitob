@@ -18,7 +18,7 @@
                 </a>
 
                 <p class="text-xs sm:text-sm text-mist leading-relaxed max-w-sm font-sans">
-                    Har hafta bitta sara kitob mutolaa qilib, intellektual salohiyatni oshirish va hamfikr kitobxonlar bilan chuqur tahlil maydoni.
+                    {{ __('site.footer.desc') }}
                 </p>
 
                 <!-- Platform Status Badge -->
@@ -28,12 +28,12 @@
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
-                        <span>Barcha xizmatlar faol</span>
+                        <span>{{ __('site.footer.services_active') }}</span>
                     </div>
 
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-badge bg-ink-900 border border-ink-border text-mist text-[11px] font-mono">
                         <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        <span>SSL 256-bit xavfsiz</span>
+                        <span>{{ __('site.footer.ssl_secure') }}</span>
                     </div>
                 </div>
             </div>
@@ -45,43 +45,43 @@
                 <div class="space-y-3">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                        Platforma
+                        {{ __('site.footer.platform') }}
                     </h4>
                     <ul class="space-y-1.5 text-xs text-mist font-sans">
                         <li>
                             <a href="{{ route('home') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Bosh sahifa</span>
+                                <span>{{ __('site.nav.home') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('books.public') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Kitoblar</span>
+                                <span>{{ __('site.nav.books') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('leaderboard') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Reyting</span>
+                                <span>{{ __('site.nav.leaderboard') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('chat') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Global Chat</span>
+                                <span>{{ __('site.nav.chat') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('groups.index') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Guruhlar</span>
+                                <span>{{ __('site.nav.groups') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('live.index') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Jonli efirlar</span>
+                                <span>{{ __('site.nav.live') }}</span>
                             </a>
                         </li>
                     </ul>
@@ -91,31 +91,31 @@
                 <div class="space-y-3">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                        Ma'lumot
+                        {{ __('site.footer.information') }}
                     </h4>
                     <ul class="space-y-1.5 text-xs text-mist font-sans">
                         <li>
                             <a href="{{ route('about') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Biz haqimizda</span>
+                                <span>{{ __('site.footer.about') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('faq') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Savol-javob</span>
+                                <span>{{ __('site.footer.faq') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('contact') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Bog'lanish</span>
+                                <span>{{ __('site.footer.contact') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('contact', ['report' => 1]) }}" class="py-1 hover:text-rose-300 transition-colors flex items-center gap-1.5 group">
                                 <span class="text-rose-400 font-mono text-[10px]">🚩</span>
-                                <span>Shikoyat qilish</span>
+                                <span>{{ __('site.footer.report') }}</span>
                             </a>
                         </li>
                     </ul>
@@ -125,30 +125,30 @@
                 <div class="col-span-2 sm:col-span-1 space-y-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-ink-border/50">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-paper font-mono flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                        Huquqiy
+                        {{ __('site.footer.legal') }}
                     </h4>
                     <ul class="space-y-1.5 text-xs text-mist font-sans">
                         <li>
                             <a href="{{ route('terms') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Foydalanish shartlari</span>
+                                <span>{{ __('site.footer.terms') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('privacy') }}" class="py-1 hover:text-paper transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Maxfiylik siyosati</span>
+                                <span>{{ __('site.footer.privacy') }}</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ route('terms') }}" class="py-1 hover:text-amber-400 transition-colors flex items-center gap-1.5 group">
                                 <span class="text-ink-600 group-hover:text-amber-400 transition-colors">›</span>
-                                <span>Qoidalar & Jazolash</span>
+                                <span>{{ __('site.footer.rules_and_penalties') }}</span>
                             </a>
                         </li>
                         <li>
                             <span class="text-[11px] text-ink-500 block pt-1 leading-relaxed">
-                                Barcha intellektual mulk va mualliflik huquqlari himoyalangan.
+                                {{ __('site.footer.ip_rights') }}
                             </span>
                         </li>
                     </ul>
@@ -163,11 +163,11 @@
             <div class="flex items-center gap-2">
                 <span class="font-semibold text-paper font-serif">Kitobxon</span>
                 <span>•</span>
-                <span>© {{ date('Y') }} {{ __('site.common.all_rights') ?? 'Barcha huquqlar himoyalangan.' }}</span>
+                <span>© {{ date('Y') }} {{ __('site.footer.all_rights_reserved') }}</span>
             </div>
 
             <div class="flex items-center gap-2 text-mist text-[11px]">
-                <span>O'zbekiston bo'ylab kitobsevarlar hamjamiyati</span>
+                <span>{{ __('site.footer.community_tagline') }}</span>
             </div>
 
             <!-- Scroll to top button -->
@@ -175,8 +175,8 @@
                 <button type="button" 
                         onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
                         class="ks-btn-ghost py-1.5 px-3.5 text-xs inline-flex items-center gap-1.5 cursor-pointer rounded-btn hover:border-amber-400/50 hover:text-amber-400 transition-colors"
-                        title="Sahifa boshiga qaytish">
-                    <span>Yuqoriga</span>
+                        title="{{ __('site.footer.scroll_top') }}">
+                    <span>{{ __('site.footer.scroll_top') }}</span>
                     <span>↑</span>
                 </button>
             </div>

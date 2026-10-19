@@ -40,6 +40,35 @@
         .dark .reader-text { color: #F0EDE6 !important; }
         .dark .reader-ctrl { background-color: #0F141F !important; border-color: #1F293D !important; color: #F0EDE6 !important; }
 
+        @auth
+            @php
+                $equippedReaderPalette = auth()->user()->getEquippedItem('reader_palette');
+                $equippedHighlight = auth()->user()->getEquippedItem('highlight_color');
+            @endphp
+            @if($equippedReaderPalette)
+                @php
+                    $rPl = $equippedReaderPalette->payload;
+                    $bgLight = $rPl['bg_light'] ?? '#FAF7F2';
+                    $bgDark = $rPl['bg_dark'] ?? '#07090E';
+                    $textLight = $rPl['text_light'] ?? '#1A1D24';
+                    $textDark = $rPl['text_dark'] ?? '#F0EDE6';
+                @endphp
+                .dark, html.dark { background-color: {{ $bgDark }} !important; color: {{ $textDark }} !important; }
+                .dark .reader-topbar { background-color: {{ $bgDark }}ee !important; }
+                .dark .reader-text { color: {{ $textDark }} !important; }
+                .reader-light, html.reader-light { background-color: {{ $bgLight }} !important; color: {{ $textLight }} !important; }
+                .reader-light .reader-topbar { background-color: {{ $bgLight }}ee !important; }
+                .reader-light .reader-text { color: {{ $textLight }} !important; }
+            @endif
+            @if($equippedHighlight)
+                @php
+                    $hlHex = $equippedHighlight->payload['color'] ?? '#84CC16';
+                @endphp
+                ::selection { background-color: {{ $hlHex }}66 !important; color: #fff !important; }
+                .reader-highlight-custom { background-color: {{ $hlHex }}55 !important; border-bottom: 2px solid {{ $hlHex }} !important; }
+            @endif
+        @endauth
+
         /* Font Family Classes */
         .reader-merriweather { font-family: 'Merriweather', 'Spectral', Georgia, serif !important; }
         .reader-spectral { font-family: 'Spectral', Georgia, serif !important; }

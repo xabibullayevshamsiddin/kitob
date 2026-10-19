@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Services\Shop\ShopService;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -31,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at',
         'avatar',
         'total_points',
+        'points_spent',
         'coin_balance',
         'bio',
         'is_banned',
@@ -47,6 +49,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'total_points'      => 'integer',
+        'points_spent'      => 'integer',
         'coin_balance'      => 'integer',
         'is_banned'         => 'boolean',
         'banned_until'      => 'datetime',
@@ -490,5 +493,64 @@ class User extends Authenticatable implements MustVerifyEmail
     public function reportsSent()
     {
         return $this->hasMany(Report::class, 'reporter_id');
+    }
+
+    // -------------------------------------------------------------------------
+    // Shop & Points Relationships
+    // -------------------------------------------------------------------------
+
+    public function userItems(): HasMany
+    {
+        return $this->hasMany(UserItem::class);
+    }
+
+    public function equipment(): HasMany
+    {
+        return $this->hasMany(UserEquipment::class);
+    }
+
+    public function shopPurchases(): HasMany
+    {
+        return $this->hasMany(ShopPurchase::class);
+    }
+
+    /**
+     * Tanga almashtirish uchun mavjud ball (total_points - points_spent).
+     */
+    public function getAvailablePointsAttribute(): int
+    {
+        return max(0, (int) $this->total_points - (int) ($this->points_spent ?? 0));
+    }
+
+    /**
+     * Foydalanuvchining ma'lum slotdagi kiyilgan buyumini olish.
+     */
+    public function getEquippedItem(string $slot): ?ShopItem
+    {
+        $eq = $this->relationLoaded('equipment')
+            ? $this->equipment->firstWhere('slot', $slot)
+            : $this->equipment()->with('shopItem')->where('slot', $slot)->first();
+
+        return $eq?->shopItem;
+    }
+
+    /**
+     * Foydalanuvchining kiyilgan unvoni (Title).
+     */
+    public function getEquippedTitleAttribute(): ?ShopItem
+    {
+        return $this->getEquippedItem('title');
+    }
+
+    /**
+     * Foydalanuvchining kiyilgan ism rangi (Name color hex).
+     */
+    public function getEquippedNameColorAttribute(): ?string
+    {
+        $item = $this->getEquippedItem('name_color');
+        if (!$item) return null;
+
+        $color = $item->payload['hex'] ?? ($item->payload['color'] ?? null);
+        return ShopService::validateHexColor($color) ? $color : null;
     }
 }

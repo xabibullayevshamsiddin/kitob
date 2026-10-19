@@ -25,8 +25,8 @@
         const header = document.getElementById('site-header');
         if (header) {
             gsap.fromTo(header,
-                { y: -25, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }
+                { opacity: 0 },
+                { opacity: 1, duration: 0.5, ease: "power2.out", clearProps: "all" }
             );
         }
 

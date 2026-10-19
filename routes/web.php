@@ -14,6 +14,7 @@ use App\Http\Livewire\Quiz\TakeQuiz;
 use App\Http\Livewire\Profile\ProfilePage;
 use App\Http\Livewire\Notifications\NotificationList;
 use App\Http\Livewire\Settings\SettingsPage;
+use App\Http\Livewire\Shop\ShopPage;
 use Illuminate\Support\Facades\Route;
 
 // Lightweight connectivity probe; deliberately excludes the web session and its middleware.
@@ -239,6 +240,9 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+    // Shop (Tanga Do'koni)
+    Route::get('/shop', ShopPage::class)->name('shop.index');
+
     // Kitoblar va Mutolaa (Barcha login bo'lgan foydalanuvchilar uchun)
     Route::get('/books/{slug}', function ($slug) {
         $book = \App\Models\Book::where('slug', $slug)->firstOrFail();
@@ -525,8 +529,9 @@ Route::middleware(['auth'])->group(function () {
         // Har 1 daqiqa uchun: sozlamalardagi dinamik ball va tangalar beriladi
         $pointsPerMinute = (int) setting('reading_points_per_minute', 1);
         $coinsPerMinute  = (int) setting('reading_coins_per_minute', 1);
+        $boosterMultiplier = app(\App\Services\Shop\ShopService::class)->getActiveCoinBoosterMultiplier($user);
         $pointsToAward   = $minutes * $pointsPerMinute;
-        $coinsToAward    = $minutes * $coinsPerMinute;
+        $coinsToAward    = (int) round($minutes * $coinsPerMinute * $boosterMultiplier);
 
         $pageTypeLabels = [
             'video'    => 'video dars tomoshasi',
@@ -1092,6 +1097,16 @@ Route::prefix('admin')
     Route::put('/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'update'])->name('faqs.update');
     Route::patch('/faqs/{faq}/toggle', [\App\Http\Controllers\Admin\FaqController::class, 'toggle'])->name('faqs.toggle');
     Route::delete('/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'destroy'])->name('faqs.destroy');
+
+    // ── Do'kon Boshqaruvi (Admin Shop Management) ──
+    Route::get('/shop', [\App\Http\Controllers\Admin\ShopController::class, 'index'])->name('shop.index');
+    Route::get('/shop/items/create', [\App\Http\Controllers\Admin\ShopController::class, 'create'])->name('shop.items.create');
+    Route::post('/shop/items', [\App\Http\Controllers\Admin\ShopController::class, 'store'])->name('shop.items.store');
+    Route::get('/shop/items/{item}/edit', [\App\Http\Controllers\Admin\ShopController::class, 'edit'])->name('shop.items.edit');
+    Route::put('/shop/items/{item}', [\App\Http\Controllers\Admin\ShopController::class, 'update'])->name('shop.items.update');
+    Route::post('/shop/items/{item}/toggle', [\App\Http\Controllers\Admin\ShopController::class, 'toggleActive'])->name('shop.items.toggle');
+    Route::post('/shop/settings', [\App\Http\Controllers\Admin\ShopController::class, 'updateSettings'])->name('shop.settings.update');
+    Route::post('/shop/refund', [\App\Http\Controllers\Admin\ShopController::class, 'refundUserItem'])->name('shop.refund');
 });
 
 // Alias for profile.edit

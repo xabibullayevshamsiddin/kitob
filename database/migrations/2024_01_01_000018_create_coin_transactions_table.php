@@ -14,9 +14,7 @@ return new class extends Migration
                   ->constrained('users')
                   ->onDelete('cascade');
             $table->integer('coins')->comment('Positive for earn, negative for spend');
-            $table->enum('source', [
-                'reading', 'quiz', 'streak', 'badge', 'bonus', 'admin', 'spend'
-            ]);
+            $table->string('source', 32);
             $table->string('description')->nullable();
             $table->timestamps();
 

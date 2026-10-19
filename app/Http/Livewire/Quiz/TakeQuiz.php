@@ -649,13 +649,26 @@ class TakeQuiz extends Component
             ->where('quiz_id', $quiz->id)
             ->exists();
 
+        $usedRetryTicket = false;
+        if ($alreadyAttempted) {
+            /** @var \App\Services\Shop\ShopService $shopService */
+            $shopService = app(\App\Services\Shop\ShopService::class);
+            if ($shopService->hasPurchased($user, 'quiz_retry_ticket')) {
+                // Do'kondan olingan qayta topshirish bileti sarflanadi va to'liq ball olishga ruxsat beriladi!
+                if ($shopService->consumeQuizRetryTicket($user)) {
+                    $alreadyAttempted = false;
+                    $usedRetryTicket = true;
+                }
+            }
+        }
+
         if ($alreadyAttempted) {
             // Takroriy urinish: foydalanuvchiga 0 ball ko'rsatiladi va hisobiga ham 0 ball qo'shiladi!
             $pointsToAward = 0;
             $this->score = 0;
             $this->alreadyHadFullPoints = true;
         } else {
-            // Birinchi urinish: foizga mutanosib hisoblangan ball beriladi
+            // Birinchi urinish (yoki qayta urinish bileti bilan): foizga mutanosib hisoblangan ball beriladi
             $pointsToAward = $calculatedPoints;
             $this->score = $calculatedPoints;
             $this->alreadyHadFullPoints = false;

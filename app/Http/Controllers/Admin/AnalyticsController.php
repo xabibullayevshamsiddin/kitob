@@ -243,6 +243,7 @@ class AnalyticsController extends Controller
                     'daily_issuance'      => $economy->getDailyIssuance($range, $forceRefresh),
                     'streak_distribution' => $economy->getStreakDistribution($forceRefresh),
                     'abuse_signals'       => $economy->getAbuseSignals($range, $forceRefresh),
+                    'shop_metrics'        => $economy->getShopEconomyMetrics($forceRefresh),
                 ];
 
             case 'community':

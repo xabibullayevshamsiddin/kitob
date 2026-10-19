@@ -140,32 +140,18 @@ class ProfilePage extends Component
     {
         if (Auth::id() !== $this->user->id) return;
 
-        $cost = 50;
-        if ($this->user->coin_balance < $cost) {
-            $this->toastWarning("Tangalar yetarli emas! Streak Freeze narxi: {$cost} tanga.");
-            return;
+        /** @var \App\Services\Shop\ShopService $shopService */
+        $shopService = app(\App\Services\Shop\ShopService::class);
+
+        try {
+            $result = $shopService->purchase($this->user, 'streak_freeze', 1);
+            $this->user->refresh();
+            $this->toastSuccess($result['message']);
+        } catch (\App\Services\Shop\Exceptions\ShopException $e) {
+            $this->toastWarning($e->getMessage());
+        } catch (\Throwable $e) {
+            $this->toastError("Xarid jarayonida xatolik yuz berdi.");
         }
-
-        $streak = $this->user->streak ?? \App\Models\UserStreak::firstOrCreate(['user_id' => $this->user->id], ['current_streak' => 0, 'longest_streak' => 0]);
-        if ($streak->freeze_count >= 5) {
-            $this->toastWarning("Sizda allaqachon maksimal (5 ta) Streak Freeze mavjud!");
-            return;
-        }
-
-        $this->user->coin_balance -= $cost;
-        $this->user->save();
-
-        $streak->freeze_count += 1;
-        $streak->save();
-
-        \App\Models\CoinTransaction::create([
-            'user_id' => $this->user->id,
-            'coins' => -$cost,
-            'source' => 'spend',
-            'description' => 'Streak Freeze (muzlatgich) xaridi',
-        ]);
-
-        $this->toastSuccess("Streak Freeze muvaffaqiyatli xarid qilindi! Streak muzlatgichingiz saqlandi.");
     }
 
     public function buyAvatarFrame(string $frame): void
@@ -177,58 +163,32 @@ class ProfilePage extends Component
     {
         if (Auth::id() !== $this->user->id) return;
 
-        $themes = \App\Services\Gamification\ProfileVisualService::THEMES;
+        /** @var \App\Services\Shop\ShopService $shopService */
+        $shopService = app(\App\Services\Shop\ShopService::class);
 
-        if (!isset($themes[$themeKey])) {
-            $this->toastWarning("Noma'lum vizual fon!");
-            return;
-        }
+        try {
+            $profile = $this->user->profile ?? \App\Models\UserProfile::firstOrCreate(['user_id' => $this->user->id]);
 
-        $item = $themes[$themeKey];
-        $profile = $this->user->profile ?? \App\Models\UserProfile::create(['user_id' => $this->user->id]);
+            if ($profile->hasUnlockedItem($themeKey) || $shopService->hasPurchased($this->user, $themeKey)) {
+                $res = $shopService->equip($this->user, $themeKey);
+                $this->user->unsetRelation('profile');
+                $this->user->load('profile');
+                $this->toastSuccess($res['message']);
+                return;
+            }
 
-        // Agar ushbu buyum allaqachon sotib olingan bo'lsa — qayta to'lovsiz faollashtiramiz
-        if ($profile->hasUnlockedItem($themeKey)) {
-            $profile->profile_theme = $themeKey;
-            $profile->avatar_frame = $themeKey;
-            $profile->chat_bubble_theme = $themeKey;
-            $profile->chat_style_preference = 'shop';
-            $profile->save();
+            // Yangi xarid qilish va darhol jihozlash
+            $purRes = $shopService->purchase($this->user, $themeKey, 1);
+            $shopService->equip($this->user, $themeKey);
 
-            $this->user->unsetRelation('profile');
+            $this->user->refresh();
             $this->user->load('profile');
-
-            $this->toastSuccess("{$item['name']} foni o‘rnatildi va profilingizga faol qilindi! 🎨");
-            return;
+            $this->toastSuccess($purRes['message']);
+        } catch (\App\Services\Shop\Exceptions\ShopException $e) {
+            $this->toastWarning($e->getMessage());
+        } catch (\Throwable $e) {
+            $this->toastError("Xarid jarayonida xatolik yuz berdi.");
         }
-
-        // Yangi xarid qilish
-        if ($this->user->coin_balance < $item['price']) {
-            $this->toastWarning("Tangalar yetarli emas! Narxi: {$item['price']} tanga.");
-            return;
-        }
-
-        $this->user->coin_balance -= $item['price'];
-        $this->user->save();
-
-        $profile->unlockItem($themeKey);
-        $profile->profile_theme = $themeKey;
-        $profile->avatar_frame = $themeKey;
-        $profile->chat_bubble_theme = $themeKey;
-        $profile->chat_style_preference = 'shop';
-        $profile->save();
-
-        $this->user->unsetRelation('profile');
-        $this->user->load('profile');
-
-        \App\Models\CoinTransaction::create([
-            'user_id' => $this->user->id,
-            'coins' => -$item['price'],
-            'source' => 'spend',
-            'description' => "{$item['name']} profil vizual foni va chat uslubi xaridi",
-        ]);
-
-        $this->toastSuccess("{$item['name']} muvaffaqiyatli xarid qilindi va profilingizga o‘rnatildi! 🎉");
     }
 
     public function setChatStylePreference(string $pref): void
@@ -244,31 +204,62 @@ class ProfilePage extends Component
         $this->user->load('profile');
 
         $msg = match($pref) {
-            'rank' => 'Profil va chat vizual foni: Reyting uslubiga o‘tkazildi! 🏆',
-            'shop' => 'Profil va chat vizual foni: Tangaga olingan do‘kon foniga o‘tkazildi! 🛍️',
+            'rank' => 'Profil va chat vizual foni: Reyting uslubiga o‘tkazildi.',
+            'shop' => 'Profil va chat vizual foni: Tangaga olingan do‘kon foniga o‘tkazildi.',
             default => 'Profil va chat vizual foni: Standart ko‘rinishga qaytarildi.',
         };
 
         $this->toastSuccess($msg);
     }
 
+    public function equipItem(string $itemKey): void
+    {
+        if (Auth::id() !== $this->user->id) return;
+
+        /** @var \App\Services\Shop\ShopService $shopService */
+        $shopService = app(\App\Services\Shop\ShopService::class);
+
+        try {
+            $res = $shopService->equip($this->user, $itemKey);
+            $this->user->unsetRelation('profile');
+            $this->user->unsetRelation('equipment');
+            $this->user->load(['profile', 'equipment.shopItem']);
+            $this->toastSuccess($res['message']);
+        } catch (\Throwable $e) {
+            $this->toastError($e->getMessage());
+        }
+    }
+
+    public function unequipItem(string $slot): void
+    {
+        if (Auth::id() !== $this->user->id) return;
+
+        /** @var \App\Services\Shop\ShopService $shopService */
+        $shopService = app(\App\Services\Shop\ShopService::class);
+
+        try {
+            $res = $shopService->unequip($this->user, $slot);
+            $this->user->unsetRelation('profile');
+            $this->user->unsetRelation('equipment');
+            $this->user->load(['profile', 'equipment.shopItem']);
+            $this->toastInfo($res['message']);
+        } catch (\Throwable $e) {
+            $this->toastError($e->getMessage());
+        }
+    }
+
     public function unequipShopTheme(): void
     {
         if (Auth::id() !== $this->user->id) return;
 
-        $profile = $this->user->profile;
-        if ($profile) {
-            $profile->avatar_frame = null;
-            $profile->chat_bubble_theme = null;
-            $profile->profile_theme = null;
-            $profile->chat_style_preference = 'default';
-            $profile->save();
+        /** @var \App\Services\Shop\ShopService $shopService */
+        $shopService = app(\App\Services\Shop\ShopService::class);
+        $res = $shopService->unequip($this->user, 'all');
 
-            $this->user->unsetRelation('profile');
-            $this->user->load('profile');
-
-            $this->toastInfo("Maxsus fon va bezaklar yechildi, standart ko‘rinishga qaytarildi.");
-        }
+        $this->user->unsetRelation('profile');
+        $this->user->unsetRelation('equipment');
+        $this->user->load(['profile', 'equipment.shopItem']);
+        $this->toastInfo($res['message']);
     }
 
     public function render()
@@ -334,6 +325,8 @@ class ProfilePage extends Component
 
         $userRank = app(\App\Services\LeaderboardService::class)->getUserRank($this->user);
         $profileVisual = \App\Services\Gamification\ProfileVisualService::resolveVisual($this->user, $userRank);
+        $userItems = $isOwner ? $this->user->userItems()->with('shopItem')->get() : collect();
+        $equippedItemIds = $isOwner ? $this->user->equipment()->pluck('shop_item_id')->toArray() : [];
 
         return view('livewire.profile.profile-page', [
             'user'              => $this->user,
@@ -348,6 +341,8 @@ class ProfilePage extends Component
             'notes'             => $notes,
             'stats'             => $stats,
             'isOwner'           => $isOwner,
+            'userItems'         => $userItems,
+            'equippedItemIds'   => $equippedItemIds,
         ])->layout('layouts.app', ['title' => $this->user->name . ' (@' . $this->user->username . ')']);
     }
 }

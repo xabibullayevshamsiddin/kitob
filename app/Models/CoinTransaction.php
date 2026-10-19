@@ -16,10 +16,15 @@ class CoinTransaction extends Model
         'coins',
         'source',
         'description',
+        'reference_type',
+        'reference_id',
+        'balance_after',
     ];
 
     protected $casts = [
-        'coins' => 'integer',
+        'coins'         => 'integer',
+        'reference_id'  => 'integer',
+        'balance_after' => 'integer',
     ];
 
     // -------------------------------------------------------------------------
@@ -29,6 +34,11 @@ class CoinTransaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reference()
+    {
+        return $this->morphTo();
     }
 
     // -------------------------------------------------------------------------

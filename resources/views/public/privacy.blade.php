@@ -368,7 +368,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof gsap !== 'undefined') {
-                gsap.fromTo('#site-header', { y: -25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" });
+                gsap.fromTo('#site-header', { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out", clearProps: "all" });
             }
 
             // Spotlight card mouse tracking

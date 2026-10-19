@@ -153,7 +153,9 @@ class GroupList extends Component
             ? (int) setting('teacher_group_membership_limit', 20)
             : (int) setting('user_group_membership_limit', 5);
 
-        return $baseLimit + $this->getRankBonus($user);
+        $shopBonus = app(\App\Services\Shop\ShopService::class)->getExtraGroupSlots($user);
+
+        return $baseLimit + $this->getRankBonus($user) + $shopBonus;
     }
 
     /**

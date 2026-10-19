@@ -155,8 +155,8 @@
 
             // 1. Header Entrance
             gsap.fromTo('#site-header',
-                { y: -30, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
+                { opacity: 0 },
+                { opacity: 1, duration: 0.5, ease: "power2.out", clearProps: "all" }
             );
 
             // 2. Books Header Entrance

@@ -47,24 +47,33 @@ class PointsService
 
     /**
      * Tanga sarflash (Coins spending)
+     *
+     * @deprecated Yangi do'kon va xaridlar uchun \App\Services\Shop\ShopService::purchase() ishlatilsin.
      */
     public function spendCoins(User $user, int $coins, string $description): bool
     {
-        if ($user->coin_balance < $coins) {
+        if ($coins <= 0) {
             return false;
         }
 
-        DB::transaction(function () use ($user, $coins, $description) {
-            $user->decrement('coin_balance', $coins);
+        return DB::transaction(function () use ($user, $coins, $description) {
+            /** @var User $lockedUser */
+            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
+            if (!$lockedUser || $lockedUser->coin_balance < $coins) {
+                return false;
+            }
+
+            $lockedUser->decrement('coin_balance', $coins);
 
             CoinTransaction::create([
-                'user_id' => $user->id,
-                'coins' => -$coins,
-                'source' => 'spend',
-                'description' => $description,
+                'user_id'       => $lockedUser->id,
+                'coins'         => -$coins,
+                'source'        => 'spend',
+                'description'   => $description,
+                'balance_after' => $lockedUser->coin_balance,
             ]);
-        });
 
-        return true;
+            return true;
+        });
     }
 }

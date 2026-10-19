@@ -57,22 +57,22 @@
             indicator = document.createElement('aside');
             indicator.className = 'kitob-pwa-status';
             indicator.setAttribute('role', 'status');
-            indicator.innerHTML = '<span class="kitob-pwa-dot" aria-hidden="true"></span><span class="kitob-pwa-label"></span><a href="#">Offline sahifani ochish</a><button type="button" class="kitob-pwa-close" aria-label="Yopish">&times;</button>';
+            indicator.innerHTML = '<span class="kitob-pwa-dot" aria-hidden="true"></span><span class="kitob-pwa-label"></span><a href="#">' + @js(__('site.common.open_offline_page')) + '</a><button type="button" class="kitob-pwa-close" aria-label="' + @js(__('site.common.close')) + '">&times;</button>';
             document.body.appendChild(indicator);
             indicator.querySelector('a').href = '/offline/index.html?reason=offline&from=' + encodeURIComponent(location.pathname + location.search);
             indicator.querySelector('.kitob-pwa-close').addEventListener('click', () => { indicator.hidden = true; });
         }
         indicator.classList.toggle('is-offline', offline);
-        indicator.querySelector('.kitob-pwa-label').textContent = offline ? 'Internet aloqasi yo‘q' : 'Aloqa tiklandi';
+        indicator.querySelector('.kitob-pwa-label').textContent = offline ? @js(__('site.common.offline_no_internet')) : @js(__('site.common.offline_restored'));
         indicator.hidden = !offline;
 
         // Faqat oldin haqiqatdan offline bo'lib, keyin tiklangandagina bildirishnoma berish!
         // Boshlang'ich sahifa ochilishida (hasInitialized === false) aslo "Aloqa tiklandi" demaslik!
         if (hasInitialized) {
             if (offline && !wasOffline) {
-                notify('warning', 'Internet aloqasi uzildi. Sahifani yopmay turing.');
+                notify('warning', @js(__('site.common.offline_lost')));
             } else if (!offline && wasOffline) {
-                notify('success', 'Internet aloqasi tiklandi.');
+                notify('success', @js(__('site.common.offline_restored_msg')));
             }
         }
         wasOffline = offline;

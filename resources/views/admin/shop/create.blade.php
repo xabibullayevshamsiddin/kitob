@@ -1,0 +1,196 @@
+@extends('admin.layouts.app')
+
+@section('title', 'Yangi buyum qo‘shish')
+@section('breadcrumb')
+    <a href="{{ route('admin.shop.index') }}" class="text-mist hover:text-paper">Do‘kon</a>
+    <span class="text-mist/60 mx-1">/</span>
+    <span>Yangi buyum</span>
+@endsection
+
+@section('content')
+<div class="max-w-3xl space-y-5">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-bold font-serif text-paper">Yangi Do‘kon Buyumi Qo‘shish</h1>
+            <p class="text-xs text-mist font-mono mt-0.5">Yangi bezak, rang palitrasi yoki imtiyozli buyumni yarating</p>
+        </div>
+        <a href="{{ route('admin.shop.index') }}" class="px-3 py-1.5 rounded-btn bg-ink-950 border border-ink-border text-xs font-mono text-mist hover:text-paper">
+            &larr; Orqaga
+        </a>
+    </div>
+
+    @if($errors->any())
+        <div class="bg-rose-950/60 border border-rose-500/40 text-rose-300 p-4 rounded-panel text-xs font-mono">
+            <p class="font-bold mb-1">Xatoliklarni to‘g‘rilang:</p>
+            <ul class="list-disc list-inside space-y-0.5">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('admin.shop.items.store') }}" class="bg-ink-900 border border-ink-border rounded-panel p-6 space-y-5 font-mono text-xs">
+        @csrf
+
+        {{-- Kalit (Key) va Bo'lim --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Unikal kalit (Key) *</label>
+                <input type="text" name="key" value="{{ old('key') }}" required placeholder="masalan: frame_neon_wings"
+                       class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+                <p class="text-[10px] text-mist">Faqat kichik lotin harflari va pastki chiziq</p>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Bo‘lim (Category) *</label>
+                <select name="category" required class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+                    <option value="profile" {{ old('category') === 'profile' ? 'selected' : '' }}>Profil bezagi (profile)</option>
+                    <option value="colors" {{ old('category') === 'colors' ? 'selected' : '' }}>Ranglar va mavzular (colors)</option>
+                    <option value="consumable" {{ old('category') === 'consumable' ? 'selected' : '' }}>Foydali buyum (consumable)</option>
+                    <option value="perk" {{ old('category') === 'perk' ? 'selected' : '' }}>Imtiyoz (perk)</option>
+                    <option value="bundle" {{ old('category') === 'bundle' ? 'selected' : '' }}>To‘liq mavzu to‘plami (bundle)</option>
+                </select>
+            </div>
+        </div>
+
+        {{-- Slot va Nodirlik --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Jihozlash joyi (Slot)</label>
+                <select name="slot" class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+                    <option value="">Slot talab qilinmaydi (masalan consumable/perk)</option>
+                    @foreach($slots as $slot)
+                        <option value="{{ $slot }}" {{ old('slot') === $slot ? 'selected' : '' }}>{{ $slot }}</option>
+                    @endforeach
+                </select>
+                <p class="text-[10px] text-mist">avatar_frame, profile_theme, chat_bubble, accent va h.k.</p>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Nodirlik (Rarity) *</label>
+                <select name="rarity" required class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+                    <option value="common" {{ old('rarity') === 'common' ? 'selected' : '' }}>Oddiy (common)</option>
+                    <option value="rare" {{ old('rarity') === 'rare' ? 'selected' : '' }}>Noyob (rare)</option>
+                    <option value="epic" {{ old('rarity') === 'epic' ? 'selected' : '' }}>Epik (epic)</option>
+                    <option value="legendary" {{ old('rarity') === 'legendary' ? 'selected' : '' }}>Afsonaviy (legendary)</option>
+                </select>
+            </div>
+        </div>
+
+        {{-- Narx va Tartib --}}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Narxi (Tanga) *</label>
+                <input type="number" name="price_coins" value="{{ old('price_coins', 50) }}" min="0" required
+                       class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Maksimal miqdor</label>
+                <input type="number" name="max_quantity" value="{{ old('max_quantity', 1) }}" min="1" max="999" required
+                       class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+                <p class="text-[10px] text-mist">Bir martalik buyumlar uchun: 1</p>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Amal qilish muddati (daqiqa)</label>
+                <input type="number" name="duration_minutes" value="{{ old('duration_minutes') }}" min="1" placeholder="Muddatsiz (bo‘sh)"
+                       class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+            </div>
+        </div>
+
+        {{-- Nomlar 3 tilda --}}
+        <div class="space-y-3 pt-2 border-t border-ink-border">
+            <h3 class="text-xs uppercase text-mist tracking-wider font-bold">Buyum Nomi (3 tilda)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[11px] text-paper">O‘zbekcha *</label>
+                    <input type="text" name="name_uz" value="{{ old('name_uz') }}" required placeholder="Zangori mavzu"
+                           class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-2.5 py-1.5 focus:outline-none focus:border-amber-400">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] text-paper">Ruscha</label>
+                    <input type="text" name="name_ru" value="{{ old('name_ru') }}" placeholder="Лазурная тема"
+                           class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-2.5 py-1.5 focus:outline-none focus:border-amber-400">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] text-paper">Inglizcha</label>
+                    <input type="text" name="name_en" value="{{ old('name_en') }}" placeholder="Azure Theme"
+                           class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-2.5 py-1.5 focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+        </div>
+
+        {{-- Tavsiflar 3 tilda --}}
+        <div class="space-y-3 pt-2 border-t border-ink-border">
+            <h3 class="text-xs uppercase text-mist tracking-wider font-bold">Tavsif (3 tilda)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[11px] text-paper">O‘zbekcha</label>
+                    <textarea name="description_uz" rows="2" class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-2.5 py-1.5 focus:outline-none focus:border-amber-400">{{ old('description_uz') }}</textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] text-paper">Ruscha</label>
+                    <textarea name="description_ru" rows="2" class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-2.5 py-1.5 focus:outline-none focus:border-amber-400">{{ old('description_ru') }}</textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] text-paper">Inglizcha</label>
+                    <textarea name="description_en" rows="2" class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-2.5 py-1.5 focus:outline-none focus:border-amber-400">{{ old('description_en') }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        {{-- Vizual parametrlar / Rang / Payload --}}
+        <div class="space-y-3 pt-2 border-t border-ink-border">
+            <h3 class="text-xs uppercase text-mist tracking-wider font-bold">Vizual Parametrlar (Rang & Payload)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="block text-paper font-semibold">Asosiy rang (HEX)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" name="color" value="{{ old('color') }}" placeholder="#3B82F6"
+                               class="flex-1 bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+                    </div>
+                    <p class="text-[10px] text-mist">Format: #RRGGBB (masalan #3B82F6)</p>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-paper font-semibold">Tartib raqami (Sort order)</label>
+                    <input type="number" name="sort_order" value="{{ old('sort_order', 10) }}" min="0"
+                           class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-paper font-semibold">Qo‘shimcha Payload (JSON ixtiyoriy)</label>
+                <textarea name="payload_json" rows="2" placeholder='{"effect": "streak_freeze"}'
+                          class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400 font-mono text-xs">{{ old('payload_json') }}</textarea>
+            </div>
+        </div>
+
+        {{-- Flaglar: Iste'mol qilinadigan va Faol --}}
+        <div class="flex flex-wrap items-center gap-6 pt-3 border-t border-ink-border">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="is_consumable" value="1" {{ old('is_consumable') ? 'checked' : '' }}
+                       class="rounded border-ink-border bg-ink-950 text-amber-400 focus:ring-0">
+                <span class="text-paper">Iste’mol qilinadigan buyum (Consumable)</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
+                       class="rounded border-ink-border bg-ink-950 text-amber-400 focus:ring-0">
+                <span class="text-paper">Do‘konda darhol faollashtirish</span>
+            </label>
+        </div>
+
+        <div class="pt-4 flex items-center gap-3">
+            <button type="submit" class="ks-btn-primary py-2.5 px-6 text-xs font-mono rounded-btn">
+                Saqlash va yaratish
+            </button>
+            <a href="{{ route('admin.shop.index') }}" class="px-4 py-2 text-xs font-mono text-mist hover:text-paper">
+                Bekor qilish
+            </a>
+        </div>
+    </form>
+</div>
+@endsection

@@ -95,22 +95,25 @@ class BookAssistant
             ->count();
 
         if ($todayUsedCount >= $dailyLimit) {
-            $resetAt = $nowTashkent->copy()->endOfDay();
-            $diffHours = (int) $nowTashkent->diffInHours($resetAt);
-            $diffMinutes = (int) ($nowTashkent->diffInMinutes($resetAt) % 60);
+            $shopService = app(\App\Services\Shop\ShopService::class);
+            if (!$shopService->consumeAiQuestion($user)) {
+                $resetAt = $nowTashkent->copy()->endOfDay();
+                $diffHours = (int) $nowTashkent->diffInHours($resetAt);
+                $diffMinutes = (int) ($nowTashkent->diffInMinutes($resetAt) % 60);
 
-            if ($diffHours > 0) {
-                $timeLeft = $diffMinutes > 0
-                    ? "{$diffHours} soat {$diffMinutes} daqiqa"
-                    : "{$diffHours} soat";
-            } else {
-                $timeLeft = max(1, $diffMinutes) . " daqiqa";
+                if ($diffHours > 0) {
+                    $timeLeft = $diffMinutes > 0
+                        ? "{$diffHours} soat {$diffMinutes} daqiqa"
+                        : "{$diffHours} soat";
+                } else {
+                    $timeLeft = max(1, $diffMinutes) . " daqiqa";
+                }
+
+                return $this->errorResult(trans('ai.daily_limit_reached', [
+                    'limit'     => $dailyLimit,
+                    'time_left' => $timeLeft,
+                ]));
             }
-
-            return $this->errorResult(trans('ai.daily_limit_reached', [
-                'limit'     => $dailyLimit,
-                'time_left' => $timeLeft,
-            ]));
         }
 
         RateLimiter::hit($throttleKey, 60);

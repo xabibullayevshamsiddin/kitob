@@ -224,6 +224,16 @@
             border: 1px solid #D9D2C5;
             box-sizing: border-box;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        @media (max-width: 639px) {
+            .stf-book-page {
+                font-size: 8px;
+            }
+            .stf-book-page p, .stf-book-page blockquote {
+                line-height: 1.35;
+            }
         }
         .stf-book-page.--left {
             border-right: 0;
@@ -302,19 +312,19 @@
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                 </span>
-                <span class="break-words">HAR HAFTA BITTA SARA ASAR VA CHUQUR MUTOLAA</span>
+                <span class="break-words">{{ __('site.home.hero_badge') }}</span>
             </div>
 
             <!-- H1 Cinematic Headline -->
             <h1 class="hero-anim-item animate-fade-rise text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.98] sm:leading-[0.95] tracking-tight sm:tracking-[-2.46px] max-w-7xl font-normal text-white break-words"
                 style="font-family: 'Instrument Serif', serif;">
-                Sahifalar aro <em class="not-italic text-amber-300">orzular</em> va <em class="not-italic text-white/70">teran tafakkur yuksaladi.</em>
+                {{ __('site.home.cinematic_title_1') }}<em class="not-italic text-amber-300">{{ __('site.home.cinematic_title_accent') }}</em>{{ __('site.home.cinematic_title_2') }}<em class="not-italic text-white/70">{{ __('site.home.cinematic_title_end') }}</em>
             </h1>
 
             <!-- Subtext -->
             <p class="hero-anim-item animate-fade-rise-delay text-white/75 text-base sm:text-lg max-w-2xl mt-8 leading-relaxed font-normal"
                style="font-family: var(--font-body, 'Inter', sans-serif);">
-                Chalg'ituvchi shovqinlar orasida — chuqur mutolaa, 3D interaktiv varaqlash va ilhom maskani. Sara jahon hamda o'zbek adabiyoti, audio asarlar va intellektual kitobxonlar ekotizimi.
+                {{ __('site.home.cinematic_sub') }}
             </p>
 
             <!-- Hero CTA Buttons -->
@@ -322,7 +332,7 @@
                 <a href="{{ auth()->check() ? route('books.catalog') : route('register') }}"
                    class="group relative inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-ink-950 font-bold text-sm sm:text-base shadow-[0_0_30px_rgba(245,158,11,0.45),inset_0_1px_1px_rgba(255,255,255,0.6)] border border-amber-300/80 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 w-full sm:w-auto"
                    style="font-family: var(--font-body, 'Inter', sans-serif);">
-                    <span>Mutolaani boshlash</span>
+                    <span>{{ __('site.home.start_reading') }}</span>
                     <span class="w-7 h-7 rounded-full bg-ink-950/15 flex items-center justify-center group-hover:translate-x-1 transition-transform duration-200">
                         <svg class="w-3.5 h-3.5 text-ink-950" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </span>
@@ -330,7 +340,7 @@
                 <a href="#book-reveal-section"
                    class="inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-4 rounded-full bg-black/45 hover:bg-black/60 text-white/90 hover:text-white font-medium text-sm sm:text-base backdrop-blur-md border border-white/20 hover:border-amber-400/50 shadow-lg shadow-black/40 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 w-full sm:w-auto"
                    style="font-family: var(--font-body, 'Inter', sans-serif);">
-                    <span>📖 3D Kitobni ochish</span>
+                    <span>{{ __('site.home.open_3d_book') }}</span>
                 </a>
             </div>
 
@@ -343,11 +353,11 @@
                 </span>
                 <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">🎧</span>
-                    <span class="text-white/90 font-medium">Audio mutolaa</span>
+                    <span class="text-white/90 font-medium">{{ __('site.home.audio_reading') }}</span>
                 </span>
                 <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">🔥</span>
-                    <span class="text-white/90 font-medium">Kunlik streak va ballar</span>
+                    <span class="text-white/90 font-medium">{{ __('site.home.streak_and_points') }}</span>
                 </span>
                 <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white/90 shadow-lg shadow-black/40 hover:border-amber-400/40 transition-colors">
                     <span class="text-sm">👥</span>
@@ -361,7 +371,7 @@
         <!-- Bottom scroll cue -->
         <div class="relative z-10 pb-6 w-full flex justify-center">
             <a href="#book-reveal-section" class="inline-flex flex-col items-center gap-1.5 text-[11px] font-mono tracking-widest uppercase text-white/50 hover:text-amber-400 transition-colors cursor-pointer group">
-                <span>Varaqlab o'qish</span>
+                <span>{{ __('site.home.flip_and_read') }}</span>
                 <svg class="w-4 h-4 animate-bounce text-amber-400/80 group-hover:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
             </a>
         </div>
@@ -395,8 +405,8 @@
 
         // Realistic book excerpt for printed page with drop cap
         $scrollyPageExcerpt = (!$isDummyDesc && !empty($cleanDesc))
-            ? \Illuminate\Support\Str::limit($cleanDesc, 220)
-            : "Har bir buyuk asar inson qalbining eng yashirin torlarini chertadi. Sahifalar varaqlangani sari, so'zlar jonlanib, qahramonlarning quvonch va iztiroblari kitobxon vujudiga singib boradi. Bu sahifalarda bitilgan har bir satr sizni bepoyon tafakkur sayohatiga chorlaydi.";
+            ? \Illuminate\Support\Str::limit($cleanDesc, 140)
+            : "Har bir buyuk asar inson qalbining eng yashirin torlarini chertadi. Sahifalar varaqlangani sari, so'zlar jonlanib, kitobxon qalbiga chuqur singib boradi.";
 
         $scrollyLink = $scrollyBook ? route('books.show', $scrollyBook->slug) : route('books.public');
         $scrollyReaders = $featuredReadersCount ?? ($scrollyBook ? 48 : 24);
@@ -418,15 +428,15 @@
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse"></span>
                     <span class="font-mono text-xs uppercase tracking-widest text-amber-600 dark:text-amber-400 font-bold">
-                        {{ $scrollyBook ? ($scrollyBook->week_number . '-HAFTA MUTOLAASI') : 'HAFTANING ASOSIY KITOBI' }}
+                        {{ $scrollyBook ? __('site.home.week_reading_num', ['num' => $scrollyBook->week_number]) : __('site.home.main_book_of_week') }}
                     </span>
                     <span class="text-mist/40">|</span>
                     <span class="font-mono text-[11px] text-mist tracking-wider uppercase">
-                        Scrollytelling Tajribasi
+                        {{ __('site.home.scrolly_experience') }}
                     </span>
                 </div>
                 <div class="hidden lg:flex items-center gap-2 font-mono text-[11px] text-mist">
-                    <span>Scroll qiling va kitob ochilishini kuzating</span>
+                    <span>{{ __('site.home.scroll_to_open') }}</span>
                     <svg class="w-3.5 h-3.5 animate-bounce text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
                     </svg>
@@ -438,13 +448,13 @@
                 
                 <!-- LEFT (cols 1-6): The Grand 3D Book Stage (Multi-Leaf 3D Interactive Flip) -->
                 <div class="lg:col-span-6 flex flex-col justify-center lg:justify-end lg:pr-8 items-center max-w-full">
-                    <div class="scrolly-book-stage relative w-[310px] sm:w-[440px] lg:w-[540px] xl:w-[580px] max-w-[94vw] select-none" id="scrolly-book-stage" style="transform: translateX(-25%);">
+                    <div class="scrolly-book-stage relative w-[326px] sm:w-[440px] lg:w-[540px] xl:w-[580px] max-w-[95vw] select-none" id="scrolly-book-stage" style="transform: translateX(-25%);">
                         
                         <!-- Floating Drag/Swipe Gesture Hint Pill -->
                         <div id="scrolly-drag-hint"
                              class="absolute -top-11 left-1/2 -translate-x-1/2 pointer-events-none z-50 transition-all duration-500 flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink-950/95 border border-amber-500/40 dark:border-amber-400/40 text-[10px] sm:text-[10.5px] font-mono text-amber-700 dark:text-amber-300 shadow-2xl backdrop-blur-md max-w-[90vw] whitespace-nowrap overflow-hidden">
                             <span class="inline-block animate-[bounce_1.2s_infinite]">👈</span>
-                            <span>Burchakdan tortib yoki bosib varaqlang</span>
+                            <span>{{ __('site.home.flip_hint') }}</span>
                             <span class="inline-block animate-[bounce_1.2s_infinite]">👉</span>
                         </div>
 
@@ -470,7 +480,7 @@
                                                     <p class="text-xs text-mist font-sans mt-1">{{ $scrollyAuthor }}</p>
                                                 </div>
                                                 <div class="pt-4 border-t border-ink-border flex justify-between items-center text-xs font-mono text-amber-400">
-                                                    <span>Hafta Kitobi</span>
+                                                    <span>{{ __('site.home.book_of_week') }}</span>
                                                     <span>✦</span>
                                                 </div>
                                             </div>
@@ -484,42 +494,42 @@
                                 <!-- PAGE 1 (Spread 1 Left): INSIDE FRONT COVER (Forzats)              -->
                                 <!-- ══════════════════════════════════════════════════════════════════ -->
                                 <div class="stf-book-page stf-page-forzats" data-density="hard">
-                                    <div class="relative w-full h-full p-3 sm:p-4 flex flex-col justify-between text-ink-950 overflow-hidden">
+                                    <div class="relative w-full h-full p-2 sm:p-4 flex flex-col justify-between text-ink-950 overflow-hidden">
                                         <!-- Vintage Double Inner Border Frame -->
-                                        <div class="absolute inset-2 pointer-events-none border border-[#C5BBA8]/50 rounded-[2px]"></div>
-                                        <div class="absolute inset-2.5 pointer-events-none border border-[#C5BBA8]/30 rounded-[1px]"></div>
+                                        <div class="absolute inset-1 sm:inset-2 pointer-events-none border border-[#C5BBA8]/50 rounded-[2px]"></div>
+                                        <div class="absolute inset-1.5 sm:inset-2.5 pointer-events-none border border-[#C5BBA8]/30 rounded-[1px]"></div>
 
                                         <!-- Top Header -->
-                                        <div class="relative z-10 border-b border-[#D5CBB9] pb-1.5 text-center">
-                                            <span class="font-mono text-[7px] sm:text-[8px] uppercase tracking-[0.2em] text-[#8B9BAD] block">Nodir Nusxalar Kolleksiyasi</span>
-                                            <span class="font-serif text-[10px] sm:text-[11px] text-[#1A1D24] font-semibold tracking-wide mt-0.5 block">KITOBXON KUTUBXONASI</span>
+                                        <div class="relative z-10 shrink-0 border-b border-[#D5CBB9] pb-1 sm:pb-1.5 text-center">
+                                            <span class="font-mono text-[6.5px] sm:text-[8px] uppercase tracking-[0.2em] text-[#8B9BAD] block leading-tight">{{ __('site.home.rare_collection') }}</span>
+                                            <span class="font-serif text-[9px] sm:text-[11px] text-[#1A1D24] font-semibold tracking-wide mt-0.5 block leading-tight">{{ __('site.home.kitobxon_library') }}</span>
                                         </div>
 
                                         <!-- Center: Ex-Libris Seal & Quote -->
-                                        <div class="relative z-10 my-auto py-1 text-center space-y-1.5">
-                                            <div class="inline-flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-full border border-amber-700/30 bg-amber-500/5 mx-auto">
-                                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <div class="relative z-10 my-auto py-0.5 sm:py-1 text-center space-y-1 sm:space-y-1.5">
+                                            <div class="inline-flex flex-col items-center justify-center p-1 sm:p-2 rounded-full border border-amber-700/30 bg-amber-500/5 mx-auto">
+                                                <svg class="w-3.5 h-3.5 sm:w-5 sm:h-5 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                                     <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
                                                     <circle cx="12" cy="9" r="2"/>
                                                     <path d="M9 14h6"/>
                                                 </svg>
-                                                <span class="font-mono text-[6.5px] uppercase tracking-widest text-amber-800 font-bold mt-0.5">EX LIBRIS</span>
+                                                <span class="font-mono text-[5.5px] sm:text-[6.5px] uppercase tracking-widest text-amber-800 font-bold mt-0.5">EX LIBRIS</span>
                                             </div>
-                                            <blockquote class="font-serif italic text-[9px] sm:text-[10px] text-[#2C3440] leading-relaxed px-1">
-                                                «Kitob — zamonlar to'lqinida suzuvchi va o'zining qimmatbaho yukini avlodlarga eltuvchi hikmat kemasidir.»
+                                            <blockquote class="font-serif italic text-[7.5px] sm:text-[10px] text-[#2C3440] leading-snug sm:leading-relaxed px-1">
+                                                {{ __('site.home.forzats_quote') }}
                                             </blockquote>
-                                            <div class="w-8 h-px bg-amber-700/30 mx-auto"></div>
+                                            <div class="w-6 sm:w-8 h-px bg-amber-700/30 mx-auto"></div>
                                         </div>
 
                                         <!-- Bottom Metadata -->
-                                        <div class="relative z-10 border-t border-[#D5CBB9] pt-1.5 space-y-0.5 text-[7.5px] sm:text-[8px] font-mono text-[#6E7B8B]">
+                                        <div class="relative z-10 shrink-0 border-t border-[#D5CBB9] pt-1 sm:pt-1.5 space-y-0.5 text-[6.5px] sm:text-[8px] font-mono text-[#6E7B8B]">
                                             <div class="flex items-center justify-between">
-                                                <span>NASHR:</span>
-                                                <span class="text-[#1A1D24] font-semibold">№ 084 · HAFTALIK</span>
+                                                <span>{{ __('site.home.edition_label') }}</span>
+                                                <span class="text-[#1A1D24] font-semibold">{{ __('site.home.edition_weekly') }}</span>
                                             </div>
-                                            <div class="flex items-center justify-between text-[7px] text-[#8B9BAD]">
-                                                <span>✦ ASLIYATGA MOS</span>
-                                                <span>TOSHKENT · 2026 ✦</span>
+                                            <div class="flex items-center justify-between text-[6px] sm:text-[7px] text-[#8B9BAD]">
+                                                <span>{{ __('site.home.authentic_text') }}</span>
+                                                <span>{{ __('site.home.city_year') }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -529,40 +539,40 @@
                                 <!-- PAGE 2 (Spread 1 Right): 1-BET (Birinchi Bob — Soft Curling Page) -->
                                 <!-- ══════════════════════════════════════════════════════════════════ -->
                                 <div class="stf-book-page" data-density="soft">
-                                    <div class="relative w-full h-full p-3 sm:p-5 flex flex-col justify-between text-ink-950 overflow-hidden">
+                                    <div class="relative w-full h-full p-2 sm:p-5 flex flex-col justify-between text-ink-950 overflow-hidden">
                                         <!-- Header Bar -->
-                                        <div class="border-b border-[#D9D2C5]/80 pb-1.5 flex items-center justify-between text-[8px] sm:text-[9px] font-mono tracking-widest text-[#8B9BAD] uppercase">
-                                            <span class="truncate max-w-[90px] sm:max-w-[130px] font-semibold text-[#526071]">{{ $scrollyTitle }}</span>
-                                            <span class="text-amber-700/70 font-serif text-xs">❦</span>
-                                            <span>BOB I · 1</span>
+                                        <div class="shrink-0 border-b border-[#D9D2C5]/80 pb-1 sm:pb-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono tracking-widest text-[#8B9BAD] uppercase">
+                                            <span class="truncate max-w-[85px] sm:max-w-[130px] font-semibold text-[#526071]">{{ $scrollyTitle }}</span>
+                                            <span class="text-amber-700/70 font-serif text-[10px] sm:text-xs">❦</span>
+                                            <span>{{ __('site.home.chapter_i') }}</span>
                                         </div>
 
                                         <!-- Chapter Heading & Body with Drop Cap -->
-                                        <div class="space-y-1.5 py-1 my-auto">
+                                        <div class="space-y-1 sm:space-y-1.5 py-0.5 sm:py-1 my-auto">
                                             <div class="text-center pb-0.5">
-                                                <span class="font-mono text-[7.5px] sm:text-[8.5px] tracking-[0.2em] text-[#8B9BAD] uppercase block">Birinchi Bob</span>
-                                                <h4 class="font-serif italic text-[11px] sm:text-xs font-semibold text-[#1A1D24] mt-0.5">«Ibtido va Tafakkur»</h4>
-                                                <div class="w-10 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent mx-auto mt-1"></div>
+                                                <span class="font-mono text-[6.5px] sm:text-[8.5px] tracking-[0.2em] text-[#8B9BAD] uppercase block">{{ __('site.home.first_chapter') }}</span>
+                                                <h4 class="font-serif italic text-[10px] sm:text-xs font-semibold text-[#1A1D24] leading-tight mt-0.5">{{ __('site.home.first_chapter_title') }}</h4>
+                                                <div class="w-8 sm:w-10 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent mx-auto mt-0.5 sm:mt-1"></div>
                                             </div>
 
-                                            <p class="font-serif italic text-[8.5px] sm:text-[9.5px] text-[#526071] leading-relaxed border-l-2 border-amber-600/40 pl-2 text-left">
-                                                «Tafakkur qilgan inson uchun har bir sahifada butun bir olam yashiringan...»
+                                            <p class="font-serif italic text-[7px] sm:text-[9.5px] text-[#526071] leading-tight sm:leading-relaxed border-l-2 border-amber-600/40 pl-1.5 sm:pl-2 text-left line-clamp-2">
+                                                {{ __('site.home.first_chapter_epigraph') }}
                                             </p>
 
-                                            <div class="font-serif text-[9px] sm:text-[10.5px] text-[#1A1D24] leading-[1.55] sm:leading-[1.65] text-justify pt-0.5">
-                                                <span class="float-left text-2xl sm:text-3xl font-serif font-bold text-amber-700 leading-none mr-1 mt-0.5 select-none">{{ mb_substr($scrollyPageExcerpt, 0, 1) }}</span><span class="inline">{{ mb_substr($scrollyPageExcerpt, 1) }}</span>
+                                            <div class="font-serif text-[7.5px] sm:text-[10.5px] text-[#1A1D24] leading-[1.38] sm:leading-[1.65] text-justify pt-0.5">
+                                                <span class="float-left text-xl sm:text-3xl font-serif font-bold text-amber-700 leading-none mr-1 select-none">{{ mb_substr($scrollyPageExcerpt, 0, 1) }}</span><span class="inline">{{ mb_substr($scrollyPageExcerpt, 1) }}</span>
                                             </div>
 
                                             <p class="font-serif text-[9.5px] text-[#4A5568] leading-relaxed pt-0.5 text-justify hidden sm:block">
-                                                Mutolaa — qalbni yorituvchi nur, ruhni yuksaltiruvchi qanotdir.
+                                                {{ __('site.home.reading_quote_1') }}
                                             </p>
                                         </div>
 
                                         <!-- Running Footer -->
-                                        <div class="border-t border-[#D9D2C5]/80 pt-1.5 flex items-center justify-between text-[8px] sm:text-[9px] font-mono text-[#8B9BAD]">
+                                        <div class="shrink-0 border-t border-[#D9D2C5]/80 pt-1 sm:pt-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-[#8B9BAD]">
                                             <span>Kitobxon</span>
-                                            <span class="font-serif italic text-[#526071] font-semibold">— 1 —</span>
-                                            <span class="text-amber-700 font-semibold">2-bet ➔</span>
+                                            <span class="font-serif italic text-[#526071] font-semibold">{{ __('site.home.page_num', ['num' => 1]) }}</span>
+                                            <span class="text-amber-700 font-semibold">{{ __('site.home.page_next_hint', ['num' => 2]) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -571,22 +581,22 @@
                                 <!-- PAGE 3 (Spread 2 Left): 1-BET VERSO (Muqaddima — Soft Page)       -->
                                 <!-- ══════════════════════════════════════════════════════════════════ -->
                                 <div class="stf-book-page" data-density="soft">
-                                    <div class="relative w-full h-full p-3 sm:p-5 flex flex-col justify-between bg-[#F5EFE6] text-ink-950 overflow-hidden">
-                                        <div class="border-b border-[#D5CBB9] pb-1.5 text-center">
-                                            <span class="font-mono text-[7.5px] sm:text-[8px] uppercase tracking-[0.2em] text-[#8B9BAD] block">Muqaddima</span>
-                                            <span class="font-serif text-[10px] sm:text-[11px] text-[#1A1D24] font-semibold">«Kitob Falsafasi»</span>
+                                    <div class="relative w-full h-full p-2 sm:p-5 flex flex-col justify-between bg-[#F5EFE6] text-ink-950 overflow-hidden">
+                                        <div class="shrink-0 border-b border-[#D5CBB9] pb-1 sm:pb-1.5 text-center">
+                                            <span class="font-mono text-[6.5px] sm:text-[8px] uppercase tracking-[0.2em] text-[#8B9BAD] block leading-tight">{{ __('site.home.preface') }}</span>
+                                            <span class="font-serif text-[9.5px] sm:text-[11px] text-[#1A1D24] font-semibold leading-tight">{{ __('site.home.book_philosophy') }}</span>
                                         </div>
-                                        <div class="my-auto py-2 text-center space-y-2">
-                                            <blockquote class="font-serif italic text-[9px] sm:text-[10px] text-[#2C3440] leading-relaxed px-1 sm:px-2">
-                                                «So'z — qalb ko'zgusi, kitob esa butun insoniyatning bebaho xazinasidir.»
+                                        <div class="my-auto py-1 sm:py-2 text-center space-y-1 sm:space-y-2">
+                                            <blockquote class="font-serif italic text-[7.5px] sm:text-[10px] text-[#2C3440] leading-snug sm:leading-relaxed px-1 sm:px-2">
+                                                {{ __('site.home.preface_quote') }}
                                             </blockquote>
-                                            <div class="w-8 h-px bg-amber-700/30 mx-auto"></div>
-                                            <p class="font-serif text-[8.5px] sm:text-[9.5px] text-[#526071] leading-relaxed px-1 hidden sm:block">
-                                                Asar davomida inson irodasi, sabr va ma'rifatning ulug'vor kuchi badiiy mahorat bilan tasvirlanadi.
+                                            <div class="w-6 sm:w-8 h-px bg-amber-700/30 mx-auto"></div>
+                                            <p class="font-serif text-[7.5px] sm:text-[9.5px] text-[#526071] leading-relaxed px-1 hidden sm:block">
+                                                {{ __('site.home.preface_sub') }}
                                             </p>
                                         </div>
-                                        <div class="border-t border-[#D5CBB9] pt-1.5 flex justify-between text-[7.5px] sm:text-[8px] font-mono text-[#6E7B8B]">
-                                            <span>BOB I XULOSASI</span>
+                                        <div class="shrink-0 border-t border-[#D5CBB9] pt-1 sm:pt-1.5 flex justify-between text-[6.5px] sm:text-[8px] font-mono text-[#6E7B8B]">
+                                            <span>{{ __('site.home.chapter_i_summary') }}</span>
                                             <span>№ {{ $scrollyBook->week_number ?? 1 }}</span>
                                         </div>
                                     </div>
@@ -596,40 +606,40 @@
                                 <!-- PAGE 4 (Spread 2 Right): 2-BET (Ikkinchi Bob — Soft Curling Page) -->
                                 <!-- ══════════════════════════════════════════════════════════════════ -->
                                 <div class="stf-book-page" data-density="soft">
-                                    <div class="relative w-full h-full p-3 sm:p-5 flex flex-col justify-between text-ink-950 overflow-hidden">
+                                    <div class="relative w-full h-full p-2 sm:p-5 flex flex-col justify-between text-ink-950 overflow-hidden">
                                         <!-- Header -->
-                                        <div class="border-b border-[#D9D2C5]/80 pb-1.5 flex items-center justify-between text-[8px] sm:text-[9px] font-mono tracking-widest text-[#8B9BAD] uppercase">
-                                            <span class="truncate max-w-[90px] sm:max-w-[130px] font-semibold text-[#526071]">{{ $scrollyTitle }}</span>
-                                            <span class="text-amber-700/70 font-serif text-xs">❦</span>
-                                            <span>BOB II · 2</span>
+                                        <div class="shrink-0 border-b border-[#D9D2C5]/80 pb-1 sm:pb-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono tracking-widest text-[#8B9BAD] uppercase">
+                                            <span class="truncate max-w-[85px] sm:max-w-[130px] font-semibold text-[#526071]">{{ $scrollyTitle }}</span>
+                                            <span class="text-amber-700/70 font-serif text-[10px] sm:text-xs">❦</span>
+                                            <span>{{ __('site.home.chapter_ii') }}</span>
                                         </div>
 
                                         <!-- Body -->
-                                        <div class="space-y-1.5 py-1 my-auto">
+                                        <div class="space-y-1 sm:space-y-1.5 py-0.5 sm:py-1 my-auto">
                                             <div class="text-center pb-0.5">
-                                                <span class="font-mono text-[7.5px] sm:text-[8.5px] tracking-[0.2em] text-[#8B9BAD] uppercase block">Ikkinchi Bob</span>
-                                                <h4 class="font-serif italic text-[11px] sm:text-xs font-semibold text-[#1A1D24] mt-0.5">«Marg'ilon Yo'lida»</h4>
-                                                <div class="w-10 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent mx-auto mt-1"></div>
+                                                <span class="font-mono text-[6.5px] sm:text-[8.5px] tracking-[0.2em] text-[#8B9BAD] uppercase block">{{ __('site.home.second_chapter') }}</span>
+                                                <h4 class="font-serif italic text-[10px] sm:text-xs font-semibold text-[#1A1D24] mt-0.5 leading-tight">{{ __('site.home.second_chapter_title') }}</h4>
+                                                <div class="w-8 sm:w-10 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent mx-auto mt-0.5 sm:mt-1"></div>
                                             </div>
 
-                                            <p class="font-serif italic text-[8.5px] sm:text-[9.5px] text-[#526071] leading-relaxed border-l-2 border-amber-600/40 pl-2 text-left">
-                                                «Qalb istagan manzilga yetmoq uchun yo'l mashaqqatlariga chidamoq darkor...»
+                                            <p class="font-serif italic text-[7px] sm:text-[9.5px] text-[#526071] leading-tight sm:leading-relaxed border-l-2 border-amber-600/40 pl-1.5 sm:pl-2 text-left line-clamp-2">
+                                                {{ __('site.home.second_chapter_epigraph') }}
                                             </p>
 
-                                            <div class="font-serif text-[9px] sm:text-[10.5px] text-[#1A1D24] leading-[1.55] sm:leading-[1.65] text-justify pt-0.5">
-                                                Otabek Marg'ilonga yaqinlashar ekan, uning qalbida noma'lum bir orziqish uyg'ongan edi. Oqshom shafag'i ostida shahar devorlari sirli tus olib, har bir ko'cha o'tmish hikoyalaridan so'zlayotgandek tuyulardi.
+                                            <div class="font-serif text-[7.5px] sm:text-[10.5px] text-[#1A1D24] leading-[1.38] sm:leading-[1.65] text-justify pt-0.5">
+                                                {{ __('site.home.second_chapter_body') }}
                                             </div>
 
                                             <p class="font-serif text-[9.5px] text-[#4A5568] leading-relaxed pt-0.5 text-justify hidden sm:block">
-                                                Taqdirning sirli burilishlari va buyuk muhabbat sinovlari bu sahifalarda o'z aksini topgan.
+                                                {{ __('site.home.second_chapter_sub') }}
                                             </p>
                                         </div>
 
                                         <!-- Footer -->
-                                        <div class="border-t border-[#D9D2C5]/80 pt-1.5 flex items-center justify-between text-[8px] sm:text-[9px] font-mono text-[#8B9BAD]">
+                                        <div class="shrink-0 border-t border-[#D9D2C5]/80 pt-1 sm:pt-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-[#8B9BAD]">
                                             <span>Kitobxon</span>
-                                            <span class="font-serif italic text-[#526071] font-semibold">— 2 —</span>
-                                            <span class="text-amber-700 font-semibold">3-bet ➔</span>
+                                            <span class="font-serif italic text-[#526071] font-semibold">{{ __('site.home.page_num', ['num' => 2]) }}</span>
+                                            <span class="text-amber-700 font-semibold">{{ __('site.home.page_next_hint', ['num' => 3]) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -638,19 +648,19 @@
                                 <!-- PAGE 5 (Spread 3 Left): 2-BET VERSO (Adabiy Sharh — Soft Page)    -->
                                 <!-- ══════════════════════════════════════════════════════════════════ -->
                                 <div class="stf-book-page" data-density="soft">
-                                    <div class="relative w-full h-full p-3 sm:p-5 flex flex-col justify-between bg-[#F5EFE6] text-ink-950 overflow-hidden">
-                                        <div class="border-b border-[#D5CBB9] pb-1.5 text-center">
-                                            <span class="font-mono text-[7.5px] sm:text-[8px] uppercase tracking-[0.2em] text-[#8B9BAD] block">Adabiy Sharh</span>
-                                            <span class="font-serif text-[10px] sm:text-[11px] text-[#1A1D24] font-semibold">«Qahramonlar Qalbi»</span>
+                                    <div class="relative w-full h-full p-2 sm:p-5 flex flex-col justify-between bg-[#F5EFE6] text-ink-950 overflow-hidden">
+                                        <div class="shrink-0 border-b border-[#D5CBB9] pb-1 sm:pb-1.5 text-center">
+                                            <span class="font-mono text-[6.5px] sm:text-[8px] uppercase tracking-[0.2em] text-[#8B9BAD] block leading-tight">{{ __('site.home.literary_review') }}</span>
+                                            <span class="font-serif text-[9.5px] sm:text-[11px] text-[#1A1D24] font-semibold leading-tight">{{ __('site.home.heroes_heart') }}</span>
                                         </div>
-                                        <div class="my-auto py-2 text-center space-y-2">
-                                            <blockquote class="font-serif italic text-[9px] sm:text-[10px] text-[#2C3440] leading-relaxed px-1 sm:px-2">
-                                                «Har bir qahramonning o'z haqiqati bor. Lekin eng oliy haqiqat — bu sadoqat va ma'rifatdir.»
+                                        <div class="my-auto py-1 sm:py-2 text-center space-y-1 sm:space-y-2">
+                                            <blockquote class="font-serif italic text-[7.5px] sm:text-[10px] text-[#2C3440] leading-snug sm:leading-relaxed px-1 sm:px-2">
+                                                {{ __('site.home.review_quote') }}
                                             </blockquote>
-                                            <div class="w-8 h-px bg-amber-700/30 mx-auto"></div>
+                                            <div class="w-6 sm:w-8 h-px bg-amber-700/30 mx-auto"></div>
                                         </div>
-                                        <div class="border-t border-[#D5CBB9] pt-1.5 flex justify-between text-[7.5px] sm:text-[8px] font-mono text-[#6E7B8B]">
-                                            <span>BOB II TAHLILI</span>
+                                        <div class="shrink-0 border-t border-[#D5CBB9] pt-1 sm:pt-1.5 flex justify-between text-[6.5px] sm:text-[8px] font-mono text-[#6E7B8B]">
+                                            <span>{{ __('site.home.chapter_ii_analysis') }}</span>
                                             <span>№ {{ $scrollyBook->week_number ?? 1 }}</span>
                                         </div>
                                     </div>
@@ -660,44 +670,44 @@
                                 <!-- PAGE 6 (Spread 3 Right): 3-BET (Xotima & Reader Link — Soft Page) -->
                                 <!-- ══════════════════════════════════════════════════════════════════ -->
                                 <div class="stf-book-page" data-density="soft">
-                                    <div class="relative w-full h-full p-3 sm:p-5 flex flex-col justify-between text-ink-950 overflow-hidden">
+                                    <div class="relative w-full h-full p-2 sm:p-5 flex flex-col justify-between text-ink-950 overflow-hidden">
                                         <!-- Header Bar -->
-                                        <div class="border-b border-[#D9D2C5]/80 pb-1.5 flex items-center justify-between text-[8px] sm:text-[9px] font-mono tracking-widest text-[#8B9BAD] uppercase">
-                                            <span class="truncate max-w-[90px] sm:max-w-[130px] font-semibold text-[#526071]">{{ $scrollyTitle }}</span>
-                                            <span class="text-amber-700/70 font-serif text-xs">❦</span>
-                                            <span>BOB III · 3</span>
+                                        <div class="shrink-0 border-b border-[#D9D2C5]/80 pb-1 sm:pb-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono tracking-widest text-[#8B9BAD] uppercase">
+                                            <span class="truncate max-w-[85px] sm:max-w-[130px] font-semibold text-[#526071]">{{ $scrollyTitle }}</span>
+                                            <span class="text-amber-700/70 font-serif text-[10px] sm:text-xs">❦</span>
+                                            <span>{{ __('site.home.chapter_iii') }}</span>
                                         </div>
 
                                         <!-- Chapter 3 Body & Reader Callout -->
-                                        <div class="space-y-1.5 py-1 my-auto">
+                                        <div class="space-y-1 sm:space-y-1.5 py-0.5 sm:py-1 my-auto">
                                             <div class="text-center pb-0.5">
-                                                <span class="font-mono text-[7.5px] sm:text-[8.5px] tracking-[0.2em] text-[#8B9BAD] uppercase block">Uchinchi Bob</span>
-                                                <h4 class="font-serif italic text-[11px] sm:text-xs font-semibold text-[#1A1D24] mt-0.5">«Xotima va Hikmat»</h4>
-                                                <div class="w-10 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent mx-auto mt-1"></div>
+                                                <span class="font-mono text-[6.5px] sm:text-[8.5px] tracking-[0.2em] text-[#8B9BAD] uppercase block">{{ __('site.home.third_chapter') }}</span>
+                                                <h4 class="font-serif italic text-[10px] sm:text-xs font-semibold text-[#1A1D24] leading-tight mt-0.5">{{ __('site.home.third_chapter_title') }}</h4>
+                                                <div class="w-8 sm:w-10 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent mx-auto mt-0.5 sm:mt-1"></div>
                                             </div>
 
-                                            <p class="font-serif italic text-[8.5px] sm:text-[9.5px] text-[#526071] leading-relaxed border-l-2 border-amber-600/40 pl-2 text-left">
-                                                «Kitob tugagan joyda inson tafakkurining cheksiz ufqlariga parvoz boshlanadi...»
+                                            <p class="font-serif italic text-[7px] sm:text-[9.5px] text-[#526071] leading-tight sm:leading-relaxed border-l-2 border-amber-600/40 pl-1.5 sm:pl-2 text-left line-clamp-2">
+                                                {{ __('site.home.third_chapter_epigraph') }}
                                             </p>
 
-                                            <p class="font-serif text-[9px] sm:text-[10px] text-[#1A1D24] leading-[1.5] text-justify pt-0.5">
-                                                Ushbu asar qalbni yorituvchi teran hikmatdir. Qahramonlarning har bir qarori bugungi kunimiz uchun ham qimmatli saboq beradi.
+                                            <p class="font-serif text-[7.5px] sm:text-[10px] text-[#1A1D24] leading-[1.35] sm:leading-[1.5] text-justify pt-0.5">
+                                                {{ __('site.home.third_chapter_body') }}
                                             </p>
 
                                             <!-- Direct CTA to Open Full Book Reader -->
-                                            <div class="pt-1 space-y-1">
+                                            <div class="pt-0.5 sm:pt-1">
                                                 <a href="{{ $scrollyLink }}"
-                                                   class="w-full py-1.5 sm:py-2 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-ink-950 font-serif font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 shadow-md transition-all hover:scale-[1.02] active:scale-95 group">
-                                                    <span>📖 Kitobni to'liq o'qish</span>
+                                                   class="w-full py-1 sm:py-2 px-2 rounded-md bg-amber-500 hover:bg-amber-400 text-ink-950 font-serif font-bold text-[8.5px] sm:text-xs flex items-center justify-center gap-1 shadow-md transition-all hover:scale-[1.02] active:scale-95 group">
+                                                    <span>{{ __('site.home.read_full_book') }}</span>
                                                     <span class="group-hover:translate-x-1 transition-transform">➔</span>
                                                 </a>
                                             </div>
                                         </div>
 
                                         <!-- Running Footer -->
-                                        <div class="border-t border-[#D9D2C5]/80 pt-1.5 flex items-center justify-between text-[8px] sm:text-[9px] font-mono text-[#8B9BAD]">
+                                        <div class="shrink-0 border-t border-[#D9D2C5]/80 pt-1 sm:pt-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-[#8B9BAD]">
                                             <span>Kitobxon</span>
-                                            <span class="font-serif italic text-[#526071] font-semibold">— 3 —</span>
+                                            <span class="font-serif italic text-[#526071] font-semibold">{{ __('site.home.page_num', ['num' => 3]) }}</span>
                                             <span>№ {{ $scrollyBook->week_number ?? 1 }}</span>
                                         </div>
                                     </div>
@@ -712,25 +722,25 @@
                     <div class="scrolly-book-controls flex items-center justify-between gap-2 mt-4 px-1 w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[380px] select-none">
                         <button type="button" id="scrolly-prev-page-btn"
                                 class="px-2.5 py-1 rounded-full bg-ink-900 border border-ink-border text-mist hover:text-paper hover:border-amber-400/50 text-xs font-mono transition-colors flex items-center gap-1 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
-                                title="Oldingi bet">
+                                title="{{ __('site.home.prev') }}">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                            <span class="text-[11px]">Oldingi</span>
+                            <span class="text-[11px]">{{ __('site.home.prev') }}</span>
                         </button>
 
                         <div class="px-2.5 py-1 rounded-full bg-ink-900/90 border border-ink-border flex items-center gap-2 shadow-sm">
-                            <span id="scrolly-page-label" class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-semibold tracking-wider whitespace-nowrap shrink-0">Muqova</span>
+                            <span id="scrolly-page-label" class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-semibold tracking-wider whitespace-nowrap shrink-0">{{ __('site.home.cover') }}</span>
                             <div class="flex items-center gap-1">
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 transition-all cursor-pointer" data-page="0" title="Muqova"></span>
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="1" title="1-bet"></span>
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="2" title="2-bet"></span>
-                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="3" title="3-bet (Xotima)"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 transition-all cursor-pointer" data-page="0" title="{{ __('site.home.cover') }}"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="1" title="{{ __('site.home.page_numbered', ['num' => 1]) }}"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="2" title="{{ __('site.home.page_numbered', ['num' => 2]) }}"></span>
+                                <span class="scrolly-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-ink-700 transition-all cursor-pointer" data-page="3" title="{{ __('site.home.page_xotima') }}"></span>
                             </div>
                         </div>
 
                         <button type="button" id="scrolly-next-page-btn"
                                 class="px-2.5 py-1 rounded-full bg-ink-900 border border-ink-border text-mist hover:text-paper hover:border-amber-400/50 text-xs font-mono transition-colors flex items-center gap-1 active:scale-95"
-                                title="Keyingi bet">
-                            <span class="text-[11px]">Keyingi</span>
+                                title="{{ __('site.home.next') }}">
+                            <span class="text-[11px]">{{ __('site.home.next') }}</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </button>
                     </div>
@@ -743,7 +753,7 @@
                     <!-- Badge & Week Tag -->
                     <div class="scrolly-content-item inline-flex items-center gap-2 px-3 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-xs tracking-wider">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
-                        <span class="uppercase">{{ $scrollyBook ? ($scrollyBook->week_number . '-HAFTA TANLOVI') : 'MAXSUS NASHR' }}</span>
+                        <span class="uppercase">{{ $scrollyBook ? __('site.home.week_choice_num', ['num' => $scrollyBook->week_number]) : __('site.home.special_edition') }}</span>
                     </div>
 
                     <!-- Book Title & Author -->
@@ -772,7 +782,7 @@
                     <!-- Actions: Read CTA + Audio / Details + Share -->
                     <div class="scrolly-content-item flex flex-wrap items-center gap-3 pt-1">
                         <a href="{{ $scrollyLink }}" class="ks-btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold">
-                            <span>Mutolaani boshlash</span>
+                            <span>{{ __('site.home.start_reading') }}</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </a>
 
@@ -793,9 +803,9 @@
                                         shareUrl: '{{ $scrollyLink }}'
                                     })"
                                     class="px-4 py-2.5 rounded-btn bg-amber-400 hover:bg-amber-300 text-ink-950 font-bold text-sm inline-flex items-center gap-2 shadow-md transition-all active:scale-95"
-                                    title="Pastki audio pleyerda tinglash">
+                                    title="{{ __('site.home.listen_audio') }}">
                                 <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                                <span>Tinglash</span>
+                                <span>{{ __('site.home.listen_audio') }}</span>
                             </button>
                         @endif
 
@@ -807,9 +817,9 @@
                                     url: '{{ $scrollyLink }}',
                                     coverUrl: '{{ $scrollyCover }}',
                                     description: '{{ addslashes(\Illuminate\Support\Str::limit($scrollyDesc, 150)) }}'
-                                })"
+                                    })"
                                 class="p-2.5 rounded-btn bg-ink-900 hover:bg-white/10 border border-ink-border hover:border-amber-400/40 text-mist hover:text-amber-400 transition-all flex items-center justify-center shadow"
-                                title="Kitobni ulashish">
+                                title="{{ __('site.home.share_book') }}">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="18" cy="5" r="3"/>
                                 <circle cx="6" cy="12" r="3"/>
@@ -820,7 +830,7 @@
                         </button>
 
                         <a href="{{ route('books.public') }}" class="ks-btn-ghost inline-flex items-center gap-2 px-4 py-2.5 text-sm">
-                            <span>Barcha kitoblar</span>
+                            <span>{{ __('site.home.all_books') }}</span>
                         </a>
                     </div>
 
@@ -829,7 +839,7 @@
                         
                         <!-- Stat 1: Readers -->
                         <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
-                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Faol O'quvchilar</span>
+                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">{{ __('site.home.active_readers_label') }}</span>
                             <p class="font-mono text-xl sm:text-2xl font-bold text-paper mt-1">
                                 <span class="scrolly-stat-num" data-target="{{ $scrollyReaders }}">0</span>
                                 <span class="text-xs text-amber-600 dark:text-amber-400 font-normal">+</span>
@@ -838,19 +848,19 @@
 
                         <!-- Stat 2: Chapters -->
                         <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
-                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Mundarija</span>
+                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">{{ __('site.home.table_of_contents') }}</span>
                             <p class="font-mono text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
                                 <span class="scrolly-stat-num" data-target="{{ $scrollyChapters }}">0</span>
-                                <span class="text-xs text-mist font-normal">bob</span>
+                                <span class="text-xs text-mist font-normal">{{ __('site.home.chapter_unit') }}</span>
                             </p>
                         </div>
 
                         <!-- Stat 3: Audio Duration -->
                         <div class="p-3.5 rounded-card bg-ink-900/90 border border-ink-border/80 text-left">
-                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">Audio Tahlil</span>
+                            <span class="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-mist block">{{ __('site.home.audio_analysis') }}</span>
                             <p class="font-mono text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                                 <span class="scrolly-stat-num" data-target="{{ $scrollyAudio }}">0</span>
-                                <span class="text-xs text-mist font-normal">daq</span>
+                                <span class="text-xs text-mist font-normal">{{ __('site.home.minute_unit') }}</span>
                             </p>
                         </div>
 
@@ -914,18 +924,18 @@
                 <div>
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[11px] uppercase tracking-wider mb-2">
                         <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
-                        <span>SHARAF ZALI</span>
+                        <span>{{ __('site.home.hall_of_fame_badge') }}</span>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-bold font-serif text-paper">
-                        Faxriy Beshlik <span class="text-amber-400 font-sans text-xl sm:text-2xl font-normal">(Top 5)</span>
+                        {{ __('site.home.hall_of_fame_title') }} <span class="text-amber-400 font-sans text-xl sm:text-2xl font-normal">(Top 5)</span>
                     </h2>
                     <p class="text-mist text-xs sm:text-sm mt-1 max-w-xl">
-                        Platformaning all-time reytingida eng yuqori natija va mutolaa intizomini ko'rsatayotgan peshqadam kitobxonlar.
+                        {{ __('site.home.hall_of_fame_sub') }}
                     </p>
                 </div>
                 <div>
                     <a href="{{ route('leaderboard') }}" class="ks-btn-ghost text-xs py-2 px-3.5 inline-flex items-center gap-1.5 hover:border-amber-400/50">
-                        <span>To'liq reytingni ko'rish</span>
+                        <span>{{ __('site.home.view_full_leaderboard') }}</span>
                         <svg class="w-3.5 h-3.5 text-mist" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </a>
                 </div>
@@ -961,7 +971,7 @@
                         <div class="mt-3 pt-3 border-t border-ink-border/60 w-full flex items-center justify-between">
                             <x-ui.rank-badge :rank="$rank" size="sm" />
                             <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
-                                {{ number_format($topUser->total_points) }} <span class="text-[10px] text-mist font-normal">ball</span>
+                                {{ number_format($topUser->total_points) }} <span class="text-[10px] text-mist font-normal">{{ __('site.home.points_unit') }}</span>
                             </span>
                         </div>
                     </a>
@@ -1244,8 +1254,8 @@
                 // 1. Header Entrance
                 if (document.querySelector('#site-header')) {
                     gsap.fromTo('#site-header',
-                        { y: -20, opacity: 0 },
-                        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
+                        { opacity: 0 },
+                        { opacity: 1, duration: 0.5, ease: "power2.out", clearProps: "all" }
                     );
                 }
 
@@ -1379,7 +1389,7 @@
                     const dots = document.querySelectorAll('.scrolly-dot');
 
                     const maxPages = 3;
-                    const pageLabels = ['Muqova', '1 / 3-bet', '2 / 3-bet', '3 / 3-bet (Xotima)'];
+                    const pageLabels = [@js(__('site.home.cover')), @js(__('site.home.page_numbered', ['num' => 1])), @js(__('site.home.page_numbered', ['num' => 2])), @js(__('site.home.page_xotima'))];
                     // Map logical spreads (0..3) to StPageFlip page indices:
                     // Spread 0: [0] (Cover)
                     // Spread 1: [1, 2] (Forzats + 1-bet)
@@ -1398,13 +1408,13 @@
 
                     // Instantiate Nodlik/StPageFlip (page-flip) in 2-page spread landscape mode
                     const pageFlip = new window.PageFlip(flipbookEl, {
-                        width: 290,
-                        height: 435,
+                        width: 275,
+                        height: 425,
                         size: 'stretch',
-                        minWidth: 135,
-                        maxWidth: 340,
-                        minHeight: 205,
-                        maxHeight: 510,
+                        minWidth: 130,
+                        maxWidth: 350,
+                        minHeight: 210,
+                        maxHeight: 540,
                         maxShadowOpacity: 0.65,
                         showCover: true,
                         usePortrait: false,

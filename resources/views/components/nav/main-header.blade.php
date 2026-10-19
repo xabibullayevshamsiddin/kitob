@@ -3,6 +3,7 @@
     $navLinks = [
         ['route' => 'books.catalog', 'match' => ['books.*', 'book.*'], 'label' => __('site.nav.books')],
         ['route' => 'leaderboard',   'match' => ['leaderboard*'],       'label' => __('site.nav.leaderboard')],
+        ['route' => 'shop.index',    'match' => ['shop*'],              'label' => __('site.nav.shop')],
         ['route' => 'chat',          'match' => ['chat*'],              'label' => __('site.nav.chat')],
         ['route' => 'groups.index',  'match' => ['groups.*'],           'label' => __('site.nav.groups')],
         ['route' => 'live.index',    'match' => ['live.*'],             'label' => __('site.nav.live')],
@@ -294,7 +295,8 @@
 
                     {{-- Coins with Live Counting and Floating Badge (mobilda profil menyusida, sm dan boshlab ko'rinadi) --}}
                     <div class="relative hidden sm:block">
-                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
+                        <a href="{{ route('shop.index') }}"
+                           class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200 hover:text-amber-400"
                               :class="coinsBump ? 'bg-yellow-500/20 text-yellow-300' : 'text-paper'"
                               title="{{ __('site.common.coins') }}">
                             <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gilt transition-transform duration-300"
@@ -303,7 +305,7 @@
                                 <circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>
                             </svg>
                             <span :class="coinsBump ? 'ks-coin-rolling' : ''" x-text="totalCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
-                        </span>
+                        </a>
 
                         {{-- Floating +Coins Pop Animation (Yuqoriga uchuvchi) --}}
                         <template x-if="coinFloater">
@@ -407,7 +409,15 @@
                             <div class="flex items-center gap-3">
                                 <img src="{{ auth()->user()->avatar_url }}" class="w-10 h-10 rounded-full object-cover" alt="{{ auth()->user()->name }}">
                                 <div class="min-w-0 flex-1">
-                                    <p class="font-display text-[15px] font-semibold text-paper truncate leading-tight">{{ auth()->user()->name }}</p>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <p class="font-display text-[15px] font-semibold text-paper truncate leading-tight">{{ auth()->user()->name }}</p>
+                                        @if($headerTitle = auth()->user()->equipped_title)
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold"
+                                                  style="background-color: {{ $headerTitle->payload['badge_color'] ?? '#FBBF24' }}25; color: {{ $headerTitle->payload['badge_color'] ?? '#FBBF24' }}; border: 1px solid {{ $headerTitle->payload['badge_color'] ?? '#FBBF24' }}50;">
+                                                {{ $headerTitle->name_text }}
+                                            </span>
+                                        @endif
+                                    </div>
                                     <p class="text-[11px] font-mono text-mist truncate mt-0.5">{{ '@' . auth()->user()->username }}</p>
                                 </div>
                                 @if(auth()->user()->hasRole('admin'))
@@ -435,10 +445,10 @@
                                     <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                     <span x-text="mobilePoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span>
                                 </span>
-                                <span class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
+                                <a href="{{ route('shop.index') }}" class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
                                     <svg class="w-3.5 h-3.5 text-amber-600 dark:text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
                                     <span x-text="mobileCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
-                                </span>
+                                </a>
                             </div>
                         </div>
 
@@ -459,6 +469,10 @@
                             <a href="{{ route('profile.show', auth()->user()->username) }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
                                 <svg class="w-4 h-4 text-amber-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 <span>{{ __('site.nav.my_profile') }}</span>
+                            </a>
+                            <a href="{{ route('shop.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
+                                <svg class="w-4 h-4 text-amber-500 dark:text-gilt shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
+                                <span>{{ __('site.nav.shop') }}</span>
                             </a>
                             <a href="{{ route('settings') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
                                 <svg class="w-4 h-4 text-amber-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>

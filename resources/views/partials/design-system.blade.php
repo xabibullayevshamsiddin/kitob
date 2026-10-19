@@ -124,6 +124,30 @@
 {{-- Vite Bundled Styles & Scripts (Tailwind v3 + Alpine.js + Collapse, Pusher, Echo, Axios) --}}
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+@auth
+    @php
+        $authUser = auth()->user();
+        $userAccent = $authUser->getEquippedItem('accent');
+        $userAccentColor = $userAccent ? ($userAccent->payload['color'] ?? null) : null;
+    @endphp
+    @if($userAccentColor && \App\Services\Shop\ShopService::validateHexColor($userAccentColor))
+        @php
+            list($ar, $ag, $ab) = sscanf($userAccentColor, "#%02x%02x%02x");
+        @endphp
+        <style>
+            :root {
+                --user-accent: {{ $userAccentColor }};
+                --user-accent-rgb: {{ $ar }} {{ $ag }} {{ $ab }};
+            }
+            .ks-btn-gold:not(:disabled), .ks-btn-primary:not(:disabled) {
+                background: linear-gradient(135deg, {{ $userAccentColor }} 0%, rgba({{ $ar }}, {{ $ag }}, {{ $ab }}, 0.85) 100%) !important;
+                border-color: {{ $userAccentColor }} !important;
+                box-shadow: 0 4px 14px rgba({{ $ar }}, {{ $ag }}, {{ $ab }}, 0.28) !important;
+            }
+        </style>
+    @endif
+@endauth
+
 <style>
     :root, html.dark, html.force-dark {
         --ink-950-rgb: 7 9 14;

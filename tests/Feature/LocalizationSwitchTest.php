@@ -36,6 +36,8 @@ class LocalizationSwitchTest extends TestCase
         $resRu->assertOk();
         $resRu->assertSee('lang="ru"', false);
         $resRu->assertSee('Главная');
+        $resRu->assertSee('Начать чтение');
+        $resRu->assertSee('Все сервисы работают');
 
         // Subsequent page retains ru
         $resAbout = $this->get('/about');
@@ -48,11 +50,41 @@ class LocalizationSwitchTest extends TestCase
         $resEn->assertOk();
         $resEn->assertSee('lang="en"', false);
         $resEn->assertSee('Home');
-
         $resCatalog = $this->get('/catalog');
         $resCatalog->assertOk();
         $resCatalog->assertSee('lang="en"', false);
         $resCatalog->assertSee('Books library');
+    }
+
+    /** @test */
+    public function it_renders_home_page_scrollytelling_and_footer_in_all_languages()
+    {
+        // 1. Russian
+        $resRu = $this->get('/?lang=ru');
+        $resRu->assertOk();
+        $resRu->assertSee('Начать чтение');
+        $resRu->assertSee('Все сервисы работают');
+        $resRu->assertSee('SSL 256-бит защита');
+        $resRu->assertSee('Политика конфиденциальности');
+        $resRu->assertSee('Подать жалобу');
+        $resRu->assertSee('Правила и санкции');
+        // Ensure no untranslated Uzbek residue in Scrolly/Footer
+        $resRu->assertDontSee('Barcha xizmatlar faol');
+        $resRu->assertDontSee('Scrollytelling Tajribasi');
+        $resRu->assertDontSee('SHARAF ZALI');
+
+        // 2. English
+        $resEn = $this->get('/?lang=en');
+        $resEn->assertOk();
+        $resEn->assertSee('Start reading');
+        $resEn->assertSee('All systems operational');
+        $resEn->assertSee('SSL 256-bit secure');
+        $resEn->assertSee('Privacy Policy');
+        $resEn->assertSee('Report Issue');
+        $resEn->assertSee('Rules &amp; Penalties', false);
+        $resEn->assertDontSee('Barcha xizmatlar faol');
+        $resEn->assertDontSee('Scrollytelling Tajribasi');
+        $resEn->assertDontSee('SHARAF ZALI');
     }
 
     /** @test */
