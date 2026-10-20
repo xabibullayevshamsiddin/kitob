@@ -22,6 +22,61 @@ use Illuminate\Support\Str;
 class ShopService
 {
     /**
+     * Tizimda qo'llab-quvvatlanadigan perk/imtiyoz effektlari registri va ularning ulangan joylari.
+     */
+    public const SUPPORTED_EFFECTS = [
+        'streak_freeze' => [
+            'label'       => 'Ketma-ketlik muzlatgichi (Streak Freeze)',
+            'description' => 'Foydalanuvchi bir kun faol bo\'lmasa, uning kunlik o\'qish seriyasini saqlab qoladi.',
+            'handler'     => 'ShopService::checkStreakFreeze, ShopService::purchase (max 2)',
+        ],
+        'coin_booster' => [
+            'label'       => 'Tanga kuchaytirgich (Coin Booster)',
+            'description' => 'Ma\'lum vaqt davomida tanga yig\'ish koeffitsientini oshiradi (standart 2x).',
+            'handler'     => 'ShopService::getActiveCoinBoosterMultiplier, ShopService::hasActiveBooster',
+        ],
+        'ai_questions' => [
+            'label'       => 'AI yordamchi savollari to\'plami (AI Questions)',
+            'description' => 'Kitob o\'qish davomida sun\'iy intellektga qo\'shimcha savollar berish limiti.',
+            'handler'     => 'ShopService::consumeAiQuestion',
+        ],
+        'group_slot' => [
+            'label'       => 'Qo\'shimcha kitob klubi o\'rni (Group Slot)',
+            'description' => 'Foydalanuvchiga yana bitta yangi kitobxonlar guruhi ochish imkonini beradi.',
+            'handler'     => 'ShopService::getExtraGroupSlots',
+        ],
+        'quiz_retry' => [
+            'label'       => 'Viktorinani qayta topshirish bileti (Quiz Retry)',
+            'description' => 'Muvaffaqiyatsiz yakunlangan test yoki viktorinani qayta topshirish imkonini beradi.',
+            'handler'     => 'ShopService::consumeQuizRetryTicket, TakeQuiz::submit',
+        ],
+        'live_priority' => [
+            'label'       => 'Jonli efirda ustuvor savol (Live Priority)',
+            'description' => 'Jonli efir davomida savol berishda birinchi bo\'lib ko\'rinish va ustuvor navbat.',
+            'handler'     => 'ShopService::createLiveQuestion, ShopService::consumeLivePriorityQuestion, SubmitsLiveQuestion',
+        ],
+    ];
+
+    /**
+     * Qo'llab-quvvatlanadigan barcha effektlar kalitlari ro'yxati.
+     */
+    public static function supportedEffects(): array
+    {
+        return array_keys(self::SUPPORTED_EFFECTS);
+    }
+
+    /**
+     * Berilgan effekt tizimda mavjud va qo'llab-quvvatlanadimi?
+     */
+    public static function isEffectSupported(?string $effect): bool
+    {
+        if ($effect === null || $effect === '') {
+            return false;
+        }
+
+        return array_key_exists($effect, self::SUPPORTED_EFFECTS);
+    }
+    /**
      * Tanga evaziga do'kondan buyum xarid qilish (Atomic, DB::transaction + lockForUpdate).
      *
      * @param User $user

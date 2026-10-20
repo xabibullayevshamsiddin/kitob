@@ -162,6 +162,10 @@
                 <label class="block text-paper font-semibold">Joriy Payload JSON</label>
                 <textarea name="payload_json" rows="3"
                           class="w-full bg-ink-950 border border-ink-border text-paper rounded-btn px-3 py-2 focus:outline-none focus:border-amber-400 font-mono text-xs">{{ old('payload_json', json_encode($item->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) }}</textarea>
+                <p class="text-[10px] text-mist">
+                    Qo‘llab-quvvatlanadigan effektlar: <code class="text-amber-400">streak_freeze</code>, <code class="text-amber-400">coin_booster</code>, <code class="text-amber-400">ai_questions</code>, <code class="text-amber-400">group_slot</code>, <code class="text-amber-400">quiz_retry</code>, <code class="text-amber-400">live_priority</code>.
+                </p>
+                @error('effect') <p class="text-rose-400 text-xs">{{ $message }}</p> @enderror
             </div>
         </div>
 

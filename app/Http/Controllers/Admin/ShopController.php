@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ShopController extends Controller
@@ -181,6 +182,7 @@ class ShopController extends Controller
             'is_active'        => 'boolean',
             'sort_order'       => 'nullable|integer|min:0',
             'color'            => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'effect'           => ['nullable', 'string', 'in:' . implode(',', ShopService::supportedEffects())],
             'payload_json'     => 'nullable|string',
         ]);
 
@@ -248,6 +250,7 @@ class ShopController extends Controller
             'is_active'        => 'boolean',
             'sort_order'       => 'nullable|integer|min:0',
             'color'            => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'effect'           => ['nullable', 'string', 'in:' . implode(',', ShopService::supportedEffects())],
             'payload_json'     => 'nullable|string',
         ]);
 
@@ -384,6 +387,15 @@ class ShopController extends Controller
         // Effekt parametrlari
         if ($effect = trim((string) $request->get('effect'))) {
             $payload['effect'] = $effect;
+        }
+
+        // Agar payload ichida effect mavjud bo'lsa, uning qo'llab-quvvatlanishini kafolatlaymiz
+        if (isset($payload['effect']) && $payload['effect'] !== '') {
+            if (!ShopService::isEffectSupported((string) $payload['effect'])) {
+                throw ValidationException::withMessages([
+                    'effect' => "«{$payload['effect']}» effekti tizimda qo'llab-quvvatlanmaydi. Ruxsat etilganlar: " . implode(', ', ShopService::supportedEffects()),
+                ]);
+            }
         }
         if ($request->filled('multiplier')) {
             $payload['multiplier'] = (float) $request->multiplier;
