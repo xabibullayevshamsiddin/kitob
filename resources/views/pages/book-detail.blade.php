@@ -720,7 +720,7 @@
         @endif
     </div>
 
-    <!-- ── 3. TABS: Tavsif, Izohlar & Taqrizlar ── -->
+    <!-- ── 3. TABS: Tavsif va Izohlar ── -->
     <div id="book-comments" class="space-y-4 scroll-mt-20">
         <!-- Tabs Header -->
         <div class="flex items-center gap-2 sm:gap-4 border-b border-ink-border pb-2 overflow-x-auto">
@@ -739,14 +739,6 @@
                 <span>Kitobxonlar izohlari</span>
                 <span class="px-2 py-0.2 rounded-badge bg-amber-500/15 text-amber-400 text-xs font-mono font-bold" x-text="totalComments">{{ $totalCommentsCount }}</span>
             </button>
-            <button type="button"
-                    @click="activeTab = 'discussions'"
-                    :class="activeTab === 'discussions' ? 'border-b-2 border-amber-400 text-amber-400 font-bold' : 'text-mist hover:text-paper font-medium'"
-                    class="pb-2 text-xs sm:text-sm font-serif flex items-center gap-1.5 transition-colors shrink-0">
-                <span>📝</span>
-                <span>Muhokamalar va tahlillar</span>
-                <span class="px-2 py-0.2 rounded-badge bg-ink-950 text-mist text-xs font-mono">{{ $discussions->count() }}</span>
-            </button>
         </div>
 
         <!-- Tab 1: Tavsif -->
@@ -759,68 +751,6 @@
         <!-- Tab 2: Kitobxonlar suhbati & Jonli izohlari (Live Discussion & Chat) -->
         <div x-show="activeTab === 'comments'" x-cloak class="space-y-4">
             @livewire('book.book-discussion-chat', ['book' => $book], key('tab-chat-'.$book->id))
-        </div>
-
-        <!-- Tab 3: Fikrlar va Tahlillar (Discussions) -->
-        <div x-show="activeTab === 'discussions'" x-cloak class="space-y-4">
-            <!-- New Discussion / Review Card -->
-            <div class="p-5 sm:p-6 rounded-card bg-ink-900 border border-ink-border space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold font-serif text-paper">O'z tahlilingiz yoki taqrizingizni qoldiring</h3>
-                    <span class="text-xs text-mist font-mono">Kitobxonlar bilan kengroq baham ko'ring</span>
-                </div>
-
-                <form action="{{ route('books.discussions.store', $book) }}" method="POST" class="space-y-3">
-                    @csrf
-                    <div>
-                        <input type="text" 
-                               name="title" 
-                               required 
-                               placeholder="Mavzu yoki taqriz sarlavhasi..."
-                               class="ks-input w-full text-xs sm:text-sm">
-                    </div>
-                    <div>
-                        <textarea name="body" 
-                                  rows="3" 
-                                  required 
-                                  placeholder="Kitob haqida fikr yoki tahlilingizni yozing..."
-                                  class="ks-input w-full text-xs sm:text-sm resize-y"></textarea>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="ks-btn-primary py-2 px-4 text-xs font-bold inline-flex items-center gap-2">
-                            <span>Chop etish</span>
-                            <span>➔</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Existing Discussions List -->
-            @forelse($discussions as $disc)
-                <div class="p-5 rounded-card bg-ink-900 border border-ink-border space-y-3">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2.5">
-                            <img src="{{ $disc->user->avatar_url }}" alt="{{ $disc->user->name }}" class="w-8 h-8 rounded-full border border-ink-border object-cover">
-                            <div>
-                                <h4 class="text-xs font-bold text-paper">{{ $disc->user->name }}</h4>
-                                <span class="text-[11px] text-mist font-mono">{{ $disc->created_at->diffForHumans() }}</span>
-                            </div>
-                        </div>
-                        @if($disc->is_pinned)
-                            <span class="px-2 py-0.5 rounded-badge bg-amber-500/15 text-amber-400 text-[10px] font-mono font-bold uppercase">Tanlangan</span>
-                        @endif
-                    </div>
-
-                    <h4 class="text-sm font-bold font-serif text-amber-400">{{ $disc->title }}</h4>
-                    <p class="text-xs text-mist leading-relaxed whitespace-pre-line">{{ $disc->body }}</p>
-                </div>
-            @empty
-                <div class="p-8 rounded-card bg-ink-900 border border-ink-border text-center space-y-2">
-                    <span class="text-3xl block">📝</span>
-                    <p class="text-sm font-bold font-serif text-paper">Hali tahlillar mavjud emas.</p>
-                    <p class="text-xs text-mist">Ushbu kitob haqida birinchi bo'lib o'z tahliliy taqrizingizni yozib qoldiring!</p>
-                </div>
-            @endforelse
         </div>
     </div>
 
