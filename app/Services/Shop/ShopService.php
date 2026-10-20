@@ -3,6 +3,7 @@
 namespace App\Services\Shop;
 
 use App\Models\CoinTransaction;
+use App\Models\LiveQuestion;
 use App\Models\PointTransaction;
 use App\Models\Setting;
 use App\Models\ShopItem;
@@ -641,6 +642,52 @@ class ShopService
 
 
     /**
+     * Foydalanuvchida qancha ustuvor savol chiptasi borligini olish.
+     */
+    public function getLivePriorityTicketCount(User $user): int
+    {
+        $item = ShopItem::where('key', 'live_priority_question')->first();
+        if (!$item) {
+            return 0;
+        }
+
+        $userItem = UserItem::where('user_id', $user->id)
+            ->where('shop_item_id', $item->id)
+            ->first();
+
+        if (!$userItem || $userItem->quantity <= 0 || $userItem->isExpired()) {
+            return 0;
+        }
+
+        return (int) $userItem->quantity;
+    }
+
+    /**
+     * Foydalanuvchi ushbu efirda qancha ustuvor savol berganini hisoblash.
+     */
+    public function getLivePriorityQuestionsUsed(User $user, int $liveEventId): int
+    {
+        return LiveQuestion::where('live_event_id', $liveEventId)
+            ->where('user_id', $user->id)
+            ->where('is_priority', true)
+            ->count();
+    }
+
+    /**
+     * Foydalanuvchi ushbu efirda yana ustuvor savol bera oladimi?
+     */
+    public function canSubmitLivePriorityQuestion(User $user, int $liveEventId): bool
+    {
+        $maxPerLive = (int) config('shop.max_priority_questions_per_live', 2);
+        $used = $this->getLivePriorityQuestionsUsed($user, $liveEventId);
+        if ($used >= $maxPerLive) {
+            return false;
+        }
+
+        return $this->getLivePriorityTicketCount($user) > 0;
+    }
+
+    /**
      * Jonli efirda ustuvor savol chiptasini sarflash.
      */
     public function consumeLivePriorityQuestion(User $user): bool
@@ -652,9 +699,10 @@ class ShopService
 
         $userItem = UserItem::where('user_id', $user->id)
             ->where('shop_item_id', $item->id)
+            ->lockForUpdate()
             ->first();
 
-        if (!$userItem || $userItem->quantity <= 0) {
+        if (!$userItem || $userItem->quantity <= 0 || $userItem->isExpired()) {
             return false;
         }
 
@@ -665,6 +713,54 @@ class ShopService
         }
 
         return true;
+    }
+
+    /**
+     * Jonli efir savolini yaratish (ustuvor bo'lsa chiptani atomik sarflaydi).
+     *
+     * @throws ShopException
+     */
+    public function createLiveQuestion(User $user, int $liveEventId, string $questionText, bool $isPriority = false): LiveQuestion
+    {
+        $questionText = trim($questionText);
+
+        if (!$isPriority) {
+            return LiveQuestion::create([
+                'live_event_id' => $liveEventId,
+                'user_id'       => $user->id,
+                'question'      => $questionText,
+                'is_priority'   => false,
+                'is_selected'   => false,
+                'is_answered'   => false,
+            ]);
+        }
+
+        return DB::transaction(function () use ($user, $liveEventId, $questionText) {
+            $maxLimit = (int) config('shop.max_priority_questions_per_live', 2);
+            $usedCount = LiveQuestion::where('live_event_id', $liveEventId)
+                ->where('user_id', $user->id)
+                ->where('is_priority', true)
+                ->lockForUpdate()
+                ->count();
+
+            if ($usedCount >= $maxLimit) {
+                throw new ShopException("Ushbu jonli efirda ko'pi bilan {$maxLimit} ta ustuvor savol berishingiz mumkin.");
+            }
+
+            $consumed = $this->consumeLivePriorityQuestion($user);
+            if (!$consumed) {
+                throw new ShopException("Sizda ustuvor savol chiptasi mavjud emas yoki muddati tugagan.");
+            }
+
+            return LiveQuestion::create([
+                'live_event_id' => $liveEventId,
+                'user_id'       => $user->id,
+                'question'      => $questionText,
+                'is_priority'   => true,
+                'is_selected'   => false,
+                'is_answered'   => false,
+            ]);
+        });
     }
 
     /**

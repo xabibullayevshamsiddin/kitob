@@ -36,6 +36,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Jonli Efir Savollari Sozlamalari (Live Priority Questions)
+    |--------------------------------------------------------------------------
+    | Bitta foydalanuvchi bitta efirda ko'pi bilan nechta ustuvor savol berishi
+    | mumkinligi (navbatni egallab olmasligi uchun standart: 2).
+    */
+    'max_priority_questions_per_live' => (int) env('SHOP_MAX_PRIORITY_QUESTIONS_PER_LIVE', 2),
+
+    /*
+    |--------------------------------------------------------------------------
     | Qo'llab-quvvatlanadigan Jihozlash Slotlari (Slots)
     |--------------------------------------------------------------------------
     */

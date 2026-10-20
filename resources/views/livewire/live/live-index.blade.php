@@ -335,6 +335,18 @@
                     {{ __('site.live.send') }}
                 </button>
             </form>
+            @if($this->canMakePriority)
+                <div class="flex items-center justify-between pt-1">
+                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" wire:model="isPriority" class="w-3.5 h-3.5 rounded border-ink-border text-amber-400 focus:ring-amber-400/30 bg-ink-950">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-mono text-amber-400 font-semibold">
+                            <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            Ustuvor savol sifatida yuborish (chiptalaringiz: {{ $this->priorityTicketsCount }} ta)
+                        </span>
+                    </label>
+                    <span class="text-[10px] font-mono text-mist">Navbatda 1-o'rinda</span>
+                </div>
+            @endif
             @error('question') <p class="text-rose-300 font-mono text-xs">{{ $message }}</p> @enderror
 
             @if ($myQuestions->isNotEmpty())
@@ -342,7 +354,15 @@
                     <span class="text-[10px] font-mono uppercase tracking-wider text-mist">{{ __('site.live.my_questions') }}</span>
                     @foreach ($myQuestions as $q)
                         <div class="flex items-center justify-between text-xs" wire:key="q-{{ $q->id }}">
-                            <span class="text-mist truncate max-w-md font-sans">{{ $q->question }}</span>
+                            <div class="flex items-center gap-2 truncate max-w-md">
+                                @if($q->is_priority)
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 font-mono font-bold text-[9px] rounded-pill uppercase shrink-0 shadow-sm">
+                                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        Ustuvor
+                                    </span>
+                                @endif
+                                <span class="text-mist truncate font-sans">{{ $q->question }}</span>
+                            </div>
                             <span class="{{ $q->is_answered ? 'text-emerald-400' : ($q->is_selected ? 'text-amber-400' : 'text-mist') }} shrink-0 font-mono text-[11px]">
                                 {{ $q->is_answered ? __('site.live.q_answered') : ($q->is_selected ? __('site.live.q_selected') : __('site.live.q_pending')) }}
                             </span>

@@ -67,6 +67,22 @@
         </div>
     </div>
 
+    @if($isHost)
+        <!-- Host View Switcher -->
+        <div class="px-3 py-1.5 bg-ink-950 border-b border-ink-border flex items-center gap-2 shrink-0">
+            <button type="button" wire:click="$set('viewTab', 'chat')"
+                class="px-2.5 py-1 rounded-btn text-xs font-mono transition-all {{ $viewTab === 'chat' ? 'bg-amber-500/15 text-amber-400 font-bold border border-amber-500/30' : 'text-mist hover:text-paper' }}">
+                Muloqot
+            </button>
+            <button type="button" wire:click="$set('viewTab', 'queue')"
+                class="px-2.5 py-1 rounded-btn text-xs font-mono transition-all flex items-center gap-1.5 {{ $viewTab === 'queue' ? 'bg-amber-500/15 text-amber-400 font-bold border border-amber-500/30' : 'text-mist hover:text-paper' }}">
+                <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>Savollar navbati</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-400/20 text-amber-300 font-bold">{{ $queueQuestions->count() }}</span>
+            </button>
+        </div>
+    @endif
+
     <!-- PINNED xabarlar -->
     @if($pinned->isNotEmpty())
         <div class="px-3.5 pt-3 shrink-0 space-y-2">
@@ -77,6 +93,12 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-1.5 mb-0.5 flex-wrap font-mono text-[10px]">
                                 <span class="font-bold text-amber-400">{{ $pin->user?->name ?? 'Foydalanuvchi' }}</span>
+                                @if($pin->is_priority)
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 font-bold rounded-pill text-[9px] uppercase shadow-sm">
+                                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        Ustuvor
+                                    </span>
+                                @endif
                                 @if(isset($topFiveIds[$pin->user_id]))
                                     <x-ui.rank-badge :rank="$topFiveIds[$pin->user_id]" size="xs" />
                                 @endif
@@ -101,8 +123,58 @@
         </div>
     @endif
 
-    <!-- Messages Container -->
-    <div id="liveChatScroll" class="flex-1 p-3.5 overflow-y-auto overflow-x-hidden space-y-2.5">
+    @if($isHost && $viewTab === 'queue')
+        <!-- Questions Queue Container (Host/Moderator) -->
+        <div class="flex-1 p-3.5 overflow-y-auto space-y-2.5">
+            @if($queueQuestions->isEmpty())
+                <div class="h-full flex flex-col items-center justify-center text-center p-6 text-mist space-y-2">
+                    <div class="w-8 h-8 rounded-btn bg-ink-800 border border-ink-border flex items-center justify-center text-amber-400">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <p class="text-xs font-mono">Hozircha savollar navbati bo'sh.</p>
+                </div>
+            @else
+                @foreach($queueQuestions as $qItem)
+                    <div class="p-3 rounded-panel border {{ $qItem->is_priority ? 'bg-amber-500/10 border-amber-500/35' : ($qItem->is_selected ? 'bg-ink-800/80 border-amber-500/20' : 'bg-ink-950/60 border-ink-border') }} space-y-2" wire:key="queue-{{ $qItem->id }}">
+                        <div class="flex items-center justify-between gap-2 flex-wrap text-[11px] font-mono">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-bold {{ $qItem->is_priority ? 'text-amber-400' : 'text-paper' }}">{{ $qItem->user?->name ?? 'Foydalanuvchi' }}</span>
+                                @if($qItem->is_priority)
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 font-bold rounded-pill text-[9px] uppercase shadow-sm">
+                                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        Ustuvor
+                                    </span>
+                                @endif
+                                @if($qItem->likes_count > 0)
+                                    <span class="text-rose-400 font-bold flex items-center gap-0.5">
+                                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                        {{ $qItem->likes_count }}
+                                    </span>
+                                @endif
+                                <span class="text-mist text-[10px]">{{ $qItem->created_at->timezone('Asia/Tashkent')->format('H:i') }}</span>
+                                @if($qItem->is_answered)
+                                    <span class="text-emerald-400 text-[10px]">✓ javob berildi</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button type="button" wire:click="togglePin({{ $qItem->id }})" wire:loading.attr="disabled"
+                                    class="px-2 py-0.5 rounded text-[10px] {{ $qItem->is_selected ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper hover:bg-ink-800' }}">
+                                    {{ $qItem->is_selected ? 'Pin bekor' : 'Pin' }}
+                                </button>
+                                <button type="button" wire:click="markAnswered({{ $qItem->id }})" wire:loading.attr="disabled"
+                                    class="px-2 py-0.5 rounded text-[10px] {{ $qItem->is_answered ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-mist hover:text-emerald-400 hover:bg-ink-800' }}">
+                                    {{ $qItem->is_answered ? '✓ Qaytarish' : 'Javob berildi' }}
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-paper leading-relaxed font-sans break-words">{{ $qItem->question }}</p>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+    @else
+        <!-- Messages Container -->
+        <div id="liveChatScroll" class="flex-1 p-3.5 overflow-y-auto overflow-x-hidden space-y-2.5">
         @if($messages->isEmpty())
             <div class="h-full flex flex-col items-center justify-center text-center p-6 text-mist space-y-2">
                 <div class="w-8 h-8 rounded-btn bg-ink-800 border border-ink-border flex items-center justify-center text-amber-400">
@@ -138,6 +210,13 @@
 
                             @if($badgeText)
                                 <span class="{{ $badgeClass }}">{{ $badgeText }}</span>
+                            @endif
+
+                            @if($msg->is_priority)
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 font-mono font-bold text-[9px] rounded-pill uppercase shadow-sm" title="Ustuvor savol">
+                                    <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    Ustuvor
+                                </span>
                             @endif
 
                             @if($isTopFive && ($chatStyle['mode'] ?? '') !== 'rank')
@@ -214,6 +293,7 @@
             @endforeach
         @endif
     </div>
+    @endif
 
     <!-- Permission notice strip -->
     <div class="px-3.5 py-1.5 bg-ink-950/80 border-t border-ink-border text-[11px] font-mono text-mist flex items-center justify-between shrink-0">
@@ -229,6 +309,18 @@
     <!-- Input Bar -->
     <div class="p-3 bg-ink-900 border-t border-ink-border shrink-0" x-data="{ count: 0 }">
         @if($this->canWrite)
+            @if($this->canMakePriority)
+                <div class="mb-2 flex items-center justify-between">
+                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" wire:model="isPriority" class="w-3.5 h-3.5 rounded border-ink-border text-amber-400 focus:ring-amber-400/30 bg-ink-950">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-mono text-amber-400 font-semibold">
+                            <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            Ustuvor qilish (chiptalar: {{ $this->priorityTicketsCount }})
+                        </span>
+                    </label>
+                    <span class="text-[10px] font-mono text-mist">Navbatda 1-o'rinda</span>
+                </div>
+            @endif
             <form wire:submit.prevent="sendMessage" class="flex items-center gap-2">
                 <div class="relative flex-1">
                     <input type="text" wire:model.defer="message" x-on:input="count = $event.target.value.length"

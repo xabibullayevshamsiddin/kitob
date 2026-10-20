@@ -3,17 +3,20 @@
 namespace App\Http\Livewire\Live;
 
 use App\Http\Livewire\Concerns\WithToast;
+use App\Http\Livewire\Live\Concerns\SubmitsLiveQuestion;
 use App\Models\Follow;
 use App\Models\LiveEvent;
 use App\Models\LiveEventLike;
 use App\Models\LiveQuestion;
 use App\Models\LiveSignal;
+use App\Services\Shop\Exceptions\ShopException;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class LiveDetail extends Component
 {
     use WithToast;
+    use SubmitsLiveQuestion;
 
     public LiveEvent $event;
 
@@ -288,17 +291,22 @@ class LiveDetail extends Component
             'question.min'      => 'Xabar kamida 2 belgidan iborat bo\'lsin.',
         ]);
 
-        LiveQuestion::create([
-            'live_event_id' => $this->event->id,
-            'user_id'       => Auth::id(),
-            'question'      => trim($this->question),
-            'is_selected'   => false,
-            'is_answered'   => false,
-        ]);
+        $wasPriority = $this->isPriority;
+
+        try {
+            $this->handleQuestionSubmission(Auth::user(), $this->event->id, $this->question);
+        } catch (ShopException $e) {
+            $this->toast('error', $e->getMessage());
+            return;
+        }
 
         $this->reset('question');
 
-        $this->toast('success', 'Xabaringiz yuborildi!');
+        if ($wasPriority) {
+            $this->toast('success', 'Ustuvor savolingiz qabul qilindi!');
+        } else {
+            $this->toast('success', 'Xabaringiz yuborildi!');
+        }
     }
 
     public function requestVoiceSpeech(): void
@@ -334,15 +342,14 @@ class LiveDetail extends Component
     {
         $allQuestions = LiveQuestion::where('live_event_id', $this->event->id)
             ->with('user:id,name,username,avatar')
-            ->latest()
+            ->inPriorityOrder()
             ->take(40)
-            ->get()
-            ->reverse();
+            ->get();
 
         $selectedQuestions = LiveQuestion::where('live_event_id', $this->event->id)
             ->selected()
             ->with('user:id,name,username,avatar')
-            ->latest()
+            ->inPriorityOrder()
             ->get();
 
         $myQuestions = Auth::check()

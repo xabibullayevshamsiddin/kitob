@@ -3,8 +3,10 @@
 namespace App\Http\Livewire\Live;
 
 use App\Http\Livewire\Concerns\WithToast;
+use App\Http\Livewire\Live\Concerns\SubmitsLiveQuestion;
 use App\Models\LiveEvent;
 use App\Models\LiveQuestion;
+use App\Services\Shop\Exceptions\ShopException;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -18,6 +20,7 @@ use Livewire\Component;
 class LiveChatPanel extends Component
 {
     use WithToast;
+    use SubmitsLiveQuestion;
 
     /**
      * Event faqat ID sifatida saqlanadi (model emas!).
@@ -30,6 +33,8 @@ class LiveChatPanel extends Component
     public bool $isHost = false;
 
     public string $message = '';
+
+    public string $viewTab = 'chat'; // 'chat' or 'queue' (host/moderator uchun)
 
     /** Shu foydalanuvchi (brauzer) like bosgan xabarlar ID'lari — component state'da saqlanadi */
     public array $myLikedIds = [];
@@ -101,15 +106,20 @@ class LiveChatPanel extends Component
 
         $this->validate();
 
-        LiveQuestion::create([
-            'live_event_id' => $this->event->id,
-            'user_id'       => Auth::id(),
-            'question'      => trim($this->message),
-            'is_selected'   => false,
-            'is_answered'   => false,
-        ]);
+        $wasPriority = $this->isPriority;
+
+        try {
+            $this->handleQuestionSubmission(Auth::user(), $this->event->id, $this->message);
+        } catch (ShopException $e) {
+            $this->toast('error', $e->getMessage());
+            return;
+        }
 
         $this->reset('message');
+
+        if ($wasPriority) {
+            $this->toast('success', 'Ustuvor savolingiz qabul qilindi!');
+        }
 
         $this->dispatchBrowserEvent('live-chat-scroll-bottom');
     }
@@ -213,15 +223,29 @@ class LiveChatPanel extends Component
             ->reverse()
             ->values();
 
+        // Host/moderator uchun savollar navbati (ustuvorlar yuqorida, keyin likes_count, keyin vaqt)
+        $queueQuestions = collect();
+        if ($this->isHost) {
+            $queueQuestions = LiveQuestion::where('live_event_id', $event->id)
+                ->inPriorityOrder()
+                ->with([
+                    'user:id,name,username,avatar,role',
+                    'user.profile:id,user_id,avatar_frame,chat_style_preference,chat_bubble_theme'
+                ])
+                ->take(50)
+                ->get();
+        }
+
         // Umumiy like soni (hamma ko'radi, shu jumladan efir boshlagan odam)
         $totalLikes = (int) LiveQuestion::where('live_event_id', $event->id)->sum('likes_count');
 
         return view('livewire.live.live-chat-panel', [
-            'event'      => $event,
-            'pinned'     => $pinned,
-            'messages'   => $messages,
-            'totalLikes' => $totalLikes,
-            'topFiveIds' => app(\App\Services\LeaderboardService::class)->getTopFiveIds(),
+            'event'          => $event,
+            'pinned'         => $pinned,
+            'messages'       => $messages,
+            'queueQuestions' => $queueQuestions,
+            'totalLikes'     => $totalLikes,
+            'topFiveIds'     => app(\App\Services\LeaderboardService::class)->getTopFiveIds(),
         ]);
     }
 }

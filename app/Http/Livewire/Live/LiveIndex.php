@@ -3,8 +3,10 @@
 namespace App\Http\Livewire\Live;
 
 use App\Http\Livewire\Concerns\WithToast;
+use App\Http\Livewire\Live\Concerns\SubmitsLiveQuestion;
 use App\Models\LiveEvent;
 use App\Models\LiveQuestion;
+use App\Services\Shop\Exceptions\ShopException;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,7 +14,7 @@ use Livewire\WithPagination;
 class LiveIndex extends Component
 {
     use WithToast;
-
+    use SubmitsLiveQuestion;
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
@@ -223,6 +225,14 @@ class LiveIndex extends Component
         $this->toast('success', $count . ' ta jonli efir birdan tugatildi va saytdan o\'chirildi.');
     }
 
+    protected function resolveEventIdForSubmission(): ?int
+    {
+        return LiveEvent::whereIn('status', [LiveEvent::STATUS_SCHEDULED, LiveEvent::STATUS_LIVE])
+            ->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+            ->orderBy('scheduled_at')
+            ->value('id');
+    }
+
     public function submitQuestion(): void
     {
         $this->validate([
@@ -243,15 +253,22 @@ class LiveIndex extends Component
             return;
         }
 
-        LiveQuestion::create([
-            'live_event_id' => $event->id,
-            'user_id'       => Auth::id(),
-            'question'      => trim($this->question),
-        ]);
+        $wasPriority = $this->isPriority;
+
+        try {
+            $this->handleQuestionSubmission(Auth::user(), $event->id, $this->question);
+        } catch (ShopException $e) {
+            $this->toast('error', $e->getMessage());
+            return;
+        }
 
         $this->reset('question');
 
-        $this->toast('success', 'Savolingiz yuborildi! Muallif efirda javob berishi mumkin. 🎤');
+        if ($wasPriority) {
+            $this->toast('success', 'Ustuvor savolingiz qabul qilindi! Muallif efirda birinchilardan bo\'lib javob beradi. 🎤');
+        } else {
+            $this->toast('success', 'Savolingiz yuborildi! Muallif efirda javob berishi mumkin. 🎤');
+        }
     }
 
     public function render()
@@ -343,7 +360,7 @@ class LiveIndex extends Component
             ->paginate(6);
 
         $myQuestions = LiveQuestion::where('user_id', Auth::id())
-            ->latest()
+            ->inPriorityOrder()
             ->take(5)
             ->get();
 

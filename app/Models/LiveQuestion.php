@@ -15,12 +15,14 @@ class LiveQuestion extends Model
         'live_event_id',
         'user_id',
         'question',
+        'is_priority',
         'is_selected',
         'is_answered',
         'likes_count',
     ];
 
     protected $casts = [
+        'is_priority' => 'boolean',
         'is_selected' => 'boolean',
         'is_answered' => 'boolean',
         'likes_count' => 'integer',
@@ -47,6 +49,21 @@ class LiveQuestion extends Model
     public function scopeSelected(Builder $query): Builder
     {
         return $query->where('is_selected', true);
+    }
+
+    public function scopePriority(Builder $query): Builder
+    {
+        return $query->where('is_priority', true);
+    }
+
+    /**
+     * Savollar navbati: ustuvorlar yuqorida, keyin likes_count, keyin vaqt bo'yicha.
+     */
+    public function scopeInPriorityOrder(Builder $query): Builder
+    {
+        return $query->orderByDesc('is_priority')
+            ->orderByDesc('likes_count')
+            ->orderBy('created_at');
     }
 
     public function scopePending(Builder $query): Builder
