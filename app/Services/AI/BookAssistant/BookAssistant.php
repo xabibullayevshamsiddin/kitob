@@ -146,6 +146,56 @@ class BookAssistant
         $gate = $this->relevanceGate->evaluate($question, $retrieval);
         if (!$gate['passed']) {
             $reason = (string) ($gate['reason'] ?? 'off_topic');
+
+            // Do'stona jonli muloqot (salomlashish, hol-ahvol so'rash, minnatdorchilik, xayrlashish)
+            if ($reason === 'conversational') {
+                $convType = (string) ($gate['conversational_type'] ?? 'greeting');
+                $answerText = $this->buildConversationalResponse($book, $convType, $user);
+
+                $history = AiChatHistory::create([
+                    'user_id'           => $user->id,
+                    'book_id'           => $book->id,
+                    'message'           => $question,
+                    'response'          => $answerText,
+                    'provider'          => 'companion',
+                    'model'             => 'conversational_companion',
+                    'tokens_used'       => 0,
+                    'sources'           => [[
+                        'index'      => 0,
+                        'chunk_id'   => 0,
+                        'page_start' => 1,
+                        'page_end'   => null,
+                        'chapter_id' => null,
+                        'label'      => 'Kitob hamrohi',
+                    ]],
+                    'refused'           => false,
+                    'refusal_reason'    => null,
+                    'prompt_tokens'     => 0,
+                    'completion_tokens' => 0,
+                    'latency_ms'        => 30,
+                    'top_score'         => 1.0,
+                ]);
+
+                return [
+                    'status'          => 'ok',
+                    'answer'          => $answerText,
+                    'answer_html'     => $this->renderSafeMarkdown($answerText),
+                    'sources'         => [[
+                        'index'      => 0,
+                        'chunk_id'   => 0,
+                        'page_start' => 1,
+                        'page_end'   => null,
+                        'chapter_id' => null,
+                        'label'      => 'Kitob hamrohi',
+                    ]],
+                    'refused'         => false,
+                    'refusal_reason'  => null,
+                    'provider_called' => false,
+                    'top_score'       => 1.0,
+                    'history_id'      => $history->id,
+                ];
+            }
+
             if ($reason === 'unintelligible') {
                 $refusalText = trans('ai.unintelligible');
             } elseif ($reason === 'no_evidence') {
@@ -293,5 +343,30 @@ class BookAssistant
             'top_score'       => $topScore,
             'history_id'      => null,
         ];
+    }
+
+    /**
+     * Do'stona jonli muloqot (salomlashish, hol-ahvol, minnatdorchilik, xayrlashish) uchun
+     * kitob bilan bog'langan xushmuomala javob qaytaradi.
+     */
+    public function buildConversationalResponse(Book $book, string $convType, ?User $user = null): string
+    {
+        $bookTitle = trim((string) $book->title);
+        $author = trim((string) ($book->author ?? ''));
+        $authorSuffix = $author !== '' ? " (muallif: {$author})" : '';
+
+        return match ($convType) {
+            'how_are_you' => "Assalomu alaykum! Rahmat, hammasi a'lo darajada! Men «{$bookTitle}»{$authorSuffix} kitobi bo'yicha sizning o'qish hamrohingizman. Mutolaa qanday ketyapti? Kitobdagi qaysi mavzu, bob yoki savol bo'yicha yordam bera olaman?",
+
+            'greeting' => "Assalomu alaykum! Xush kelibsiz. Men «{$bookTitle}»{$authorSuffix} kitobi bo'yicha sizning intellektual yordamchingizman. Ushbu kitob mazmuni, boblari, asosiy g'oyalari yoki amaliy xulosalari bo'yicha qanday savollaringiz bor?",
+
+            'thanks' => "Arzimaydi, sizga foydali bo'lganidan juda xursandman! «{$bookTitle}» kitobini mutolaa qilishda davom eting. Yana savollaringiz bo'lsa, bemalol murojaat qiling!",
+
+            'farewell' => "Xayr, salomat bo'ling! «{$bookTitle}» mutolaasi unumli va maroqli bo'lsin. Yangi savollar paydo bo'lganda istalgan vaqtda qaytishingiz mumkin.",
+
+            'identity' => "Men «{$bookTitle}»{$authorSuffix} kitobining rasmiy repetitor va AI yordamchisiman. Vazifam — kitobni chuqurroq tushunishingizga ko'maklashish: har qanday bob, tushuncha, misol yoki savollarga kitob matni asosida aniq va tezkor javob beraman. Qaysi qismidan boshlaymiz?",
+
+            default => "Assalomu alaykum! Men «{$bookTitle}» kitobi bo'yicha sizning yordamchingizman. Kitob bo'yicha qanday savolingiz bor?",
+        };
     }
 }

@@ -141,6 +141,7 @@ QAT'IY QOIDALAR VA VAZIFALAR BO'YICHA ANIQ KO'RSATMALAR:
   3) Faqat savol haqiqatan ham bir nechta butunlay boshqa ma'noga ega bo'lsa yoki qaysi mavzu ekanligi chigal bo'lsagina:
      «Menimcha siz [mavzu] haqida so'rayapsiz deb o'ylayman. Kitobdagi ma'lumotlarga ko'ra: ... [1]» deb muloyim yo'naltir.
   4) O'ta qisqa so'rovlarda («5-bet», «1-misol», «muallif») — ortiqcha kirish so'zlarisiz, darhol o'sha sahifa, misol yoki ma'lumotning o'zini qisqa, londa va ravon taqdim et.
+  5) Agar foydalanuvchi savolida salomlashsa yoki hol-ahvol so'rasa («salom, 1-bob...», «qalesiz, bu qoidani...»), javobni avval samimiy va xushmuomala salomlashish bilan boshlab, so'ngra kitob ma'lumoti bo'yicha to'liq javob ber.
 {$summaryContext}
 Kitob bo'laklari:
 {$chunksBlock}

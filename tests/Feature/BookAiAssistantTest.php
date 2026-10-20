@@ -1536,6 +1536,39 @@ class BookAiAssistantTest extends TestCase
         $this->assertSame(1, $res['sources'][0]['index']);
         $this->assertSame('5-bet', $res['sources'][0]['label']);
     }
+
+    /**
+     * Do'stona salomlashish va hol-ahvol so'rashlar rad etilmasdan, xushmuomala javob qaytarilishi testi.
+     */
+    public function test_conversational_greetings_are_answered_politely_without_rejection(): void
+    {
+        $book = Book::create([
+            'title'           => 'Atom Odatlar (Atomic Habits)',
+            'slug'            => 'atom-odatlar-' . uniqid(),
+            'author'          => 'James Clear',
+            'genre'           => 'Psixologiya',
+            'week_number'     => $this->nextWeekNumber++,
+            'description'     => 'Kichik o\'zgarishlar, ulkan natijalar',
+            'is_active'       => true,
+            'ai_enabled'      => true,
+            'ai_index_status' => 'ready',
+        ]);
+
+        $user = \App\Models\User::factory()->create();
+        $assistant = app(\App\Services\AI\BookAssistant\BookAssistant::class);
+
+        $greetings = ['nima gaplar', 'salom', 'assalomu alaykum', 'qalesiz', 'rahmat', 'sen kimsan', 'xayr'];
+
+        foreach ($greetings as $greet) {
+            \Illuminate\Support\Facades\RateLimiter::clear('book_ai_ask:' . $user->id);
+            $res = $assistant->ask($user, $book->id, $greet);
+
+            $this->assertSame('ok', $res['status'], "Failed for greeting: {$greet}");
+            $this->assertFalse($res['refused'], "Expected greeting not to be refused: {$greet}");
+            $this->assertNull($res['refusal_reason']);
+            $this->assertStringContainsString('Atom Odatlar', $res['answer']);
+        }
+    }
 }
 
 
