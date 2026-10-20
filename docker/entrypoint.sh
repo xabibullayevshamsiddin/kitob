@@ -34,6 +34,8 @@ php artisan route:clear || true
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "==> Running database migrations..."
     php artisan migrate --force || echo "Migration encountered an issue, proceeding with startup..."
+    echo "==> Ensuring shop catalog and data migration..."
+    php artisan shop:install || echo "Shop install encountered an issue, proceeding with startup..."
 fi
 
 # Re-cache after migrations if in production

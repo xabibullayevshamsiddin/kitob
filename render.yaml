@@ -39,3 +39,15 @@ services:
         value: file
       - key: FILESYSTEM_DISK
         value: public
+      - key: AI_ENABLED
+        value: "true"
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_EMBEDDING_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_CHAT_MODEL
+        value: gemini-flash-lite-latest
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-2
