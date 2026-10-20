@@ -56,7 +56,36 @@ class GroqLlmProvider implements LlmProviderInterface
 
         if (!$response->successful()) {
             $errMsg = $response->json('error.message') ?: ('HTTP ' . $response->status());
-            throw new AiProviderException('Groq xatosi: ' . $errMsg);
+
+            // Agar model topilmasa (404), ruxsat bo'lmasa yoki eskirgan bo'lsa, zaxira modellarni sinab ko'ramiz
+            if ($response->status() === 404 || str_contains($errMsg, 'does not exist') || str_contains($errMsg, 'decommissioned')) {
+                $fallbacks = ['llama-3.3-70b-versatile', 'qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
+                foreach ($fallbacks as $fbModel) {
+                    if ($fbModel === $model) {
+                        continue;
+                    }
+                    $fbResponse = Http::withToken($this->apiKey)
+                        ->timeout($this->timeout)
+                        ->acceptJson()
+                        ->post($this->baseUrl . '/chat/completions', [
+                            'model'       => $fbModel,
+                            'messages'    => $messages,
+                            'max_tokens'  => $maxTokens,
+                            'temperature' => $temperature,
+                        ]);
+
+                    if ($fbResponse->successful()) {
+                        $response = $fbResponse;
+                        $model = $fbModel;
+                        break;
+                    }
+                }
+            }
+
+            if (!$response->successful()) {
+                $errMsg = $response->json('error.message') ?: ('HTTP ' . $response->status());
+                throw new AiProviderException('Groq xatosi: ' . $errMsg);
+            }
         }
 
         $data = $response->json();

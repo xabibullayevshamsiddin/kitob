@@ -51,3 +51,7 @@ services:
         value: gemini-flash-lite-latest
       - key: GEMINI_EMBEDDING_MODEL
         value: gemini-embedding-2
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_CHAT_MODEL
+        value: llama-3.3-70b-versatile
