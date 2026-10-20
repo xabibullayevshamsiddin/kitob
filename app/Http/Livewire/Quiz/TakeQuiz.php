@@ -650,34 +650,30 @@ class TakeQuiz extends Component
             ->exists();
 
         $usedRetryTicket = false;
-        if ($alreadyAttempted) {
-            /** @var \App\Services\Shop\ShopService $shopService */
-            $shopService = app(\App\Services\Shop\ShopService::class);
-            if ($shopService->hasPurchased($user, 'quiz_retry_ticket')) {
-                // Do'kondan olingan qayta topshirish bileti sarflanadi va to'liq ball olishga ruxsat beriladi!
-                if ($shopService->consumeQuizRetryTicket($user)) {
-                    $alreadyAttempted = false;
-                    $usedRetryTicket = true;
+        $pointsToAward = 0;
+
+        DB::transaction(function () use ($user, $quiz, $calculatedPoints, &$alreadyAttempted, &$usedRetryTicket, &$pointsToAward) {
+            if ($alreadyAttempted) {
+                /** @var \App\Services\Shop\ShopService $shopService */
+                $shopService = app(\App\Services\Shop\ShopService::class);
+                if ($shopService->hasPurchased($user, 'quiz_retry_ticket')) {
+                    // Do'kondan olingan qayta topshirish bileti sarflanadi va to'liq ball olishga ruxsat beriladi!
+                    // Atomik: chipta tranzaksiya ichida sarflanadi — agar urinish yozuvi saqlanmasa, chipta yo'qolmaydi.
+                    if ($shopService->consumeQuizRetryTicket($user)) {
+                        $alreadyAttempted = false;
+                        $usedRetryTicket = true;
+                    }
                 }
             }
-        }
 
-        if ($alreadyAttempted) {
-            // Takroriy urinish: foydalanuvchiga 0 ball ko'rsatiladi va hisobiga ham 0 ball qo'shiladi!
-            $pointsToAward = 0;
-            $this->score = 0;
-            $this->alreadyHadFullPoints = true;
-        } else {
-            // Birinchi urinish (yoki qayta urinish bileti bilan): foizga mutanosib hisoblangan ball beriladi
-            $pointsToAward = $calculatedPoints;
-            $this->score = $calculatedPoints;
-            $this->alreadyHadFullPoints = false;
-        }
+            if ($alreadyAttempted) {
+                // Takroriy urinish: foydalanuvchiga 0 ball ko'rsatiladi va hisobiga ham 0 ball qo'shiladi!
+                $pointsToAward = 0;
+            } else {
+                // Birinchi urinish (yoki qayta urinish bileti bilan): foizga mutanosib hisoblangan ball beriladi
+                $pointsToAward = $calculatedPoints;
+            }
 
-        $this->maxScore = $this->maxRewardPoints;
-        $this->pointsAwarded = $pointsToAward;
-
-        DB::transaction(function () use ($user, $quiz, $pointsToAward, $alreadyAttempted) {
             QuizAttempt::create([
                 'user_id'                => $user->id,
                 'quiz_id'                => $quiz->id,
@@ -698,6 +694,11 @@ class TakeQuiz extends Component
                 );
             }
         });
+
+        $this->score = $pointsToAward;
+        $this->alreadyHadFullPoints = $alreadyAttempted;
+        $this->maxScore = $this->maxRewardPoints;
+        $this->pointsAwarded = $pointsToAward;
         $this->forgetAttemptDraft();
 
         // Tepadagi navbar ball hisoblagichiga jonli animatsiya yuborish

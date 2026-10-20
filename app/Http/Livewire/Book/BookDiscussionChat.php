@@ -59,11 +59,15 @@ class BookDiscussionChat extends Component
 
     public function setReplyTo(int $commentId): void
     {
-        $comment = BookComment::with('user')->find($commentId);
+        $comment = BookComment::with('user')
+            ->where('book_id', $this->bookId)
+            ->find($commentId);
         if ($comment) {
             $this->replyToId = $comment->id;
             $this->replyToUserName = $comment->user->name ?? 'Kitobxon';
             $this->replyToSnippet = Str::limit($comment->comment, 60);
+        } else {
+            $this->cancelReply();
         }
     }
 
@@ -88,12 +92,23 @@ class BookDiscussionChat extends Component
             return;
         }
 
+        // parent_id aynan shu kitobga tegishli ekani qat'iy tekshiriladi
+        $parentId = null;
+        if ($this->replyToId) {
+            $parentComment = BookComment::where('id', $this->replyToId)
+                ->where('book_id', $book->id)
+                ->first();
+            if ($parentComment) {
+                $parentId = $parentComment->id;
+            }
+        }
+
         BookComment::create([
             'book_id'     => $book->id,
             'user_id'     => Auth::id(),
-            'parent_id'   => $this->replyToId,
+            'parent_id'   => $parentId,
             'page_number' => $this->selectedPage,
-            'rating'      => empty($this->replyToId) ? $this->rating : null,
+            'rating'      => empty($parentId) ? $this->rating : null,
             'comment'     => trim($this->message),
         ]);
 

@@ -609,56 +609,70 @@ class ShopService
 
     /**
      * AI savollar paketi: foydalanuvchidan 1 ta AI savolini sarflash.
+     * Parallel so'rovlar poygasi va muddati tugagan chiptalardan himoyalangan (tranzaksiya + lockForUpdate).
      */
     public function consumeAiQuestion(User $user): bool
     {
-        $item = ShopItem::where('key', 'ai_questions_pack')->first();
-        if (!$item) {
-            return false;
-        }
+        return DB::transaction(function () use ($user) {
+            $item = ShopItem::where('key', 'ai_questions_pack')->first();
+            if (!$item) {
+                return false;
+            }
 
-        $userItem = UserItem::where('user_id', $user->id)
-            ->where('shop_item_id', $item->id)
-            ->first();
+            $userItem = UserItem::where('user_id', $user->id)
+                ->where('shop_item_id', $item->id)
+                ->lockForUpdate()
+                ->first();
 
-        if (!$userItem || $userItem->quantity <= 0) {
-            return false;
-        }
+            if (!$userItem || $userItem->quantity <= 0 || $userItem->isExpired()) {
+                if ($userItem && $userItem->isExpired()) {
+                    $userItem->delete();
+                }
+                return false;
+            }
 
-        if ($userItem->quantity <= 1) {
-            $userItem->delete();
-        } else {
-            $userItem->decrement('quantity', 1);
-        }
+            if ($userItem->quantity <= 1) {
+                $userItem->delete();
+            } else {
+                $userItem->decrement('quantity', 1);
+            }
 
-        return true;
+            return true;
+        });
     }
 
     /**
      * Viktorinani qayta topshirish bileti: 1 ta biletni sarflash.
+     * Parallel so'rovlar poygasi va muddati tugagan chiptalardan himoyalangan (tranzaksiya + lockForUpdate).
      */
     public function consumeQuizRetryTicket(User $user): bool
     {
-        $item = ShopItem::where('key', 'quiz_retry_ticket')->first();
-        if (!$item) {
-            return false;
-        }
+        return DB::transaction(function () use ($user) {
+            $item = ShopItem::where('key', 'quiz_retry_ticket')->first();
+            if (!$item) {
+                return false;
+            }
 
-        $userItem = UserItem::where('user_id', $user->id)
-            ->where('shop_item_id', $item->id)
-            ->first();
+            $userItem = UserItem::where('user_id', $user->id)
+                ->where('shop_item_id', $item->id)
+                ->lockForUpdate()
+                ->first();
 
-        if (!$userItem || $userItem->quantity <= 0) {
-            return false;
-        }
+            if (!$userItem || $userItem->quantity <= 0 || $userItem->isExpired()) {
+                if ($userItem && $userItem->isExpired()) {
+                    $userItem->delete();
+                }
+                return false;
+            }
 
-        if ($userItem->quantity <= 1) {
-            $userItem->delete();
-        } else {
-            $userItem->decrement('quantity', 1);
-        }
+            if ($userItem->quantity <= 1) {
+                $userItem->delete();
+            } else {
+                $userItem->decrement('quantity', 1);
+            }
 
-        return true;
+            return true;
+        });
     }
 
     /**

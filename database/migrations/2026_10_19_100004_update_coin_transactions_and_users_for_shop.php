@@ -50,6 +50,20 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'mysql') {
+            // Rollback xavfsizligi: shop, exchange, refund kabi yangi qiymatlarni
+            // eski ENUM ro'yxatiga mos xavfsiz qiymatlarga o'tkazamiz (MySQL truncation xatosi bo'lmasligi uchun)
+            DB::table('coin_transactions')
+                ->whereIn('source', ['shop', 'shop_purchase', 'refund'])
+                ->update(['source' => 'spend']);
+
+            DB::table('coin_transactions')
+                ->whereIn('source', ['exchange', 'exchange_points'])
+                ->update(['source' => 'bonus']);
+
+            DB::table('coin_transactions')
+                ->whereNotIn('source', ['reading', 'quiz', 'streak', 'badge', 'bonus', 'admin', 'spend'])
+                ->update(['source' => 'admin']);
+
             DB::statement("ALTER TABLE coin_transactions MODIFY COLUMN source ENUM('reading','quiz','streak','badge','bonus','admin','spend') NOT NULL");
         }
     }

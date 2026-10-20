@@ -33,9 +33,15 @@ php artisan route:clear || true
 # Run database migrations if RUN_MIGRATIONS is set to true
 if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "==> Running database migrations..."
-    php artisan migrate --force || echo "Migration encountered an issue, proceeding with startup..."
+    if ! php artisan migrate --force; then
+        echo "==> FATAL: Database migrations failed! Halting startup to prevent running on an outdated schema." >&2
+        exit 1
+    fi
     echo "==> Ensuring shop catalog and data migration..."
-    php artisan shop:install || echo "Shop install encountered an issue, proceeding with startup..."
+    if ! php artisan shop:install; then
+        echo "==> FATAL: Shop install command failed! Halting startup." >&2
+        exit 1
+    fi
 fi
 
 # Re-cache after migrations if in production

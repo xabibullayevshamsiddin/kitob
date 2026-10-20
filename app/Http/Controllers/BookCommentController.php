@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\BookComment;
 use App\Models\BookCommentLike;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class BookCommentController extends Controller
 {
@@ -17,7 +18,10 @@ class BookCommentController extends Controller
         $validated = $request->validate([
             'comment'     => ['required', 'string', 'min:1', 'max:2000'],
             'rating'      => ['nullable', 'integer', 'min:1', 'max:5'],
-            'parent_id'   => ['nullable', 'exists:book_comments,id'],
+            'parent_id'   => [
+                'nullable',
+                Rule::exists('book_comments', 'id')->where('book_id', $book->id),
+            ],
             'page_number' => ['nullable', 'integer', 'min:1'],
         ]);
 

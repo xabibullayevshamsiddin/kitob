@@ -271,11 +271,6 @@ Route::middleware(['auth'])->group(function () {
 
         $isSaved = request()->user() ? request()->user()->isBookSaved($book) : false;
         $savedCount = $book->savedByUsers()->count();
-        $discussions = $book->discussions()
-            ->with(['user', 'comments.user'])
-            ->latest()
-            ->take(20)
-            ->get();
 
         $bookComments = $book->comments()
             ->with(['user', 'replies.user', 'replies.likes', 'likes'])
@@ -289,7 +284,6 @@ Route::middleware(['auth'])->group(function () {
             'pdfAnnotations',
             'isSaved',
             'savedCount',
-            'discussions',
             'bookComments',
             'averageRating',
             'ratingsCount',
