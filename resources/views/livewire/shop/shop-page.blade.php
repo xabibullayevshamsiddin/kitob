@@ -600,21 +600,21 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-sans text-mist leading-relaxed">
                     <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border/60 space-y-1">
                         <div class="text-paper font-semibold flex items-center gap-1.5">
-                            <span class="text-emerald-400">✓</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Reyting xavfsiz</span>
                         </div>
                         <p>{{ trans('shop.exchange.notice_1') }}</p>
                     </div>
                     <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border/60 space-y-1">
                         <div class="text-paper font-semibold flex items-center gap-1.5">
-                            <span class="text-emerald-400">✓</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Bir tomonlama</span>
                         </div>
                         <p>{{ trans('shop.exchange.notice_2') }}</p>
                     </div>
                     <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border/60 space-y-1">
                         <div class="text-paper font-semibold flex items-center gap-1.5">
-                            <span class="text-emerald-400">✓</span>
+                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Kunlik qayta yangilanish</span>
                         </div>
                         <p>{{ trans('shop.exchange.notice_3') }}</p>
@@ -752,9 +752,10 @@
                                     {{ $user->name }}
                                 </span>
                                 @if($previewItem->slot === 'title')
-                                    <span class="px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold"
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold"
                                           style="background-color: {{ $previewAccent }}25; color: {{ $previewAccent }}; border: 1px solid {{ $previewAccent }}50;">
-                                        ★ {{ $previewItem->name_text }}
+                                        <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        <span>{{ $previewItem->name_text }}</span>
                                     </span>
                                 @endif
                             </div>
@@ -847,7 +848,7 @@
                         <div class="pt-1">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-badge text-xs font-mono font-bold shadow-sm"
                                   style="background-color: {{ $badgeColor }}20; color: {{ $badgeColor }}; border: 1px solid {{ $badgeColor }}50;">
-                                <span>★</span>
+                                <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 <span>{{ $purchaseItem->name_text }}</span>
                             </span>
                         </div>

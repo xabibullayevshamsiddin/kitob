@@ -97,28 +97,28 @@
             </p>
 
             @if($item->slot === 'title')
-                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1 pt-1.5">
-                    <span>✦</span>
+                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1.5 pt-1.5">
+                    <svg class="w-2.5 h-2.5 text-amber-400 shrink-0 fill-current" viewBox="0 0 24 24"><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2"/></svg>
                     <span>Ismingiz yonida, profil va chatda faxriy nishon</span>
                 </div>
             @elseif($item->slot === 'name_color')
-                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1 pt-1.5">
-                    <span>✦</span>
+                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1.5 pt-1.5">
+                    <svg class="w-2.5 h-2.5 text-amber-400 shrink-0 fill-current" viewBox="0 0 24 24"><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2"/></svg>
                     <span>Ismingiz butun saytda shu rangda porlaydi</span>
                 </div>
             @elseif($item->slot === 'accent')
-                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1 pt-1.5">
-                    <span>✦</span>
+                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1.5 pt-1.5">
+                    <svg class="w-2.5 h-2.5 text-amber-400 shrink-0 fill-current" viewBox="0 0 24 24"><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2"/></svg>
                     <span>Butun platforma tugmalari va aksent rangi</span>
                 </div>
             @elseif($item->slot === 'reader_palette')
-                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1 pt-1.5">
-                    <span>✦</span>
+                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1.5 pt-1.5">
+                    <svg class="w-2.5 h-2.5 text-amber-400 shrink-0 fill-current" viewBox="0 0 24 24"><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2"/></svg>
                     <span>Kitob mutolaa sahifasi foni</span>
                 </div>
             @elseif($item->slot === 'highlight_color')
-                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1 pt-1.5">
-                    <span>✦</span>
+                <div class="text-[10px] font-mono text-amber-400/90 flex items-center gap-1.5 pt-1.5">
+                    <svg class="w-2.5 h-2.5 text-amber-400 shrink-0 fill-current" viewBox="0 0 24 24"><polygon points="12 2 14.5 9.5 22 12 14.5 14.5 12 22 9.5 14.5 2 12 9.5 9.5 12 2"/></svg>
                     <span>Kitobda matn belgilash va iqtibos rangi</span>
                 </div>
             @endif
