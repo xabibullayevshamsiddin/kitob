@@ -17,6 +17,7 @@ use App\Services\Shop\Exceptions\ShopException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 class ShopService
@@ -95,6 +96,14 @@ class ShopService
         if ($quantity < 1) {
             throw new ShopException(trans('shop.invalid_quantity'));
         }
+
+        $throttleKey = 'shop:purchase:' . $user->id;
+        $maxAttempts = (int) config('shop.throttle.purchases_per_minute', 10);
+        if ($maxAttempts > 0 && RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw new ShopException(trans('shop.throttle_purchase', ['seconds' => $seconds]));
+        }
+        RateLimiter::hit($throttleKey, 60);
 
         $token = $purchaseToken ? trim($purchaseToken) : null;
 
@@ -295,6 +304,14 @@ class ShopService
      */
     public function equip(User $user, ShopItem|int|string $item): array
     {
+        $throttleKey = 'shop:equip:' . $user->id;
+        $maxAttempts = (int) config('shop.throttle.equip_per_minute', 30);
+        if ($maxAttempts > 0 && RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw new ShopException(trans('shop.throttle_equip', ['seconds' => $seconds]));
+        }
+        RateLimiter::hit($throttleKey, 60);
+
         /** @var ShopItem|null $shopItem */
         $shopItem = $this->resolveShopItem($item);
 
@@ -421,6 +438,14 @@ class ShopService
         if ($points < $minPoints) {
             throw new ShopException(trans('shop.exchange_min_points', ['min' => $minPoints]));
         }
+
+        $throttleKey = 'shop:exchange:' . $user->id;
+        $maxAttempts = (int) config('shop.throttle.exchange_per_minute', 5);
+        if ($maxAttempts > 0 && RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw new ShopException(trans('shop.throttle_exchange', ['seconds' => $seconds]));
+        }
+        RateLimiter::hit($throttleKey, 60);
 
         return DB::transaction(function () use ($user, $points) {
             /** @var User $lockedUser */

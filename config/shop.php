@@ -32,6 +32,8 @@ return [
     */
     'throttle' => [
         'purchases_per_minute' => (int) env('SHOP_PURCHASE_THROTTLE', 10),
+        'exchange_per_minute'  => (int) env('SHOP_EXCHANGE_THROTTLE', 5),
+        'equip_per_minute'     => (int) env('SHOP_EQUIP_THROTTLE', 30),
     ],
 
     /*
