@@ -9,6 +9,27 @@ use Illuminate\Database\Seeder;
 class ShopItemsSeeder extends Seeder
 {
     /**
+     * Agar true bo'lsa, mavjud buyumlarning narxi va parametrlarini yangilaydi (updateOrCreate).
+     * False bo'lsa (standart), adminning o'zgartirishlarini saqlab qoladi (firstOrCreate).
+     */
+    public static bool $refreshDefaults = false;
+
+    /**
+     * Buyumni xavfsiz yaratish yoki yangilash (standart: firstOrCreate, --refresh-defaults: updateOrCreate).
+     */
+    protected function seedItem(array $attributes, array $values): ShopItem
+    {
+        $shouldRefresh = static::$refreshDefaults
+            || (isset($_SERVER['argv']) && in_array('--refresh-defaults', $_SERVER['argv'], true));
+
+        if ($shouldRefresh) {
+            return ShopItem::updateOrCreate($attributes, $values);
+        }
+
+        return ShopItem::firstOrCreate($attributes, $values);
+    }
+
+    /**
      * Do'kon standart katalogi: 7 ta mavzu va Streak Freeze.
      */
     public function run(): void
@@ -70,7 +91,7 @@ class ShopItemsSeeder extends Seeder
                 'bundle_slots' => ['profile_theme', 'avatar_frame', 'chat_bubble'],
             ]);
 
-            ShopItem::updateOrCreate(
+            $this->seedItem(
                 ['key' => $key],
                 [
                     'category'         => 'bundle',
@@ -98,7 +119,7 @@ class ShopItemsSeeder extends Seeder
         }
 
         // 2. Streak Freeze (Muzlatgich)
-        ShopItem::updateOrCreate(
+        $this->seedItem(
             ['key' => 'streak_freeze'],
             [
                 'category'         => 'consumable',
@@ -129,7 +150,7 @@ class ShopItemsSeeder extends Seeder
         );
 
         // 3. Tanga kuchaytirgich (Coin Booster 60 min)
-        ShopItem::updateOrCreate(
+        $this->seedItem(
             ['key' => 'coin_booster_60'],
             [
                 'category'         => 'consumable',
@@ -160,7 +181,7 @@ class ShopItemsSeeder extends Seeder
         );
 
         // 4. Viktorinani qayta urinish chiptasi
-        ShopItem::updateOrCreate(
+        $this->seedItem(
             ['key' => 'quiz_retry_ticket'],
             [
                 'category'         => 'consumable',
@@ -241,7 +262,7 @@ class ShopItemsSeeder extends Seeder
         ];
 
         foreach ($titles as $t) {
-            ShopItem::updateOrCreate(
+            $this->seedItem(
                 ['key' => $t['key']],
                 [
                     'category'         => 'profile',
@@ -312,7 +333,7 @@ class ShopItemsSeeder extends Seeder
         ];
 
         foreach ($nameColors as $nc) {
-            ShopItem::updateOrCreate(
+            $this->seedItem(
                 ['key' => $nc['key']],
                 [
                     'category'         => 'profile',
@@ -382,7 +403,7 @@ class ShopItemsSeeder extends Seeder
         ];
 
         foreach ($accents as $acc) {
-            ShopItem::updateOrCreate(
+            $this->seedItem(
                 ['key' => $acc['key']],
                 [
                     'category'         => 'colors',
@@ -452,7 +473,7 @@ class ShopItemsSeeder extends Seeder
         ];
 
         foreach ($readerPalettes as $rp) {
-            ShopItem::updateOrCreate(
+            $this->seedItem(
                 ['key' => $rp['key']],
                 [
                     'category'         => 'colors',
@@ -516,7 +537,7 @@ class ShopItemsSeeder extends Seeder
         ];
 
         foreach ($highlights as $hl) {
-            ShopItem::updateOrCreate(
+            $this->seedItem(
                 ['key' => $hl['key']],
                 [
                     'category'         => 'colors',
@@ -601,7 +622,7 @@ class ShopItemsSeeder extends Seeder
         ];
 
         foreach ($perks as $p) {
-            ShopItem::updateOrCreate(
+            $this->seedItem(
                 ['key' => $p['key']],
                 [
                     'category'         => $p['category'],

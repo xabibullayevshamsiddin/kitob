@@ -179,101 +179,124 @@
 
     {{-- 4.1. VITRINA (Showcase) TAB --}}
     @if($activeTab === 'showcase')
-        <div class="space-y-10">
-            {{-- Daily Recommendation Banner (Kunlik Tavsiya) --}}
-            @if($dailyRecommendation)
-                @php
-                    $isDailyOwned = $ownedItemsMap->has($dailyRecommendation->id);
-                    $dailyPayload = $dailyRecommendation->payload ?? [];
-                    $accentColor = $dailyPayload['accent_color'] ?? '#F59E0B';
-                @endphp
-                <div class="relative overflow-hidden rounded-panel border border-amber-500/40 bg-gradient-to-r from-ink-950 via-ink-900 to-amber-950/20 p-6 sm:p-8 shadow-xl">
-                    <div class="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none opacity-20 bg-gradient-to-l from-amber-500/30 to-transparent blur-2xl"></div>
+        @if(!$dailyRecommendation && $featuredItems->isEmpty() && $consumableHighlights->isEmpty())
+            <div class="p-12 sm:p-16 text-center rounded-panel border border-ink-border bg-ink-900/60 space-y-4">
+                <div class="w-16 h-16 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+                        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+                    </svg>
+                </div>
+                <div class="space-y-1">
+                    <h3 class="text-xl font-serif font-bold text-paper">Do‘kon tez orada ochiladi</h3>
+                    <p class="text-xs sm:text-sm text-mist max-w-md mx-auto leading-relaxed">
+                        Hozirda do‘konimiz yangilanmoqda va tez orada siz uchun ajoyib mavzular, avatar ramkalari va maxsus imtiyozlar taqdim etiladi.
+                    </p>
+                </div>
+                <div class="pt-2">
+                    <a href="{{ route('books.catalog') }}" class="ks-btn-primary px-5 py-2.5 rounded-btn text-xs font-semibold inline-flex items-center gap-2">
+                        <span>Kitoblar katalogi</span>
+                        <span>&rarr;</span>
+                    </a>
+                </div>
+            </div>
+        @else
+            <div class="space-y-10">
+                {{-- Daily Recommendation Banner (Kunlik Tavsiya) --}}
+                @if($dailyRecommendation)
+                    @php
+                        $isDailyOwned = $ownedItemsMap->has($dailyRecommendation->id);
+                        $dailyPayload = $dailyRecommendation->payload ?? [];
+                        $accentColor = $dailyPayload['accent_color'] ?? '#F59E0B';
+                    @endphp
+                    <div class="relative overflow-hidden rounded-panel border border-amber-500/40 bg-gradient-to-r from-ink-950 via-ink-900 to-amber-950/20 p-6 sm:p-8 shadow-xl">
+                        <div class="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none opacity-20 bg-gradient-to-l from-amber-500/30 to-transparent blur-2xl"></div>
 
-                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div class="space-y-3 max-w-2xl">
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono text-[11px] font-bold uppercase tracking-wider">
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                                <span>Kunlik maxsus tavsiya</span>
-                            </div>
-                            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-paper">
-                                {{ $dailyRecommendation->name_text }}
-                            </h2>
-                            <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">
-                                {{ $dailyRecommendation->description_text }}
-                            </p>
-                            <div class="flex items-center gap-4 pt-1">
-                                <span class="px-2.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold tracking-wider {{ $dailyRecommendation->rarity === 'legendary' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : ($dailyRecommendation->rarity === 'epic' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40') }}">
-                                    {{ trans('shop.rarity_' . $dailyRecommendation->rarity) }}
-                                </span>
-                                <div class="flex items-center gap-1.5 font-mono text-base font-bold text-amber-400">
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/></svg>
-                                    <span>{{ $dailyRecommendation->price_coins }} tanga</span>
+                        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div class="space-y-3 max-w-2xl">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono text-[11px] font-bold uppercase tracking-wider">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    <span>Kunlik maxsus tavsiya</span>
+                                </div>
+                                <h2 class="text-2xl sm:text-3xl font-serif font-bold text-paper">
+                                    {{ $dailyRecommendation->name_text }}
+                                </h2>
+                                <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">
+                                    {{ $dailyRecommendation->description_text }}
+                                </p>
+                                <div class="flex items-center gap-4 pt-1">
+                                    <span class="px-2.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold tracking-wider {{ $dailyRecommendation->rarity === 'legendary' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : ($dailyRecommendation->rarity === 'epic' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40') }}">
+                                        {{ trans('shop.rarity_' . $dailyRecommendation->rarity) }}
+                                    </span>
+                                    <div class="flex items-center gap-1.5 font-mono text-base font-bold text-amber-400">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/></svg>
+                                        <span>{{ $dailyRecommendation->price_coins }} tanga</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="flex items-center gap-3 shrink-0">
-                            @if(!$isDailyOwned)
-                                <button wire:click="openPreview({{ $dailyRecommendation->id }})"
-                                        type="button"
-                                        class="px-4 py-2.5 rounded-btn bg-ink-800 border border-ink-border text-paper hover:bg-ink-700 text-xs font-medium transition-colors inline-flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    <span>Sinab ko‘rish</span>
-                                </button>
-                                <button wire:click="openPurchaseModal({{ $dailyRecommendation->id }})"
-                                        type="button"
-                                        class="ks-btn-primary px-5 py-2.5 rounded-btn text-xs font-semibold inline-flex items-center gap-1.5">
-                                    <span>Xarid qilish</span>
-                                </button>
-                            @else
-                                <span class="px-4 py-2 rounded-badge bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">
-                                    Sizda mavjud
-                                </span>
-                            @endif
+                            <div class="flex items-center gap-3 shrink-0">
+                                @if(!$isDailyOwned)
+                                    <button wire:click="openPreview({{ $dailyRecommendation->id }})"
+                                            type="button"
+                                            class="px-4 py-2.5 rounded-btn bg-ink-800 border border-ink-border text-paper hover:bg-ink-700 text-xs font-medium transition-colors inline-flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <span>Sinab ko‘rish</span>
+                                    </button>
+                                    <button wire:click="openPurchaseModal({{ $dailyRecommendation->id }})"
+                                            type="button"
+                                            class="ks-btn-primary px-5 py-2.5 rounded-btn text-xs font-semibold inline-flex items-center gap-1.5">
+                                        <span>Xarid qilish</span>
+                                    </button>
+                                @else
+                                    <span class="px-4 py-2 rounded-badge bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">
+                                        Sizda mavjud
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            {{-- Ommabop profil mavzulari --}}
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-serif text-xl font-bold text-paper">Mavzular to‘plami</h3>
-                        <p class="text-xs text-mist font-sans">Profil, avatar va chat uslubingizni yaxlit o‘zgartiring</p>
+                {{-- Ommabop profil mavzulari --}}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-serif text-xl font-bold text-paper">Mavzular to‘plami</h3>
+                            <p class="text-xs text-mist font-sans">Profil, avatar va chat uslubingizni yaxlit o‘zgartiring</p>
+                        </div>
+                        <button wire:click="setTab('profile')" class="text-xs font-mono text-amber-400 hover:underline">
+                            Barchasini ko‘rish &rarr;
+                        </button>
                     </div>
-                    <button wire:click="setTab('profile')" class="text-xs font-mono text-amber-400 hover:underline">
-                        Barchasini ko‘rish &rarr;
-                    </button>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        @foreach($featuredItems as $item)
+                            @include('livewire.shop.partials.item-card', ['item' => $item])
+                        @endforeach
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    @foreach($featuredItems as $item)
-                        @include('livewire.shop.partials.item-card', ['item' => $item])
-                    @endforeach
+                {{-- Foydali buyumlar --}}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-serif text-xl font-bold text-paper">Foydali buyumlar</h3>
+                            <p class="text-xs text-mist font-sans">Streakni saqlang, tezroq tanga yig‘ing va testlarni qayta topshiring</p>
+                        </div>
+                        <button wire:click="setTab('consumable')" class="text-xs font-mono text-amber-400 hover:underline">
+                            Barchasini ko‘rish &rarr;
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        @foreach($consumableHighlights as $item)
+                            @include('livewire.shop.partials.item-card', ['item' => $item])
+                        @endforeach
+                    </div>
                 </div>
             </div>
-
-            {{-- Foydali buyumlar --}}
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-serif text-xl font-bold text-paper">Foydali buyumlar</h3>
-                        <p class="text-xs text-mist font-sans">Streakni saqlang, tezroq tanga yig‘ing va testlarni qayta topshiring</p>
-                    </div>
-                    <button wire:click="setTab('consumable')" class="text-xs font-mono text-amber-400 hover:underline">
-                        Barchasini ko‘rish &rarr;
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    @foreach($consumableHighlights as $item)
-                        @include('livewire.shop.partials.item-card', ['item' => $item])
-                    @endforeach
-                </div>
-            </div>
-        </div>
+        @endif
 
     {{-- 4.2. PROFIL / RANG / FOYDALI BUYUMLAR / IMTIYOZLAR KARTALARI RO'YXATI --}}
     @elseif(in_array($activeTab, ['profile', 'colors', 'consumable', 'perks']))

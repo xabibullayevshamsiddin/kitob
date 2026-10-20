@@ -9,6 +9,7 @@ use App\Models\ShopItem;
 use App\Models\ShopPurchase;
 use App\Models\User;
 use App\Models\UserItem;
+use App\Models\UserProfile;
 use App\Services\Analytics\EconomyMetrics;
 use App\Services\Shop\Exceptions\ShopException;
 use App\Services\Shop\ShopService;
@@ -106,6 +107,32 @@ class ShopController extends Controller
             ->take(10)
             ->get();
 
+        // 5. Katalog va migratsiya holatini tekshirish (Ogohlantirishlar)
+        $shopWarnings = [];
+        $itemsTotalCount = ShopItem::count();
+        if ($itemsTotalCount === 0) {
+            $shopWarnings[] = [
+                'type'    => 'danger',
+                'title'   => 'Do‘kon katalogi yuklanmagan!',
+                'message' => 'Hozirda shop_items jadvalida birorta ham buyum mavjud emas. Foydalanuvchilarga do‘kon bo‘sh ko‘rinadi. Katalog va standart buyumlarni yuklash uchun ushbu buyruqni ishga tushiring: php artisan shop:install',
+            ];
+        }
+
+        $unmigratedCount = UserProfile::query()
+            ->whereNotNull('unlocked_items')
+            ->where('unlocked_items', '!=', '[]')
+            ->where('unlocked_items', '!=', '')
+            ->whereDoesntHave('user.userItems')
+            ->count();
+
+        if ($unmigratedCount > 0) {
+            $shopWarnings[] = [
+                'type'    => 'warning',
+                'title'   => 'Eski xaridlar yangi do‘konga ko‘chirilmagan!',
+                'message' => "Eski tizimda mavzular sotib olgan {$unmigratedCount} ta foydalanuvchining inventari hali yangi Shop jadvaliga ko‘chirilmagan. Ularning buyumlari ko‘rinishi uchun ushbu buyruqni ishga tushiring: php artisan shop:install",
+            ];
+        }
+
         return view('admin.shop.index', [
             'activeTab'        => $activeTab,
             'items'            => $items,
@@ -114,6 +141,7 @@ class ShopController extends Controller
             'exchangeSettings' => $exchangeSettings,
             'userItems'        => $userItems,
             'recentRefunds'    => $recentRefunds,
+            'shopWarnings'     => $shopWarnings,
             'slots'            => config('shop.slots', []),
             'rarities'         => config('shop.rarities', []),
         ]);

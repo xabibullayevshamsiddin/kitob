@@ -215,5 +215,8 @@ class DatabaseSeeder extends Seeder
         foreach ($badgesData as $b) {
             Badge::firstOrCreate(['slug' => $b['slug']], $b);
         }
+
+        // ─── Shop Items ───────────────────────────────────────────────────────
+        $this->call(ShopItemsSeeder::class);
     }
 }

@@ -44,6 +44,34 @@
         </div>
     @endif
 
+    {{-- Tizim ogohlantirishlari (Katalog bo'sh yoki migratsiya qilinmagan) --}}
+    @if(!empty($shopWarnings))
+        <div class="space-y-3">
+            @foreach($shopWarnings as $warning)
+                <div class="p-4 rounded-panel border {{ $warning['type'] === 'danger' ? 'bg-rose-950/70 border-rose-500/50 text-rose-200' : 'bg-amber-950/70 border-amber-500/50 text-amber-200' }} shadow-lg shadow-black/20">
+                    <div class="flex items-start gap-3">
+                        <div class="p-1.5 rounded-full {{ $warning['type'] === 'danger' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400' }} shrink-0 mt-0.5">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </div>
+                        <div class="space-y-1 flex-1">
+                            <h4 class="text-sm font-bold font-serif">{{ $warning['title'] }}</h4>
+                            <p class="text-xs leading-relaxed opacity-90">{{ $warning['message'] }}</p>
+                            <div class="pt-2">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-black/40 border border-white/10 font-mono text-[11px] select-all text-amber-300">
+                                    <code>php artisan shop:install</code>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- Tab Navigatsiyasi --}}
     <div class="border-b border-ink-border flex items-center gap-2 overflow-x-auto">
         <a href="{{ route('admin.shop.index', ['tab' => 'items']) }}"
