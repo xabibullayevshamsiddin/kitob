@@ -807,7 +807,117 @@ Route::prefix('admin')
             return redirect()->route('admin.users.index')->with('error', "Admin foydalanuvchini tahrirlash mumkin emas. 🛡️");
         }
         $roles = \Spatie\Permission\Models\Role::all();
-        return view('admin.users.edit', compact('user', 'roles'));
+
+        // 1. Leaderboard reytingi va o'rni
+        $leaderboardService = app(\App\Services\LeaderboardService::class);
+        $rank = $leaderboardService->getUserRank($user);
+        $leaderboardRank = $rank ?? (\App\Models\User::where('total_points', '>', 0)->count() + 1);
+        $totalUsersCount = \App\Models\User::count();
+
+        // 2. O'qish statistikasi va o'rtacha mutolaa
+        $totalReadingMinutes = (int) $user->total_reading_minutes;
+        $readingDaysCount = (int) $user->dailyActivities()->where('minutes_read', '>', 0)->count();
+        if ($readingDaysCount === 0) {
+            $readingDaysCount = (int) $user->readingSessions()->distinct('session_date')->count('session_date');
+        }
+        $avgDailyMinutes = $readingDaysCount > 0 ? (int) round($totalReadingMinutes / $readingDaysCount) : $totalReadingMinutes;
+
+        $totalSessionsCount = (int) $user->readingSessions()->count();
+        $avgSessionMinutes = $totalSessionsCount > 0 ? (int) round($user->readingSessions()->avg('minutes_read') ?: 0) : 0;
+
+        // Kitoblar mutolaa progressi
+        $readingProgress = $user->readingProgress()
+            ->with(['book' => function ($q) {
+                $q->select('id', 'title', 'slug', 'cover_image', 'author');
+            }])
+            ->orderByDesc('updated_at')
+            ->get();
+        $booksFinishedCount = $readingProgress->filter(fn ($p) => (float) $p->percent_complete >= 100)->count();
+        $booksInProgressCount = $readingProgress->filter(fn ($p) => (float) $p->percent_complete < 100 && (float) $p->percent_complete > 0)->count();
+
+        // Streak ma'lumotlari
+        $streak = $user->streak;
+        $currentStreak = (int) $user->current_streak;
+        $longestStreak = (int) ($streak?->longest_streak ?? 0);
+        $freezeCount = (int) ($streak?->freeze_count ?? 0);
+
+        // 3. Do'kon va Inventar
+        $userItems = $user->userItems()->with('shopItem')->latest('acquired_at')->get();
+        $shopPurchases = $user->shopPurchases()->with('shopItem')->latest('created_at')->take(20)->get();
+        $equipment = $user->equipment()->with('shopItem')->get()->keyBy('slot');
+
+        // 4. Moliya va Balans tarixi
+        $coinTransactions = $user->coinTransactions()->latest()->take(20)->get();
+        $pointTransactions = $user->pointTransactions()->latest()->take(20)->get();
+        $totalEarnedCoins = (int) $user->coinTransactions()->where('coins', '>', 0)->sum('coins');
+        $totalSpentCoins = abs((int) $user->coinTransactions()->where('coins', '<', 0)->sum('coins'));
+
+        // 5. Testlar va boshqa faolliklar
+        $quizAttempts = $user->quizAttempts()
+            ->with(['quiz.book'])
+            ->latest('completed_at')
+            ->latest('id')
+            ->take(15)
+            ->get();
+        $quizPassedCount = (int) $user->quizAttempts()->where('percent', '>=', 70)->count();
+        $quizTotalCount = (int) $user->quizAttempts()->count();
+
+        $bookComments = $user->bookComments()
+            ->with('book:id,title,slug')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        $aiQuestions = $user->aiChatHistories()
+            ->with('book:id,title,slug')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        $liveQuestions = $user->liveQuestions()
+            ->with('liveEvent:id,title')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        $userNotesCount = (int) $user->notes()->count();
+        $userBookmarksCount = (int) $user->bookmarks()->count();
+        $userQuotesCount = (int) $user->userQuotes()->count();
+
+        return view('admin.users.edit', compact(
+            'user',
+            'roles',
+            'leaderboardRank',
+            'totalUsersCount',
+            'totalReadingMinutes',
+            'readingDaysCount',
+            'avgDailyMinutes',
+            'totalSessionsCount',
+            'avgSessionMinutes',
+            'readingProgress',
+            'booksFinishedCount',
+            'booksInProgressCount',
+            'streak',
+            'currentStreak',
+            'longestStreak',
+            'freezeCount',
+            'userItems',
+            'shopPurchases',
+            'equipment',
+            'coinTransactions',
+            'pointTransactions',
+            'totalEarnedCoins',
+            'totalSpentCoins',
+            'quizAttempts',
+            'quizPassedCount',
+            'quizTotalCount',
+            'bookComments',
+            'aiQuestions',
+            'liveQuestions',
+            'userNotesCount',
+            'userBookmarksCount',
+            'userQuotesCount'
+        ));
     })->name('users.edit');
 
     Route::put('/users/{user}', function (\Illuminate\Http\Request $req, \App\Models\User $user) {
