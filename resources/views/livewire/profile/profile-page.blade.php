@@ -106,7 +106,7 @@
 
                                 @if($equippedTitle)
                                     @php
-                                        $titleColor = $equippedTitle->payload['badge_color'] ?? '#FBBF24';
+                                        $titleColor = $equippedTitle->safeColor('badge_color', '#FBBF24');
                                     @endphp
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold shadow-md select-none transition-transform hover:scale-105"
                                           style="background-color: {{ $titleColor }}18; color: {{ $titleColor }}; border: 1.5px solid {{ $titleColor }}60;">
@@ -748,7 +748,7 @@
                                     {{-- Aniq Vizual Ko'rgazma (Live Visual Preview & Effect) --}}
                                     @if($sItem->slot === 'title')
                                         @php
-                                            $bColor = $sItem->payload['badge_color'] ?? '#A78BFA';
+                                            $bColor = $sItem->safeColor('badge_color', '#A78BFA');
                                         @endphp
                                         <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Nishon:</span>
@@ -763,7 +763,7 @@
                                         </p>
                                     @elseif($sItem->slot === 'name_color')
                                         @php
-                                            $nColor = $sItem->payload['color'] ?? '#F59E0B';
+                                            $nColor = $sItem->safeColor('color', '#F59E0B');
                                         @endphp
                                         <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Ism rangi:</span>
@@ -776,7 +776,7 @@
                                         </p>
                                     @elseif($sItem->slot === 'accent')
                                         @php
-                                            $aColor = $sItem->payload['color'] ?? '#10B981';
+                                            $aColor = $sItem->safeColor('color', '#10B981');
                                         @endphp
                                         <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Sayt urg‘usi:</span>
@@ -789,8 +789,8 @@
                                         </p>
                                     @elseif($sItem->slot === 'reader_palette')
                                         @php
-                                            $bgDark = $sItem->payload['bg_dark'] ?? '#121212';
-                                            $txDark = $sItem->payload['text_dark'] ?? '#fff';
+                                            $bgDark = $sItem->safeColor('bg_dark', '#121212');
+                                            $txDark = $sItem->safeColor('text_dark', '#ffffff');
                                         @endphp
                                         <div class="p-2 rounded-btn border flex items-center justify-between" style="background-color: {{ $bgDark }}; color: {{ $txDark }}; border-color: {{ $txDark }}33;">
                                             <span class="text-[10px] font-mono opacity-80 uppercase">Mutolaa foni:</span>
@@ -801,7 +801,7 @@
                                         </p>
                                     @elseif($sItem->slot === 'highlight_color')
                                         @php
-                                            $hColor = $sItem->payload['color'] ?? '#84CC16';
+                                            $hColor = $sItem->safeColor('color', '#84CC16');
                                         @endphp
                                         <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Belgilash:</span>

@@ -717,7 +717,7 @@
     @if($previewItem)
         @php
             $pPayload = $previewItem->payload ?? [];
-            $previewAccent = $pPayload['accent_color'] ?? ($pPayload['color'] ?? '#F59E0B');
+            $previewAccent = $previewItem->safeColor('accent_color', $previewItem->safeColor('color', '#F59E0B'));
             $pGradient = $pPayload['banner_gradient'] ?? 'bg-gradient-to-r from-ink-900 via-ink-950 to-ink-950';
             $pAmbient = $pPayload['banner_ambient'] ?? 'none';
             $pAvatarRing = $pPayload['avatar_ring'] ?? 'ring-2 ring-amber-400/80';
@@ -803,7 +803,7 @@
             $neededPoints = $missingCoins * $rate;
             $canCoverWithPoints = (!$hasEnough && $user->available_points >= $neededPoints);
             $payload = $purchaseItem->payload ?? [];
-            $badgeColor = $payload['badge_color'] ?? ($payload['color'] ?? ($payload['accent_color'] ?? '#FBBF24'));
+            $badgeColor = $purchaseItem->safeColor('badge_color', $purchaseItem->safeColor('color', $purchaseItem->safeColor('accent_color', '#FBBF24')));
         @endphp
         <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md"
              @keydown.escape.window="$wire.closePurchaseModal()"

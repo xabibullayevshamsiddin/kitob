@@ -141,6 +141,25 @@ class ShopItem extends Model
     }
 
     // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Payload ichidagi rangni xavfsiz HEX formatida olish (CSS inyeksiyalariga qarshi himoya).
+     */
+    public function safeColor(string $key = 'color', string $fallback = '#F59E0B'): string
+    {
+        $payload = is_array($this->payload) ? $this->payload : [];
+        $val = $payload[$key] ?? null;
+
+        if (is_string($val) && \App\Services\Shop\ShopService::validateHexColor(trim($val))) {
+            return trim($val);
+        }
+
+        return $fallback;
+    }
+
+    // -------------------------------------------------------------------------
     // Relationships
     // -------------------------------------------------------------------------
 

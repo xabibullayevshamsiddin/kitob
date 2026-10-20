@@ -8,7 +8,7 @@
     }
 
     $payload = $item->payload ?? [];
-    $accentColor = $payload['accent_color'] ?? ($payload['color'] ?? ($payload['badge_color'] ?? '#F59E0B'));
+    $accentColor = $item->safeColor('accent_color', $item->safeColor('color', $item->safeColor('badge_color', '#F59E0B')));
     $bannerGradient = $payload['banner_gradient'] ?? 'bg-gradient-to-r from-ink-900 to-ink-950';
     $canAfford = ($user->coin_balance >= $item->price_coins);
     $isConsumable = (bool) $item->is_consumable;
@@ -67,7 +67,7 @@
                 </div>
             @elseif($item->slot === 'reader_palette')
                 <div class="flex items-center gap-2 px-3 py-2 rounded-btn text-xs font-serif"
-                     style="background-color: {{ $payload['bg_light'] ?? '#fff' }}; color: {{ $payload['text_light'] ?? '#000' }}; border: 1px solid rgba(0,0,0,0.1);">
+                     style="background-color: {{ $item->safeColor('bg_light', '#ffffff') }}; color: {{ $item->safeColor('text_light', '#000000') }}; border: 1px solid rgba(0,0,0,0.1);">
                     Aa Mutolaa foni
                 </div>
             @elseif($item->slot === 'highlight_color')

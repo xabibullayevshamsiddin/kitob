@@ -47,11 +47,10 @@
             @endphp
             @if($equippedReaderPalette)
                 @php
-                    $rPl = $equippedReaderPalette->payload;
-                    $bgLight = $rPl['bg_light'] ?? '#FAF7F2';
-                    $bgDark = $rPl['bg_dark'] ?? '#07090E';
-                    $textLight = $rPl['text_light'] ?? '#1A1D24';
-                    $textDark = $rPl['text_dark'] ?? '#F0EDE6';
+                    $bgLight = $equippedReaderPalette->safeColor('bg_light', '#FAF7F2');
+                    $bgDark = $equippedReaderPalette->safeColor('bg_dark', '#07090E');
+                    $textLight = $equippedReaderPalette->safeColor('text_light', '#1A1D24');
+                    $textDark = $equippedReaderPalette->safeColor('text_dark', '#F0EDE6');
                 @endphp
                 .dark, html.dark { background-color: {{ $bgDark }} !important; color: {{ $textDark }} !important; }
                 .dark .reader-topbar { background-color: {{ $bgDark }}ee !important; }
@@ -62,7 +61,7 @@
             @endif
             @if($equippedHighlight)
                 @php
-                    $hlHex = $equippedHighlight->payload['color'] ?? '#84CC16';
+                    $hlHex = $equippedHighlight->safeColor('color', '#84CC16');
                 @endphp
                 ::selection { background-color: {{ $hlHex }}66 !important; color: #fff !important; }
                 .reader-highlight-custom { background-color: {{ $hlHex }}55 !important; border-bottom: 2px solid {{ $hlHex }} !important; }

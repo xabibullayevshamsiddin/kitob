@@ -181,9 +181,9 @@
                                             <span class="text-mist/70 text-[11px]">#{{ $item->id }}</span>
                                             <div class="w-8 h-8 rounded-btn border border-ink-border bg-ink-950 flex items-center justify-center overflow-hidden">
                                                 @if(isset($item->payload['color']))
-                                                    <span class="w-4 h-4 rounded-full border border-white/20" style="background-color: {{ $item->payload['color'] }}"></span>
+                                                    <span class="w-4 h-4 rounded-full border border-white/20" style="background-color: {{ $item->safeColor('color') }}"></span>
                                                 @elseif(isset($item->payload['bg_light']))
-                                                    <span class="w-4 h-4 rounded-btn border border-white/20" style="background-color: {{ $item->payload['bg_light'] }}"></span>
+                                                    <span class="w-4 h-4 rounded-btn border border-white/20" style="background-color: {{ $item->safeColor('bg_light') }}"></span>
                                                 @else
                                                     <svg class="w-4 h-4 text-amber-400/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>
                                                 @endif

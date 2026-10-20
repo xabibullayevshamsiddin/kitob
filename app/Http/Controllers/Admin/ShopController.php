@@ -354,33 +354,49 @@ class ShopController extends Controller
     {
         $payload = $current ?? [];
 
-        // Agar to'g'ridan-to'g'ri JSON kiritilgan bo'lsa
+        // 1. Agar to'g'ridan-to'g'ri JSON kiritilgan bo'lsa
         if ($jsonStr = trim((string) $request->get('payload_json'))) {
-            $decoded = json_decode($jsonStr, true);
-            if (is_array($decoded)) {
-                $payload = array_merge($payload, $decoded);
+            // Umumiy hajm <= ~2 KB (2048 bayt)
+            if (strlen($jsonStr) > 2048) {
+                throw ValidationException::withMessages([
+                    'payload_json' => "Payload JSON hajmi 2 KB dan oshmasligi kerak (joriy: " . strlen($jsonStr) . " bayt).",
+                ]);
             }
+
+            $decoded = json_decode($jsonStr, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                throw ValidationException::withMessages([
+                    'payload_json' => "Payload JSON formati noto'g'ri: " . json_last_error_msg(),
+                ]);
+            }
+
+            $payload = array_merge($payload, $decoded);
         }
 
-        // Rang parametri kiritilgan bo'lsa
+        // 2. Alohida maydonlardan kelgan rang parametrlari
         if ($color = $request->get('color')) {
             $cleaned = trim($color);
-            if (ShopService::validateHexColor($cleaned)) {
+            if ($cleaned !== '') {
+                if (!ShopService::validateHexColor($cleaned)) {
+                    throw ValidationException::withMessages([
+                        'color' => "Rang formati noto'g'ri. Faqat #RRGGBB formatidagi HEX rang kiritilishi kerak.",
+                    ]);
+                }
                 $payload['color'] = $cleaned;
             }
         }
 
         // Reader fon ranglari
-        if ($request->filled('bg_light') && ShopService::validateHexColor($request->bg_light)) {
+        if ($request->filled('bg_light')) {
             $payload['bg_light'] = trim($request->bg_light);
         }
-        if ($request->filled('bg_dark') && ShopService::validateHexColor($request->bg_dark)) {
+        if ($request->filled('bg_dark')) {
             $payload['bg_dark'] = trim($request->bg_dark);
         }
-        if ($request->filled('text_light') && ShopService::validateHexColor($request->text_light)) {
+        if ($request->filled('text_light')) {
             $payload['text_light'] = trim($request->text_light);
         }
-        if ($request->filled('text_dark') && ShopService::validateHexColor($request->text_dark)) {
+        if ($request->filled('text_dark')) {
             $payload['text_dark'] = trim($request->text_dark);
         }
 
@@ -389,14 +405,6 @@ class ShopController extends Controller
             $payload['effect'] = $effect;
         }
 
-        // Agar payload ichida effect mavjud bo'lsa, uning qo'llab-quvvatlanishini kafolatlaymiz
-        if (isset($payload['effect']) && $payload['effect'] !== '') {
-            if (!ShopService::isEffectSupported((string) $payload['effect'])) {
-                throw ValidationException::withMessages([
-                    'effect' => "«{$payload['effect']}» effekti tizimda qo'llab-quvvatlanmaydi. Ruxsat etilganlar: " . implode(', ', ShopService::supportedEffects()),
-                ]);
-            }
-        }
         if ($request->filled('multiplier')) {
             $payload['multiplier'] = (float) $request->multiplier;
         }
@@ -404,6 +412,144 @@ class ShopController extends Controller
             $payload['amount'] = (int) $request->amount;
         }
 
-        return $payload;
+        $category = (string) $request->get('category', '');
+        $slot = $request->get('slot') ? (string) $request->get('slot') : null;
+
+        return $this->validateAndSanitizePayload($payload, $category, $slot);
+    }
+
+    /**
+     * Payload JSON ma'lumotlarini oq ro'yxat (whitelist) va xavfsizlik qoidalari bo'yicha tekshirish.
+     *
+     * @throws ValidationException
+     */
+    protected function validateAndSanitizePayload(array $payload, string $category, ?string $slot): array
+    {
+        $allowedColorKeys = [
+            'color',
+            'bg_light',
+            'bg_dark',
+            'text_light',
+            'text_dark',
+            'accent_color',
+            'badge_color',
+            'hex',
+            'frame',
+            'border_color',
+        ];
+
+        $allowedNumberRanges = [
+            'multiplier'       => ['min' => 1.0, 'max' => 5.0, 'type' => 'float'],
+            'amount'           => ['min' => 1, 'max' => 100, 'type' => 'int'],
+            'duration_minutes' => ['min' => 1, 'max' => 1440, 'type' => 'int'],
+            'max_limit'        => ['min' => 1, 'max' => 100, 'type' => 'int'],
+        ];
+
+        $allowedGeneralKeys = [
+            'id',
+            'name',
+            'price',
+            'description',
+            'effect',
+            'icon',
+            'bundle_slots',
+            'banner_gradient',
+            'banner_ambient',
+            'card_border',
+            'card_glow',
+            'card_accent_line',
+            'badge_text',
+            'badge_class',
+            'stat_card_class',
+            'avatar_ring',
+            'pattern',
+        ];
+
+        $allAllowedKeys = array_merge($allowedColorKeys, array_keys($allowedNumberRanges), $allowedGeneralKeys);
+
+        $sanitized = [];
+
+        foreach ($payload as $key => $value) {
+            // 1. Noma'lum kalitlar rad etilsin
+            if (!in_array($key, $allAllowedKeys, true)) {
+                throw ValidationException::withMessages([
+                    'payload_json' => "«{$key}» parametri ruxsat etilmagan. Faqat belgilangan kalitlardan foydalaning.",
+                ]);
+            }
+
+            // 2. Rang kalitlari: ^#[0-9A-Fa-f]{6}$
+            if (in_array($key, $allowedColorKeys, true)) {
+                if ($value !== null && $value !== '') {
+                    if (!is_string($value) || !ShopService::validateHexColor(trim($value))) {
+                        throw ValidationException::withMessages([
+                            'payload_json' => "«{$key}» uchun noto'g'ri rang kiritilgan («{$value}»). Faqat #RRGGBB formatidagi HEX rang ruxsat etiladi.",
+                        ]);
+                    }
+                    $sanitized[$key] = trim($value);
+                }
+                continue;
+            }
+
+            // 3. Sonlar diapazoni
+            if (isset($allowedNumberRanges[$key])) {
+                $range = $allowedNumberRanges[$key];
+                if (!is_numeric($value)) {
+                    throw ValidationException::withMessages([
+                        'payload_json' => "«{$key}» sonli qiymat bo'lishi kerak.",
+                    ]);
+                }
+
+                $numVal = $range['type'] === 'float' ? (float) $value : (int) $value;
+                if ($numVal < $range['min'] || $numVal > $range['max']) {
+                    throw ValidationException::withMessages([
+                        'payload_json' => "«{$key}» qiymati {$range['min']} va {$range['max']} oralig'ida bo'lishi kerak.",
+                    ]);
+                }
+                $sanitized[$key] = $numVal;
+                continue;
+            }
+
+            // 4. Effekt tekshiruvi: 3-banddagi ro'yxatdan bo'lishi shart
+            if ($key === 'effect') {
+                if ($value !== null && $value !== '') {
+                    $effectStr = trim((string) $value);
+                    if (!ShopService::isEffectSupported($effectStr)) {
+                        throw ValidationException::withMessages([
+                            'effect' => "«{$effectStr}» effekti tizimda qo'llab-quvvatlanmaydi. Ruxsat etilganlar: " . implode(', ', ShopService::supportedEffects()),
+                        ]);
+                    }
+                    $sanitized[$key] = $effectStr;
+                }
+                continue;
+            }
+
+            // 5. bundle_slots tekshiruvi
+            if ($key === 'bundle_slots') {
+                if (!is_array($value)) {
+                    throw ValidationException::withMessages([
+                        'payload_json' => "«bundle_slots» massiv (array) bo'lishi kerak.",
+                    ]);
+                }
+                $validSlots = config('shop.slots', []);
+                foreach ($value as $slotItem) {
+                    if (!in_array($slotItem, $validSlots, true)) {
+                        throw ValidationException::withMessages([
+                            'payload_json' => "«bundle_slots» ichidagi «{$slotItem}» sloti tizimda mavjud emas.",
+                        ]);
+                    }
+                }
+                $sanitized[$key] = $value;
+                continue;
+            }
+
+            // 6. Matnli kalitlar
+            if (is_string($value)) {
+                $sanitized[$key] = strip_tags(trim($value));
+            } else {
+                $sanitized[$key] = $value;
+            }
+        }
+
+        return $sanitized;
     }
 }
