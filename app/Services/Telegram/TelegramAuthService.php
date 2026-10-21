@@ -55,6 +55,64 @@ class TelegramAuthService
     }
 
     /**
+     * Telegram Mini App (TMA) tomonidan yuborilgan initData haqiqiyligini tekshirish (HMAC-SHA256).
+     * Rasmiy hujjat: https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+     *
+     * @param string $initData
+     * @return array|false
+     */
+    public function verifyInitData(string $initData): array|false
+    {
+        if (trim($initData) === '') {
+            return false;
+        }
+
+        // 1. Query stringni parse qilish
+        parse_str($initData, $params);
+
+        if (empty($params['hash']) || empty($params['auth_date'])) {
+            return false;
+        }
+
+        // 2. auth_date 24 soatdan (86400 soniya) eski bo'lmasligi kerak
+        if (abs(time() - (int) $params['auth_date']) > 86400) {
+            return false;
+        }
+
+        $checkHash = (string) $params['hash'];
+        unset($params['hash']);
+
+        // 3. Alfavit bo'yicha saralash: key=value
+        $dataCheckArr = [];
+        foreach ($params as $key => $value) {
+            $dataCheckArr[] = $key . '=' . $value;
+        }
+        sort($dataCheckArr);
+        $dataCheckString = implode("\n", $dataCheckArr);
+
+        // 4. HMAC kalitini hisoblash: secret_key = HMAC_SHA256("WebAppData", bot_token)
+        $botToken = (string) config('telegram.bot_token', '');
+        if (empty($botToken)) {
+            return false;
+        }
+
+        $secretKey = hash_hmac('sha256', $botToken, 'WebAppData', true);
+        $calculatedHash = hash_hmac('sha256', $dataCheckString, $secretKey);
+
+        // 5. Timing-safe taqqoslash
+        if (!hash_equals($calculatedHash, $checkHash)) {
+            return false;
+        }
+
+        // user JSON obyektini parse qilish
+        if (isset($params['user']) && is_string($params['user'])) {
+            $params['user_data'] = json_decode($params['user'], true);
+        }
+
+        return $params;
+    }
+
+    /**
      * Telegram ma'lumotlari orqali foydalanuvchini topish yoki yangi foydalanuvchi yaratish.
      */
     public function findOrCreateUser(array $telegramData): array
@@ -270,7 +328,7 @@ class TelegramAuthService
         $token = Str::random(32);
         Cache::put("tg_verify_token_{$token}", $user->id, now()->addMinutes(30));
 
-        $botUsername = (string) config('telegram.bot_username', 'ziyonur_bot');
+        $botUsername = (string) config('telegram.bot_username', 'kitobxonS_bot');
         return "https://t.me/{$botUsername}?start=verify_{$token}";
     }
 

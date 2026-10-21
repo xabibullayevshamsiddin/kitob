@@ -22,13 +22,20 @@ class TelegramBotService
      */
     public function handleUpdate(array $update): void
     {
-        // 1. Agar Callback query (tugma bosilishi) bo'lsa
+        // 1. Agar pre_checkout_query (Stars to'lovidan oldingi tekshiruv) bo'lsa
+        if (isset($update['pre_checkout_query'])) {
+            $paymentService = new TelegramPaymentService($this->client);
+            $paymentService->handlePreCheckoutQuery($update['pre_checkout_query']);
+            return;
+        }
+
+        // 2. Agar Callback query (tugma bosilishi) bo'lsa
         if (isset($update['callback_query'])) {
             $this->handleCallbackQuery($update['callback_query']);
             return;
         }
 
-        // 2. Agar oddiy xabar bo'lsa
+        // 3. Agar oddiy xabar bo'lsa
         if (isset($update['message'])) {
             $this->handleMessage($update['message']);
             return;
@@ -45,6 +52,13 @@ class TelegramBotService
         $userId = $from['id'] ?? null;
 
         if (!$chatId || !$userId) {
+            return;
+        }
+
+        // Agar foydalanuvchi muvaffaqiyatli Stars to'lovini amalga oshirgan bo'lsa
+        if (isset($message['successful_payment'])) {
+            $paymentService = new TelegramPaymentService($this->client);
+            $paymentService->handleSuccessfulPayment($message);
             return;
         }
 
@@ -72,6 +86,7 @@ class TelegramBotService
             '/hikmat' => $this->handleHikmatCommand($chatId),
             '/shop', '/dokon' => $this->handleShopCommand($chatId),
             '/help', '/yordam' => $this->handleHelpCommand($chatId),
+            '/app', '/miniapp' => $this->handleAppCommand($chatId),
             '/stop' => $this->handleStopCommand($chatId, $userId),
             default => $this->handleDefaultMessage($chatId, $text),
         };
@@ -128,14 +143,25 @@ class TelegramBotService
 
                 if ($findResult['success']) {
                     Cache::put("tg_auth_confirmed_{$token}", $findResult['user']->id, now()->addMinutes(10));
-                    $this->client->sendMessage($chatId, "Salom, <b>{$name}</b>! ✅\n\nSaytga kirishingiz tasdiqlandi. Brauzeringizga qaytib davom etishingiz mumkin!");
+                    $completeUrl = route('auth.telegram.complete', ['token' => $token]);
+
+                    $this->client->sendMessage($chatId, "Salom, <b>{$name}</b>! ✅\n\nSaytga kirishingiz muvaffaqiyatli tasdiqlandi!\n\nBrauzer sahifangiz avtomatik yangilanadi. Agar yangilanmasa, quyidagi tugma orqali to'g'ridan-to'g'ri saytga kiring:", [
+                        'reply_markup' => [
+                            'inline_keyboard' => [
+                                [
+                                    ['text' => '🚀 Saytga kirish', 'url' => $completeUrl]
+                                ]
+                            ]
+                        ]
+                    ]);
                     return;
                 }
             }
         }
 
         // 3. Standart salomlashuv
-        $appUrl = config('app.url', 'https://ziyonur.uz');
+        $appUrl = config('app.url', 'https://kitobxon.laravel.cloud');
+        $miniAppUrl = config('telegram.mini_app_url', "{$appUrl}/tg-app");
 
         $text = "Assalomu alaykum, <b>{$name}</b>! 👋📚\n\n"
               . "<b>«Kitobxon»</b> platformasining rasmiy botiga xush kelibsiz!\n\n"
@@ -145,11 +171,15 @@ class TelegramBotService
               . "• Yangi kitoblar va muhim yangiliklardan doimiy xabardor bo'lasiz.\n\n"
               . "Quyidagi tugmalar orqali platformadan foydalaning 👇";
 
+        $firstRow = [];
+        if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://')) {
+            $firstRow[] = ['text' => '📱 Mini App (Mutolaa)', 'web_app' => ['url' => $miniAppUrl]];
+        }
+        $firstRow[] = ['text' => '🌐 Veb-sayt', 'url' => $appUrl];
+
         $buttons = [
             'inline_keyboard' => [
-                [
-                    ['text' => '📖 Kitoblar va Mutolaa', 'url' => $appUrl],
-                ],
+                $firstRow,
                 [
                     ['text' => '👤 Profilim', 'callback_data' => 'cmd_profil'],
                     ['text' => '🔥 Streak holati', 'callback_data' => 'cmd_streak'],
@@ -158,6 +188,27 @@ class TelegramBotService
                     ['text' => '🪙 Tanga balansi', 'callback_data' => 'cmd_balance'],
                     ['text' => '✨ Kun hikmati', 'callback_data' => 'cmd_hikmat'],
                 ],
+            ]
+        ];
+
+        $this->client->sendMessage($chatId, $text, [
+            'reply_markup' => $buttons,
+        ]);
+    }
+
+    /**
+     * /app buyrug'i (Mini App ochish).
+     */
+    protected function handleAppCommand(int|string $chatId): void
+    {
+        $miniAppUrl = config('telegram.mini_app_url', config('app.url') . '/tg-app');
+        $text = "📱 <b>«Kitobxon» Mini App</b>\n\nTelegram ichida kitoblar mutolaa qiling, testlar yeching va tangalarni boshqaring! 📖✨";
+
+        $buttons = [
+            'inline_keyboard' => [
+                [
+                    ['text' => '🚀 Mini Appni ochish', 'web_app' => ['url' => $miniAppUrl]],
+                ]
             ]
         ];
 

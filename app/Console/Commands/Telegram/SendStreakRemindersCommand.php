@@ -34,7 +34,7 @@ class SendStreakRemindersCommand extends Command
             ->get();
 
         $count = 0;
-        $appUrl = config('app.url', 'https://ziyonur.uz');
+        $appUrl = config('app.url', 'https://kitobxon.laravel.cloud');
 
         foreach ($users as $user) {
             if (!$user->prefersTelegramNotification('streak_reminder')) {

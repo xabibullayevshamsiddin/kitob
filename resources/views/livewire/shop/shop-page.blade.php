@@ -651,6 +651,74 @@
                 </div>
             </div>
 
+            {{-- Telegram Stars Tanga To'plamlari --}}
+            <div class="p-5 sm:p-6 rounded-panel border border-ink-border bg-ink-900/80 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-bold">
+                            ⭐️
+                        </span>
+                        <div>
+                            <h3 class="font-serif font-bold text-lg text-paper">Telegram Stars orqali tanga xarid qilish</h3>
+                            <p class="text-xs text-mist">Telegram yulduzlari evaziga bir zumda tanga hisobingizni to'ldiring</p>
+                        </div>
+                    </div>
+
+                    @if($starsPaymentsEnabled)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Faol
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                            🔒 Tez kunda
+                        </span>
+                    @endif
+                </div>
+
+                @if($starsPaymentsEnabled)
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
+                        @foreach($starPacks as $pKey => $pData)
+                            <div class="p-4 rounded-2xl bg-ink-950 border border-ink-border hover:border-amber-500/30 flex flex-col justify-between transition-all group">
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
+                                            {{ $pData['badge'] }}
+                                        </span>
+                                        <span class="text-xs font-bold text-white font-mono flex items-center gap-1">
+                                            {{ $pData['stars'] }} ⭐️
+                                        </span>
+                                    </div>
+                                    <h4 class="text-sm font-bold text-white font-serif pt-1 flex items-center gap-1.5">
+                                        <span>🪙 {{ $pData['coins'] }}</span>
+                                        <span class="text-xs text-mist font-normal">tanga</span>
+                                    </h4>
+                                    <p class="text-[11px] text-mist leading-relaxed line-clamp-2">
+                                        {{ $pData['description'] }}
+                                    </p>
+                                </div>
+
+                                <div class="pt-3">
+                                    <button wire:click="buyCoinPackWithStars('{{ $pKey }}')"
+                                            wire:loading.attr="disabled"
+                                            class="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition-all active:scale-98">
+                                        <span>{{ $pData['stars'] }} ⭐️ bilan olish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="p-4 rounded-2xl bg-ink-950 border border-ink-border/60 text-xs text-mist flex items-start gap-3">
+                        <span class="text-base text-amber-400 mt-0.5">ℹ️</span>
+                        <div class="space-y-1">
+                            <p class="text-slate-300 font-medium">To'lov integratsiyasi xavfsiz bayroq ortida tayyorlangan (Master switch: <code>TELEGRAM_PAYMENTS_ENABLED=false</code>).</p>
+                            <p class="text-[11px] text-slate-400">Stars orqali haqiqiy to'lovlarni ochish mijozning soliq, qaytarish siyosati va yosh chegarasi bo'yicha biznes qaroriga binoan <code>.env</code> faylida <code>true</code> qilinishi kifoya.</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
             {{-- Transactions Table with filter --}}
             <div class="p-5 sm:p-6 rounded-panel border border-ink-border bg-ink-900/80 space-y-4">
                 <div class="flex items-center justify-between">

@@ -113,6 +113,37 @@ class TelegramClient
     }
 
     /**
+     * Botning chap pastki menyu tugmasini sozlash (setChatMenuButton).
+     * Masalan, Mini App (web_app) tugmasi yoki standart buyruqlar menyusi.
+     */
+    public function setChatMenuButton(?array $menuButton = null, int|string|null $chatId = null): array
+    {
+        $payload = [];
+        if ($chatId !== null) {
+            $payload['chat_id'] = $chatId;
+        }
+
+        if ($menuButton !== null) {
+            $payload['menu_button'] = $menuButton;
+        }
+
+        return $this->request('setChatMenuButton', $payload);
+    }
+
+    /**
+     * Joriy menyu tugmasi holatini olish (getChatMenuButton).
+     */
+    public function getChatMenuButton(int|string|null $chatId = null): array
+    {
+        $payload = [];
+        if ($chatId !== null) {
+            $payload['chat_id'] = $chatId;
+        }
+
+        return $this->request('getChatMenuButton', $payload);
+    }
+
+    /**
      * Telegram Stars yoki boshqa to'lovlar uchun invoice havolasini yaratish (createInvoiceLink).
      */
     public function createInvoiceLink(

@@ -383,6 +383,12 @@ class ShopPage extends Component
         // Ball -> Tanga hisob-kitoblari
         /** @var \App\Services\Shop\ShopService $shopService */
         $shopService = app(\App\Services\Shop\ShopService::class);
+
+        /** @var \App\Services\Telegram\TelegramPaymentService $paymentService */
+        $paymentService = app(\App\Services\Telegram\TelegramPaymentService::class);
+        $starsPaymentsEnabled = $paymentService->isPaymentsEnabled();
+        $starPacks = $paymentService->getCoinPacks();
+
         $exchangeRate = $shopService->getExchangeRate();
         $exchangeMinPoints = $shopService->getExchangeMinPoints();
         $exchangeDailyLimit = $shopService->getExchangeDailyLimit();
@@ -417,6 +423,34 @@ class ShopPage extends Component
             'dailyRemainingPoints' => $dailyRemainingPoints,
             'availablePoints'      => $availablePoints,
             'coinsToReceive'       => $coinsToReceive,
+            'starsPaymentsEnabled' => $starsPaymentsEnabled,
+            'starPacks'            => $starPacks,
         ])->layout('layouts.app', ['title' => trans('shop.title') . ' — Kitobxon']);
+    }
+
+    /**
+     * Telegram Stars orqali tanga paketi xarid qilish (Invoice).
+     */
+    public function buyCoinPackWithStars(string $packId): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            $this->toastError('Iltimos, avval tizimga kiring.');
+            return;
+        }
+
+        /** @var \App\Services\Telegram\TelegramPaymentService $paymentService */
+        $paymentService = app(\App\Services\Telegram\TelegramPaymentService::class);
+
+        $result = $paymentService->createCoinPackInvoice($user, $packId);
+
+        if (!$result['success']) {
+            $this->toastError($result['message']);
+            return;
+        }
+
+        $this->toastSuccess('Telegram Stars to\'lov havolasi yaratildi!');
+        $this->emit('openTelegramInvoice', $result['invoice_link']);
+        $this->dispatchBrowserEvent('open-url', ['url' => $result['invoice_link']]);
     }
 }

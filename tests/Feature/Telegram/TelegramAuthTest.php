@@ -303,4 +303,55 @@ class TelegramAuthTest extends TestCase
 
         $response->assertSessionHasErrors(['email']);
     }
+
+    public function test_redirect_route_redirects_to_waiting_screen(): void
+    {
+        $response = $this->get(route('auth.telegram.redirect'));
+        $response->assertStatus(302);
+        $this->assertStringContainsString('/auth/telegram/waiting/', $response->headers->get('Location'));
+    }
+
+    public function test_waiting_screen_renders_successfully(): void
+    {
+        $token = 'test_token_waiting_123';
+        \Illuminate\Support\Facades\Cache::put("tg_auth_login_{$token}", ['created_at' => now()], now()->addMinutes(15));
+
+        $response = $this->get(route('auth.telegram.waiting', ['token' => $token]));
+        $response->assertStatus(200);
+        $response->assertSee('Telegram orqali kirish');
+        $response->assertSee('Bot javobi kutilmoqda');
+    }
+
+    public function test_check_endpoint_returns_confirmed_and_logs_in(): void
+    {
+        $token = 'test_token_confirm_456';
+        $user = User::factory()->create(['name' => 'Tasdiqlangan User']);
+
+        \Illuminate\Support\Facades\Cache::put("tg_auth_login_{$token}", ['created_at' => now()], now()->addMinutes(15));
+        \Illuminate\Support\Facades\Cache::put("tg_auth_confirmed_{$token}", $user->id, now()->addMinutes(10));
+
+        $response = $this->getJson(route('auth.telegram.check', ['token' => $token]));
+        $response->assertStatus(200);
+        $response->assertJson([
+            'confirmed' => true,
+        ]);
+
+        $this->assertTrue(Auth::check());
+        $this->assertEquals($user->id, Auth::id());
+    }
+
+    public function test_complete_endpoint_logs_in_user_and_redirects_to_home(): void
+    {
+        $token = 'test_token_direct_789';
+        $user = User::factory()->create(['name' => 'Direct User']);
+
+        \Illuminate\Support\Facades\Cache::put("tg_auth_confirmed_{$token}", $user->id, now()->addMinutes(10));
+
+        $response = $this->get(route('auth.telegram.complete', ['token' => $token]));
+        $response->assertStatus(302);
+        $response->assertRedirect(route('home'));
+
+        $this->assertTrue(Auth::check());
+        $this->assertEquals($user->id, Auth::id());
+    }
 }

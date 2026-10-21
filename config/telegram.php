@@ -79,4 +79,14 @@ return [
     'timeout' => (int) env('TELEGRAM_TIMEOUT', 15),
     'retry_attempts' => (int) env('TELEGRAM_RETRY_ATTEMPTS', 2),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Telegram Mini App URL
+    |--------------------------------------------------------------------------
+    |
+    | Telegram ichida ochiladigan Mini App (TMA) manzili (HTTPS bo'lishi shart).
+    |
+    */
+    'mini_app_url' => env('TELEGRAM_MINI_APP_URL', rtrim(env('APP_URL', 'https://kitobxon.laravel.cloud'), '/') . '/tg-app'),
+
 ];

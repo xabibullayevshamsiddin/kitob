@@ -39,7 +39,7 @@ class SendDailyQuoteCommand extends Command
             $message .= "\n\n📖 <b>«{$quote->book->title}»</b> kitobidan";
         }
 
-        $appUrl = config('app.url', 'https://ziyonur.uz');
+        $appUrl = config('app.url', 'https://kitobxon.laravel.cloud');
         $buttons = [];
 
         if ($quote->book) {

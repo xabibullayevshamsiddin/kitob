@@ -1276,6 +1276,15 @@ Route::get('/auth/telegram/redirect', [\App\Http\Controllers\Auth\TelegramAuthCo
     ->name('auth.telegram.redirect')
     ->middleware('throttle:30,1');
 
+Route::get('/auth/telegram/waiting/{token}', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'waiting'])
+    ->name('auth.telegram.waiting');
+
+Route::get('/auth/telegram/check/{token}', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'check'])
+    ->name('auth.telegram.check');
+
+Route::get('/auth/telegram/complete/{token}', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'complete'])
+    ->name('auth.telegram.complete');
+
 Route::post('/auth/telegram/unlink', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'unlink'])
     ->name('auth.telegram.unlink')
     ->middleware('auth');
@@ -1292,6 +1301,13 @@ Route::post('/settings/telegram/notifications', [\App\Http\Controllers\Auth\Tele
 Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetController::class, 'sendResetLink'])
     ->middleware('guest')
     ->name('password.email');
+
+// Telegram Mini App (TMA)
+Route::get('/tg-app', [\App\Http\Controllers\Telegram\TelegramMiniAppController::class, 'index'])
+    ->name('tg-app');
+
+Route::post('/tg-app/auth', [\App\Http\Controllers\Telegram\TelegramMiniAppController::class, 'authenticate'])
+    ->name('tg-app.auth');
 
 
 

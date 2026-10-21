@@ -90,7 +90,7 @@ class PasswordResetController extends Controller
         }
 
         // 5. Agar foydalanuvchida email yo'q va Telegram bot ulanmagan bo'lsa
-        $botUsername = (string) config('telegram.bot_username', 'ziyonur_bot');
+        $botUsername = (string) config('telegram.bot_username', 'kitobxonS_bot');
         return back()->withErrors([
             'email' => "Hisobingizga email ulanmagan. Iltimos, Telegram (@{$botUsername}) orqali kiring yoki yordamga murojaat qiling.",
         ]);

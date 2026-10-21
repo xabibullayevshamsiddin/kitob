@@ -80,7 +80,7 @@ class TelegramAuthController extends Controller
             return redirect()->away($url);
         }
 
-        // 2. Agar bot username mavjud bo'lsa, Telegram botiga deep-link orqali yo'naltirish
+        // 2. Agar bot username mavjud bo'lsa, Telegram botiga deep-link orqali kutish sahifasiga yo'naltirish
         if (!empty($botUsername)) {
             $token = \Illuminate\Support\Str::random(32);
             \Illuminate\Support\Facades\Cache::put("tg_auth_login_{$token}", [
@@ -88,10 +88,110 @@ class TelegramAuthController extends Controller
                 'ip'         => $request->ip(),
             ], now()->addMinutes(15));
 
-            return redirect()->away("https://t.me/{$botUsername}?start=auth_{$token}");
+            return redirect()->route('auth.telegram.waiting', ['token' => $token]);
         }
 
         return redirect()->route('login');
+    }
+
+    /**
+     * Telegram orqali tasdiqlashni kutish sahifasi.
+     */
+    public function waiting(string $token)
+    {
+        if (!\Illuminate\Support\Facades\Cache::has("tg_auth_login_{$token}")) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Kirish sessiyasi eskirgan. Iltimos, qaytadan urinib ko\'ring.',
+            ]);
+        }
+
+        $botUsername = config('telegram.bot_username');
+        $tgUrl = "https://t.me/{$botUsername}?start=auth_{$token}";
+        $tgAppUrl = "tg://resolve?domain={$botUsername}&start=auth_{$token}";
+
+        return view('auth.telegram-waiting', compact('token', 'botUsername', 'tgUrl', 'tgAppUrl'));
+    }
+
+    /**
+     * Telegram tasdiqlanganligini polling orqali tekshirish (AJAX).
+     */
+    public function check(Request $request, string $token): \Illuminate\Http\JsonResponse
+    {
+        $userId = \Illuminate\Support\Facades\Cache::get("tg_auth_confirmed_{$token}");
+
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
+
+            if ($user) {
+                if ($user->is_banned) {
+                    \Illuminate\Support\Facades\Cache::forget("tg_auth_confirmed_{$token}");
+                    \Illuminate\Support\Facades\Cache::forget("tg_auth_login_{$token}");
+
+                    return response()->json([
+                        'confirmed' => false,
+                        'banned'    => true,
+                        'message'   => 'Hisobingiz ma\'muriyat tomonidan bloklangan.',
+                    ]);
+                }
+
+                Auth::login($user, true);
+                $request->session()->regenerate();
+
+                \Illuminate\Support\Facades\Cache::forget("tg_auth_confirmed_{$token}");
+                \Illuminate\Support\Facades\Cache::forget("tg_auth_login_{$token}");
+
+                return response()->json([
+                    'confirmed'    => true,
+                    'redirect_url' => route('home'),
+                ]);
+            }
+        }
+
+        if (!\Illuminate\Support\Facades\Cache::has("tg_auth_login_{$token}")) {
+            return response()->json([
+                'confirmed' => false,
+                'expired'   => true,
+            ]);
+        }
+
+        return response()->json([
+            'confirmed' => false,
+        ]);
+    }
+
+    /**
+     * Telegram botidagi tugmadan to'g'ridan-to'g'ri saytga kirish (Deep-link complete).
+     */
+    public function complete(Request $request, string $token): RedirectResponse
+    {
+        $userId = \Illuminate\Support\Facades\Cache::get("tg_auth_confirmed_{$token}");
+
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
+
+            if ($user) {
+                if ($user->is_banned) {
+                    \Illuminate\Support\Facades\Cache::forget("tg_auth_confirmed_{$token}");
+                    \Illuminate\Support\Facades\Cache::forget("tg_auth_login_{$token}");
+
+                    return redirect()->route('login')->withErrors([
+                        'email' => 'Hisobingiz ma\'muriyat tomonidan bloklangan.',
+                    ]);
+                }
+
+                Auth::login($user, true);
+                $request->session()->regenerate();
+
+                \Illuminate\Support\Facades\Cache::forget("tg_auth_confirmed_{$token}");
+                \Illuminate\Support\Facades\Cache::forget("tg_auth_login_{$token}");
+
+                return redirect()->route('home')->with('status', 'Xush kelibsiz! Telegram orqali muvaffaqiyatli kirdingiz. 🎉');
+            }
+        }
+
+        return redirect()->route('login')->withErrors([
+            'email' => 'Kirish havolasi muddati o\'tgan yoki allaqachon foydalanilgan.',
+        ]);
     }
 
     /**
