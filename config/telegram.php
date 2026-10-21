@@ -87,6 +87,6 @@ return [
     | Telegram ichida ochiladigan Mini App (TMA) manzili (HTTPS bo'lishi shart).
     |
     */
-    'mini_app_url' => env('TELEGRAM_MINI_APP_URL', rtrim(env('APP_URL', 'https://kitobxon.laravel.cloud'), '/') . '/tg-app'),
+    'mini_app_url' => env('TELEGRAM_MINI_APP_URL', rtrim(env('APP_URL', 'https://kitob-9y1h.onrender.com'), '/') . '/tg-app'),
 
 ];

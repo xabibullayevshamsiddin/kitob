@@ -160,7 +160,7 @@ class TelegramBotService
         }
 
         // 3. Standart salomlashuv
-        $appUrl = config('app.url', 'https://kitobxon.laravel.cloud');
+        $appUrl = config('app.url', 'https://kitob-9y1h.onrender.com');
         $miniAppUrl = config('telegram.mini_app_url', "{$appUrl}/tg-app");
 
         $text = "Assalomu alaykum, <b>{$name}</b>! 👋📚\n\n"

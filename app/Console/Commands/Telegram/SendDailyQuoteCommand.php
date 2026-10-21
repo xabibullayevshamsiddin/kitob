@@ -39,7 +39,7 @@ class SendDailyQuoteCommand extends Command
             $message .= "\n\n📖 <b>«{$quote->book->title}»</b> kitobidan";
         }
 
-        $appUrl = config('app.url', 'https://kitobxon.laravel.cloud');
+        $appUrl = config('app.url', 'https://kitob-9y1h.onrender.com');
         $buttons = [];
 
         if ($quote->book) {
