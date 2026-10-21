@@ -75,7 +75,7 @@
                     </div>
 
                     <div class="flex items-center gap-3 text-xs text-mist font-mono flex-wrap">
-                        <span>{{ $user->email }}</span>
+                        <span>{{ $user->email ?: ($user->phone ? \App\Support\PhoneNumber::mask($user->phone) : 'Email ko\'rsatilmagan') }}</span>
                         <span>•</span>
                         <span>{{ '@' . ($user->username ?? 'foydalanuvchi') }}</span>
                         <span>•</span>

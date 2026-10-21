@@ -72,8 +72,46 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $email = (string) $request->email;
+            $email = (string) ($request->input('email') ?: ($request->input('phone') ?: $request->input('login', '')));
             return Limit::perMinute(5)->by($email . $request->ip());
+        });
+
+        Fortify::authenticateUsing(function (Request $request) {
+            $login = trim((string) ($request->input('email') ?: ($request->input('phone') ?: $request->input('login', ''))));
+            $password = (string) $request->input('password', '');
+
+            if ($login === '' || $password === '') {
+                return null;
+            }
+
+            // 1. Agar telefon raqami kiritilgan bo'lsa
+            $normalizedPhone = \App\Support\PhoneNumber::normalize($login);
+            $user = null;
+
+            if ($normalizedPhone) {
+                $user = \App\Models\User::where('phone', $normalizedPhone)->first();
+            }
+
+            // 2. Agar telefon bo'yicha topilmasa, email yoki username bo'yicha qidiramiz
+            if (!$user) {
+                $user = \App\Models\User::where('email', $login)
+                    ->orWhere('username', strtolower($login))
+                    ->first();
+            }
+
+            // 3. Parolni tekshirish
+            if ($user && !empty($user->password) && \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+                if ($user->is_banned) {
+                    $reason = $user->ban_reason ? ": {$user->ban_reason}" : '';
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'email' => "Hisobingiz ma'muriyat tomonidan bloklangan{$reason}.",
+                    ]);
+                }
+
+                return $user;
+            }
+
+            return null;
         });
 
         RateLimiter::for('two-factor', function (Request $request) {

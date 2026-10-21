@@ -288,7 +288,7 @@
                                     @endif
                                     <div class="min-w-0">
                                         <p class="text-xs font-semibold text-paper truncate">{{ $user->name }}</p>
-                                        <p class="text-[10px] text-mist font-mono truncate">{{ $user->email }}</p>
+                                        <p class="text-[10px] text-mist font-mono truncate">{{ $user->email ?: ($user->phone ? \App\Support\PhoneNumber::mask($user->phone) : ($user->telegram_username ? '@' . $user->telegram_username : 'Ko\'rsatilmagan')) }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -665,7 +665,7 @@
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-semibold text-paper truncate max-w-[120px]">{{ $u->name ?? 'Foydalanuvchi' }}</p>
-                                            <p class="text-[9px] text-mist font-mono truncate max-w-[120px]">{{ $u->email ?? '' }}</p>
+                                            <p class="text-[9px] text-mist font-mono truncate max-w-[120px]">{{ $u->email ?: ($u->phone ? \App\Support\PhoneNumber::mask($u->phone) : ($u->telegram_username ? '@' . $u->telegram_username : 'Ko\'rsatilmagan')) }}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -714,7 +714,7 @@
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-semibold text-paper truncate max-w-[120px]">{{ $u->name ?? 'Foydalanuvchi' }}</p>
-                                            <p class="text-[9px] text-mist font-mono truncate max-w-[120px]">{{ $u->email ?? '' }}</p>
+                                            <p class="text-[9px] text-mist font-mono truncate max-w-[120px]">{{ $u->email ?: ($u->phone ? \App\Support\PhoneNumber::mask($u->phone) : ($u->telegram_username ? '@' . $u->telegram_username : 'Ko\'rsatilmagan')) }}</p>
                                         </div>
                                     </div>
                                 </td>

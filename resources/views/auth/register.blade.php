@@ -29,6 +29,23 @@
     </div>
 @endif
 
+{{-- Telegram orqali tezkor ro'yxatdan o'tish --}}
+<div class="mb-5 space-y-3">
+    <a href="{{ route('auth.telegram.redirect') }}" 
+       class="w-full py-2.5 px-4 rounded-xl bg-[#24A1DE] hover:bg-[#2092c9] active:scale-[0.99] text-white font-medium text-xs flex items-center justify-center gap-2.5 transition-all shadow-md shadow-[#24A1DE]/20 group">
+        <svg class="w-4 h-4 fill-current group-hover:scale-110 transition-transform shrink-0" viewBox="0 0 24 24">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.196 1.006.128.832.926z"/>
+        </svg>
+        <span class="font-bold tracking-wide">Telegram orqali 1 bosishda ro'yxatdan o'tish</span>
+    </a>
+
+    <div class="relative flex items-center justify-center pt-1">
+        <div class="border-t border-ink-border w-full"></div>
+        <span class="bg-ink-900 px-3 text-[10px] font-mono uppercase tracking-wider text-mist shrink-0">yoki telefon raqami bilan</span>
+        <div class="border-t border-ink-border w-full"></div>
+    </div>
+</div>
+
 <form method="POST" action="{{ route('register') }}" class="space-y-3.5">
     @csrf
 
@@ -57,16 +74,33 @@
     </div>
 
     <div>
-        <label for="email" class="block text-xs font-mono uppercase tracking-wider text-mist mb-1.5">{{ __('site.auth.email') }}</label>
+        <label for="phone" class="block text-xs font-mono uppercase tracking-wider text-mist mb-1.5">Telefon raqam</label>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            </div>
+            <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required autocomplete="tel"
+                class="ks-input pl-9 font-mono"
+                placeholder="+998 90 123 45 67">
+        </div>
+    </div>
+
+    @if(config('telegram.auth_email_registration_enabled', true))
+    <div>
+        <div class="flex items-center justify-between mb-1.5">
+            <label for="email" class="block text-xs font-mono uppercase tracking-wider text-mist">{{ __('site.auth.email') }}</label>
+            <span class="text-[10px] text-mist">(ixtiyoriy)</span>
+        </div>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
             </div>
-            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email"
+            <input id="email" type="email" name="email" value="{{ old('email') }}" autocomplete="email"
                 class="ks-input pl-9"
                 placeholder="ali@misol.uz">
         </div>
     </div>
+    @endif
 
     <div>
         <label for="password" class="block text-xs font-mono uppercase tracking-wider text-mist mb-1.5">{{ __('site.auth.password') }}</label>

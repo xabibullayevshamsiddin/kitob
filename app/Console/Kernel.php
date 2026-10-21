@@ -29,6 +29,16 @@ class Kernel extends ConsoleKernel
         $schedule->command('notifications:prune')
             ->dailyAt('03:00')
             ->timezone('Asia/Tashkent');
+
+        // Kunlik Telegram kun hikmati (har kuni ertalab 09:00 da)
+        $schedule->command('telegram:send-daily-quote')
+            ->dailyAt('09:00')
+            ->timezone('Asia/Tashkent');
+
+        // Kunlik Streak buzilish xavfi eslatmasi (har kuni kechki 20:30 da)
+        $schedule->command('telegram:send-streak-reminders')
+            ->dailyAt('20:30')
+            ->timezone('Asia/Tashkent');
     }
 
     /**

@@ -166,7 +166,7 @@
                             </div>
                         </td>
                         <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist whitespace-nowrap">
-                            {{ $user->email }}
+                            {{ $user->email ?: ($user->phone ? \App\Support\PhoneNumber::mask($user->phone) : ($user->telegram_username ? '@' . $user->telegram_username : 'Ko\'rsatilmagan')) }}
                         </td>
                         <td class="py-2.5 px-3.5 whitespace-nowrap">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold border {{ $rc['class'] }}">

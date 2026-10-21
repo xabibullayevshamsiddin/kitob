@@ -1263,3 +1263,36 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200)->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
+// Telegram Bot Webhook
+Route::post('/telegram/webhook', [\App\Http\Controllers\Telegram\TelegramWebhookController::class, 'handle'])
+    ->name('telegram.webhook');
+
+// Telegram Auth & Account Linking
+Route::get('/auth/telegram/callback', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'callback'])
+    ->name('auth.telegram.callback')
+    ->middleware('throttle:30,1');
+
+Route::get('/auth/telegram/redirect', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'redirect'])
+    ->name('auth.telegram.redirect')
+    ->middleware('throttle:30,1');
+
+Route::post('/auth/telegram/unlink', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'unlink'])
+    ->name('auth.telegram.unlink')
+    ->middleware('auth');
+
+Route::get('/auth/telegram/verify-phone', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'verifyPhone'])
+    ->name('auth.telegram.verify-phone')
+    ->middleware('auth');
+
+Route::post('/settings/telegram/notifications', [\App\Http\Controllers\Auth\TelegramAuthController::class, 'updateNotifications'])
+    ->name('settings.telegram.notifications')
+    ->middleware('auth');
+
+// Parolni tiklash (Telefon, Telegram yoki Email orqali)
+Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetController::class, 'sendResetLink'])
+    ->middleware('guest')
+    ->name('password.email');
+
+
+
+

@@ -31,6 +31,14 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'email_verified_at',
         'avatar',
+        'telegram_id',
+        'telegram_username',
+        'phone',
+        'phone_verified_at',
+        'telegram_linked_at',
+        'telegram_blocked_at',
+        'telegram_locale',
+        'notification_prefs',
         'total_points',
         'points_spent',
         'coin_balance',
@@ -44,16 +52,22 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'phone',
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'total_points'      => 'integer',
-        'points_spent'      => 'integer',
-        'coin_balance'      => 'integer',
-        'is_banned'         => 'boolean',
-        'banned_until'      => 'datetime',
-        'banned_at'         => 'datetime',
+        'email_verified_at'   => 'datetime',
+        'telegram_id'         => 'integer',
+        'phone_verified_at'   => 'datetime',
+        'telegram_linked_at'  => 'datetime',
+        'telegram_blocked_at' => 'datetime',
+        'notification_prefs'  => 'array',
+        'total_points'        => 'integer',
+        'points_spent'        => 'integer',
+        'coin_balance'        => 'integer',
+        'is_banned'           => 'boolean',
+        'banned_until'        => 'datetime',
+        'banned_at'           => 'datetime',
     ];
 
     protected $appends = [
@@ -552,5 +566,58 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $color = $item->payload['hex'] ?? ($item->payload['color'] ?? null);
         return ShopService::validateHexColor($color) ? $color : null;
+    }
+
+    // -------------------------------------------------------------------------
+    // Telegram & Auth Helpers
+    // -------------------------------------------------------------------------
+
+    public function hasPassword(): bool
+    {
+        return !empty($this->password);
+    }
+
+    public function hasEmail(): bool
+    {
+        return !empty($this->email);
+    }
+
+    public function isTelegramLinked(): bool
+    {
+        return !empty($this->telegram_id);
+    }
+
+    public function hasVerifiedPhone(): bool
+    {
+        return !empty($this->phone) && !empty($this->phone_verified_at);
+    }
+
+    public function isTelegramBlocked(): bool
+    {
+        return !empty($this->telegram_blocked_at);
+    }
+
+    public function markTelegramBlocked(): void
+    {
+        $this->update(['telegram_blocked_at' => now()]);
+    }
+
+    public function markTelegramUnblocked(): void
+    {
+        $this->update(['telegram_blocked_at' => null]);
+    }
+
+    public function prefersTelegramNotification(string $type): bool
+    {
+        if (!$this->isTelegramLinked() || $this->isTelegramBlocked()) {
+            return false;
+        }
+
+        $prefs = $this->notification_prefs;
+        if (!is_array($prefs)) {
+            return true;
+        }
+
+        return (bool) ($prefs[$type] ?? true);
     }
 }
