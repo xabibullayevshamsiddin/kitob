@@ -29,22 +29,6 @@
     </div>
 @endif
 
-{{-- Telegram orqali tezkor ro'yxatdan o'tish --}}
-<div class="mb-5 space-y-3">
-    <a href="{{ route('auth.telegram.redirect') }}" 
-       class="w-full py-2.5 px-4 rounded-xl bg-[#24A1DE] hover:bg-[#2092c9] active:scale-[0.99] text-white font-medium text-xs flex items-center justify-center gap-2.5 transition-all shadow-md shadow-[#24A1DE]/20 group">
-        <svg class="w-4 h-4 fill-current group-hover:scale-110 transition-transform shrink-0" viewBox="0 0 24 24">
-            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.196 1.006.128.832.926z"/>
-        </svg>
-        <span class="font-bold tracking-wide">Telegram orqali 1 bosishda ro'yxatdan o'tish</span>
-    </a>
-
-    <div class="relative flex items-center justify-center pt-1">
-        <div class="border-t border-ink-border w-full"></div>
-        <span class="bg-ink-900 px-3 text-[10px] font-mono uppercase tracking-wider text-mist shrink-0">yoki telefon raqami bilan</span>
-        <div class="border-t border-ink-border w-full"></div>
-    </div>
-</div>
 
 <form method="POST" action="{{ route('register') }}" class="space-y-3.5">
     @csrf
