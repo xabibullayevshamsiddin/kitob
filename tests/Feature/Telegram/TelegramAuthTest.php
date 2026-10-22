@@ -283,7 +283,7 @@ class TelegramAuthTest extends TestCase
         $response = $this->get('/forgot-password');
         $response->assertStatus(200);
         $response->assertSee('Parolni tiklash');
-        $response->assertSee('Telegram orqali parolsiz kirish');
+        $response->assertSee('Tiklash havolasini olish');
     }
 
     public function test_password_reset_request_sends_telegram_message_for_telegram_user(): void

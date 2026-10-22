@@ -528,7 +528,7 @@
                                 <tr class="hover:bg-ink-950/40 transition-colors">
                                     <td class="px-4 py-3">
                                         <p class="font-bold text-paper">{{ $uItem->user->name ?? 'Mavjud emas' }}</p>
-                                        <p class="text-[10px] text-mist">{{ $uItem->user->email ?? '' }}</p>
+                                        <p class="text-[10px] font-mono text-mist">{{ $uItem->user?->phone ? \App\Support\PhoneNumber::format($uItem->user->phone) : ($uItem->user->email ?? '') }}</p>
                                         <span class="text-[10px] text-amber-400">Balans: {{ number_format($uItem->user->coin_balance ?? 0) }} 🪙</span>
                                     </td>
                                     <td class="px-4 py-3">

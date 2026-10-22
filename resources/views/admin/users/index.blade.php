@@ -111,7 +111,7 @@
                 <tr class="bg-ink-950/60 border-b border-ink-border text-[11px] font-mono uppercase text-mist">
                     <th class="py-2.5 px-3.5 whitespace-nowrap">#</th>
                     <th class="py-2.5 px-3.5 whitespace-nowrap">Foydalanuvchi</th>
-                    <th class="py-2.5 px-3.5 whitespace-nowrap">Email</th>
+                    <th class="py-2.5 px-3.5 whitespace-nowrap">Telefon / Bog'lanish</th>
                     <th class="py-2.5 px-3.5 whitespace-nowrap">Rol</th>
                     <th class="py-2.5 px-3.5 whitespace-nowrap text-center">Guruh ochganmi?</th>
                     <th class="py-2.5 px-3.5 whitespace-nowrap text-center">Tokenga fon olganmi?</th>
@@ -165,8 +165,31 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="py-2.5 px-3.5 font-mono text-[11px] text-mist whitespace-nowrap">
-                            {{ $user->email ?: ($user->phone ? \App\Support\PhoneNumber::mask($user->phone) : ($user->telegram_username ? '@' . $user->telegram_username : 'Ko\'rsatilmagan')) }}
+                        <td class="py-2.5 px-3.5 whitespace-nowrap">
+                            @if($user->phone)
+                                <div class="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-paper">
+                                    <a href="tel:{{ $user->phone }}" class="hover:text-amber-400 transition-colors inline-flex items-center gap-1">
+                                        <span>📞</span>
+                                        <span>{{ \App\Support\PhoneNumber::format($user->phone) }}</span>
+                                    </a>
+                                    @if($user->telegram_username)
+                                        <a href="https://t.me/{{ $user->telegram_username }}" target="_blank" title="Telegram: @{{ $user->telegram_username }}" class="text-sky-400 hover:text-sky-300 ml-0.5">
+                                            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.196 1.006.128.832.926z"/></svg>
+                                        </a>
+                                    @endif
+                                </div>
+                                @if($user->email)
+                                    <p class="text-[10px] text-mist/70 font-mono truncate max-w-[140px]">{{ $user->email }}</p>
+                                @endif
+                            @elseif($user->email)
+                                <div class="font-mono text-[11px] text-mist">{{ $user->email }}</div>
+                            @elseif($user->telegram_username)
+                                <a href="https://t.me/{{ $user->telegram_username }}" target="_blank" class="font-mono text-[11px] text-sky-400 hover:underline">
+                                    @{{ $user->telegram_username }}
+                                </a>
+                            @else
+                                <span class="font-mono text-[11px] text-mist/50">Ko'rsatilmagan</span>
+                            @endif
                         </td>
                         <td class="py-2.5 px-3.5 whitespace-nowrap">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-badge text-[10px] font-mono font-bold border {{ $rc['class'] }}">

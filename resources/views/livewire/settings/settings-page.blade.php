@@ -5,13 +5,13 @@
         <p class="text-xs font-mono text-mist mt-1">{{ __('site.settings.subtitle') }}</p>
     </div>
 
-    <!-- Profile Settings Card -->
+    <!-- ── 1. Asosiy Profil Ma'lumotlari Card ── -->
     <div class="p-6 sm:p-7 rounded-panel bg-ink-900 border border-ink-border shadow-soft space-y-5">
         <h3 class="text-sm font-bold text-paper font-serif border-b border-ink-border pb-3">{{ __('site.settings.profile_info') }}</h3>
 
-        <!-- Avatar Preview -->
+        <!-- Avatar Preview & Upload -->
         <div class="flex items-center gap-4">
-            <div class="w-16 h-16 rounded-panel overflow-hidden border-2 border-amber-400/40 shrink-0">
+            <div class="w-16 h-16 rounded-panel overflow-hidden border-2 border-amber-400/40 shrink-0 bg-ink-950">
                 @if ($avatar)
                     <img src="{{ $avatar->temporaryUrl() }}" class="w-full h-full object-cover">
                 @else
@@ -23,12 +23,12 @@
                 <input type="file" wire:model="avatar" accept="image/*"
                     class="text-xs font-mono text-mist file:mr-3 file:py-1.5 file:px-3 file:rounded-btn file:border-0 file:text-xs file:font-mono file:font-semibold file:bg-amber-400 file:text-ink-950 hover:file:bg-amber-300 file:cursor-pointer">
                 <span wire:loading wire:target="avatar" class="text-[11px] font-mono text-amber-400 block mt-1">{{ __('site.settings.uploading') }}</span>
-                @error('avatar') <p class="text-rose-300 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                @error('avatar') <p class="text-rose-400 font-mono text-xs mt-1">{{ $message }}</p> @enderror
                 @if (auth()->user()->avatar)
                     <div class="mt-2">
                         <button type="button" wire:click="removeAvatar" wire:target="removeAvatar" wire:loading.attr="disabled"
                             wire:confirm="{{ __('site.settings.remove_avatar_confirm') }}"
-                            class="inline-flex items-center gap-1.5 text-[11px] font-mono text-rose-300/90 hover:text-rose-200 transition-colors">
+                            class="inline-flex items-center gap-1.5 text-[11px] font-mono text-rose-400 hover:text-rose-300 transition-colors">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             {{ __('site.settings.remove_avatar') }}
                         </button>
@@ -38,41 +38,316 @@
             </div>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-4 pt-1">
+            <!-- To'liq ism -->
             <div>
                 <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.settings.full_name') }}</label>
-                <input type="text" wire:model="name"
-                    class="w-full px-3.5 py-2 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none">
-                @error('name') <p class="text-rose-300 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                <input type="text" wire:model.defer="name"
+                    class="w-full px-3.5 py-2.5 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none">
+                @error('name') <p class="text-rose-400 font-mono text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            <!-- Username -->
             <div>
                 <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.settings.username') }}</label>
-                <input type="text" wire:model="username"
-                    class="w-full px-3.5 py-2 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none">
-                @error('username') <p class="text-rose-300 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist font-mono text-xs">@</span>
+                    <input type="text" wire:model.defer="username"
+                        class="w-full pl-7 pr-3.5 py-2.5 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper font-mono focus:border-amber-400 focus:outline-none">
+                </div>
+                @error('username') <p class="text-rose-400 font-mono text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            <!-- Elektron pochta (Gmail — Erkin tahrirlanadi) -->
             <div>
-                <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.settings.email') }}</label>
-                <input type="email" value="{{ auth()->user()->email }}" disabled
-                    class="w-full px-3.5 py-2 bg-ink-950/40 border border-ink-border rounded-btn text-xs sm:text-sm text-mist/60 cursor-not-allowed font-mono">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-xs font-mono uppercase tracking-wider text-mist">{{ __('site.settings.email') }} (Gmail)</label>
+                    <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Erkin o'zgartirish</span>
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                    </div>
+                    <input type="email" wire:model.defer="email"
+                        class="w-full pl-9 pr-3.5 py-2.5 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none"
+                        placeholder="ali@gmail.com">
+                </div>
+                @error('email') <p class="text-rose-400 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                <p class="text-[11px] text-mist/70 font-mono mt-1">Elektron pochtangizni xohlagan paytda erkin o'zgartirishingiz mumkin.</p>
             </div>
 
+            <!-- Telefon raqami (Xavfsizlik shartlari bilan o'zgartiriladi) -->
+            <div class="p-3.5 rounded-xl bg-ink-950/60 border border-ink-border space-y-2">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <label class="block text-xs font-mono uppercase tracking-wider text-mist">
+                        Telefon raqam <span class="text-amber-400 font-bold">(Asosiy identifikator)</span>
+                    </label>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        @if($hasVerifiedPhone)
+                            <span class="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                ✅ Tasdiqlangan
+                            </span>
+                        @endif
+                        @if($isTelegramLinked)
+                            <span class="text-[10px] font-mono font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">
+                                🤖 Telegram ulangan
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-ink-800 border border-ink-border flex items-center justify-center text-amber-400 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        </div>
+                        <div>
+                            <p class="font-mono text-sm font-semibold text-paper">
+                                {{ $phone ?: 'Telefon raqami kiritilmagan' }}
+                            </p>
+                            <p class="text-[10px] font-mono text-mist">Platformaga kirish va 2FA xavfsizlik raqamingiz</p>
+                        </div>
+                    </div>
+
+                    <button type="button" wire:click="openPhoneModal"
+                        class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-btn text-xs font-mono font-semibold transition-all inline-flex items-center gap-1.5 shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span>{{ $phone ? "Raqamni o'zgartirish" : "Raqam qo'shish" }}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bio -->
             <div>
                 <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.settings.bio') }}</label>
-                <textarea rows="3" wire:model="bio" placeholder="{{ __('site.settings.bio_placeholder') }}"
-                    class="w-full px-3.5 py-2 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none resize-none font-sans"></textarea>
-                @error('bio') <p class="text-rose-300 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                <textarea rows="3" wire:model.defer="bio" placeholder="{{ __('site.settings.bio_placeholder') }}"
+                    class="w-full px-3.5 py-2.5 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none resize-none font-sans"></textarea>
+                @error('bio') <p class="text-rose-400 font-mono text-xs mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
 
-        <div class="flex items-center justify-end gap-3 pt-2">
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-ink-border">
             <span wire:loading wire:target="save" class="text-xs font-mono text-mist">{{ __('site.settings.saving') }}</span>
             <button wire:click="save" wire:loading.attr="disabled"
-                class="ks-btn-primary text-xs py-2 px-4">
+                class="ks-btn-primary text-xs py-2.5 px-5">
                 {{ __('site.settings.save') }}
             </button>
         </div>
     </div>
+
+    <!-- ── 2. Telefon Raqamini O'zgartirish Xavfsizlik Modali ── -->
+    @if($showPhoneModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in"
+             x-data @keydown.escape.window="$wire.closePhoneModal()">
+            <div class="w-full max-w-md bg-ink-900 border border-ink-border rounded-panel p-6 shadow-2xl space-y-4 relative">
+                
+                <!-- Modal Sarlavhasi -->
+                <div class="flex items-center justify-between border-b border-ink-border pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold font-serif text-paper">Telefon raqamini o'zgartirish</h3>
+                            <p class="text-[10px] font-mono text-mist">Xavfsizlik shartlari asosida tasdiqlash</p>
+                        </div>
+                    </div>
+                    <button type="button" wire:click="closePhoneModal" class="text-mist hover:text-paper transition-colors p-1 text-lg leading-none">
+                        &times;
+                    </button>
+                </div>
+
+                @if(!$codeSent)
+                    <!-- 1-BOSQICH: Yangi raqam va Joriy parol -->
+                    <div class="space-y-3.5">
+                        <div class="p-3 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] leading-relaxed">
+                            <p class="font-bold mb-0.5">🔒 Xavfsizlik talablari:</p>
+                            <p>1. Hisobingizni begona shaxslar o'g'irlamasligi uchun <b>amaldagi parolingizni</b> kiritishingiz shart.</p>
+                            @if($isTelegramLinked)
+                                <p class="mt-1">2. Yangi raqam kiritilgach, hisobingizga ulangan <b>Telegram botga 6 xonali tasdiqlash kodi</b> yuboriladi.</p>
+                            @endif
+                        </div>
+
+                        <!-- Yangi telefon raqami -->
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">
+                                Yangi telefon raqami <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative flex items-center w-full rounded-btn bg-ink-950 border border-ink-border px-3 py-2">
+                                <span class="font-mono text-xs font-semibold text-paper shrink-0 pr-2 border-r border-ink-border">+998</span>
+                                <input type="tel" wire:model.defer="newPhone" autofocus
+                                    class="w-full bg-transparent border-0 p-0 pl-2 text-xs sm:text-sm text-paper font-mono focus:ring-0 focus:outline-none"
+                                    placeholder="90 123 45 67">
+                            </div>
+                            @error('newPhone') <p class="text-rose-400 font-mono text-[11px] mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Amaldagi parol -->
+                        <div>
+                            <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">
+                                Amaldagi parolingiz <span class="text-rose-400">*</span>
+                            </label>
+                            <input type="password" wire:model.defer="currentPassword"
+                                class="w-full px-3 py-2 bg-ink-950 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none"
+                                placeholder="Joriy parolingizni kiriting">
+                            @error('currentPassword') <p class="text-rose-400 font-mono text-[11px] mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Tugmalar -->
+                        <div class="flex items-center justify-end gap-2 pt-2 border-t border-ink-border">
+                            <button type="button" wire:click="closePhoneModal" class="ks-btn-ghost text-xs py-2 px-3.5">
+                                Bekor qilish
+                            </button>
+                            <button type="button" wire:click="requestPhoneChange" wire:loading.attr="disabled"
+                                class="ks-btn-primary text-xs py-2 px-4 flex items-center gap-1.5">
+                                <span wire:loading wire:target="requestPhoneChange">Tekshirilmoqda...</span>
+                                <span wire:loading.remove wire:target="requestPhoneChange">
+                                    {{ $isTelegramLinked ? "Kodni Telegramga yuborish →" : "Raqamni saqlash" }}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                @else
+                    <!-- 2-BOSQICH: Telegram tasdiqlash kodi -->
+                    <div class="space-y-3.5">
+                        <div class="p-3 rounded-lg bg-sky-500/10 border border-sky-500/25 text-sky-300 text-xs text-center space-y-1">
+                            <p class="font-bold">📱 Telegram botga kod yuborildi!</p>
+                            <p class="text-[11px] text-sky-200/80">
+                                Telegram botingizga (<b>@{{ $telegramUsername ?: config('telegram.bot_username') }}</b>) 6 xonali maxsus tasdiqlash kodi yuborildi. Kodni quyida kiriting:
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-center text-xs font-mono uppercase tracking-wider text-mist mb-1.5">
+                                6 xonali tasdiqlash kodi
+                            </label>
+                            <input type="text" wire:model.defer="verificationCode" autofocus maxlength="6"
+                                class="w-full text-center tracking-[0.4em] font-mono text-xl font-bold py-2.5 px-3 bg-ink-950 border border-ink-border rounded-btn text-paper focus:border-amber-400 focus:outline-none"
+                                placeholder="••••••">
+                            @error('verificationCode') <p class="text-rose-400 text-center font-mono text-[11px] mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Tugmalar -->
+                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-ink-border">
+                            <button type="button" wire:click="requestPhoneChange" class="text-xs text-amber-400 hover:underline font-mono">
+                                Kod kelmadimi? Qayta yuborish ↻
+                            </button>
+                            <div class="flex items-center gap-2">
+                                <button type="button" wire:click="closePhoneModal" class="ks-btn-ghost text-xs py-2 px-3">
+                                    Bekor qilish
+                                </button>
+                                <button type="button" wire:click="confirmPhoneChange" wire:loading.attr="disabled"
+                                    class="ks-btn-primary text-xs py-2 px-4">
+                                    <span wire:loading wire:target="confirmPhoneChange">Tasdiqlanmoqda...</span>
+                                    <span wire:loading.remove wire:target="confirmPhoneChange">Tasdiqlash & Saqlash</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+            </div>
+        </div>
+    @endif
+
+    <!-- ── 3. Telegram Integratsiyasi Card ── -->
+    <div class="p-6 sm:p-7 rounded-panel bg-ink-900 border border-ink-border shadow-soft space-y-4">
+        <div class="flex items-center justify-between border-b border-ink-border pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-btn bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.196 1.006.128.832.926z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold font-serif text-paper">Telegram hisobi</h3>
+                    <p class="text-[11px] font-mono text-mist">Tezkor kirish, 2FA kodlari va muhim bildirishnomalar</p>
+                </div>
+            </div>
+
+            @if(auth()->user()->isTelegramLinked())
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    Ulangan
+                </span>
+            @else
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-mist/10 text-mist border border-ink-border">
+                    Ulanmagan
+                </span>
+            @endif
+        </div>
+
+        @if(auth()->user()->isTelegramLinked())
+            <div class="p-3.5 rounded-xl bg-ink-950/60 border border-ink-border flex items-center justify-between flex-wrap gap-3">
+                <div class="space-y-0.5">
+                    <p class="text-xs font-bold text-paper flex items-center gap-1.5">
+                        <span>{{ auth()->user()->telegram_username ? '@' . auth()->user()->telegram_username : 'Telegram foydalanuvchisi' }}</span>
+                        @if(auth()->user()->isTelegramBlocked())
+                            <span class="text-[10px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">Bot bloklangan</span>
+                        @endif
+                    </p>
+                    <p class="text-[10px] text-mist font-mono">ID: {{ auth()->user()->telegram_id }} • Ulandi: {{ auth()->user()->telegram_linked_at?->format('d.m.Y') }}</p>
+                </div>
+
+                <form method="POST" action="{{ route('auth.telegram.unlink') }}" onsubmit="return confirm('Haqiqatan ham Telegram hisobingizni uzmoqchimisiz? 2FA kirish to\'xtatiladi.');">
+                    @csrf
+                    <button type="submit" class="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-btn text-xs font-mono font-semibold transition-all">
+                        Telegramni uzish
+                    </button>
+                </form>
+            </div>
+
+            <!-- Bildirishnoma sozlamalari -->
+            <form method="POST" action="{{ route('settings.telegram.notifications') }}" class="pt-2 space-y-3">
+                @csrf
+                <div class="border-t border-ink-border pt-3">
+                    <h4 class="text-xs font-mono uppercase tracking-wider text-mist mb-2.5">Telegram bildirishnomalari</h4>
+                    
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
+                            <input type="checkbox" name="streak_reminder" value="1" {{ auth()->user()->prefersTelegramNotification('streak_reminder') ? 'checked' : '' }} class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-semibold text-paper">🔥 Streak xavf ostida eslatmasi</p>
+                                <p class="text-[11px] text-mist">Kechki 20:30 da bugun hali mutolaa qilmagan bo'lsangiz, streakni saqlab qolish uchun bot eslatadi.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
+                            <input type="checkbox" name="daily_quote" value="1" {{ auth()->user()->prefersTelegramNotification('daily_quote') ? 'checked' : '' }} class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-semibold text-paper">✨ Kun hikmati</p>
+                                <p class="text-[11px] text-mist">Har kuni ertalab 09:00 da kitoblardan sara iqtiboslarni bot orqali qabul qilish.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
+                            <input type="checkbox" name="coin_reward" value="1" {{ auth()->user()->prefersTelegramNotification('coin_reward') ? 'checked' : '' }} class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-semibold text-paper">🪙 Tangalar va yutuqlar</p>
+                                <p class="text-[11px] text-mist">Testlarni topshirganda tanga va yutuqlar haqida bildirishnoma.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-1">
+                    <button type="submit" class="ks-btn-ghost text-xs py-1.5 px-3">
+                        Bildirishnoma sozlamalarini saqlash
+                    </button>
+                </div>
+            </form>
+        @else
+            <div class="p-4 rounded-xl bg-ink-950/60 border border-ink-border space-y-3">
+                <p class="text-xs text-mist">
+                    Hisobingizga Telegram'ni ulasangiz, Telegram orqali 6 xonali xavfsiz kod bilan bir zumda kira olasiz hamda muhim bildirishnomalarni bot orqali qabul qilasiz.
+                </p>
+
+                <div class="pt-1">
+                    <a href="{{ route('auth.telegram.redirect') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-[#24A1DE] hover:bg-[#2092c9] text-white rounded-btn text-xs font-bold shadow-md transition-all">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.196 1.006.128.832.926z"/></svg>
+                        <span>Telegram hisobini ulash</span>
+                    </a>
+                </div>
+            </div>
+        @endif
+    </div>
+
 </div>

@@ -254,7 +254,7 @@
                              style="display:none;">
                             <div class="px-3.5 py-2.5 border-b border-ink-border">
                                 <p class="text-xs font-medium text-paper truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
-                                <p class="font-mono text-[11px] text-mist mt-0.5 truncate">{{ auth()->user()->email ?? 'admin@kitobxon.uz' }}</p>
+                                <p class="font-mono text-[11px] text-mist mt-0.5 truncate">{{ auth()->user()->phone ? \App\Support\PhoneNumber::format(auth()->user()->phone) : (auth()->user()->email ?? 'admin@kitobxon.uz') }}</p>
                             </div>
                             <div class="py-1">
                                 <a href="{{ route('settings') }}" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/90 hover:bg-ink-700 transition-colors duration-base">

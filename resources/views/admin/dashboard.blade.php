@@ -288,7 +288,7 @@
                                     @endif
                                     <div class="min-w-0">
                                         <p class="text-xs font-semibold text-paper truncate">{{ $user->name }}</p>
-                                        <p class="text-[10px] text-mist font-mono truncate">{{ $user->email ?: ($user->phone ? \App\Support\PhoneNumber::mask($user->phone) : ($user->telegram_username ? '@' . $user->telegram_username : 'Ko\'rsatilmagan')) }}</p>
+                                        <p class="text-[10px] text-mist font-mono truncate">{{ $user->phone ? \App\Support\PhoneNumber::format($user->phone) : ($user->email ?: ($user->telegram_username ? '@' . $user->telegram_username : '—')) }}</p>
                                     </div>
                                 </div>
                             </td>

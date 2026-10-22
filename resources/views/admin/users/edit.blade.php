@@ -75,7 +75,20 @@
                     </div>
 
                     <div class="flex items-center gap-3 text-xs text-mist font-mono flex-wrap">
-                        <span>{{ $user->email ?: ($user->phone ? \App\Support\PhoneNumber::mask($user->phone) : 'Email ko\'rsatilmagan') }}</span>
+                        @if($user->phone)
+                            <a href="tel:{{ $user->phone }}" class="text-amber-400 hover:underline inline-flex items-center gap-1 font-semibold">
+                                <span>📞</span>
+                                <span>{{ \App\Support\PhoneNumber::format($user->phone) }}</span>
+                            </a>
+                        @endif
+                        @if($user->telegram_username)
+                            <a href="https://t.me/{{ $user->telegram_username }}" target="_blank" class="text-sky-400 hover:underline inline-flex items-center gap-1 font-semibold">
+                                <span>🤖 @</span><span>{{ $user->telegram_username }}</span>
+                            </a>
+                        @endif
+                        @if($user->email)
+                            <span class="text-mist">{{ $user->email }}</span>
+                        @endif
                         <span>•</span>
                         <span>{{ '@' . ($user->username ?? 'foydalanuvchi') }}</span>
                         <span>•</span>

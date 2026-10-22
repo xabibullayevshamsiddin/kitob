@@ -85,7 +85,7 @@
                         <tr class="transition-colors hover:bg-ink-800/40">
                             <td class="px-4 py-3">
                                 <p class="text-xs font-semibold text-paper">{{ $attempt->user?->name ?? 'Foydalanuvchi o‘chirilgan' }}</p>
-                                @if($attempt->user?->email)<p class="mt-0.5 text-[11px] text-mist">{{ $attempt->user->email }}</p>@endif
+                                @if($attempt->user?->phone)<p class="mt-0.5 text-[11px] font-mono text-amber-400/90">📞 {{ \App\Support\PhoneNumber::format($attempt->user->phone) }}</p>@elseif($attempt->user?->email)<p class="mt-0.5 text-[11px] text-mist">{{ $attempt->user->email }}</p>@endif
                             </td>
                             <td class="whitespace-nowrap px-3 py-3 font-mono text-xs text-mist">{{ $attempt->completed_at?->format('d.m.Y H:i') ?? '—' }}</td>
                             <td class="whitespace-nowrap px-3 py-3 text-xs font-semibold text-paper">
