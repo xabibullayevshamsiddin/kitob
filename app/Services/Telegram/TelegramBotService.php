@@ -135,6 +135,11 @@ class TelegramBotService
             if ($loginData) {
                 $user = User::find($loginData['user_id']);
                 if ($user) {
+                    // Agar bu telegram_id boshqa foydalanuvchida qolgan bo'lsa, avval uni bo'shatamiz
+                    User::where('telegram_id', $userId)
+                        ->where('id', '!=', $user->id)
+                        ->update(['telegram_id' => null, 'telegram_username' => null]);
+
                     $user->update([
                         'telegram_id'        => $userId,
                         'telegram_username'  => $from['username'] ?? null,
@@ -290,6 +295,10 @@ class TelegramBotService
                 }
 
                 $welcomeCoins = (int) setting('welcome_bonus_coins', 50);
+
+                // Agar bu telegram_id boshqa foydalanuvchida qolgan bo'lsa, avval uni bo'shatamiz
+                User::where('telegram_id', $userId)
+                    ->update(['telegram_id' => null, 'telegram_username' => null]);
 
                 $user = User::create([
                     'name'              => $pending['name'],
