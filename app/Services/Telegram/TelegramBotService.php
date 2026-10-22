@@ -73,9 +73,12 @@ class TelegramBotService
             return;
         }
 
-        // Buyruqlarni ajratib olish (/start payload)
+        // Buyruqlarni ajratib olish (/start payload yoki /start@bot_username payload)
         $parts = explode(' ', $text, 2);
         $command = strtolower($parts[0]);
+        if (str_contains($command, '@')) {
+            $command = explode('@', $command)[0];
+        }
         $payload = trim($parts[1] ?? '');
 
         match ($command) {
@@ -123,6 +126,9 @@ class TelegramBotService
                         'one_time_keyboard' => true,
                     ]
                 ]);
+                return;
+            } else {
+                $this->client->sendMessage($chatId, "⚠️ Ro'yxatdan o'tish havolasi muddati eskirgan (15 daqiqadan oshgan) yoki topilmadi.\n\nIltimos, saytga qaytib, ro'yxatdan o'tish formasini qaytadan yuboring.");
                 return;
             }
         }
