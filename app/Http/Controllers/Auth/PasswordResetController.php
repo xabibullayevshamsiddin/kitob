@@ -59,16 +59,35 @@ class PasswordResetController extends Controller
                 }
 
                 $token = Password::broker()->createToken($user);
-                $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
+
+                $publicBase = config('app.url', 'https://kitob-9y1h.onrender.com');
+                if (str_contains($publicBase, 'localhost') || str_contains($publicBase, '127.0.0.1')) {
+                    $publicBase = 'https://kitob-9y1h.onrender.com';
+                }
+                $publicResetUrl = rtrim($publicBase, '/') . '/reset-password/' . $token . '?email=' . urlencode($user->email);
+                $localResetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
 
                 $telegram = new TelegramClient();
                 $message = "<b>Parolni yangilash so'rovi 🔐</b>\n\n"
                     . "Assalomu alaykum, <b>" . htmlspecialchars($user->name) . "</b>!\n\n"
-                    . "Platformada parolingizni tiklash yoki yangi parol o'rnatish uchun quyidagi havolaga kiring:\n"
-                    . "<a href=\"{$resetUrl}\">👉 Yangi parol o'rnatish</a>\n\n"
-                    . "<i>Agar bu so'rovni siz yubormagan bo'lsangiz, xabarni e'tiborsiz qoldiring. Havola 60 daqiqa amal qiladi.</i>";
+                    . "Platformada parolingizni tiklash yoki yangi parol o'rnatish uchun quyidagi tugmani bosing yoki havolaga kiring:\n\n"
+                    . "👉 <a href=\"{$publicResetUrl}\">{$publicResetUrl}</a>\n\n";
 
-                $telegram->sendMessage($user->telegram_id, $message);
+                if ($request->getHost() === 'localhost' || $request->getHost() === '127.0.0.1') {
+                    $message .= "💻 <b>Lokal kompyuter (localhost) havolasi:</b>\n<code>{$localResetUrl}</code>\n\n";
+                }
+
+                $message .= "<i>Agar bu so'rovni siz yubormagan bo'lsangiz, xabarni e'tiborsiz qoldiring. Havola 60 daqiqa amal qiladi.</i>";
+
+                $telegram->sendMessage($user->telegram_id, $message, [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => '🔑 Yangi parol o\'rnatish', 'url' => $publicResetUrl]
+                            ]
+                        ]
+                    ]
+                ]);
 
                 return back()->with('status', "Telegram hisobingizga parolni yangilash havolasi yuborildi! Iltimos, Telegram botingizni tekshiring.");
             } catch (\Throwable $e) {
