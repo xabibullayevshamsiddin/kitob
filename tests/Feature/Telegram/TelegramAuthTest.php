@@ -7,8 +7,10 @@ use App\Models\User;
 use App\Services\Telegram\TelegramAuthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class TelegramAuthTest extends TestCase
@@ -196,18 +198,35 @@ class TelegramAuthTest extends TestCase
 
     public function test_user_can_log_in_using_phone_number_in_standard_login_form(): void
     {
-        $user = User::factory()->create([
-            'phone'    => '+998901234567',
-            'password' => Hash::make('my-password-123'),
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]], 200),
         ]);
 
-        // Standart E.164 formati bilan kirish
+        $user = User::factory()->create([
+            'phone'       => '+998901234567',
+            'telegram_id' => 123456789,
+            'password'    => Hash::make('my-password-123'),
+        ]);
+
+        // Standart E.164 formati bilan kirish (2FA kod sahifasiga yo'naltiriladi)
         $response = $this->post(route('login'), [
             'email'    => '+998901234567',
             'password' => 'my-password-123',
         ]);
 
-        $response->assertRedirect(route('home'));
+        $response->assertStatus(302);
+        $this->assertStringContainsString('/login/verify-code/', (string) $response->headers->get('Location'));
+
+        // Telegram orqali yuborilgan 6 xonali kod bilan tasdiqlash
+        $location = (string) $response->headers->get('Location');
+        $token = basename(parse_url($location, PHP_URL_PATH));
+        $cached = Cache::get("login_2fa_{$token}");
+        $this->assertNotNull($cached);
+
+        $verifyRes = $this->post(route('login.verify-code', ['token' => $token]), [
+            'code' => $cached['code'],
+        ]);
+        $verifyRes->assertRedirect(route('home'));
         $this->assertAuthenticatedAs($user);
 
         Auth::logout();
@@ -218,8 +237,8 @@ class TelegramAuthTest extends TestCase
             'password' => 'my-password-123',
         ]);
 
-        $response2->assertRedirect(route('home'));
-        $this->assertAuthenticatedAs($user);
+        $response2->assertStatus(302);
+        $this->assertStringContainsString('/login/verify-code/', (string) $response2->headers->get('Location'));
     }
 
     public function test_user_can_register_with_phone_number(): void

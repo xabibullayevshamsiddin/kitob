@@ -105,7 +105,49 @@ class TelegramBotService
             ->whereNotNull('telegram_blocked_at')
             ->update(['telegram_blocked_at' => null]);
 
-        // 1. Agar bu telefon tasdiqlash uchun deep-link bo'lsa: /start verify_{token}
+        // 1. Agar bu ro'yxatdan o'tishda telefon tasdiqlash deep-linki bo'lsa: /start reg_{token}
+        if (str_starts_with($payload, 'reg_')) {
+            $token = substr($payload, 4);
+            $pending = Cache::get("pending_reg_{$token}");
+
+            if ($pending) {
+                Cache::put("tg_reg_token_{$userId}", $token, now()->addMinutes(15));
+                $masked = PhoneNumber::mask($pending['phone']);
+
+                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$pending['name']}</b>! 👋📚\n\nPlatformada ro'yxatdan o'tish uchun <b>{$masked}</b> telefon raqamingizni tasdiqlashingiz lozim.\n\nIltimos, pastdagi <b>«📲 Raqamni ulashish (Tasdiqlash)»</b> tugmasini bosing:", [
+                    'reply_markup' => [
+                        'keyboard' => [
+                            [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]]
+                        ],
+                        'resize_keyboard' => true,
+                        'one_time_keyboard' => true,
+                    ]
+                ]);
+                return;
+            }
+        }
+
+        // 2. Agar bu kirishda 6 xonali kod olish deep-linki bo'lsa: /start login_code_{token}
+        if (str_starts_with($payload, 'login_code_')) {
+            $token = substr($payload, 11);
+            $loginData = Cache::get("login_2fa_{$token}");
+
+            if ($loginData) {
+                $user = User::find($loginData['user_id']);
+                if ($user) {
+                    $user->update([
+                        'telegram_id'        => $userId,
+                        'telegram_username'  => $from['username'] ?? null,
+                        'telegram_linked_at' => now(),
+                    ]);
+
+                    $this->client->sendMessage($chatId, "Salom, <b>{$name}</b>! 🔐\n\nPlatformaga kirish uchun 6 xonali tasdiqlash kodingiz:\n👉 <code>{$loginData['code']}</code> 👈\n\nUshbu kodni saytga kiriting. Amal qilish muddati: 5 daqiqa.");
+                    return;
+                }
+            }
+        }
+
+        // 3. Agar bu telefon tasdiqlash uchun deep-link bo'lsa: /start verify_{token}
         if (str_starts_with($payload, 'verify_')) {
             $token = substr($payload, 7);
             $appUserId = Cache::get("tg_verify_token_{$token}");
@@ -237,7 +279,73 @@ class TelegramBotService
             return;
         }
 
-        // Sessiyadagi yoki telegram_id bo'yicha foydalanuvchini topish
+        // 1. Yangi ro'yxatdan o'tish (Registration verification)
+        $regToken = Cache::get("tg_reg_token_{$userId}");
+        if ($regToken) {
+            $pending = Cache::get("pending_reg_{$regToken}");
+            if ($pending) {
+                if ($normalized !== $pending['phone']) {
+                    $this->client->sendMessage($chatId, "⚠️ Siz saytda kiritgan raqam (<b>" . PhoneNumber::mask($pending['phone']) . "</b>) bilan Telegram hisobingizdagi raqam (<b>" . PhoneNumber::mask($normalized) . "</b>) mos kelmadi.\n\nIltimos, o'zingizning haqiqiy raqamingiz bilan ro'yxatdan o'ting.");
+                    return;
+                }
+
+                $welcomeCoins = (int) setting('welcome_bonus_coins', 50);
+
+                $user = User::create([
+                    'name'              => $pending['name'],
+                    'username'          => $pending['username'],
+                    'email'             => $pending['email'] ?? null,
+                    'phone'             => $pending['phone'],
+                    'password'          => $pending['password'],
+                    'phone_verified_at' => now(),
+                    'telegram_id'       => $userId,
+                    'telegram_username' => $from['username'] ?? null,
+                    'telegram_linked_at'=> now(),
+                    'role'              => 'reader',
+                    'total_points'      => 0,
+                    'coin_balance'      => $welcomeCoins,
+                ]);
+
+                if ($welcomeCoins > 0) {
+                    try {
+                        \App\Models\CoinTransaction::create([
+                            'user_id'     => $user->id,
+                            'coins'       => $welcomeCoins,
+                            'source'      => 'bonus',
+                            'description' => 'Ro\'yxatdan o\'tish uchun xush kelibsiz bonusi 🎁',
+                        ]);
+                    } catch (\Throwable $e) {}
+                }
+
+                try {
+                    if (method_exists($user, 'assignRole')) {
+                        $user->assignRole('reader');
+                    }
+                } catch (\Throwable $e) {}
+
+                \App\Models\UserProfile::create([
+                    'user_id'          => $user->id,
+                    'privacy_settings' => ['show_stats' => true, 'show_activity' => true],
+                ]);
+
+                \App\Models\UserStreak::create([
+                    'user_id'          => $user->id,
+                    'current_streak'   => 0,
+                    'longest_streak'   => 0,
+                    'last_active_date' => null,
+                ]);
+
+                Cache::put("pending_reg_completed_{$regToken}", $user->id, now()->addMinutes(10));
+                Cache::forget("tg_reg_token_{$userId}");
+
+                $this->client->sendMessage($chatId, "Tabriklaymiz, <b>{$pending['name']}</b>! 🎉\n\nTelefon raqamingiz muvaffaqiyatli tasdiqlandi va hisobingiz faollashtirildi!\n\nSaytdagi sahifangiz avtomatik ochiladi. Xush kelibsiz! ✅", [
+                    'reply_markup' => ['remove_keyboard' => true],
+                ]);
+                return;
+            }
+        }
+
+        // 2. Mavjud hisobga telefon bog'lash (Account linking)
         $appUserId = Cache::get("tg_user_verifying_{$userId}");
         $user = $appUserId ? User::find($appUserId) : User::where('telegram_id', $userId)->first();
 

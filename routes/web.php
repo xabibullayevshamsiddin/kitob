@@ -1309,6 +1309,34 @@ Route::get('/tg-app', [\App\Http\Controllers\Telegram\TelegramMiniAppController:
 Route::post('/tg-app/auth', [\App\Http\Controllers\Telegram\TelegramMiniAppController::class, 'authenticate'])
     ->name('tg-app.auth');
 
+// Telefon orqali ro'yxatdan o'tish va Telegram orqali tasdiqlash
+Route::post('/register', [\App\Http\Controllers\Auth\PhoneRegisterController::class, 'register'])
+    ->middleware('guest');
+
+Route::get('/register/verify/{token}', [\App\Http\Controllers\Auth\PhoneRegisterController::class, 'showVerify'])
+    ->name('register.verify')
+    ->middleware('guest');
+
+Route::get('/register/check/{token}', [\App\Http\Controllers\Auth\PhoneRegisterController::class, 'checkVerify'])
+    ->name('register.check')
+    ->middleware('guest');
+
+// Telefon + Parol kiritilganda Telegram orqali 6 xonali kod bilan kirish (2FA Login)
+Route::post('/login', [\App\Http\Controllers\Auth\PhoneLoginController::class, 'login'])
+    ->middleware('guest');
+
+Route::get('/login/verify-code/{token}', [\App\Http\Controllers\Auth\PhoneLoginController::class, 'showVerifyCode'])
+    ->name('login.verify-code')
+    ->middleware('guest');
+
+Route::post('/login/verify-code/{token}', [\App\Http\Controllers\Auth\PhoneLoginController::class, 'verifyCode'])
+    ->name('login.verify-code.submit')
+    ->middleware('guest');
+
+Route::post('/login/resend-code/{token}', [\App\Http\Controllers\Auth\PhoneLoginController::class, 'resendCode'])
+    ->name('login.resend-code')
+    ->middleware('guest');
+
 
 
 
