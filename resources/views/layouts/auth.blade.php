@@ -25,6 +25,15 @@
             caret-color: #F0EDE6 !important;
             transition: background-color 9999s ease-in-out 0s !important;
         }
+        html.light:not(.force-dark) input:-webkit-autofill,
+        html.light:not(.force-dark) input:-webkit-autofill:hover,
+        html.light:not(.force-dark) input:-webkit-autofill:focus,
+        html.light:not(.force-dark) textarea:-webkit-autofill,
+        html.light:not(.force-dark) select:-webkit-autofill {
+            -webkit-text-fill-color: #1C1916 !important;
+            -webkit-box-shadow: 0 0 0 1000px #F9F6F0 inset !important;
+            caret-color: #1C1916 !important;
+        }
     </style>
     @include('components.pwa-head')
 </head>
@@ -75,8 +84,23 @@
                         </span>
                         <span>Kitobxon</span>
                     </a>
-                    <div class="ml-auto">
+                    <div class="ml-auto flex items-center gap-2">
                         <x-lang-switcher />
+                        <button onclick="window.__setKitobTheme && window.__setKitobTheme(document.documentElement.classList.contains('light') ? 'dark' : 'light', event)" 
+                                type="button"
+                                class="header-theme-btn relative inline-flex items-center justify-center w-8 h-8 rounded-btn border border-ink-border bg-ink-800 text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base select-none shrink-0 group focus:outline-none"
+                                title="Mavzuni almashtirish (Yorug' / Qorong'i)"
+                                aria-label="Mavzuni almashtirish">
+                            <!-- Sun icon (Dark mode) -->
+                            <svg class="w-4 h-4 text-amber-400 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="4"/>
+                                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                            </svg>
+                            <!-- Moon icon (Light mode) -->
+                            <svg class="w-4 h-4 text-amber-600 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 

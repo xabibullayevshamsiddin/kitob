@@ -583,3 +583,6 @@
 
 {{-- Motion layer: scroll-reveal, aurora, spotlight, ripple, counters, page transitions --}}
 @include('partials.motion')
+
+{{-- Universal Custom Form Validation & Tooltips (Dark & Light mode) --}}
+@include('partials.custom-form-validation')

@@ -53,7 +53,7 @@
             </label>
             <div class="relative">
                 <input id="code" type="text" name="code" required autofocus maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                    class="w-full text-center tracking-[0.5em] text-2xl font-mono font-bold py-3 px-4 rounded-xl text-paper transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-slate-600 {{ $errors->has('code') ? '!border-2 !border-rose-500 !bg-rose-500/10 focus:!border-rose-500 focus:!ring-rose-500/30 text-rose-300' : 'bg-ink-950 border border-ink-border focus:border-amber-500 focus:ring-1 focus:ring-amber-500' }}"
+                    class="w-full text-center tracking-[0.5em] text-2xl font-mono font-bold py-3 px-4 rounded-xl text-paper transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-slate-600 {{ $errors->has('code') ? 'ks-input-invalid' : 'bg-ink-950 border border-ink-border focus:border-amber-500 focus:ring-1 focus:ring-amber-500' }}"
                     placeholder="••••••">
             </div>
             @error('code')
