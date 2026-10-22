@@ -34,27 +34,39 @@
     @csrf
 
     <div>
-        <label for="name" class="block text-xs font-mono uppercase tracking-wider text-mist mb-1.5">{{ __('site.auth.name') }}</label>
+        <label for="name" class="block text-xs font-mono uppercase tracking-wider {{ $errors->has('name') ? 'text-rose-400 font-semibold' : 'text-mist' }} mb-1.5">{{ __('site.auth.name') }}</label>
         <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none {{ $errors->has('name') ? 'text-rose-400' : 'text-mist' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             </div>
             <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name"
-                class="ks-input pl-9"
+                class="ks-input pl-9 {{ $errors->has('name') ? '!border-2 !border-rose-500 !bg-rose-500/10 focus:!border-rose-500 focus:!ring-rose-500/30 text-rose-200' : '' }}"
                 placeholder="Ali Valiyev">
         </div>
+        @error('name')
+            <p class="text-[11px] text-rose-400 font-mono mt-1.5 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
     </div>
 
     <div>
-        <label for="username" class="block text-xs font-mono uppercase tracking-wider text-mist mb-1.5">{{ __('site.auth.username') }}</label>
+        <label for="username" class="block text-xs font-mono uppercase tracking-wider {{ $errors->has('username') ? 'text-rose-400 font-semibold' : 'text-mist' }} mb-1.5">{{ __('site.auth.username') }}</label>
         <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist font-mono text-xs">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none font-mono text-xs {{ $errors->has('username') ? 'text-rose-400 font-bold' : 'text-mist' }}">
                 @
             </div>
             <input id="username" type="text" name="username" value="{{ old('username') }}" required autocomplete="username"
-                class="ks-input pl-8 font-mono"
+                class="ks-input pl-8 font-mono {{ $errors->has('username') ? '!border-2 !border-rose-500 !bg-rose-500/10 focus:!border-rose-500 focus:!ring-rose-500/30 text-rose-200' : '' }}"
                 placeholder="ali_kitobxon">
         </div>
+        @error('username')
+            <p class="text-[11px] text-rose-400 font-mono mt-1.5 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
     </div>
 
     <x-phone-input name="phone" id="phone" label="Telefon raqam" :required="true" />
@@ -62,42 +74,60 @@
     @if(config('telegram.auth_email_registration_enabled', true))
     <div>
         <div class="flex items-center justify-between mb-1.5">
-            <label for="email" class="block text-xs font-mono uppercase tracking-wider text-mist">{{ __('site.auth.email') }}</label>
+            <label for="email" class="block text-xs font-mono uppercase tracking-wider {{ $errors->has('email') ? 'text-rose-400 font-semibold' : 'text-mist' }}">{{ __('site.auth.email') }}</label>
             <span class="text-[10px] text-mist">(ixtiyoriy)</span>
         </div>
         <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none {{ $errors->has('email') ? 'text-rose-400' : 'text-mist' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
             </div>
             <input id="email" type="email" name="email" value="{{ old('email') }}" autocomplete="email"
-                class="ks-input pl-9"
+                class="ks-input pl-9 {{ $errors->has('email') ? '!border-2 !border-rose-500 !bg-rose-500/10 focus:!border-rose-500 focus:!ring-rose-500/30 text-rose-200' : '' }}"
                 placeholder="ali@misol.uz">
         </div>
+        @error('email')
+            <p class="text-[11px] text-rose-400 font-mono mt-1.5 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
     </div>
     @endif
 
     <div>
-        <label for="password" class="block text-xs font-mono uppercase tracking-wider text-mist mb-1.5">{{ __('site.auth.password') }}</label>
+        <label for="password" class="block text-xs font-mono uppercase tracking-wider {{ $errors->has('password') ? 'text-rose-400 font-semibold' : 'text-mist' }} mb-1.5">{{ __('site.auth.password') }}</label>
         <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none {{ $errors->has('password') ? 'text-rose-400' : 'text-mist' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
             <input id="password" type="password" name="password" required autocomplete="new-password"
-                class="ks-input pl-9"
+                class="ks-input pl-9 {{ $errors->has('password') ? '!border-2 !border-rose-500 !bg-rose-500/10 focus:!border-rose-500 focus:!ring-rose-500/30 text-rose-200' : '' }}"
                 placeholder="Kamida 8 ta belgi">
         </div>
+        @error('password')
+            <p class="text-[11px] text-rose-400 font-mono mt-1.5 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
     </div>
 
     <div>
-        <label for="password_confirmation" class="block text-xs font-mono uppercase tracking-wider text-mist mb-1.5">{{ __('site.auth.confirm_password') }}</label>
+        <label for="password_confirmation" class="block text-xs font-mono uppercase tracking-wider {{ $errors->has('password_confirmation') || $errors->has('password') ? 'text-rose-400 font-semibold' : 'text-mist' }} mb-1.5">{{ __('site.auth.confirm_password') }}</label>
         <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none {{ $errors->has('password_confirmation') || $errors->has('password') ? 'text-rose-400' : 'text-mist' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
             </div>
             <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
-                class="ks-input pl-9"
+                class="ks-input pl-9 {{ $errors->has('password_confirmation') || $errors->has('password') ? '!border-2 !border-rose-500 !bg-rose-500/10 focus:!border-rose-500 focus:!ring-rose-500/30 text-rose-200' : '' }}"
                 placeholder="••••••••">
         </div>
+        @error('password_confirmation')
+            <p class="text-[11px] text-rose-400 font-mono mt-1.5 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>{{ $message }}</span>
+            </p>
+        @enderror
     </div>
 
     <button type="submit"

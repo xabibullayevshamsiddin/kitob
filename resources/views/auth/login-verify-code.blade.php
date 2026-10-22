@@ -48,14 +48,20 @@
         @csrf
 
         <div>
-            <label for="code" class="block text-center text-xs font-mono uppercase tracking-wider text-mist mb-2">
+            <label for="code" class="block text-center text-xs font-mono uppercase tracking-wider {{ $errors->has('code') ? 'text-rose-400 font-semibold' : 'text-mist' }} mb-2">
                 6 xonali kodni kiriting
             </label>
             <div class="relative">
                 <input id="code" type="text" name="code" required autofocus maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                    class="w-full text-center tracking-[0.5em] text-2xl font-mono font-bold py-3 px-4 rounded-xl bg-ink-950 border border-ink-border text-paper focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-slate-600"
+                    class="w-full text-center tracking-[0.5em] text-2xl font-mono font-bold py-3 px-4 rounded-xl text-paper transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-slate-600 {{ $errors->has('code') ? '!border-2 !border-rose-500 !bg-rose-500/10 focus:!border-rose-500 focus:!ring-rose-500/30 text-rose-300' : 'bg-ink-950 border border-ink-border focus:border-amber-500 focus:ring-1 focus:ring-amber-500' }}"
                     placeholder="••••••">
             </div>
+            @error('code')
+                <p class="text-[11px] text-center text-rose-400 font-mono mt-1.5 flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>{{ $message }}</span>
+                </p>
+            @enderror
             <p class="text-[11px] text-center text-mist mt-1.5 font-mono">
                 Kod Telegram botingizda: <b>@{{ $botUsername }}</b>
             </p>
