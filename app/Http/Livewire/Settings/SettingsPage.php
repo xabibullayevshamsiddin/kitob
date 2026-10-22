@@ -74,8 +74,39 @@ class SettingsPage extends Component
         'bio'      => 'site.settings.bio',
     ];
 
+    public function updatedUsername(): void
+    {
+        $clean = strtolower(trim((string) $this->username));
+        $this->username = $clean;
+        $this->resetErrorBag('username');
+
+        if (strlen($clean) >= 3) {
+            $alreadyExists = User::whereRaw('LOWER(username) = ?', [$clean])
+                ->where('id', '!=', Auth::id())
+                ->exists();
+
+            if ($alreadyExists) {
+                $this->addError('username', "Ushbu foydalanuvchi nomi (@{$clean}) allaqachon band. Iltimos, boshqa nom tanlang.");
+            }
+        }
+    }
+
     public function save(): void
     {
+        $this->username = strtolower(trim((string) $this->username));
+        $this->name = trim((string) $this->name);
+
+        // Username takrorlanmasligi (unique) qat'iy tekshiruvi (Katta-kichik harflaridan qat'i nazar)
+        $alreadyExists = User::whereRaw('LOWER(username) = ?', [$this->username])
+            ->where('id', '!=', Auth::id())
+            ->exists();
+
+        if ($alreadyExists) {
+            $this->addError('username', "Ushbu foydalanuvchi nomi (@{$this->username}) allaqachon band. Iltimos, boshqa nom tanlang.");
+            $this->toastError("Ushbu username band! Boshqa nom tanlang.");
+            return;
+        }
+
         try {
             $this->validate();
         } catch (ValidationException $e) {

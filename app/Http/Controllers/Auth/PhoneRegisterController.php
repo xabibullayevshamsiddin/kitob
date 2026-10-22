@@ -48,18 +48,35 @@ class PhoneRegisterController extends Controller
             ])->withInput();
         }
 
-        // 2. Validatsiya
+        // 2. Validatsiya (Username takrorlanmasligi qat'iy tekshiriladi, Ism esa takrorlanishi mumkin)
+        $rawUsername = strtolower(trim((string) $request->input('username')));
+        $request->merge(['username' => $rawUsername]);
+
+        if (User::whereRaw('LOWER(username) = ?', [$rawUsername])->exists()) {
+            return back()->withErrors([
+                'username' => "Ushbu foydalanuvchi nomi (@{$rawUsername}) allaqachon band. Iltimos, boshqa username tanlang.",
+            ])->withInput();
+        }
+
         $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'username' => [
                 'required',
                 'string',
+                'min:3',
                 'max:30',
                 'alpha_dash',
                 Rule::unique(User::class, 'username'),
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'email'    => ['nullable', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')],
+        ], [
+            'username.unique'     => "Ushbu foydalanuvchi nomi (@{$rawUsername}) allaqachon band. Iltimos, boshqa username tanlang.",
+            'username.alpha_dash' => "Foydalanuvchi nomida faqat lotin harflari, raqamlar, tire va pastki chiziq bo'lishi mumkin.",
+            'username.min'        => "Foydalanuvchi nomi kamida 3 ta belgidan iborat bo'lishi kerak.",
+            'username.max'        => "Foydalanuvchi nomi 30 ta belgidan oshmasligi kerak.",
+            'email.unique'        => "Ushbu email manzil allaqachon ro'yxatdan o'tgan.",
+            'password.confirmed'  => "Kiritilgan parollar bir-biriga mos kelmadi.",
         ]);
 
         // 3. Tasdiqlash tokenini yaratish va keshda vaqtinchalik saqlash (15 daqiqa)

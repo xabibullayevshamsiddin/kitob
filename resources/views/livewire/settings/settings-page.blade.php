@@ -49,13 +49,25 @@
 
             <!-- Username -->
             <div>
-                <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.settings.username') }}</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist font-mono text-xs">@</span>
-                    <input type="text" wire:model.defer="username"
-                        class="w-full pl-7 pr-3.5 py-2.5 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper font-mono focus:border-amber-400 focus:outline-none">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-xs font-mono uppercase tracking-wider text-mist">{{ __('site.settings.username') }}</label>
+                    <span class="text-[10px] text-amber-400/90 font-mono">Takrorlanmas (Unique)</span>
                 </div>
-                @error('username') <p class="text-rose-400 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                <div class="relative flex items-center w-full rounded-btn bg-ink-950/80 border border-ink-border focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400 transition-colors {{ $errors->has('username') ? 'ks-input-invalid' : '' }}">
+                    <div class="flex items-center pl-3.5 pr-2.5 border-r border-ink-border/60 select-none pointer-events-none text-mist font-mono text-sm font-semibold">
+                        @
+                    </div>
+                    <input type="text" wire:model.lazy="username"
+                        class="w-full bg-transparent border-0 py-2.5 pl-3 pr-3.5 text-xs sm:text-sm text-paper font-mono focus:ring-0 focus:outline-none placeholder:text-mist/40"
+                        placeholder="foydalanuvchi_nomi">
+                </div>
+                @error('username')
+                    <p class="text-rose-400 font-mono text-[11px] mt-1.5 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
+                <p class="text-[11px] text-mist/70 font-mono mt-1">Foydalanuvchi nomi har bir profil uchun yagona bo'lishi shart.</p>
             </div>
 
             <!-- Elektron pochta (Gmail — Erkin tahrirlanadi) -->
@@ -64,15 +76,22 @@
                     <label class="block text-xs font-mono uppercase tracking-wider text-mist">{{ __('site.settings.email') }} (Gmail)</label>
                     <span class="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Erkin o'zgartirish</span>
                 </div>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-mist">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                <div class="relative flex items-center w-full rounded-btn bg-ink-950/80 border border-ink-border focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400 transition-colors {{ $errors->has('email') ? 'ks-input-invalid' : '' }}">
+                    <div class="flex items-center pl-3.5 pr-2.5 border-r border-ink-border/60 select-none pointer-events-none text-mist shrink-0">
+                        <svg class="w-4 h-4 text-mist" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
                     </div>
                     <input type="email" wire:model.defer="email"
-                        class="w-full pl-9 pr-3.5 py-2.5 bg-ink-950/80 border border-ink-border rounded-btn text-xs sm:text-sm text-paper focus:border-amber-400 focus:outline-none"
+                        class="w-full bg-transparent border-0 py-2.5 pl-3 pr-3.5 text-xs sm:text-sm text-paper font-sans focus:ring-0 focus:outline-none placeholder:text-mist/40"
                         placeholder="ali@gmail.com">
                 </div>
-                @error('email') <p class="text-rose-400 font-mono text-xs mt-1">{{ $message }}</p> @enderror
+                @error('email')
+                    <p class="text-rose-400 font-mono text-[11px] mt-1.5 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
                 <p class="text-[11px] text-mist/70 font-mono mt-1">Elektron pochtangizni xohlagan paytda erkin o'zgartirishingiz mumkin.</p>
             </div>
 

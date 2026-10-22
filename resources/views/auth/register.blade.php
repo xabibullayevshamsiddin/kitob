@@ -53,12 +53,12 @@
 
     <div>
         <label for="username" class="block text-xs font-mono uppercase tracking-wider {{ $errors->has('username') ? 'text-rose-400 font-semibold' : 'text-mist' }} mb-1.5">{{ __('site.auth.username') }}</label>
-        <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none font-mono text-xs {{ $errors->has('username') ? 'text-rose-400 font-bold' : 'text-mist' }}">
+        <div class="relative flex items-center w-full rounded-input bg-ink-950 border border-ink-border focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-colors {{ $errors->has('username') ? 'ks-input-invalid' : '' }}">
+            <div class="flex items-center pl-3.5 pr-2.5 border-r border-ink-border/60 select-none pointer-events-none font-mono text-sm font-semibold {{ $errors->has('username') ? 'text-rose-400' : 'text-mist' }}">
                 @
             </div>
             <input id="username" type="text" name="username" value="{{ old('username') }}" required autocomplete="username"
-                class="ks-input pl-8 font-mono {{ $errors->has('username') ? 'ks-input-invalid' : '' }}"
+                class="w-full bg-transparent border-0 py-2.5 pl-3 pr-3.5 text-sm text-paper font-mono focus:ring-0 focus:outline-none placeholder:text-mist/40"
                 placeholder="ali_kitobxon">
         </div>
         @error('username')
