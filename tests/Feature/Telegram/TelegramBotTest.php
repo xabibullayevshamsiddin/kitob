@@ -177,4 +177,129 @@ class TelegramBotTest extends TestCase
                 && str_contains($request['text'], 'faqat o\'zingizning');
         });
     }
+
+    public function test_reply_keyboard_menu_button_text_triggers_profile_command(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 6]], 200),
+        ]);
+
+        $user = User::factory()->create([
+            'name'         => 'Sardor',
+            'username'     => 'sardor_reader',
+            'telegram_id'  => 555123,
+            'coin_balance' => 250,
+            'total_points' => 1500,
+        ]);
+
+        $service = new TelegramBotService();
+        // Foydalanuvchi klaviaturadagi "👤 Profilim" tugmasini bosganda
+        $service->handleUpdate([
+            'update_id' => 5006,
+            'message' => [
+                'chat' => ['id' => 555123],
+                'from' => ['id' => 555123, 'first_name' => 'Sardor'],
+                'text' => '👤 Profilim',
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 555123
+                && str_contains($request['text'], 'Sardor')
+                && str_contains($request['text'], '250 🪙')
+                && str_contains($request['text'], '1,500 ⭐️');
+        });
+    }
+
+    public function test_menu_command_and_reply_buttons_routing(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 7]], 200),
+        ]);
+
+        $service = new TelegramBotService();
+
+        // 1. /menu buyrug'i
+        $service->handleUpdate([
+            'update_id' => 5007,
+            'message' => [
+                'chat' => ['id' => 112233],
+                'from' => ['id' => 112233, 'first_name' => 'Anvar'],
+                'text' => '/menu',
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 112233
+                && str_contains($request['text'], 'Asosiy buyruqlar menyusi')
+                && isset($request['reply_markup']['keyboard']);
+        });
+
+        // 2. "🏆 Reyting" tugmasi
+        $service->handleUpdate([
+            'update_id' => 5008,
+            'message' => [
+                'chat' => ['id' => 112233],
+                'from' => ['id' => 112233, 'first_name' => 'Anvar'],
+                'text' => '🏆 Reyting',
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 112233
+                && str_contains($request['text'], 'kitobxonlar reytingi');
+        });
+
+        // 3. "📚 Kitoblar" tugmasi
+        $service->handleUpdate([
+            'update_id' => 5009,
+            'message' => [
+                'chat' => ['id' => 112233],
+                'from' => ['id' => 112233, 'first_name' => 'Anvar'],
+                'text' => '📚 Kitoblar',
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 112233
+                && str_contains($request['text'], 'kitoblar');
+        });
+    }
+
+    public function test_start_reg_for_already_verified_user_shows_menu_instead_of_contact(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 8]], 200),
+        ]);
+
+        $existingUser = User::factory()->create([
+            'phone'             => '+998901234567',
+            'phone_verified_at' => now(),
+            'telegram_id'       => 999888,
+        ]);
+
+        $token = 'reg_token_already_verified';
+        \Illuminate\Support\Facades\Cache::put("pending_reg_{$token}", [
+            'name'     => 'Existing Person',
+            'username' => 'existing_person',
+            'phone'    => '+998901234567',
+            'password' => 'secret',
+        ], now()->addMinutes(15));
+
+        $service = new TelegramBotService();
+        $service->handleUpdate([
+            'update_id' => 5010,
+            'message' => [
+                'chat' => ['id' => 999888],
+                'from' => ['id' => 999888, 'first_name' => 'Existing Person'],
+                'text' => "/start reg_{$token}",
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 999888
+                && str_contains($request['text'], 'allaqachon')
+                && isset($request['reply_markup']['keyboard']);
+        });
+    }
 }

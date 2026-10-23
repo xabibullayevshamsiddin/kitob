@@ -17,12 +17,15 @@ class SetCommandsCommand extends Command
 
         $commands = [
             ['command' => 'start', 'description' => 'Botni ishga tushirish va menyu 🚀'],
+            ['command' => 'menu', 'description' => 'Asosiy menyu tugmalarini ko\'rsatish 📋'],
             ['command' => 'profil', 'description' => 'Shaxsiy profil va yutuqlar 👤'],
             ['command' => 'streak', 'description' => 'Kunlik mutolaa zanjiri (Streak) 🔥'],
             ['command' => 'balance', 'description' => 'Tanga va ballar balansi 🪙'],
-            ['command' => 'hikmat', 'description' => 'Kun hikmati ✨'],
+            ['command' => 'hikmat', 'description' => 'Ilhomlantiruvchi kun hikmati ✨'],
+            ['command' => 'books', 'description' => 'Sara kitoblar katalogi 📚'],
+            ['command' => 'leaderboard', 'description' => 'Kitobxonlar reytingi 🏆'],
             ['command' => 'shop', 'description' => 'Platforma do\'koni 🛍'],
-            ['command' => 'help', 'description' => 'Yordam va qo\'llanma ❓'],
+            ['command' => 'help', 'description' => 'Yordam va barcha buyruqlar ❓'],
             ['command' => 'stop', 'description' => 'Bildirishnomalarni to\'xtatish 🔕'],
         ];
 

@@ -75,24 +75,105 @@ class TelegramBotService
 
         // Buyruqlarni ajratib olish (/start payload yoki /start@bot_username payload)
         $parts = explode(' ', $text, 2);
-        $command = strtolower($parts[0]);
-        if (str_contains($command, '@')) {
-            $command = explode('@', $command)[0];
+        $firstWord = strtolower($parts[0]);
+        if (str_contains($firstWord, '@')) {
+            $firstWord = explode('@', $firstWord)[0];
         }
         $payload = trim($parts[1] ?? '');
 
-        match ($command) {
-            '/start' => $this->handleStartCommand($chatId, $from, $payload),
-            '/profil', '/profile' => $this->handleProfileCommand($chatId, $userId),
-            '/streak' => $this->handleStreakCommand($chatId, $userId),
-            '/balance', '/balans' => $this->handleBalanceCommand($chatId, $userId),
-            '/hikmat' => $this->handleHikmatCommand($chatId),
-            '/shop', '/dokon' => $this->handleShopCommand($chatId),
-            '/help', '/yordam' => $this->handleHelpCommand($chatId),
-            '/app', '/miniapp' => $this->handleAppCommand($chatId),
-            '/stop' => $this->handleStopCommand($chatId, $userId),
-            default => $this->handleDefaultMessage($chatId, $text),
-        };
+        // Matnni tozalash (emojilarni olib tashlab, harflar va raqamlarni solishtirish uchun)
+        $clean = mb_strtolower(preg_replace('/[^\p{L}\p{N}\s\/]/u', '', $text));
+        $clean = trim(preg_replace('/\s+/', ' ', $clean));
+
+        // 1. /start buyrug'i
+        if ($firstWord === '/start') {
+            $this->handleStartCommand($chatId, $from, $payload);
+            return;
+        }
+
+        // 2. Asosiy menyu / Buyruqlar
+        if (in_array($firstWord, ['/menu', '/menyu', '/commands', '/buyruqlar'])
+            || in_array($clean, ['menu', 'menyu', 'buyruqlar', 'asosiy menyu', 'bosh menyu'])) {
+            $this->handleMenuCommand($chatId);
+            return;
+        }
+
+        // 3. Profil
+        if (in_array($firstWord, ['/profil', '/profile'])
+            || in_array($clean, ['profilim', 'profil', 'profilimni korish', 'shaxsiy profil'])) {
+            $this->handleProfileCommand($chatId, $userId);
+            return;
+        }
+
+        // 4. Streak
+        if ($firstWord === '/streak'
+            || in_array($clean, ['streak', 'streak holati', 'kunlik streak', 'zanjir'])) {
+            $this->handleStreakCommand($chatId, $userId);
+            return;
+        }
+
+        // 5. Balans / Tangalar
+        if (in_array($firstWord, ['/balance', '/balans', '/coins', '/tangalar'])
+            || in_array($clean, ['balans', 'tanga balansi', 'tangalar', 'hisobim'])) {
+            $this->handleBalanceCommand($chatId, $userId);
+            return;
+        }
+
+        // 6. Kun hikmati
+        if (in_array($firstWord, ['/hikmat', '/quote'])
+            || in_array($clean, ['kun hikmati', 'hikmat', 'iqtibos', 'kun iqtibosi'])) {
+            $this->handleHikmatCommand($chatId);
+            return;
+        }
+
+        // 7. Kitoblar / Mutolaa
+        if (in_array($firstWord, ['/books', '/kitoblar', '/catalog'])
+            || in_array($clean, ['kitoblar', 'kitoblar katalogi', 'mutolaa', 'kitob oqish'])) {
+            $this->handleBooksCommand($chatId);
+            return;
+        }
+
+        // 8. Reyting / Leaderboard
+        if (in_array($firstWord, ['/leaderboard', '/reyting'])
+            || in_array($clean, ['reyting', 'leaderboard', 'top kitobxonlar', 'eng yaxshi kitobxonlar'])) {
+            $this->handleLeaderboardCommand($chatId);
+            return;
+        }
+
+        // 9. Do'kon
+        if (in_array($firstWord, ['/shop', '/dokon'])
+            || in_array($clean, ['dokon', 'market', 'magazin'])) {
+            $this->handleShopCommand($chatId);
+            return;
+        }
+
+        // 10. Yordam
+        if (in_array($firstWord, ['/help', '/yordam'])
+            || in_array($clean, ['yordam', 'help', 'qollanma', 'yordam kerak'])) {
+            $this->handleHelpCommand($chatId);
+            return;
+        }
+
+        // 11. Mini App
+        if (in_array($firstWord, ['/app', '/miniapp'])
+            || in_array($clean, ['app', 'miniapp', 'mini app'])) {
+            $this->handleAppCommand($chatId);
+            return;
+        }
+
+        // 12. Stop
+        if ($firstWord === '/stop' || $clean === 'stop') {
+            $this->handleStopCommand($chatId, $userId);
+            return;
+        }
+
+        // 13. Bekor qilish
+        if (in_array($clean, ['bekor qilish', 'bekor', 'cancel'])) {
+            $this->handleMenuCommand($chatId);
+            return;
+        }
+
+        $this->handleDefaultMessage($chatId, $text);
     }
 
     /**
@@ -114,21 +195,36 @@ class TelegramBotService
             $pending = Cache::get("pending_reg_{$token}");
 
             if ($pending) {
+                // Agar bu foydalanuvchi allaqachon ro'yxatdan o'tib, telefonini tasdiqlagan bo'lsa
+                $existingUser = User::where('telegram_id', $userId)
+                    ->orWhere('phone', $pending['phone'])
+                    ->first();
+
+                if ($existingUser && $existingUser->phone_verified_at) {
+                    $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$name}</b>! 👋📚\n\nSizning telefon raqamingiz allaqachon muvaffaqiyatli tasdiqlangan va hisobingiz faol! ✅\n\nPastdagi menyu yoki to'rtburchak (⊞) tugmasi orqali kerakli bo'limni tanlashingiz mumkin 👇", [
+                        'reply_markup' => $this->getMainMenuKeyboard(),
+                    ]);
+                    return;
+                }
+
                 Cache::put("tg_reg_token_{$userId}", $token, now()->addMinutes(15));
                 $masked = PhoneNumber::mask($pending['phone']);
 
                 $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$pending['name']}</b>! 👋📚\n\nPlatformada ro'yxatdan o'tish uchun <b>{$masked}</b> telefon raqamingizni tasdiqlashingiz lozim.\n\nIltimos, pastdagi <b>«📲 Raqamni ulashish (Tasdiqlash)»</b> tugmasini bosing:", [
                     'reply_markup' => [
                         'keyboard' => [
-                            [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]]
+                            [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]],
+                            [['text' => '❌ Bekor qilish']]
                         ],
-                        'resize_keyboard' => true,
+                        'resize_keyboard'   => true,
                         'one_time_keyboard' => true,
                     ]
                 ]);
                 return;
             } else {
-                $this->client->sendMessage($chatId, "⚠️ Ro'yxatdan o'tish havolasi muddati eskirgan (15 daqiqadan oshgan) yoki topilmadi.\n\nIltimos, saytga qaytib, ro'yxatdan o'tish formasini qaytadan yuboring.");
+                $this->client->sendMessage($chatId, "⚠️ Ro'yxatdan o'tish havolasi muddati eskirgan (15 daqiqadan oshgan) yoki topilmadi.\n\nIltimos, saytga qaytib, ro'yxatdan o'tish formasini qaytadan yuboring.", [
+                    'reply_markup' => $this->getMainMenuKeyboard(),
+                ]);
                 return;
             }
         }
@@ -169,11 +265,17 @@ class TelegramBotService
                 $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$name}</b>! 👋\n\nPlatformadagi hisobingiz uchun telefon raqamingizni tasdiqlashga tayyormiz.\n\nIltimos, pastdagi <b>«📲 Raqamni ulashish»</b> tugmasini bosing:", [
                     'reply_markup' => [
                         'keyboard' => [
-                            [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]]
+                            [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]],
+                            [['text' => '❌ Bekor qilish']]
                         ],
-                        'resize_keyboard' => true,
+                        'resize_keyboard'   => true,
                         'one_time_keyboard' => true,
                     ]
+                ]);
+                return;
+            } else {
+                $this->client->sendMessage($chatId, "⚠️ Tasdiqlash havolasi muddati eskirgan yoki topilmadi.\n\nIltimos, saytdan qaytadan urinib ko'ring.", [
+                    'reply_markup' => $this->getMainMenuKeyboard(),
                 ]);
                 return;
             }
@@ -221,31 +323,12 @@ class TelegramBotService
               . "Bu yerda siz:\n"
               . "• Har kuni kitob o'qib, o'z <b>Streak</b> 🔥 ko'rsatkichingizni oshirib borasiz;\n"
               . "• Testlarni topshirib, <b>oltin tangalar</b> 🪙 jamg'arasiz;\n"
-              . "• Yangi kitoblar va muhim yangiliklardan doimiy xabardor bo'lasiz.\n\n"
-              . "Quyidagi tugmalar orqali platformadan foydalaning 👇";
-
-        $firstRow = [];
-        if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://')) {
-            $firstRow[] = ['text' => '📱 Mini App (Mutolaa)', 'web_app' => ['url' => $miniAppUrl]];
-        }
-        $firstRow[] = ['text' => '🌐 Veb-sayt', 'url' => $appUrl];
-
-        $buttons = [
-            'inline_keyboard' => [
-                $firstRow,
-                [
-                    ['text' => '👤 Profilim', 'callback_data' => 'cmd_profil'],
-                    ['text' => '🔥 Streak holati', 'callback_data' => 'cmd_streak'],
-                ],
-                [
-                    ['text' => '🪙 Tanga balansi', 'callback_data' => 'cmd_balance'],
-                    ['text' => '✨ Kun hikmati', 'callback_data' => 'cmd_hikmat'],
-                ],
-            ]
-        ];
+              . "• Sara kitoblar va qizg'in reytingda doimiy qatnashasiz.\n\n"
+              . "🌐 <b>Veb-sayt:</b> {$appUrl}\n\n"
+              . "Pastdagi to'rtburchak (⊞) menyu tugmalari orqali kerakli bo'limni tanlang 👇";
 
         $this->client->sendMessage($chatId, $text, [
-            'reply_markup' => $buttons,
+            'reply_markup' => $this->getMainMenuKeyboard(),
         ]);
     }
 
@@ -286,7 +369,9 @@ class TelegramBotService
 
         $normalized = PhoneNumber::normalize($rawPhone);
         if (!$normalized) {
-            $this->client->sendMessage($chatId, "⚠️ Telefon raqam formati noto'g'ri.");
+            $this->client->sendMessage($chatId, "⚠️ Telefon raqam formati noto'g'ri.", [
+                'reply_markup' => $this->getMainMenuKeyboard(),
+            ]);
             return;
         }
 
@@ -353,8 +438,8 @@ class TelegramBotService
                 Cache::put("pending_reg_completed_{$regToken}", $user->id, now()->addMinutes(10));
                 Cache::forget("tg_reg_token_{$userId}");
 
-                $this->client->sendMessage($chatId, "Tabriklaymiz, <b>{$pending['name']}</b>! 🎉\n\nTelefon raqamingiz muvaffaqiyatli tasdiqlandi va hisobingiz faollashtirildi!\n\nSaytdagi sahifangiz avtomatik ochiladi. Xush kelibsiz! ✅", [
-                    'reply_markup' => ['remove_keyboard' => true],
+                $this->client->sendMessage($chatId, "Tabriklaymiz, <b>{$pending['name']}</b>! 🎉\n\nTelefon raqamingiz muvaffaqiyatli tasdiqlandi va hisobingiz faollashtirildi!\n\nSaytdagi sahifangiz avtomatik ochiladi. Xush kelibsiz! ✅\n\nPastdagi to'rtburchak (⊞) menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
+                    'reply_markup' => $this->getMainMenuKeyboard(),
                 ]);
                 return;
             }
@@ -377,12 +462,12 @@ class TelegramBotService
                 'telegram_linked_at' => now(),
             ]);
 
-            $this->client->sendMessage($chatId, "Tabriklaymiz! 🎉\n\nTelefon raqamingiz (<b>" . PhoneNumber::mask($normalized) . "</b>) muvaffaqiyatli tasdiqlandi va Telegram hisobingizga ulandi! ✅", [
-                'reply_markup' => ['remove_keyboard' => true],
+            $this->client->sendMessage($chatId, "Tabriklaymiz! 🎉\n\nTelefon raqamingiz (<b>" . PhoneNumber::mask($normalized) . "</b>) muvaffaqiyatli tasdiqlandi va Telegram hisobingizga ulandi! ✅\n\nPastdagi menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
+                'reply_markup' => $this->getMainMenuKeyboard(),
             ]);
         } else {
-            $this->client->sendMessage($chatId, "Rahmat! Telefon raqamingiz qabul qilindi: <b>" . PhoneNumber::mask($normalized) . "</b>. Saytda ro'yxatdan o'tganingizda ushbu raqam avtomatik bog'lanadi. ✅", [
-                'reply_markup' => ['remove_keyboard' => true],
+            $this->client->sendMessage($chatId, "Rahmat! Telefon raqamingiz qabul qilindi: <b>" . PhoneNumber::mask($normalized) . "</b>. Saytda ro'yxatdan o'tganingizda ushbu raqam avtomatik bog'lanadi. ✅\n\nPastdagi menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
+                'reply_markup' => $this->getMainMenuKeyboard(),
             ]);
         }
     }
@@ -497,21 +582,117 @@ class TelegramBotService
     }
 
     /**
+     * /menu buyrug'i (Asosiy buyruqlar menyusi).
+     */
+    protected function handleMenuCommand(int|string $chatId): void
+    {
+        $text = "📋 <b>Asosiy buyruqlar menyusi:</b>\n\n"
+              . "Quyidagi menyu tugmalaridan birini tanlang yoki to'rtburchak (⊞) tugmasini bosing 👇";
+
+        $this->client->sendMessage($chatId, $text, [
+            'reply_markup' => $this->getMainMenuKeyboard(),
+        ]);
+    }
+
+    /**
+     * /books buyrug'i (Sara kitoblar).
+     */
+    protected function handleBooksCommand(int|string $chatId): void
+    {
+        $books = \App\Models\Book::where('is_active', true)
+            ->orderByDesc('views_count')
+            ->limit(5)
+            ->get();
+
+        $catalogUrl = rtrim(config('app.url'), '/') . '/catalog';
+
+        $text = "📚 <b>Eng sara va ommabop kitoblar:</b>\n\n";
+
+        if ($books->isEmpty()) {
+            $text .= "Kutubxonamizdagi sara kitoblarni veb-saytda mutolaa qilishingiz mumkin.\n\n";
+        } else {
+            foreach ($books as $index => $book) {
+                $num = $index + 1;
+                $title = htmlspecialchars($book->title);
+                $author = htmlspecialchars($book->author ?? 'Muallif');
+                $text .= "{$num}. 📖 <b>{$title}</b> — <i>{$author}</i>\n";
+            }
+            $text .= "\n";
+        }
+
+        $text .= "Yuzlab nodir kitoblar sizni kutmoqda:";
+
+        $this->client->sendMessage($chatId, $text, [
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [['text' => '📚 Barcha kitoblar katalogi', 'url' => $catalogUrl]],
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * /leaderboard buyrug'i (Kitobxonlar reytingi).
+     */
+    protected function handleLeaderboardCommand(int|string $chatId): void
+    {
+        $topUsers = User::whereNotNull('total_points')
+            ->where('total_points', '>', 0)
+            ->orderByDesc('total_points')
+            ->limit(5)
+            ->get();
+
+        $leaderboardUrl = rtrim(config('app.url'), '/') . '/leaderboard';
+
+        $text = "🏆 <b>Eng faol kitobxonlar reytingi (Top 5):</b>\n\n";
+
+        $medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+
+        if ($topUsers->isEmpty()) {
+            $text .= "Hozircha reyting shakllanmoqda. Har kuni kitob o'qib, birinchi o'rinni egallang! 🚀\n\n";
+        } else {
+            foreach ($topUsers as $index => $u) {
+                $medal = $medals[$index] ?? ($index + 1) . '.';
+                $points = number_format($u->total_points);
+                $name = htmlspecialchars($u->name);
+                $text .= "{$medal} <b>{$name}</b> — <b>{$points}</b> ball\n";
+            }
+            $text .= "\n";
+        }
+
+        $text .= "To'liq reyting jadvalini saytimizda kuzating:";
+
+        $this->client->sendMessage($chatId, $text, [
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [['text' => '🏆 To\'liq reytingni ko\'rish', 'url' => $leaderboardUrl]],
+                ]
+            ]
+        ]);
+    }
+
+    /**
      * /help buyrug'i.
      */
     protected function handleHelpCommand(int|string $chatId): void
     {
-        $text = "❓ <b>Mavjud buyruqlar ro'yxati:</b>\n\n"
-              . "• /start — Botni ishga tushirish\n"
-              . "• /profil — Profil ma'lumotlari va balans\n"
-              . "• /streak — Kunlik zanjir holati\n"
-              . "• /balance — Tanga va ballar\n"
-              . "• /hikmat — Ilhomlantiruvchi kun hikmati\n"
-              . "• /shop — Do'kon va maxsus imtiyozlar\n"
-              . "• /help — Yordam va qo'llanma\n"
-              . "• /stop — Bildirishnomalarni to'xtatish";
+        $text = "❓ <b>Mavjud buyruqlar va imkoniyatlar:</b>\n\n"
+              . "• <b>/start</b> — Botni ishga tushirish\n"
+              . "• <b>/menu</b> — Asosiy menyu tugmalarini ko'rsatish\n"
+              . "• <b>/profil</b> (yoki 👤 Profilim) — Shaxsiy hisob, balans va statistika\n"
+              . "• <b>/streak</b> (yoki 🔥 Streak) — Kunlik mutolaa zanjiri\n"
+              . "• <b>/balance</b> (yoki 🪙 Balans) — Oltin tangalar va ballar\n"
+              . "• <b>/hikmat</b> (yoki ✨ Kun hikmati) — Ilhomlantiruvchi o'gitlar\n"
+              . "• <b>/books</b> (yoki 📚 Kitoblar) — Sara kitoblar katalogi\n"
+              . "• <b>/leaderboard</b> (yoki 🏆 Reyting) — Faol kitobxonlar reytingi\n"
+              . "• <b>/shop</b> (yoki 🛍 Do'kon) — Maxsus imtiyozlar do'koni\n"
+              . "• <b>/help</b> — Ushbu yordam qo'llanmasi\n"
+              . "• <b>/stop</b> — Bildirishnomalarni to'xtatish\n\n"
+              . "💡 <i>Pastdagi to'rtburchak (⊞) tugmasini bosib, barcha buyruqlarga tezkor o'tishingiz mumkin!</i>";
 
-        $this->client->sendMessage($chatId, $text);
+        $this->client->sendMessage($chatId, $text, [
+            'reply_markup' => $this->getMainMenuKeyboard(),
+        ]);
     }
 
     /**
@@ -531,7 +712,47 @@ class TelegramBotService
      */
     protected function handleDefaultMessage(int|string $chatId, string $text): void
     {
-        $this->client->sendMessage($chatId, "Buyruq tushunarsiz bo'ldi. Mavjud imkoniyatlarni ko'rish uchun /help buyrug'ini yuboring. 📖");
+        $this->client->sendMessage($chatId, "Buyruq tushunarsiz bo'ldi. Mavjud buyruqlarni ko'rish uchun pastdagi to'rtburchak (⊞) menyu tugmalaridan foydalaning yoki /help buyrug'ini yuboring. 📖", [
+            'reply_markup' => $this->getMainMenuKeyboard(),
+        ]);
+    }
+
+    /**
+     * Foydalanuvchi uchun asosiy menyu tugmalari (ReplyKeyboardMarkup).
+     * Bu Telegram chatidagi pastki o'ng to'rtburchak (⊞) tugmasini bosganda ochiladigan buyruqlar menyusidir.
+     */
+    public function getMainMenuKeyboard(): array
+    {
+        $appUrl = config('app.url', 'https://kitob-9y1h.onrender.com');
+        $miniAppUrl = config('telegram.mini_app_url', rtrim($appUrl, '/') . '/tg-app');
+
+        $row1 = [];
+        if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://')) {
+            $row1[] = ['text' => '📖 Mutolaa', 'web_app' => ['url' => $miniAppUrl]];
+        } else {
+            $row1[] = ['text' => '📚 Kitoblar'];
+        }
+        $row1[] = ['text' => '👤 Profilim'];
+
+        return [
+            'keyboard' => [
+                $row1,
+                [
+                    ['text' => '🔥 Streak holati'],
+                    ['text' => '🪙 Tanga balansi'],
+                ],
+                [
+                    ['text' => '✨ Kun hikmati'],
+                    ['text' => '🛍 Do\'kon'],
+                ],
+                [
+                    ['text' => '🏆 Reyting'],
+                    ['text' => '❓ Yordam'],
+                ],
+            ],
+            'resize_keyboard' => true,
+            'is_persistent'   => true,
+        ];
     }
 
     /**
@@ -558,6 +779,11 @@ class TelegramBotService
             'cmd_streak' => $this->handleStreakCommand($chatId, $userId),
             'cmd_balance' => $this->handleBalanceCommand($chatId, $userId),
             'cmd_hikmat' => $this->handleHikmatCommand($chatId),
+            'cmd_books' => $this->handleBooksCommand($chatId),
+            'cmd_leaderboard' => $this->handleLeaderboardCommand($chatId),
+            'cmd_shop' => $this->handleShopCommand($chatId),
+            'cmd_help' => $this->handleHelpCommand($chatId),
+            'cmd_menu' => $this->handleMenuCommand($chatId),
             default => null,
         };
     }
