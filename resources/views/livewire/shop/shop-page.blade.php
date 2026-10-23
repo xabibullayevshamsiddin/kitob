@@ -58,16 +58,16 @@
                 {{-- Coin Balance Pill --}}
                 <div class="flex-1 sm:flex-initial flex items-center gap-3 px-4 py-3 rounded-card bg-ink-950/80 border border-amber-500/30 shadow-lg shadow-black/20">
                     <div class="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="12" cy="12" r="9"/>
                             <path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/>
                         </svg>
                     </div>
                     <div>
-                        <div class="text-[10px] font-mono uppercase tracking-wider text-mist">Mening tangalarim</div>
-                        <div class="font-mono text-xl sm:text-2xl font-bold text-amber-400 leading-none mt-0.5 flex items-baseline gap-1">
+                        <div class="text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-mist">Mening tangalarim</div>
+                        <div class="font-mono text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-400 leading-none mt-0.5 flex items-baseline gap-1">
                             <span x-text="coinCount.toLocaleString()">{{ number_format($user->coin_balance) }}</span>
-                            <span class="text-xs text-amber-500/80 font-sans font-normal">tanga</span>
+                            <span class="text-xs text-amber-700/80 dark:text-amber-500/80 font-sans font-normal">tanga</span>
                         </div>
                     </div>
                 </div>
@@ -78,18 +78,18 @@
                         class="flex-1 sm:flex-initial flex items-center gap-3 px-4 py-3 rounded-card bg-ink-950/80 border border-ink-border hover:border-purple-500/50 shadow-lg shadow-black/20 transition-all text-left group focus:outline-none"
                         title="{{ trans('shop.tabs.exchange') }}">
                     <div class="w-10 h-10 rounded-full bg-purple-500/15 border border-purple-500/30 group-hover:border-purple-500/60 flex items-center justify-center shrink-0 transition-colors">
-                        <svg class="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <svg class="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                         </svg>
                     </div>
                     <div>
-                        <div class="text-[10px] font-mono uppercase tracking-wider text-mist flex items-center gap-1">
+                        <div class="text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-mist flex items-center gap-1">
                             <span>{{ trans('shop.exchange.available_points') }}</span>
-                            <span class="text-purple-400 group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+                            <span class="text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform">&rarr;</span>
                         </div>
                         <div class="font-mono text-xl sm:text-2xl font-bold text-paper leading-none mt-0.5 flex items-baseline gap-1">
                             <span>{{ number_format($user->available_points) }}</span>
-                            <span class="text-xs text-mist font-sans font-normal">{{ trans('shop.points') }}</span>
+                            <span class="text-xs text-stone-600 dark:text-mist font-sans font-normal">{{ trans('shop.points') }}</span>
                         </div>
                     </div>
                 </button>
@@ -116,7 +116,7 @@
             @php $isActive = ($activeTab === $tab['id']); @endphp
             <button wire:click="setTab('{{ $tab['id'] }}')"
                     type="button"
-                    class="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-btn text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-base select-none shrink-0 {{ $isActive ? 'bg-amber-500 text-ink-950 font-semibold shadow-md shadow-amber-500/20' : 'text-mist hover:text-paper hover:bg-ink-800' }}">
+                    class="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-btn text-xs sm:text-sm whitespace-nowrap transition-all duration-base select-none shrink-0 {{ $isActive ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20' : 'text-stone-700 dark:text-mist hover:text-paper hover:bg-ink-800 font-medium' }}">
                 @if($tab['icon'] === 'sparkles')
                     <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                 @elseif($tab['icon'] === 'user')
@@ -147,8 +147,8 @@
                 <input type="text"
                        wire:model.debounce.300ms="search"
                        placeholder="Buyumlarni qidirish..."
-                       class="w-full pl-9 pr-4 py-2 text-xs rounded-btn bg-ink-800 border border-ink-border text-paper placeholder-mist focus:border-amber-500 focus:outline-none transition-colors">
-                <svg class="w-4 h-4 text-mist absolute left-3 top-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                       class="w-full pl-9 pr-4 py-2 text-xs rounded-btn bg-ink-800 border border-ink-border text-paper placeholder-stone-500 dark:placeholder-mist focus:border-amber-500 focus:outline-none transition-colors">
+                <svg class="w-4 h-4 text-stone-500 dark:text-mist absolute left-3 top-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
                 </svg>
             </div>
@@ -167,7 +167,7 @@
                 @foreach($rarities as $r)
                     <button wire:click="$set('rarityFilter', '{{ $r['id'] }}')"
                             type="button"
-                            class="px-3 py-1.5 rounded-full text-xs font-mono transition-colors duration-base select-none whitespace-nowrap {{ $rarityFilter === $r['id'] ? 'bg-ink-700 border border-amber-500/50 text-paper font-semibold' : 'bg-ink-900 border border-ink-border text-mist hover:text-paper' }}">
+                            class="px-3 py-1.5 rounded-full text-xs font-mono transition-colors duration-base select-none whitespace-nowrap {{ $rarityFilter === $r['id'] ? 'bg-amber-500/15 dark:bg-ink-700 border border-amber-500/60 text-amber-900 dark:text-paper font-bold shadow-sm' : 'bg-ink-900 border border-ink-border text-stone-700 dark:text-mist hover:text-paper hover:bg-ink-800 font-medium' }}">
                         {{ $r['label'] }}
                     </button>
                 @endforeach
@@ -209,27 +209,27 @@
                         $dailyPayload = $dailyRecommendation->payload ?? [];
                         $accentColor = $dailyPayload['accent_color'] ?? '#F59E0B';
                     @endphp
-                    <div class="relative overflow-hidden rounded-panel border border-amber-500/40 bg-gradient-to-r from-ink-950 via-ink-900 to-amber-950/20 p-6 sm:p-8 shadow-xl">
+                    <div class="relative overflow-hidden rounded-panel border border-amber-500/40 bg-gradient-to-r from-ink-950 via-ink-900 to-amber-500/10 p-6 sm:p-8 shadow-xl">
                         <div class="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none opacity-20 bg-gradient-to-l from-amber-500/30 to-transparent blur-2xl"></div>
 
                         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                             <div class="space-y-3 max-w-2xl">
-                                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-mono text-[11px] font-bold uppercase tracking-wider">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-800 dark:text-amber-400 font-mono text-[11px] font-bold uppercase tracking-wider">
                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                     <span>Kunlik maxsus tavsiya</span>
                                 </div>
                                 <h2 class="text-2xl sm:text-3xl font-serif font-bold text-paper">
                                     {{ $dailyRecommendation->name_text }}
                                 </h2>
-                                <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">
+                                <p class="text-xs sm:text-sm text-stone-600 dark:text-mist leading-relaxed font-sans">
                                     {{ $dailyRecommendation->description_text }}
                                 </p>
                                 <div class="flex items-center gap-4 pt-1">
-                                    <span class="px-2.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold tracking-wider {{ $dailyRecommendation->rarity === 'legendary' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : ($dailyRecommendation->rarity === 'epic' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40') }}">
+                                    <span class="px-2.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold tracking-wider {{ $dailyRecommendation->rarity === 'legendary' ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 dark:border-amber-500/40' : ($dailyRecommendation->rarity === 'epic' ? 'bg-purple-500/15 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 dark:border-purple-500/40' : 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 dark:border-blue-500/40') }}">
                                         {{ trans('shop.rarity_' . $dailyRecommendation->rarity) }}
                                     </span>
-                                    <div class="flex items-center gap-1.5 font-mono text-base font-bold text-amber-400">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/></svg>
+                                    <div class="flex items-center gap-1.5 font-mono text-base font-bold text-amber-700 dark:text-amber-400">
+                                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/></svg>
                                         <span>{{ $dailyRecommendation->price_coins }} tanga</span>
                                     </div>
                                 </div>
@@ -240,16 +240,16 @@
                                     <button wire:click="openPreview({{ $dailyRecommendation->id }})"
                                             type="button"
                                             class="px-4 py-2.5 rounded-btn bg-ink-800 border border-ink-border text-paper hover:bg-ink-700 text-xs font-medium transition-colors inline-flex items-center gap-1.5">
-                                        <svg class="w-4 h-4 text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <svg class="w-4 h-4 text-stone-500 dark:text-mist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                         <span>Sinab ko‘rish</span>
                                     </button>
                                     <button wire:click="openPurchaseModal({{ $dailyRecommendation->id }})"
                                             type="button"
-                                            class="ks-btn-primary px-5 py-2.5 rounded-btn text-xs font-semibold inline-flex items-center gap-1.5">
+                                            class="ks-btn-primary !text-white px-5 py-2.5 rounded-btn text-xs font-semibold inline-flex items-center gap-1.5">
                                         <span>Xarid qilish</span>
                                     </button>
                                 @else
-                                    <span class="px-4 py-2 rounded-badge bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">
+                                    <span class="px-4 py-2 rounded-badge bg-emerald-500/15 dark:bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-bold">
                                         Sizda mavjud
                                     </span>
                                 @endif
@@ -263,9 +263,9 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="font-serif text-xl font-bold text-paper">Mavzular to‘plami</h3>
-                            <p class="text-xs text-mist font-sans">Profil, avatar va chat uslubingizni yaxlit o‘zgartiring</p>
+                            <p class="text-xs text-stone-600 dark:text-mist font-sans">Profil, avatar va chat uslubingizni yaxlit o‘zgartiring</p>
                         </div>
-                        <button wire:click="setTab('profile')" class="text-xs font-mono text-amber-400 hover:underline">
+                        <button wire:click="setTab('profile')" class="text-xs font-mono text-amber-700 dark:text-amber-400 hover:underline font-semibold">
                             Barchasini ko‘rish &rarr;
                         </button>
                     </div>
@@ -282,9 +282,9 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <h3 class="font-serif text-xl font-bold text-paper">Foydali buyumlar</h3>
-                            <p class="text-xs text-mist font-sans">Streakni saqlang, tezroq tanga yig‘ing va testlarni qayta topshiring</p>
+                            <p class="text-xs text-stone-600 dark:text-mist font-sans">Streakni saqlang, tezroq tanga yig‘ing va testlarni qayta topshiring</p>
                         </div>
-                        <button wire:click="setTab('consumable')" class="text-xs font-mono text-amber-400 hover:underline">
+                        <button wire:click="setTab('consumable')" class="text-xs font-mono text-amber-700 dark:text-amber-400 hover:underline font-semibold">
                             Barchasini ko‘rish &rarr;
                         </button>
                     </div>
@@ -347,11 +347,11 @@
                             {{-- Top badge and expiry --}}
                             <div class="space-y-3">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="px-2 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold tracking-wider {{ $item->rarity === 'legendary' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : ($item->rarity === 'epic' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40') }}">
+                                    <span class="px-2 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold tracking-wider {{ $item->rarity === 'legendary' ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 dark:border-amber-500/40' : ($item->rarity === 'epic' ? 'bg-purple-500/15 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 dark:border-purple-500/40' : ($item->rarity === 'rare' ? 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 dark:border-blue-500/40' : 'bg-slate-500/10 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300 border border-slate-500/30')) }}">
                                         {{ trans('shop.rarity_' . $item->rarity) }}
                                     </span>
                                     @if($isEquipped)
-                                        <span class="px-2 py-0.5 rounded-badge bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-mono text-[10px] font-bold">
+                                        <span class="px-2 py-0.5 rounded-badge bg-emerald-500/15 dark:bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-400 font-mono text-[10px] font-bold">
                                             Kiyilgan
                                         </span>
                                     @endif
@@ -359,11 +359,11 @@
 
                                 <div>
                                     <h4 class="font-serif font-bold text-base text-paper">{{ $item->name_text }}</h4>
-                                    <p class="text-xs text-mist line-clamp-2 mt-1">{{ $item->description_text }}</p>
+                                    <p class="text-xs text-stone-600 dark:text-mist line-clamp-2 mt-1">{{ $item->description_text }}</p>
                                 </div>
 
                                 @if($item->is_consumable)
-                                    <div class="text-xs font-mono text-amber-400">
+                                    <div class="text-xs font-mono text-amber-700 dark:text-amber-400">
                                         Mavjud miqdor: <span class="font-bold">{{ $item->key === 'streak_freeze' ? $freezeCount : $userItem->quantity }} ta</span>
                                     </div>
                                 @endif
@@ -376,19 +376,19 @@
                                         <button wire:click="unequipSlot('{{ $item->category === 'bundle' ? 'all' : $item->slot }}')"
                                                 wire:loading.attr="disabled"
                                                 type="button"
-                                                class="w-full py-2 rounded-btn bg-ink-800 border border-ink-border text-mist hover:text-paper text-xs font-medium transition-colors">
+                                                class="w-full py-2 rounded-btn bg-ink-800 border border-ink-border text-stone-700 dark:text-mist hover:text-paper text-xs font-medium transition-colors">
                                             Yechish
                                         </button>
                                     @else
                                         <button wire:click="equipItem({{ $item->id }})"
                                                 wire:loading.attr="disabled"
                                                 type="button"
-                                                class="w-full py-2 rounded-btn bg-emerald-600 hover:bg-emerald-500 text-ink-950 font-semibold text-xs transition-colors">
+                                                class="w-full py-2 rounded-btn bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-sm">
                                             Jihozlash
                                         </button>
                                     @endif
                                 @else
-                                    <span class="text-xs text-mist font-mono">Avtomatik ishlatiladi</span>
+                                    <span class="text-xs text-stone-600 dark:text-mist font-mono">Avtomatik ishlatiladi</span>
                                 @endif
                             </div>
                         </div>
@@ -407,25 +407,25 @@
 
                 <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div class="space-y-2 max-w-xl">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-mono font-semibold">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-mono font-semibold">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                             <span>{{ trans('shop.exchange.rate_label') }}: {{ $exchangeRate }} ball = 1 tanga</span>
                         </div>
                         <h3 class="font-serif text-2xl font-bold text-paper">{{ trans('shop.exchange.title') }}</h3>
-                        <p class="text-xs sm:text-sm text-mist leading-relaxed font-sans">{{ trans('shop.exchange.subtitle') }}</p>
+                        <p class="text-xs sm:text-sm text-stone-600 dark:text-mist leading-relaxed font-sans">{{ trans('shop.exchange.subtitle') }}</p>
                     </div>
 
                     {{-- Available & Remaining metrics --}}
                     <div class="grid grid-cols-2 gap-3 shrink-0">
                         <div class="p-3.5 rounded-card bg-ink-950/80 border border-ink-border text-center">
-                            <div class="text-[10px] font-mono uppercase text-mist">{{ trans('shop.exchange.available_points') }}</div>
-                            <div class="font-mono text-xl font-bold text-purple-300 mt-0.5">{{ number_format($availablePoints) }}</div>
-                            <div class="text-[9px] font-mono text-mist/80 mt-0.5">{{ trans('shop.points') }}</div>
+                            <div class="text-[10px] font-mono uppercase text-stone-600 dark:text-mist">{{ trans('shop.exchange.available_points') }}</div>
+                            <div class="font-mono text-xl font-bold text-purple-700 dark:text-purple-300 mt-0.5">{{ number_format($availablePoints) }}</div>
+                            <div class="text-[9px] font-mono text-stone-500 dark:text-mist/80 mt-0.5">{{ trans('shop.points') }}</div>
                         </div>
                         <div class="p-3.5 rounded-card bg-ink-950/80 border border-ink-border text-center">
-                            <div class="text-[10px] font-mono uppercase text-mist">{{ trans('shop.exchange.daily_limit') }}</div>
-                            <div class="font-mono text-xl font-bold text-amber-400 mt-0.5">{{ number_format($dailyRemainingPoints) }}</div>
-                            <div class="text-[9px] font-mono text-mist/80 mt-0.5">qoldi / {{ $exchangeDailyLimit }}</div>
+                            <div class="text-[10px] font-mono uppercase text-stone-600 dark:text-mist">{{ trans('shop.exchange.daily_limit') }}</div>
+                            <div class="font-mono text-xl font-bold text-amber-700 dark:text-amber-400 mt-0.5">{{ number_format($dailyRemainingPoints) }}</div>
+                            <div class="text-[9px] font-mono text-stone-500 dark:text-mist/80 mt-0.5">qoldi / {{ $exchangeDailyLimit }}</div>
                         </div>
                     </div>
                 </div>
@@ -435,7 +435,7 @@
                     @php
                         $usedPercent = $exchangeDailyLimit > 0 ? min(100, round((($exchangeDailyLimit - $dailyRemainingPoints) / $exchangeDailyLimit) * 100)) : 0;
                     @endphp
-                    <div class="flex items-center justify-between text-xs font-mono text-mist mb-1.5">
+                    <div class="flex items-center justify-between text-xs font-mono text-stone-600 dark:text-mist mb-1.5">
                         <span>Bugungi limit sarflanishi:</span>
                         <span class="text-paper font-semibold">{{ $exchangeDailyLimit - $dailyRemainingPoints }} / {{ $exchangeDailyLimit }} ball ({{ $usedPercent }}%)</span>
                     </div>
@@ -466,11 +466,11 @@
                     {{-- Left Input Card: Points --}}
                     <div class="md:col-span-2 p-5 rounded-card bg-ink-950 border border-ink-border space-y-3">
                         <div class="flex items-center justify-between">
-                            <label for="exchange_input" class="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                            <label for="exchange_input" class="text-xs font-mono uppercase tracking-wider text-stone-600 dark:text-mist flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
                                 <span>{{ trans('shop.exchange.points_to_exchange') }}</span>
                             </label>
-                            <span class="text-[11px] font-mono text-mist">min: {{ $exchangeMinPoints }}</span>
+                            <span class="text-[11px] font-mono text-stone-500 dark:text-mist">min: {{ $exchangeMinPoints }}</span>
                         </div>
                         <div class="relative">
                             <input id="exchange_input"
@@ -482,17 +482,17 @@
                                    x-model="inputPoints"
                                    class="w-full font-mono text-2xl font-bold bg-ink-900 border border-ink-border rounded-btn px-4 py-2.5 text-paper focus:border-purple-500 focus:outline-none transition-colors"
                                    placeholder="{{ $exchangeMinPoints }}">
-                            <span class="absolute right-3.5 top-3.5 font-mono text-xs text-mist font-semibold">{{ trans('shop.points') }}</span>
+                            <span class="absolute right-3.5 top-3.5 font-mono text-xs text-stone-500 dark:text-mist font-semibold">{{ trans('shop.points') }}</span>
                         </div>
 
                         {{-- Quick amount chips --}}
                         <div class="flex items-center gap-1.5 flex-wrap pt-1">
-                            <span class="text-[10px] font-mono text-mist">{{ trans('shop.exchange.quick_buttons') }}:</span>
+                            <span class="text-[10px] font-mono text-stone-600 dark:text-mist">{{ trans('shop.exchange.quick_buttons') }}:</span>
                             @foreach([$exchangeMinPoints, $exchangeRate * 2, $exchangeRate * 5, $exchangeRate * 10, $exchangeRate * 20] as $preset)
                                 <button type="button"
                                         wire:click="setExchangePoints({{ $preset }})"
                                         @click="inputPoints = {{ $preset }}"
-                                        class="px-2 py-0.5 rounded text-[11px] font-mono transition-colors {{ $exchangePoints === $preset ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold' : 'bg-ink-800 text-mist hover:text-paper border border-ink-border' }}">
+                                        class="px-2 py-0.5 rounded text-[11px] font-mono transition-colors {{ $exchangePoints === $preset ? 'bg-purple-500/20 text-purple-800 dark:text-purple-300 border border-purple-500/40 font-bold' : 'bg-ink-800 text-stone-700 dark:text-mist hover:text-paper border border-ink-border' }}">
                                     {{ $preset }}
                                 </button>
                             @endforeach
@@ -501,7 +501,7 @@
                                 <button type="button"
                                         wire:click="setExchangePoints({{ $maxPossible }})"
                                         @click="inputPoints = {{ $maxPossible }}"
-                                        class="px-2 py-0.5 rounded text-[11px] font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25">
+                                        class="px-2 py-0.5 rounded text-[11px] font-mono bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25">
                                     Maks ({{ $maxPossible }})
                                 </button>
                             @endif
@@ -510,7 +510,7 @@
 
                     {{-- Middle Converter Indicator --}}
                     <div class="md:col-span-1 flex flex-col items-center justify-center text-center py-2 sm:py-0">
-                        <div class="w-11 h-11 rounded-full bg-amber-500/15 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
+                        <div class="w-11 h-11 rounded-full bg-amber-500/15 border-2 border-amber-500/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-lg shadow-amber-500/10">
                             {{-- Desktopda: O'ngga qaratilgan strelka (Ball -> Tanga) --}}
                             <svg class="w-5 h-5 hidden md:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -522,7 +522,7 @@
                                 <polyline points="19 12 12 19 5 12"></polyline>
                             </svg>
                         </div>
-                        <span class="inline-block font-mono text-[11px] font-bold text-amber-300 mt-2 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                        <span class="inline-block font-mono text-[11px] font-bold text-amber-800 dark:text-amber-300 mt-2 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full whitespace-nowrap">
                             {{ $exchangeRate }} ball = 1 tanga
                         </span>
                     </div>
@@ -530,40 +530,40 @@
                     {{-- Right Output Card: Coins to receive --}}
                     <div class="md:col-span-2 p-5 rounded-card bg-ink-950 border border-amber-500/30 space-y-3">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            <span class="text-xs font-mono uppercase tracking-wider text-stone-600 dark:text-mist flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400"></span>
                                 <span>{{ trans('shop.exchange.you_will_receive') }}</span>
                             </span>
-                            <span class="text-[10px] font-mono text-amber-400">100% kafolatlangan</span>
+                            <span class="text-[10px] font-mono text-amber-700 dark:text-amber-400">100% kafolatlangan</span>
                         </div>
                         <div class="p-3 rounded-btn bg-ink-900 border border-amber-500/20 flex items-center justify-between">
                             <div class="flex items-center gap-2.5">
                                 <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
-                                    <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/></svg>
+                                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/></svg>
                                 </div>
-                                <span class="font-mono text-2xl font-bold text-amber-400" x-text="coinsOut">{{ $coinsToReceive }}</span>
+                                <span class="font-mono text-2xl font-bold text-amber-700 dark:text-amber-400" x-text="coinsOut">{{ $coinsToReceive }}</span>
                             </div>
-                            <span class="font-sans text-xs text-amber-300 font-semibold uppercase tracking-wider">{{ trans('shop.coins') }}</span>
+                            <span class="font-sans text-xs text-amber-700 dark:text-amber-300 font-semibold uppercase tracking-wider">{{ trans('shop.coins') }}</span>
                         </div>
-                        <div class="text-[11px] font-mono text-mist">
-                            Balansingiz: <span class="text-paper font-bold">{{ number_format($user->coin_balance) }}</span> &rarr; <span class="text-amber-400 font-bold" x-text="({{ (int) $user->coin_balance }} + coinsOut).toLocaleString()">{{ number_format($user->coin_balance + $coinsToReceive) }}</span>
+                        <div class="text-[11px] font-mono text-stone-600 dark:text-mist">
+                            Balansingiz: <span class="text-paper font-bold">{{ number_format($user->coin_balance) }}</span> &rarr; <span class="text-amber-700 dark:text-amber-400 font-bold" x-text="({{ (int) $user->coin_balance }} + coinsOut).toLocaleString()">{{ number_format($user->coin_balance + $coinsToReceive) }}</span>
                         </div>
                     </div>
                 </div>
 
                 {{-- Validation message alerts --}}
                 @if($exchangePoints < $exchangeMinPoints)
-                    <div class="p-3 rounded-btn bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono flex items-center gap-2">
+                    <div class="p-3 rounded-btn bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-mono flex items-center gap-2">
                         <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <span>Minimal almashtirish miqdori kamida {{ $exchangeMinPoints }} ball bo‘lishi lozim.</span>
                     </div>
                 @elseif($exchangePoints > $availablePoints)
-                    <div class="p-3 rounded-btn bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center gap-2">
+                    <div class="p-3 rounded-btn bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-mono flex items-center gap-2">
                         <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <span>Sizda yetarli ball mavjud emas. Almashtirish uchun mavjud: {{ number_format($availablePoints) }} ball.</span>
                     </div>
                 @elseif($exchangePoints > $dailyRemainingPoints)
-                    <div class="p-3 rounded-btn bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center gap-2">
+                    <div class="p-3 rounded-btn bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-mono flex items-center gap-2">
                         <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <span>Bugungi kunlik almashtirish chegarasidan oshib ketdi. Qolgan chegara: {{ number_format($dailyRemainingPoints) }} ball.</span>
                     </div>
@@ -574,14 +574,14 @@
                     $isExchangeDisabled = ($exchangePoints < $exchangeMinPoints) || ($exchangePoints > $availablePoints) || ($exchangePoints > $dailyRemainingPoints);
                 @endphp
                 <div class="pt-2 flex items-center justify-between gap-4">
-                    <div class="text-xs text-mist font-sans hidden sm:block">
+                    <div class="text-xs text-stone-600 dark:text-mist font-sans hidden sm:block">
                         «Tasdiqlash» tugmasi bosilganda ballaringiz bir zumda tangaga aylanadi.
                     </div>
                     <button wire:click="confirmExchange"
                             wire:loading.attr="disabled"
                             @if($isExchangeDisabled) disabled @endif
                             type="button"
-                            class="w-full sm:w-auto px-8 py-3 rounded-btn font-mono text-xs font-bold uppercase tracking-wider transition-all duration-base flex items-center justify-center gap-2 {{ $isExchangeDisabled ? 'bg-ink-800 text-mist/60 border border-ink-border cursor-not-allowed' : 'ks-btn-gold shadow-lg shadow-amber-500/20 active:scale-95' }}">
+                            class="w-full sm:w-auto px-8 py-3 rounded-btn font-mono text-xs font-bold uppercase tracking-wider transition-all duration-base flex items-center justify-center gap-2 {{ $isExchangeDisabled ? 'bg-ink-800 text-stone-500 dark:text-mist/60 border border-ink-border cursor-not-allowed' : 'ks-btn-gold !text-slate-950 font-bold shadow-lg shadow-amber-500/20 active:scale-95' }}">
                         <span wire:loading.remove wire:target="confirmExchange">{{ trans('shop.exchange.btn_submit') }} (+{{ $coinsToReceive }} {{ trans('shop.coins') }})</span>
                         <span wire:loading wire:target="confirmExchange" class="inline-flex items-center gap-2">
                             <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
@@ -593,28 +593,28 @@
 
             {{-- Rules / Guarantee Notice Grid --}}
             <div class="p-6 rounded-panel bg-ink-900/60 border border-ink-border space-y-4">
-                <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-mist flex items-center gap-2">
-                    <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-stone-600 dark:text-mist flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     <span>{{ trans('shop.exchange.notice_title') }}</span>
                 </h4>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-sans text-mist leading-relaxed">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-sans text-stone-600 dark:text-mist leading-relaxed">
                     <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border/60 space-y-1">
                         <div class="text-paper font-semibold flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Reyting xavfsiz</span>
                         </div>
                         <p>{{ trans('shop.exchange.notice_1') }}</p>
                     </div>
                     <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border/60 space-y-1">
                         <div class="text-paper font-semibold flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Bir tomonlama</span>
                         </div>
                         <p>{{ trans('shop.exchange.notice_2') }}</p>
                     </div>
                     <div class="p-3.5 rounded-card bg-ink-950/60 border border-ink-border/60 space-y-1">
                         <div class="text-paper font-semibold flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Kunlik qayta yangilanish</span>
                         </div>
                         <p>{{ trans('shop.exchange.notice_3') }}</p>
@@ -629,24 +629,24 @@
             {{-- Monthly Summary Cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-5 rounded-panel border border-ink-border bg-ink-900/80">
-                    <div class="text-xs font-mono uppercase text-mist">Joriy balans</div>
-                    <div class="font-mono text-2xl font-bold text-amber-400 mt-1 flex items-baseline gap-1">
+                    <div class="text-xs font-mono uppercase text-stone-600 dark:text-mist">Joriy balans</div>
+                    <div class="font-mono text-2xl font-bold text-amber-700 dark:text-amber-400 mt-1 flex items-baseline gap-1">
                         <span>{{ number_format($user->coin_balance) }}</span>
-                        <span class="text-xs text-amber-500/80 font-normal">tanga</span>
+                        <span class="text-xs text-amber-700/80 dark:text-amber-500/80 font-normal">tanga</span>
                     </div>
                 </div>
                 <div class="p-5 rounded-panel border border-ink-border bg-ink-900/80">
-                    <div class="text-xs font-mono uppercase text-mist">Bu oy ishlangan tangalar</div>
-                    <div class="font-mono text-2xl font-bold text-emerald-400 mt-1 flex items-baseline gap-1">
+                    <div class="text-xs font-mono uppercase text-stone-600 dark:text-mist">Bu oy ishlangan tangalar</div>
+                    <div class="font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1 flex items-baseline gap-1">
                         <span>+{{ number_format($monthEarned) }}</span>
-                        <span class="text-xs text-emerald-500/80 font-normal">tanga</span>
+                        <span class="text-xs text-emerald-700/80 dark:text-emerald-500/80 font-normal">tanga</span>
                     </div>
                 </div>
                 <div class="p-5 rounded-panel border border-ink-border bg-ink-900/80">
-                    <div class="text-xs font-mono uppercase text-mist">Bu oy sarflangan tangalar</div>
-                    <div class="font-mono text-2xl font-bold text-rose-400 mt-1 flex items-baseline gap-1">
+                    <div class="text-xs font-mono uppercase text-stone-600 dark:text-mist">Bu oy sarflangan tangalar</div>
+                    <div class="font-mono text-2xl font-bold text-rose-700 dark:text-rose-400 mt-1 flex items-baseline gap-1">
                         <span>-{{ number_format($monthSpent) }}</span>
-                        <span class="text-xs text-rose-500/80 font-normal">tanga</span>
+                        <span class="text-xs text-rose-700/80 dark:text-rose-500/80 font-normal">tanga</span>
                     </div>
                 </div>
             </div>
@@ -655,22 +655,22 @@
             <div class="p-5 sm:p-6 rounded-panel border border-ink-border bg-ink-900/80 space-y-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-bold">
+                        <span class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm font-bold">
                             ⭐️
                         </span>
                         <div>
                             <h3 class="font-serif font-bold text-lg text-paper">Telegram Stars orqali tanga xarid qilish</h3>
-                            <p class="text-xs text-mist">Telegram yulduzlari evaziga bir zumda tanga hisobingizni to'ldiring</p>
+                            <p class="text-xs text-stone-600 dark:text-mist">Telegram yulduzlari evaziga bir zumda tanga hisobingizni to'ldiring</p>
                         </div>
                     </div>
 
                     @if($starsPaymentsEnabled)
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                             Faol
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-slate-500/10 text-slate-700 dark:text-slate-400 border border-slate-500/20">
                             🔒 Tez kunda
                         </span>
                     @endif
@@ -682,18 +682,18 @@
                             <div class="p-4 rounded-2xl bg-ink-950 border border-ink-border hover:border-amber-500/30 flex flex-col justify-between transition-all group">
                                 <div class="space-y-1.5">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
+                                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20 font-bold">
                                             {{ $pData['badge'] }}
                                         </span>
-                                        <span class="text-xs font-bold text-white font-mono flex items-center gap-1">
+                                        <span class="text-xs font-bold text-paper font-mono flex items-center gap-1">
                                             {{ $pData['stars'] }} ⭐️
                                         </span>
                                     </div>
-                                    <h4 class="text-sm font-bold text-white font-serif pt-1 flex items-center gap-1.5">
+                                    <h4 class="text-sm font-bold text-paper font-serif pt-1 flex items-center gap-1.5">
                                         <span>🪙 {{ $pData['coins'] }}</span>
-                                        <span class="text-xs text-mist font-normal">tanga</span>
+                                        <span class="text-xs text-stone-600 dark:text-mist font-normal">tanga</span>
                                     </h4>
-                                    <p class="text-[11px] text-mist leading-relaxed line-clamp-2">
+                                    <p class="text-[11px] text-stone-600 dark:text-mist leading-relaxed line-clamp-2">
                                         {{ $pData['description'] }}
                                     </p>
                                 </div>
@@ -709,11 +709,11 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="p-4 rounded-2xl bg-ink-950 border border-ink-border/60 text-xs text-mist flex items-start gap-3">
-                        <span class="text-base text-amber-400 mt-0.5">ℹ️</span>
+                    <div class="p-4 rounded-2xl bg-ink-950 border border-ink-border/60 text-xs text-stone-600 dark:text-mist flex items-start gap-3">
+                        <span class="text-base text-amber-600 dark:text-amber-400 mt-0.5">ℹ️</span>
                         <div class="space-y-1">
-                            <p class="text-slate-300 font-medium">To'lov integratsiyasi xavfsiz bayroq ortida tayyorlangan (Master switch: <code>TELEGRAM_PAYMENTS_ENABLED=false</code>).</p>
-                            <p class="text-[11px] text-slate-400">Stars orqali haqiqiy to'lovlarni ochish mijozning soliq, qaytarish siyosati va yosh chegarasi bo'yicha biznes qaroriga binoan <code>.env</code> faylida <code>true</code> qilinishi kifoya.</p>
+                            <p class="text-stone-700 dark:text-slate-300 font-medium">To'lov integratsiyasi xavfsiz bayroq ortida tayyorlangan (Master switch: <code>TELEGRAM_PAYMENTS_ENABLED=false</code>).</p>
+                            <p class="text-[11px] text-stone-600 dark:text-slate-400">Stars orqali haqiqiy to'lovlarni ochish mijozning soliq, qaytarish siyosati va yosh chegarasi bo'yicha biznes qaroriga binoan <code>.env</code> faylida <code>true</code> qilinishi kifoya.</p>
                         </div>
                     </div>
                 @endif
@@ -726,28 +726,28 @@
                     <div class="flex items-center gap-1">
                         <button wire:click="$set('walletFilter', 'all')"
                                 type="button"
-                                class="px-2.5 py-1 text-xs rounded-btn font-mono {{ $walletFilter === 'all' ? 'bg-ink-700 text-paper font-bold' : 'text-mist hover:text-paper' }}">
+                                class="px-2.5 py-1 text-xs rounded-btn font-mono {{ $walletFilter === 'all' ? 'bg-ink-700 text-paper font-bold' : 'text-stone-600 dark:text-mist hover:text-paper' }}">
                             Barchasi
                         </button>
                         <button wire:click="$set('walletFilter', 'earned')"
                                 type="button"
-                                class="px-2.5 py-1 text-xs rounded-btn font-mono {{ $walletFilter === 'earned' ? 'bg-ink-700 text-emerald-400 font-bold' : 'text-mist hover:text-paper' }}">
+                                class="px-2.5 py-1 text-xs rounded-btn font-mono {{ $walletFilter === 'earned' ? 'bg-ink-700 text-emerald-700 dark:text-emerald-400 font-bold' : 'text-stone-600 dark:text-mist hover:text-paper' }}">
                             Kirim (+)
                         </button>
                         <button wire:click="$set('walletFilter', 'spent')"
                                 type="button"
-                                class="px-2.5 py-1 text-xs rounded-btn font-mono {{ $walletFilter === 'spent' ? 'bg-ink-700 text-rose-400 font-bold' : 'text-mist hover:text-paper' }}">
+                                class="px-2.5 py-1 text-xs rounded-btn font-mono {{ $walletFilter === 'spent' ? 'bg-ink-700 text-rose-700 dark:text-rose-400 font-bold' : 'text-stone-600 dark:text-mist hover:text-paper' }}">
                             Chiqim (-)
                         </button>
                     </div>
                 </div>
 
                 @if($transactions->isEmpty())
-                    <p class="py-8 text-center text-xs text-mist font-sans">Tranzaksiyalar mavjud emas.</p>
+                    <p class="py-8 text-center text-xs text-stone-600 dark:text-mist font-sans">Tranzaksiyalar mavjud emas.</p>
                 @else
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
-                            <thead class="border-b border-ink-border text-mist font-mono uppercase text-[10px]">
+                            <thead class="border-b border-ink-border text-stone-600 dark:text-mist font-mono uppercase text-[10px]">
                                 <tr>
                                     <th class="py-2.5 pr-4">Sana</th>
                                     <th class="py-2.5 px-4">Tavsif / Manba</th>
@@ -758,17 +758,17 @@
                             <tbody class="divide-y divide-ink-border/50 font-mono">
                                 @foreach($transactions as $tx)
                                     <tr class="hover:bg-ink-800/40 transition-colors">
-                                        <td class="py-3 pr-4 text-mist whitespace-nowrap">
+                                        <td class="py-3 pr-4 text-stone-600 dark:text-mist whitespace-nowrap">
                                             {{ $tx->created_at ? $tx->created_at->format('d.m.Y H:i') : '—' }}
                                         </td>
                                         <td class="py-3 px-4 font-sans text-paper">
                                             <div class="font-medium">{{ $tx->description ?: 'Tanga amali' }}</div>
-                                            <div class="text-[10px] font-mono text-mist uppercase tracking-wider">{{ $tx->source }}</div>
+                                            <div class="text-[10px] font-mono text-stone-600 dark:text-mist uppercase tracking-wider">{{ $tx->source }}</div>
                                         </td>
-                                        <td class="py-3 px-4 text-right font-bold whitespace-nowrap {{ $tx->coins > 0 ? 'text-emerald-400' : 'text-rose-400' }}">
+                                        <td class="py-3 px-4 text-right font-bold whitespace-nowrap {{ $tx->coins > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400' }}">
                                             {{ $tx->coins > 0 ? '+' . $tx->coins : $tx->coins }}
                                         </td>
-                                        <td class="py-3 pl-4 text-right text-mist whitespace-nowrap">
+                                        <td class="py-3 pl-4 text-right text-stone-600 dark:text-mist whitespace-nowrap">
                                             {{ $tx->balance_after !== null ? number_format($tx->balance_after) : '—' }}
                                         </td>
                                     </tr>
@@ -847,11 +847,11 @@
 
                 {{-- Actions --}}
                 <div class="flex items-center justify-end gap-3 pt-2">
-                    <button wire:click="closePreview" type="button" class="px-4 py-2 rounded-btn bg-ink-800 border border-ink-border text-xs text-paper hover:bg-ink-700">
+                    <button wire:click="closePreview" type="button" class="px-4 py-2 rounded-btn bg-ink-800 border border-ink-border text-xs text-stone-700 dark:text-mist hover:text-paper">
                         Yopish
                     </button>
                     @if(!$ownedItemsMap->has($previewItem->id))
-                        <button wire:click="openPurchaseModal({{ $previewItem->id }})" type="button" class="ks-btn-gold px-5 py-2 rounded-btn text-xs font-semibold">
+                        <button wire:click="openPurchaseModal({{ $previewItem->id }})" type="button" class="ks-btn-gold !text-slate-950 font-bold px-5 py-2 rounded-btn text-xs">
                             Sotib olish ({{ $previewItem->price_coins }} tanga)
                         </button>
                     @endif
@@ -880,13 +880,13 @@
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
                     <h3 id="purchase-modal-title" class="font-serif font-bold text-lg text-paper flex items-center gap-2">
-                        <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="9"/>
                             <path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/>
                         </svg>
                         <span>Xaridni tasdiqlash</span>
                     </h3>
-                    <button wire:click="closePurchaseModal" type="button" class="text-mist hover:text-paper p-1 rounded-btn" aria-label="Bekor qilish">
+                    <button wire:click="closePurchaseModal" type="button" class="text-stone-500 dark:text-mist hover:text-paper p-1 rounded-btn" aria-label="Bekor qilish">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -895,14 +895,14 @@
                 <div class="p-4 rounded-card bg-ink-950/70 border border-ink-border space-y-2.5">
                     <div class="flex items-start justify-between gap-3">
                         <div class="space-y-1">
-                            <span class="px-2 py-0.5 rounded-badge font-mono text-[9px] uppercase font-bold {{ $purchaseItem->rarity === 'legendary' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : ($purchaseItem->rarity === 'epic' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-blue-500/20 text-blue-300 border border-blue-500/40') }}">
+                            <span class="px-2 py-0.5 rounded-badge font-mono text-[9px] uppercase font-bold {{ $purchaseItem->rarity === 'legendary' ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 dark:border-amber-500/40' : ($purchaseItem->rarity === 'epic' ? 'bg-purple-500/15 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 dark:border-purple-500/40' : 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 dark:border-blue-500/40') }}">
                                 {{ trans('shop.rarity_' . $purchaseItem->rarity) }}
                             </span>
                             <h4 class="font-serif font-bold text-base text-paper">{{ $purchaseItem->name_text }}</h4>
                         </div>
                         <div class="text-right shrink-0">
-                            <div class="inline-flex items-center gap-1 font-mono font-bold text-amber-400 text-sm">
-                                <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <div class="inline-flex items-center gap-1 font-mono font-bold text-amber-700 dark:text-amber-400 text-sm">
+                                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="9"/>
                                     <path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/>
                                 </svg>
@@ -929,11 +929,11 @@
                     @elseif($purchaseItem->slot === 'accent')
                         <div class="pt-1 flex items-center gap-2">
                             <span class="w-5 h-5 rounded-full border border-white/20 shadow-sm" style="background-color: {{ $badgeColor }}"></span>
-                            <span class="text-xs text-mist font-mono">{{ $purchaseItem->name_text }} urg'u rangi</span>
+                            <span class="text-xs text-stone-600 dark:text-mist font-mono">{{ $purchaseItem->name_text }} urg'u rangi</span>
                         </div>
                     @endif
 
-                    <p class="text-xs text-mist font-sans leading-relaxed pt-1 border-t border-ink-border/50">
+                    <p class="text-xs text-stone-600 dark:text-mist font-sans leading-relaxed pt-1 border-t border-ink-border/50">
                         {{ $purchaseItem->description_text }}
                     </p>
                 </div>
@@ -941,7 +941,7 @@
                 {{-- Quantity Selector (if consumable) --}}
                 @if($purchaseItem->is_consumable && $purchaseItem->max_quantity > 1)
                     <div class="flex items-center justify-between p-3 rounded-card bg-ink-800/60 border border-ink-border">
-                        <span class="text-xs font-mono text-mist">Miqdori:</span>
+                        <span class="text-xs font-mono text-stone-600 dark:text-mist">Miqdori:</span>
                         <div class="flex items-center gap-3">
                             <button type="button"
                                     wire:click="$set('purchaseQuantity', {{ max(1, $purchaseQuantity - 1) }})"
@@ -960,21 +960,21 @@
 
                 {{-- Calculation Breakdown --}}
                 <div class="space-y-2 p-3.5 rounded-card bg-ink-950/60 border border-ink-border/70 text-xs font-mono">
-                    <div class="flex justify-between items-center text-mist">
+                    <div class="flex justify-between items-center text-stone-600 dark:text-mist">
                         <span>Joriy balansingiz:</span>
                         <span class="text-paper font-semibold">{{ number_format($user->coin_balance) }} tanga</span>
                     </div>
-                    <div class="flex justify-between items-center text-mist">
+                    <div class="flex justify-between items-center text-stone-600 dark:text-mist">
                         <span>Xarid narxi:</span>
-                        <span class="text-amber-400 font-bold">{{ number_format($itemCost) }} tanga</span>
+                        <span class="text-amber-700 dark:text-amber-400 font-bold">{{ number_format($itemCost) }} tanga</span>
                     </div>
                     <div class="pt-2 border-t border-ink-border/70 flex justify-between items-center font-bold">
                         @if($hasEnough)
-                            <span class="text-mist">Xariddan keyin qoladi:</span>
-                            <span class="text-emerald-400 text-sm font-bold">{{ number_format($balanceAfter) }} tanga</span>
+                            <span class="text-stone-600 dark:text-mist">Xariddan keyin qoladi:</span>
+                            <span class="text-emerald-700 dark:text-emerald-400 text-sm font-bold">{{ number_format($balanceAfter) }} tanga</span>
                         @else
-                            <span class="text-rose-400">Yetishmayotgan tanga:</span>
-                            <span class="text-rose-400 text-sm font-bold">+{{ number_format($missingCoins) }} tanga</span>
+                            <span class="text-rose-700 dark:text-rose-400">Yetishmayotgan tanga:</span>
+                            <span class="text-rose-700 dark:text-rose-400 text-sm font-bold">+{{ number_format($missingCoins) }} tanga</span>
                         @endif
                     </div>
                 </div>
@@ -982,22 +982,22 @@
                 {{-- Insufficient Balance Helper Box --}}
                 @if(!$hasEnough)
                     <div class="p-3.5 rounded-card bg-amber-500/10 border border-amber-500/30 space-y-2 text-xs">
-                        <div class="flex items-center gap-2 text-amber-300 font-medium">
-                            <svg class="w-4 h-4 shrink-0 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div class="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-medium">
+                            <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                             <span>Ushbu xarid uchun tangangiz yetarli emas.</span>
                         </div>
                         @if($canCoverWithPoints)
-                            <p class="text-[11px] text-mist font-sans leading-relaxed">
-                                Sizda <strong class="text-purple-300 font-mono">{{ number_format($user->available_points) }} ball</strong> bor. Yetishmayotgan {{ number_format($missingCoins) }} tangani olish uchun <strong class="text-paper">{{ number_format($neededPoints) }} ball</strong> almashtirish kifoya!
+                            <p class="text-[11px] text-stone-600 dark:text-mist font-sans leading-relaxed">
+                                Sizda <strong class="text-purple-700 dark:text-purple-300 font-mono">{{ number_format($user->available_points) }} ball</strong> bor. Yetishmayotgan {{ number_format($missingCoins) }} tangani olish uchun <strong class="text-paper">{{ number_format($neededPoints) }} ball</strong> almashtirish kifoya!
                             </p>
                             <button wire:click="closePurchaseModal(); $wire.setTab('exchange')"
                                     type="button"
-                                    class="w-full mt-1 py-2 px-3 rounded-btn bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 font-mono text-[11px] font-bold flex items-center justify-center gap-2 transition-colors">
+                                    class="w-full mt-1 py-2 px-3 rounded-btn bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-800 dark:text-purple-200 font-mono text-[11px] font-bold flex items-center justify-center gap-2 transition-colors">
                                 <span>Ballarni tangaga almashtirish</span>
                                 <span>&rarr;</span>
                             </button>
                         @else
-                            <p class="text-[11px] text-mist font-sans">
+                            <p class="text-[11px] text-stone-600 dark:text-mist font-sans">
                                 Kitob mutolaa qilib yoki viktorinalarda qatnashib ball va tangalar yig'ishingiz mumkin.
                             </p>
                         @endif
@@ -1008,14 +1008,14 @@
                 <div class="flex items-center justify-end gap-3 pt-2">
                     <button wire:click="closePurchaseModal"
                             type="button"
-                            class="px-4 py-2 rounded-btn bg-ink-800 border border-ink-border text-xs text-mist hover:text-paper transition-colors">
+                            class="px-4 py-2 rounded-btn bg-ink-800 border border-ink-border text-xs text-stone-700 dark:text-mist hover:text-paper transition-colors">
                         Bekor qilish
                     </button>
                     @if($hasEnough)
                         <button wire:click="confirmPurchase"
                                 wire:loading.attr="disabled"
                                 type="button"
-                                class="ks-btn-gold px-5 py-2.5 rounded-btn text-xs font-bold inline-flex items-center gap-2">
+                                class="ks-btn-gold !text-slate-950 font-bold px-5 py-2.5 rounded-btn text-xs inline-flex items-center gap-2">
                             <span wire:loading.remove wire:target="confirmPurchase">Tasdiqlash va xarid qilish</span>
                             <span wire:loading wire:target="confirmPurchase" class="inline-flex items-center gap-2">
                                 <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12"/></svg>
@@ -1025,7 +1025,7 @@
                     @elseif($canCoverWithPoints)
                         <button wire:click="closePurchaseModal(); $wire.setTab('exchange')"
                                 type="button"
-                                class="ks-btn-gold px-5 py-2.5 rounded-btn text-xs font-bold inline-flex items-center gap-2">
+                                class="ks-btn-gold !text-slate-950 font-bold px-5 py-2.5 rounded-btn text-xs inline-flex items-center gap-2">
                             <span>Ballarni almashtirish</span>
                             <span>&rarr;</span>
                         </button>
