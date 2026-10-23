@@ -3,6 +3,7 @@
 @section('title', 'Varaqlab o\'qish — ' . $book->title)
 
 @push('styles')
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.css')) }}">
 @endpush
 
@@ -51,13 +52,13 @@
                 </select>
             </div>
 
-            <!-- Shrift & Masshtab (Font & Zoom) Controls -->
+            <!-- Sahifa masshtabi (rasm kattalashadi) -->
             <div class="flex items-center bg-ink-900 border border-white/10 rounded-xl overflow-hidden p-0.5 shadow-inner">
                 <button type="button" 
                         onclick="fbZoomOut()" 
-                        title="Shrift va sahifani kichiklashtirish (A- / klaviaturada: -)" 
+                        title="Sahifani kichiklashtirish (masshtab) — klaviaturada: -" 
                         class="px-2 sm:px-2.5 py-1 text-xs font-mono font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
-                    A-
+                    🔍−
                 </button>
                 <button type="button" 
                         onclick="fbZoomReset()" 
@@ -68,11 +69,20 @@
                 </button>
                 <button type="button" 
                         onclick="fbZoomIn()" 
-                        title="Shrift va sahifani kattalashtirish (A+ / klaviaturada: +)" 
+                        title="Sahifani kattalashtirish (masshtab) — klaviaturada: +" 
                         class="px-2 sm:px-2.5 py-1 text-xs font-mono font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
-                    A+
+                    🔍+
                 </button>
             </div>
+
+            <!-- Matn rejimi: shrift turi va o'lchamini jonli o'zgartirish -->
+            <button type="button"
+                    onclick="fbtOpen()"
+                    title="Matn rejimi — shrift turi, o'lchami va qator oralig'ini jonli o'zgartirish"
+                    class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all">
+                <span class="font-serif text-sm leading-none">Aa</span>
+                <span>Matn</span>
+            </button>
 
             <!-- Paper Theme Selector -->
             <div class="flex items-center bg-ink-900 border border-white/10 rounded-xl p-0.5 shadow-inner">
@@ -306,6 +316,50 @@
 
     <!-- Ambient Background Music Player -->
     <x-ambient-music-player :book="$book" />
+    <!-- Matn rejimi paneli (jonli shrift sozlamalari) -->
+    <div id="fbt-panel" class="fbt-panel" data-theme="dark" role="dialog" aria-modal="true" aria-label="Matn rejimi">
+        <div class="fbt-bar">
+            <div class="fbt-group" title="Shrift o'lchami (klaviaturada: + / -)">
+                <button type="button" class="fbt-btn" onclick="fbtSizeDown()" aria-label="Shriftni kichraytirish">A−</button>
+                <button type="button" class="fbt-label" id="fbt-size-label" onclick="fbtSizeReset()" style="background:none;border:0;cursor:pointer" title="Asl o'lchamga qaytarish">19px</button>
+                <button type="button" class="fbt-btn" onclick="fbtSizeUp()" aria-label="Shriftni kattalashtirish" style="font-size:1rem">A+</button>
+            </div>
+            <input type="range" id="fbt-size-range" class="fbt-range" min="13" max="40" step="1" value="19" aria-label="Shrift o'lchami">
+
+            <select id="fbt-font-select" class="fbt-select" aria-label="Shrift turi">
+                <option value="merriweather">Merriweather</option>
+                <option value="spectral">Spectral</option>
+                <option value="sans">DM Sans</option>
+                <option value="mono">DM Mono</option>
+            </select>
+
+            <select id="fbt-line-select" class="fbt-select" aria-label="Qator oralig'i">
+                <option value="1.4">Qator: zich</option>
+                <option value="1.6">Qator: o'rtacha</option>
+                <option value="1.8">Qator: qulay</option>
+                <option value="2.1">Qator: keng</option>
+            </select>
+
+            <div class="fbt-group">
+                <button type="button" class="fbt-btn" data-fbt-theme="light">☀ Yorug'</button>
+                <button type="button" class="fbt-btn" data-fbt-theme="sepia">🍵 Sepia</button>
+                <button type="button" class="fbt-btn" data-fbt-theme="dark">🌙 Tun</button>
+            </div>
+
+            <span class="fbt-spacer"></span>
+            <button type="button" class="fbt-btn fbt-close" onclick="fbtClose()" title="Asl ko'rinishga qaytish (Esc)">✕ Asl ko'rinish</button>
+        </div>
+
+        <div id="fbt-scroll" class="fbt-scroll">
+            <div id="fbt-body" class="fbt-body"></div>
+        </div>
+
+        <div class="fbt-foot">
+            <button type="button" id="fbt-prev" class="fbt-btn" onclick="fbtPrev()">← Oldingi</button>
+            <span id="fbt-page-indicator" class="fbt-label" style="min-width:5rem">1 / 1</span>
+            <button type="button" id="fbt-next" class="fbt-btn" onclick="fbtNext()">Keyingi →</button>
+        </div>
+    </div>
 
 </div>
 @endsection
@@ -317,4 +371,6 @@
 <script src="{{ asset('assets/flipbook/page-flip.browser.js') }}?v={{ filemtime(public_path('assets/flipbook/page-flip.browser.js')) }}"></script>
 <!-- Flipbook Core Engine -->
 <script src="{{ asset('assets/flipbook/flipbook.js') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.js')) }}"></script>
+<!-- Matn rejimi (jonli shrift sozlamalari) -->
+<script src="{{ asset('assets/flipbook/flipbook-text.js') }}?v={{ filemtime(public_path('assets/flipbook/flipbook-text.js')) }}"></script>
 @endpush

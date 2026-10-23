@@ -1054,6 +1054,9 @@
   window.fbToggleAutoPlay = fbToggleAutoPlay;
   window.fbStopAutoPlay = fbStopAutoPlay;
   window.fbSetPaperTheme = fbSetPaperTheme;
+  window.fbGetPdfDoc = function () { return pdfDoc; };
+  window.fbGetCurrentPage = function () { return currentPage; };
+  window.fbGetTotalPages = function () { return totalPages; };
   window.initFlipbook = init;
 
   // Auto-init

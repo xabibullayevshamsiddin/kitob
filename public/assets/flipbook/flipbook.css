@@ -574,3 +574,33 @@
 }
 
 
+
+
+/* ── Matn rejimi (jonli shrift sozlamalari) ── */
+.fbt-panel { position: fixed; inset: 0; z-index: 9999; display: none; flex-direction: column;
+  --fbt-bg: #0f1420; --fbt-fg: #e7e4dc; --fbt-bar: #151b2b; --fbt-border: rgba(255,255,255,.1); --fbt-muted: #8b9bad; }
+.fbt-panel.is-open { display: flex; }
+.fbt-panel[data-theme="light"] { --fbt-bg: #f6f2ea; --fbt-fg: #1c1916; --fbt-bar: #ece6d9; --fbt-border: rgba(0,0,0,.12); --fbt-muted: #6b6358; }
+.fbt-panel[data-theme="sepia"] { --fbt-bg: #f1e4c8; --fbt-fg: #4a3722; --fbt-bar: #e6d4ae; --fbt-border: rgba(74,55,34,.2); --fbt-muted: #7a6446; }
+.fbt-panel { background: var(--fbt-bg); color: var(--fbt-fg); }
+.fbt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; padding: .6rem .9rem;
+  background: var(--fbt-bar); border-bottom: 1px solid var(--fbt-border); }
+.fbt-group { display: flex; align-items: center; gap: .25rem; padding: .15rem; border: 1px solid var(--fbt-border); border-radius: .75rem; }
+.fbt-btn, .fbt-select { background: transparent; color: var(--fbt-fg); border: 0; padding: .3rem .6rem; border-radius: .5rem;
+  font: 700 .8rem 'DM Mono', monospace; cursor: pointer; }
+.fbt-select { border: 1px solid var(--fbt-border); font-weight: 600; }
+.fbt-select option { color: #111; }
+.fbt-btn:hover:not(:disabled) { background: rgba(245,158,11,.18); }
+.fbt-btn:disabled { opacity: .35; cursor: not-allowed; }
+.fbt-btn.is-active { background: #f59e0b; color: #1a1205; }
+.fbt-label { font: 700 .8rem 'DM Mono', monospace; color: #f59e0b; min-width: 3rem; text-align: center; }
+.fbt-range { width: 7rem; accent-color: #f59e0b; }
+.fbt-spacer { flex: 1; }
+.fbt-close { background: #f59e0b; color: #1a1205; }
+.fbt-scroll { flex: 1; overflow-y: auto; padding: 2rem 1rem 4rem; }
+.fbt-body { max-width: 46rem; margin: 0 auto; transition: font-size .12s ease, line-height .12s ease; }
+.fbt-body p { margin: 0 0 1.1em; text-align: left; hyphens: auto; }
+.fbt-body .fbt-h { font-weight: 800; margin: 1.4em 0 .7em; font-size: 1.25em; line-height: 1.35; }
+.fbt-muted { color: var(--fbt-muted); text-align: center; }
+.fbt-foot { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: .6rem;
+  background: var(--fbt-bar); border-top: 1px solid var(--fbt-border); }
