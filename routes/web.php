@@ -478,8 +478,29 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         $user = auth()->user();
-        $minutes = max(1, (int) round($request->minutes));
+        $minutes = 1; // Har bir 60 soniyalik faol heartbeat uchun qat'iy 1 daqiqa
         $today = now('Asia/Tashkent')->toDateString();
+
+        // Anti-cheat: Bir nechta tab ochib yoki fokusdan tashqari tez-tez so'rov yuborishni bloklash (kamida 52 soniya oraliq)
+        $cooldownKey = 'reading_heartbeat_lock_' . $user->id;
+        if (\Illuminate\Support\Facades\Cache::has($cooldownKey)) {
+            $activity = \App\Models\DailyActivity::getTodayActivity($user->id, $today);
+            $streak = \App\Models\UserStreak::firstOrCreate(['user_id' => $user->id]);
+            return response()->json([
+                'success'             => true,
+                'minutes_added'       => 0,
+                'points_added'        => 0,
+                'coins_added'         => 0,
+                'total_minutes_today' => (int) $activity->minutes_read,
+                'total_minutes_all'   => (int) $user->total_reading_minutes,
+                'total_points'        => (int) $user->total_points,
+                'coin_balance'        => (int) $user->coin_balance,
+                'streak'              => (int) $streak->current_streak,
+                'daily_goal_reached'  => ((int) $activity->minutes_read) >= 60,
+                'daily_goal_claimed'  => (bool) ($activity->hourly_bonus_claimed ?? false),
+            ]);
+        }
+        \Illuminate\Support\Facades\Cache::put($cooldownKey, true, now()->addSeconds(52));
 
         // Oxirgi 30 daqiqa ichidagi sessiyani davom ettirish yoki yangi yaratish
         $sessionQuery = \App\Models\ReadingSession::where('user_id', $user->id)

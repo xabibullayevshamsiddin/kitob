@@ -106,17 +106,24 @@
             <!-- Ambient Spotlight Glow -->
             <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-            <!-- Pulsing 3D Hourglass Icon -->
+            <!-- Pulsing 3D Hourglass / Focus Pause Icon -->
             <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-glow-amber animate-pulse">
-                ⏳
+                <span x-show="afkReason === 'focus'">⏸️</span>
+                <span x-show="afkReason !== 'focus'">⏳</span>
             </div>
 
             <!-- Heading & Context -->
             <div class="space-y-2">
-                <h3 class="text-xl sm:text-2xl font-black text-white font-manrope tracking-tight">
+                <h3 class="text-xl sm:text-2xl font-black text-white font-manrope tracking-tight"
+                    x-text="afkReason === 'focus' ? 'Mutolaa pauza qilindi!' : 'Siz shu yerdamisiz?'">
                     Siz shu yerdamisiz?
                 </h3>
-                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto">
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto"
+                   x-show="afkReason === 'focus'">
+                    Boshqa sahifa yoki ilovaga o'tganingiz (fokus yo'qolgani) sababli mutolaa va bonus hisoblash darhol to'xtatildi. Davom ettirasizmi?
+                </p>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto"
+                   x-show="afkReason !== 'focus'">
                     5 daqiqa davomida hech qanday harakat qayd etilmadi. Vaqt va ball hisoblash to'xtatildi. Davom ettirasizmi?
                 </p>
             </div>
@@ -177,16 +184,38 @@ function readingTracker(config) {
         lastPointsAwarded: 0,
         lastCoinsAwarded: 0,
         
-        isPaused: false,
+        isPaused: config.pageType === 'audio',
         isAfk: false,
+        afkReason: 'idle', // 'idle' | 'focus'
         isSending: false,
         showAfkModal: false,
         isWidgetVisible: true,
         showPointsNotification: false,
         wasMediaPlayingBeforeAfk: false,
+        pausedMediaElements: [],
         
         timerInterval: null,
         afkLimitSeconds: 300, // 5 minut harakatsizlik (300 soniya)
+
+        isPageFocused() {
+            if (document.hidden || document.visibilityState !== 'visible') {
+                return false;
+            }
+            if (document.hasFocus()) {
+                return true;
+            }
+            // Agar foydalanuvchi sahifa ichidagi video iframe (YouTube) ustiga bosgan bo'lsa
+            if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                return true;
+            }
+            return false;
+        },
+
+        getBookAudios() {
+            return Array.from(document.querySelectorAll('audio')).filter(
+                el => !el.closest('.ambient-music-scope') && el.id !== 'liveAudioPlayer'
+            );
+        },
         
         initTracker() {
             // Activity events to detect user interaction
@@ -194,6 +223,7 @@ function readingTracker(config) {
             let lastEventTime = Date.now();
 
             const recordActivity = () => {
+                if (!this.isPageFocused()) return;
                 const now = Date.now();
                 if (now - lastEventTime > 1500) { // Throttle activity resets to every 1.5s
                     lastEventTime = now;
@@ -214,33 +244,88 @@ function readingTracker(config) {
                 if (videoEl && !videoEl._hasTrackerListener) {
                     videoEl._hasTrackerListener = true;
                     videoEl.addEventListener('play', () => {
+                        if (!this.isPageFocused()) {
+                            videoEl.pause();
+                            return;
+                        }
                         this.isPaused = false;
+                        this.isAfk = false;
+                        this.showAfkModal = false;
                         this.idleSeconds = 0;
                     });
-                }
-                const audioEl = document.querySelector('audio');
-                if (audioEl && !audioEl._hasTrackerListener) {
-                    audioEl._hasTrackerListener = true;
-                    audioEl.addEventListener('play', () => {
-                        this.isPaused = false;
-                        this.idleSeconds = 0;
+                    videoEl.addEventListener('pause', () => {
+                        if (this.pageType === 'video' && !this.isAfk) {
+                            this.isPaused = true;
+                        }
                     });
                 }
+
+                this.getBookAudios().forEach(audioEl => {
+                    if (!audioEl._hasTrackerListener) {
+                        audioEl._hasTrackerListener = true;
+                        audioEl.addEventListener('play', () => {
+                            if (!this.isPageFocused()) {
+                                audioEl.pause();
+                                return;
+                            }
+                            this.isPaused = false;
+                            this.isAfk = false;
+                            this.showAfkModal = false;
+                            this.idleSeconds = 0;
+                        });
+                        audioEl.addEventListener('pause', () => {
+                            if (this.pageType === 'audio' && !this.isAfk) {
+                                const anyPlaying = this.getBookAudios().some(a => !a.paused && !a.ended);
+                                if (!anyPlaying) {
+                                    this.isPaused = true;
+                                }
+                            }
+                        });
+                    }
+                });
             };
 
             syncMedia();
-            setInterval(syncMedia, 3000);
+            setInterval(syncMedia, 2000);
+
+            // Boshqa sahifa (tab) yoki boshqa ilovaga o'tilganda (fokus yo'qolganda) DARHOL pauza qilish
+            const handleFocusLoss = () => {
+                setTimeout(() => {
+                    if (!this.isPageFocused()) {
+                        this.triggerFocusPause();
+                    }
+                }, 80);
+            };
+
+            window.addEventListener('blur', handleFocusLoss);
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden || document.visibilityState !== 'visible') {
+                    this.triggerFocusPause();
+                }
+            });
 
             // Second ticker interval
             this.timerInterval = setInterval(() => {
+                // 1) Agar sahifa fokusda bo'lmasa (boshqa tab, oyna yoki o'yinga o'tilgan bo'lsa) — DARHOL PAUZA!
+                if (!this.isPageFocused()) {
+                    this.triggerFocusPause();
+                    return;
+                }
+
                 const videoEl = document.querySelector('video');
                 const isVideoPlaying = videoEl && !videoEl.paused && !videoEl.ended && videoEl.readyState > 2;
 
-                const audioEl = document.querySelector('audio');
-                const isAudioPlaying = audioEl && !audioEl.paused && !audioEl.ended;
+                const bookAudios = this.getBookAudios();
+                const isBookAudioPlaying = bookAudios.some(a => !a.paused && !a.ended);
 
-                // Media is playing -> user is actively watching/listening!
-                if (isVideoPlaying || isAudioPlaying) {
+                // Audio sahifasida audio qo'yilmagan bo'lsa, taymer ishlamaydi
+                if (this.pageType === 'audio' && !isBookAudioPlaying) {
+                    this.isPaused = true;
+                    return;
+                }
+
+                // Video yoki kitob audiosi (fokus yo'qolmagan holda) o'ynayotgan bo'lsa
+                if (isVideoPlaying || isBookAudioPlaying) {
                     this.idleSeconds = 0;
                 }
 
@@ -251,7 +336,8 @@ function readingTracker(config) {
 
                     // 5 minutes of total inactivity (neither media playing nor user touching mouse/keys)
                     if (this.idleSeconds >= this.afkLimitSeconds) {
-                        this.triggerAfk();
+                        this.triggerAfk('idle');
+                        return;
                     }
 
                     // Har 60 faol soniyada (1 daqiqa bo'lishi bilan) — SRAZU JONLI MUKOFOT!
@@ -280,34 +366,56 @@ function readingTracker(config) {
                     this.idleSeconds++;
                 }
             }, 1000);
-
-            // Page leave sync (visibilitychange / pagehide)
-            window.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden') {
-                    if (this.unsentSeconds >= 30) {
-                        this.sendHeartbeat(Math.round(this.unsentSeconds / 60) || 1, true);
-                    }
-                }
-            });
         },
 
-        triggerAfk() {
-            this.isAfk = true;
-            this.showAfkModal = true;
-            this.wasMediaPlayingBeforeAfk = false;
-            
-            // If video is playing, pause it so user doesn't miss anything
-            const videoEl = document.querySelector('video');
-            if (videoEl && !videoEl.paused) {
-                videoEl.pause();
+        triggerFocusPause() {
+            // Barcha o'ynab turgan video va audiolarni darhol to'xtatish
+            const playingEls = [];
+            document.querySelectorAll('video, audio').forEach(el => {
+                if (!el.paused && !el.ended) {
+                    el.pause();
+                    playingEls.push(el);
+                }
+            });
+            if (playingEls.length > 0) {
+                this.pausedMediaElements = playingEls;
                 this.wasMediaPlayingBeforeAfk = true;
             }
 
-            // If audio is playing, pause it
-            const audioEl = document.querySelector('audio');
-            if (audioEl && !audioEl.paused) {
-                audioEl.pause();
-                this.wasMediaPlayingBeforeAfk = true;
+            // Flipbook avtomatik varaqlash yoqilgan bo'lsa to'xtatish
+            if (typeof window.fbStopAutoPlay === 'function') {
+                window.fbStopAutoPlay();
+            }
+
+            // Agar mutolaa faol ketayotgan bo'lsa yoki media o'ynayotgan bo'lsa, pauza modalini yoqish
+            if (!this.isAfk && (!this.isPaused || playingEls.length > 0 || this.sessionSeconds > 0)) {
+                this.afkReason = 'focus';
+                this.isAfk = true;
+                this.isPaused = true;
+                this.showAfkModal = true;
+            } else {
+                this.isPaused = true;
+            }
+        },
+
+        triggerAfk(reason = 'idle') {
+            this.afkReason = reason;
+            this.isAfk = true;
+            this.isPaused = true;
+            this.showAfkModal = true;
+            this.wasMediaPlayingBeforeAfk = false;
+            this.pausedMediaElements = [];
+            
+            document.querySelectorAll('video, audio').forEach(el => {
+                if (!el.paused && !el.ended) {
+                    el.pause();
+                    this.pausedMediaElements.push(el);
+                    this.wasMediaPlayingBeforeAfk = true;
+                }
+            });
+
+            if (typeof window.fbStopAutoPlay === 'function') {
+                window.fbStopAutoPlay();
             }
         },
 
@@ -317,16 +425,20 @@ function readingTracker(config) {
             this.isPaused = false;
             this.idleSeconds = 0;
 
-            if (this.wasMediaPlayingBeforeAfk) {
-                const videoEl = document.querySelector('video');
-                if (videoEl && videoEl.paused) {
-                    videoEl.play().catch(() => {});
-                }
-                const audioEl = document.querySelector('audio');
-                if (audioEl && audioEl.paused) {
-                    audioEl.play().catch(() => {});
-                }
+            if (this.wasMediaPlayingBeforeAfk && this.pausedMediaElements.length > 0) {
+                this.pausedMediaElements.forEach(el => {
+                    if (el && el.paused) {
+                        el.play().catch(() => {});
+                    }
+                });
+                this.pausedMediaElements = [];
                 this.wasMediaPlayingBeforeAfk = false;
+            } else if (this.pageType === 'audio') {
+                // Audio sahifasida audio pleyerni ham ishga tushiramiz
+                const bookAudios = this.getBookAudios();
+                if (bookAudios.length > 0 && bookAudios[0].paused) {
+                    bookAudios[0].play().catch(() => {});
+                }
             }
         },
 
