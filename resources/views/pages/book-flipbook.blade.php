@@ -47,8 +47,8 @@
                 <select id="fb-page-select" 
                         onchange="if(this.value) { fbGoToPage(parseInt(this.value)); }"
                         title="Ro'yxatdan sahifani tanlash"
-                        class="ml-1 bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 hover:text-white rounded-lg text-xs py-0.5 px-1.5 outline-none cursor-pointer font-sans">
-                    <option value="" class="bg-slate-900 text-slate-400">Tanlash ▾</option>
+                        class="ml-1 bg-slate-900 hover:bg-slate-800 border border-white/15 text-slate-200 hover:text-white rounded-lg text-xs py-0.5 px-1.5 outline-none cursor-pointer font-sans">
+                    <option value="" class="bg-slate-900 text-slate-300">Tanlash ▾</option>
                 </select>
             </div>
 
@@ -319,6 +319,7 @@
     <!-- Matn rejimi paneli (jonli shrift sozlamalari) -->
     <div id="fbt-panel" class="fbt-panel" data-theme="dark" role="dialog" aria-modal="true" aria-label="Matn rejimi">
         <div class="fbt-bar">
+            <!-- Shrift o'lchami -->
             <div class="fbt-group" title="Shrift o'lchami (klaviaturada: + / -)">
                 <button type="button" class="fbt-btn" onclick="fbtSizeDown()" aria-label="Shriftni kichraytirish">A−</button>
                 <button type="button" class="fbt-label" id="fbt-size-label" onclick="fbtSizeReset()" style="background:none;border:0;cursor:pointer" title="Asl o'lchamga qaytarish">19px</button>
@@ -326,24 +327,78 @@
             </div>
             <input type="range" id="fbt-size-range" class="fbt-range" min="13" max="40" step="1" value="19" aria-label="Shrift o'lchami">
 
-            <select id="fbt-font-select" class="fbt-select" aria-label="Shrift turi">
-                <option value="merriweather">Merriweather</option>
-                <option value="spectral">Spectral</option>
-                <option value="sans">DM Sans</option>
-                <option value="mono">DM Mono</option>
-            </select>
+            <!-- Shrift turi (Maxsus ko'rinadigan dropdown) -->
+            <div class="fbt-dd" id="fbt-font-dd">
+                <button type="button" class="fbt-dd-trigger" onclick="fbtToggleDd('fbt-font-dd')" aria-haspopup="listbox">
+                    <span class="fbt-dd-prefix">🔤</span>
+                    <span id="fbt-font-label">Merriweather</span>
+                    <span class="fbt-dd-caret">▾</span>
+                </button>
+                <div class="fbt-dd-menu" role="listbox" aria-label="Shrift turi">
+                    <button type="button" class="fbt-dd-item" data-fbt-font="merriweather" style="font-family:'Merriweather',Georgia,serif">
+                        <span>Merriweather (Klassik)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                    <button type="button" class="fbt-dd-item" data-fbt-font="spectral" style="font-family:'Spectral',Georgia,serif">
+                        <span>Spectral (Adabiy)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                    <button type="button" class="fbt-dd-item" data-fbt-font="sans" style="font-family:'DM Sans',system-ui,sans-serif">
+                        <span>DM Sans (Zamonaviy)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                    <button type="button" class="fbt-dd-item" data-fbt-font="mono" style="font-family:'DM Mono',monospace">
+                        <span>DM Mono (Texnik)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                </div>
+            </div>
 
-            <select id="fbt-line-select" class="fbt-select" aria-label="Qator oralig'i">
-                <option value="1.4">Qator: zich</option>
-                <option value="1.6">Qator: o'rtacha</option>
-                <option value="1.8">Qator: qulay</option>
-                <option value="2.1">Qator: keng</option>
-            </select>
+            <!-- Qator oralig'i (Maxsus ko'rinadigan dropdown) -->
+            <div class="fbt-dd" id="fbt-line-dd">
+                <button type="button" class="fbt-dd-trigger" onclick="fbtToggleDd('fbt-line-dd')" aria-haspopup="listbox">
+                    <span class="fbt-dd-prefix">↕</span>
+                    <span id="fbt-line-label">Qator: qulay</span>
+                    <span class="fbt-dd-caret">▾</span>
+                </button>
+                <div class="fbt-dd-menu" role="listbox" aria-label="Qator oralig'i">
+                    <button type="button" class="fbt-dd-item" data-fbt-line="1.4">
+                        <span>Qator: zich (1.4)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                    <button type="button" class="fbt-dd-item" data-fbt-line="1.6">
+                        <span>Qator: o'rtacha (1.6)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                    <button type="button" class="fbt-dd-item" data-fbt-line="1.8">
+                        <span>Qator: qulay (1.8)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                    <button type="button" class="fbt-dd-item" data-fbt-line="2.1">
+                        <span>Qator: keng (2.1)</span>
+                        <span class="fbt-dd-check">✓</span>
+                    </button>
+                </div>
+            </div>
 
+            <!-- Fon mavzusi -->
             <div class="fbt-group">
                 <button type="button" class="fbt-btn" data-fbt-theme="light">☀ Yorug'</button>
                 <button type="button" class="fbt-btn" data-fbt-theme="sepia">🍵 Sepia</button>
                 <button type="button" class="fbt-btn" data-fbt-theme="dark">🌙 Tun</button>
+            </div>
+
+            <!-- Sahifaga tez o'tish (Top bar ichida ham ko'rinadi) -->
+            <div class="fbt-group">
+                <button type="button" class="fbt-btn" id="fbt-prev-top" onclick="fbtPrev()" title="Oldingi sahifa">←</button>
+                <div class="fbt-dd" id="fbt-page-dd">
+                    <button type="button" class="fbt-dd-trigger fbt-dd-trigger--compact" onclick="fbtToggleDd('fbt-page-dd')" title="Sahifani tanlash">
+                        <span id="fbt-page-indicator" class="fbt-label" style="min-width:4.2rem">1 / 1</span>
+                        <span class="fbt-dd-caret">▾</span>
+                    </button>
+                    <div class="fbt-dd-menu fbt-dd-menu--pages" id="fbt-page-menu" role="listbox" aria-label="Sahifani tanlash"></div>
+                </div>
+                <button type="button" class="fbt-btn" id="fbt-next-top" onclick="fbtNext()" title="Keyingi sahifa">→</button>
             </div>
 
             <span class="fbt-spacer"></span>
@@ -355,9 +410,9 @@
         </div>
 
         <div class="fbt-foot">
-            <button type="button" id="fbt-prev" class="fbt-btn" onclick="fbtPrev()">← Oldingi</button>
-            <span id="fbt-page-indicator" class="fbt-label" style="min-width:5rem">1 / 1</span>
-            <button type="button" id="fbt-next" class="fbt-btn" onclick="fbtNext()">Keyingi →</button>
+            <button type="button" id="fbt-prev" class="fbt-btn" onclick="fbtPrev()">← Oldingi sahifa</button>
+            <span id="fbt-page-indicator-foot" class="fbt-label" style="min-width:7rem">Sahifa 1 / 1</span>
+            <button type="button" id="fbt-next" class="fbt-btn" onclick="fbtNext()">Keyingi sahifa →</button>
         </div>
     </div>
 
