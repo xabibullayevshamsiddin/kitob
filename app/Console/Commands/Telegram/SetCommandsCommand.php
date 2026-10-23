@@ -18,6 +18,7 @@ class SetCommandsCommand extends Command
         $commands = [
             ['command' => 'start', 'description' => 'Botni ishga tushirish va menyu 🚀'],
             ['command' => 'menu', 'description' => 'Asosiy menyu tugmalarini ko\'rsatish 📋'],
+            ['command' => 'close', 'description' => 'Menyuni yopish va yashirish ❌'],
             ['command' => 'profil', 'description' => 'Shaxsiy profil va yutuqlar 👤'],
             ['command' => 'streak', 'description' => 'Kunlik mutolaa zanjiri (Streak) 🔥'],
             ['command' => 'balance', 'description' => 'Tanga va ballar balansi 🪙'],

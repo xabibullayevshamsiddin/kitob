@@ -98,6 +98,13 @@ class TelegramBotService
             return;
         }
 
+        // 2.1. Menyuni yopish (klaviaturani yashirish)
+        if (in_array($firstWord, ['/close', '/yopish'])
+            || in_array($clean, ['menyuni yopish', 'yopish', 'close', 'menyu yopish', 'bekor qilish', 'bekor', 'cancel'])) {
+            $this->handleCloseMenuCommand($chatId);
+            return;
+        }
+
         // 3. Profil
         if (in_array($firstWord, ['/profil', '/profile'])
             || in_array($clean, ['profilim', 'profil', 'profilimni korish', 'shaxsiy profil'])) {
@@ -167,9 +174,9 @@ class TelegramBotService
             return;
         }
 
-        // 13. Bekor qilish
+        // 13. Bekor qilish (Menyuni yopish)
         if (in_array($clean, ['bekor qilish', 'bekor', 'cancel'])) {
-            $this->handleMenuCommand($chatId);
+            $this->handleCloseMenuCommand($chatId);
             return;
         }
 
@@ -595,6 +602,22 @@ class TelegramBotService
     }
 
     /**
+     * /close yoki «❌ Menyuni yopish» buyrug'i. Klaviaturani yopish (yashirish).
+     */
+    public function handleCloseMenuCommand(int|string $chatId): void
+    {
+        $this->client->sendMessage(
+            $chatId,
+            "Menyu yopildi. 🔒\n\nMenyuni qayta ochish uchun <b>/menu</b> buyrug'ini yuboring yoki quyidagi to'rtburchak (⊞) tugmasini bosing. 📖",
+            [
+                'reply_markup' => [
+                    'remove_keyboard' => true,
+                ],
+            ]
+        );
+    }
+
+    /**
      * /books buyrug'i (Sara kitoblar).
      */
     protected function handleBooksCommand(int|string $chatId): void
@@ -679,6 +702,7 @@ class TelegramBotService
         $text = "❓ <b>Mavjud buyruqlar va imkoniyatlar:</b>\n\n"
               . "• <b>/start</b> — Botni ishga tushirish\n"
               . "• <b>/menu</b> — Asosiy menyu tugmalarini ko'rsatish\n"
+              . "• <b>/close</b> (yoki ❌ Menyuni yopish) — Menyuni yopish va yashirish\n"
               . "• <b>/profil</b> (yoki 👤 Profilim) — Shaxsiy hisob, balans va statistika\n"
               . "• <b>/streak</b> (yoki 🔥 Streak) — Kunlik mutolaa zanjiri\n"
               . "• <b>/balance</b> (yoki 🪙 Balans) — Oltin tangalar va ballar\n"
@@ -749,9 +773,11 @@ class TelegramBotService
                     ['text' => '🏆 Reyting'],
                     ['text' => '❓ Yordam'],
                 ],
+                [
+                    ['text' => '❌ Menyuni yopish'],
+                ],
             ],
             'resize_keyboard' => true,
-            'is_persistent'   => true,
         ];
     }
 
@@ -784,6 +810,7 @@ class TelegramBotService
             'cmd_shop' => $this->handleShopCommand($chatId),
             'cmd_help' => $this->handleHelpCommand($chatId),
             'cmd_menu' => $this->handleMenuCommand($chatId),
+            'cmd_close' => $this->handleCloseMenuCommand($chatId),
             default => null,
         };
     }

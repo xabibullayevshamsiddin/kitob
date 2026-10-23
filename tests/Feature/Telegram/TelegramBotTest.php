@@ -302,4 +302,73 @@ class TelegramBotTest extends TestCase
                 && isset($request['reply_markup']['keyboard']);
         });
     }
+
+    public function test_main_menu_keyboard_has_close_button_and_not_persistent(): void
+    {
+        $service = new TelegramBotService();
+        $keyboard = $service->getMainMenuKeyboard();
+
+        $this->assertArrayHasKey('keyboard', $keyboard);
+        $this->assertTrue($keyboard['resize_keyboard']);
+        $this->assertArrayNotHasKey('is_persistent', $keyboard);
+
+        $flatButtons = [];
+        foreach ($keyboard['keyboard'] as $row) {
+            foreach ($row as $btn) {
+                $flatButtons[] = $btn['text'];
+            }
+        }
+
+        $this->assertContains('❌ Menyuni yopish', $flatButtons);
+        $this->assertContains('🔥 Streak holati', $flatButtons);
+        $this->assertContains('🪙 Tanga balansi', $flatButtons);
+    }
+
+    public function test_close_menu_removes_keyboard(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 9]], 200),
+        ]);
+
+        $service = new TelegramBotService();
+        $service->handleUpdate([
+            'update_id' => 5011,
+            'message' => [
+                'chat' => ['id' => 555444],
+                'from' => ['id' => 555444, 'first_name' => 'Alisher'],
+                'text' => '❌ Menyuni yopish',
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 555444
+                && str_contains($request['text'], 'Menyu yopildi')
+                && isset($request['reply_markup']['remove_keyboard'])
+                && $request['reply_markup']['remove_keyboard'] === true;
+        });
+    }
+
+    public function test_slash_close_command_removes_keyboard(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 10]], 200),
+        ]);
+
+        $service = new TelegramBotService();
+        $service->handleUpdate([
+            'update_id' => 5012,
+            'message' => [
+                'chat' => ['id' => 555444],
+                'from' => ['id' => 555444, 'first_name' => 'Alisher'],
+                'text' => '/close',
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 555444
+                && str_contains($request['text'], 'Menyu yopildi')
+                && isset($request['reply_markup']['remove_keyboard'])
+                && $request['reply_markup']['remove_keyboard'] === true;
+        });
+    }
 }
