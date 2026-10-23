@@ -32,10 +32,10 @@
         x-init="if (isHome) { scrolled = (window.scrollY > 20); }"
         @scroll.window.passive="if (isHome) { scrolled = (window.scrollY > 20); }"
         @theme-changed.window="theme = $event.detail.theme"
-        class="sticky top-0 z-40 w-full transition-all duration-300 bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10"
+        class="sticky top-0 z-40 w-full transition-all duration-300 {{ $isHome ? 'is-hero-header !bg-transparent !border-b !border-white/10 !backdrop-blur-none !shadow-none' : 'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10' }}"
         :class="{
-            'is-hero-header !bg-transparent !border-b !border-white/10 !backdrop-blur-none !shadow-none': (isHome && !scrolled && !mobileMenu && theme === 'dark'),
-            'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10': (!isHome || scrolled || mobileMenu || theme === 'light')
+            'is-hero-header !bg-transparent !border-b !border-white/10 !backdrop-blur-none !shadow-none': (isHome && !scrolled && !mobileMenu),
+            'bg-ink-900/95 border-b border-ink-border backdrop-blur-md shadow-lg shadow-black/10': (!isHome || scrolled || mobileMenu)
         }">
     <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-1.5 sm:gap-3">
 
@@ -653,9 +653,14 @@ html.light:not(.force-dark) .group:hover .header-logo-badge {
     background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
 }
 
-/* ── Velorah & Editorial Hero Header Overrides (Dark Mode Home Hero Only) ── */
-html.dark #site-header.is-hero-header,
-html:not(.light) #site-header.is-hero-header {
+/* ── Velorah & Editorial Hero Header Overrides (Hero Header on Home - Both Dark & Light) ── */
+#site-header.is-hero-header {
+    background-color: transparent !important;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     --paper-rgb: 255 255 255 !important;
     --paper-50-rgb: 255 255 255 !important;
     --paper-100-rgb: 255 255 255 !important;
@@ -664,55 +669,134 @@ html:not(.light) #site-header.is-hero-header {
     --mist-rgb: 226 232 240 !important;
     --mist-600-rgb: 148 163 184 !important;
     --ink-border-rgb: 255 255 255 / 0.15 !important;
-}
-html.dark #site-header.is-hero-header .header-theme-btn,
-html:not(.light) #site-header.is-hero-header .header-theme-btn {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
     color: #ffffff !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
-html.dark #site-header.is-hero-header .header-theme-btn:hover,
-html:not(.light) #site-header.is-hero-header .header-theme-btn:hover {
-    background-color: rgba(255, 255, 255, 0.16) !important;
-    border-color: rgba(255, 255, 255, 0.35) !important;
+
+#site-header.is-hero-header nav a,
+#site-header.is-hero-header nav button {
+    color: rgba(255, 255, 255, 0.85) !important;
 }
-html.dark #site-header.is-hero-header .header-theme-moon,
-html:not(.light) #site-header.is-hero-header .header-theme-moon {
-    color: #fde047 !important;
-}
-html.dark #site-header.is-hero-header .header-lang-btn,
-html:not(.light) #site-header.is-hero-header .header-lang-btn {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+#site-header.is-hero-header nav a:hover,
+#site-header.is-hero-header nav button:hover {
     color: #ffffff !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
-html.dark #site-header.is-hero-header .header-lang-btn:hover,
-html:not(.light) #site-header.is-hero-header .header-lang-btn:hover {
-    background-color: rgba(255, 255, 255, 0.16) !important;
-    border-color: rgba(255, 255, 255, 0.35) !important;
+#site-header.is-hero-header nav a[aria-current="page"] {
+    color: #ffffff !important;
+    font-weight: 600 !important;
 }
-html.dark #site-header.is-hero-header .header-streak-pill,
-html:not(.light) #site-header.is-hero-header .header-streak-pill {
+
+#site-header.is-hero-header a[aria-label="Kitobxon"] span.font-display {
+    color: #ffffff !important;
+}
+#site-header.is-hero-header a[aria-label="Kitobxon"] span.font-mono {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+#site-header.is-hero-header a[aria-label="Kitobxon"]:hover span.font-display {
     color: #f59e0b !important;
 }
-html.dark #site-header.is-hero-header .ks-btn-primary,
-html:not(.light) #site-header.is-hero-header .ks-btn-primary {
+
+#site-header.is-hero-header .header-theme-btn {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+#site-header.is-hero-header .header-theme-btn:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+}
+#site-header.is-hero-header .header-theme-moon,
+#site-header.is-hero-header .header-theme-sun {
+    color: #fde047 !important;
+}
+
+#site-header.is-hero-header .header-lang-btn {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+#site-header.is-hero-header .header-lang-btn:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    color: #ffffff !important;
+}
+#site-header.is-hero-header .header-lang-btn svg {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+#site-header.is-hero-header .header-streak-pill,
+#site-header.is-hero-header [title*="streak"],
+#site-header.is-hero-header [title*="Streak"],
+#site-header.is-hero-header [title*="kunlik"],
+#site-header.is-hero-header [title*="Kunlik"] {
+    color: #f59e0b !important;
+}
+
+#site-header.is-hero-header [title*="ball"],
+#site-header.is-hero-header [title*="Ball"],
+#site-header.is-hero-header [title*="ochko"],
+#site-header.is-hero-header [title*="Ochko"],
+#site-header.is-hero-header [title*="point"],
+#site-header.is-hero-header [title*="Point"],
+#site-header.is-hero-header [title*="tanga"],
+#site-header.is-hero-header [title*="Tanga"],
+#site-header.is-hero-header [title*="coin"],
+#site-header.is-hero-header [title*="Coin"] {
+    color: #ffffff !important;
+}
+
+#site-header.is-hero-header .header-notification-btn {
+    color: rgba(241, 245, 249, 0.86) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+#site-header.is-hero-header .header-notification-btn:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+#site-header.is-hero-header .header-avatar-btn {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+#site-header.is-hero-header .header-avatar-btn:hover {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+#site-header.is-hero-header .header-avatar-btn span {
+    color: #ffffff !important;
+}
+#site-header.is-hero-header .header-avatar-btn svg {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+#site-header.is-hero-header button[aria-label*="Menyu"],
+#site-header.is-hero-header button[aria-label*="menu"],
+#site-header.is-hero-header button[aria-label*="Menu"] {
+    color: #ffffff !important;
+}
+
+#site-header.is-hero-header .ks-btn-primary {
     background-color: #C1392B !important;
     color: #ffffff !important;
     border-color: #A82E22 !important;
     box-shadow: 0 2px 8px rgba(193, 57, 43, 0.4) !important;
 }
-html.dark #site-header.is-hero-header .ks-btn-primary:hover,
-html:not(.light) #site-header.is-hero-header .ks-btn-primary:hover {
+#site-header.is-hero-header .ks-btn-primary:hover {
     background-color: #A82E22 !important;
 }
 
-/* ── High-Contrast Literary Light Mode Header ── */
-html.light:not(.force-dark) #site-header {
+/* ── High-Contrast Literary Light Mode Header (Scrolled or Subpages) ── */
+html.light:not(.force-dark) #site-header:not(.is-hero-header) {
     background-color: rgba(249, 246, 240, 0.96) !important;
     border-bottom: 1px solid #E0D9CD !important;
     box-shadow: 0 4px 20px -2px rgba(28, 25, 22, 0.06) !important;
@@ -731,121 +815,121 @@ html.light:not(.force-dark) #site-header {
 }
 
 /* Nav links in Light Mode */
-html.light:not(.force-dark) #site-header nav a,
-html.light:not(.force-dark) #site-header nav button {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a,
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav button {
     color: #5C554B !important;
 }
-html.light:not(.force-dark) #site-header nav a:hover,
-html.light:not(.force-dark) #site-header nav button:hover {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a:hover,
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav button:hover {
     color: #1C1916 !important;
 }
-html.light:not(.force-dark) #site-header nav a[aria-current="page"] {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a[aria-current="page"] {
     color: #1C1916 !important;
     font-weight: 600 !important;
 }
 
 /* Logo in Light Mode */
-html.light:not(.force-dark) #site-header a[aria-label="Kitobxon"] span.font-display {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"] span.font-display {
     color: #1C1916 !important;
 }
-html.light:not(.force-dark) #site-header a[aria-label="Kitobxon"] span.font-mono {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"] span.font-mono {
     color: #6B6358 !important;
 }
-html.light:not(.force-dark) #site-header a[aria-label="Kitobxon"]:hover span.font-display {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"]:hover span.font-display {
     color: #D97706 !important;
 }
 
 /* Buttons and Controls in Light Mode */
-html.light:not(.force-dark) #site-header .header-theme-btn {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn {
     background-color: #EEE9DF !important;
     border-color: #E0D9CD !important;
     color: #4E483F !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
-html.light:not(.force-dark) #site-header .header-theme-btn:hover {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn:hover {
     background-color: #E4DDD1 !important;
     color: #1C1916 !important;
 }
-html.light:not(.force-dark) #site-header .header-theme-btn svg {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn svg {
     color: #D97706 !important;
 }
 
-html.light:not(.force-dark) #site-header .header-lang-btn {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn {
     background-color: #EEE9DF !important;
     border-color: #E0D9CD !important;
     color: #1C1916 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
-html.light:not(.force-dark) #site-header .header-lang-btn:hover {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn:hover {
     background-color: #E4DDD1 !important;
     color: #1C1916 !important;
 }
-html.light:not(.force-dark) #site-header .header-lang-btn svg {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn svg {
     color: #6B6358 !important;
 }
 
 /* Streak, Points, Coins in Light Mode */
-html.light:not(.force-dark) #site-header .header-streak-pill {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-streak-pill {
     color: #D97706 !important;
 }
-html.light:not(.force-dark) #site-header [title*="streak"],
-html.light:not(.force-dark) #site-header [title*="Streak"],
-html.light:not(.force-dark) #site-header [title*="kunlik"],
-html.light:not(.force-dark) #site-header [title*="Kunlik"] {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="streak"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Streak"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="kunlik"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Kunlik"] {
     color: #D97706 !important;
 }
-html.light:not(.force-dark) #site-header [title*="ball"],
-html.light:not(.force-dark) #site-header [title*="Ball"],
-html.light:not(.force-dark) #site-header [title*="ochko"],
-html.light:not(.force-dark) #site-header [title*="Ochko"],
-html.light:not(.force-dark) #site-header [title*="point"],
-html.light:not(.force-dark) #site-header [title*="Point"] {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="ball"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Ball"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="ochko"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Ochko"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="point"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Point"] {
     color: #1C1916 !important;
 }
-html.light:not(.force-dark) #site-header [title*="tanga"],
-html.light:not(.force-dark) #site-header [title*="Tanga"],
-html.light:not(.force-dark) #site-header [title*="coin"],
-html.light:not(.force-dark) #site-header [title*="Coin"] {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="tanga"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Tanga"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="coin"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Coin"] {
     color: #1C1916 !important;
 }
 
 /* Notifications in Light Mode */
-html.light:not(.force-dark) #site-header a[title*="Bildirishnoma"],
-html.light:not(.force-dark) #site-header a[title*="Уведомления"],
-html.light:not(.force-dark) #site-header a[title*="Notification"] {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Bildirishnoma"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Уведомления"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Notification"] {
     color: #5C554B !important;
 }
-html.light:not(.force-dark) #site-header a[title*="Bildirishnoma"]:hover,
-html.light:not(.force-dark) #site-header a[title*="Уведомления"]:hover,
-html.light:not(.force-dark) #site-header a[title*="Notification"]:hover {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Bildirishnoma"]:hover,
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Уведомления"]:hover,
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Notification"]:hover {
     color: #1C1916 !important;
     background-color: #EEE9DF !important;
 }
 
 /* Avatar button in Light Mode */
-html.light:not(.force-dark) #site-header .header-avatar-btn {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn {
     background-color: #EEE9DF !important;
     border-color: #E0D9CD !important;
     color: #1C1916 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
-html.light:not(.force-dark) #site-header .header-avatar-btn:hover {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn:hover {
     background-color: #E4DDD1 !important;
 }
-html.light:not(.force-dark) #site-header .header-avatar-btn span {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn span {
     color: #1C1916 !important;
 }
-html.light:not(.force-dark) #site-header .header-avatar-btn svg {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn svg {
     color: #6B6358 !important;
 }
 
 /* Mobile Hamburger button in Light Mode */
-html.light:not(.force-dark) #site-header button[aria-label*="Menyu"],
-html.light:not(.force-dark) #site-header button[aria-label*="menu"],
-html.light:not(.force-dark) #site-header button[aria-label*="Menu"] {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) button[aria-label*="Menyu"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) button[aria-label*="menu"],
+html.light:not(.force-dark) #site-header:not(.is-hero-header) button[aria-label*="Menu"] {
     color: #1C1916 !important;
 }
 
