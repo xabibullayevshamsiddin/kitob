@@ -584,6 +584,7 @@ class TelegramBotTest extends TestCase
 
         Http::assertSent(function ($request) {
             return (int) ($request['chat_id'] ?? 0) === 600111
+                && str_contains($request['text'], 'Admin sizga shaxsiy xabar yubordi:')
                 && str_contains($request['text'], 'Maxsus tabrik!')
                 && str_contains($request['text'], '1-o\'rinni egalladingiz!');
         });

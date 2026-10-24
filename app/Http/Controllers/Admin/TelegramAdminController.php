@@ -109,8 +109,17 @@ class TelegramAdminController extends Controller
         // 1. Bitta tanlangan foydalanuvchiga bot orqali yuborish
         if ($targetType === 'single') {
             $targetUser = User::findOrFail($validated['user_id']);
+            $safeUserName = htmlspecialchars((string) $targetUser->name);
+            $titleLine = $rawTitle !== '' ? "📌 <b>" . htmlspecialchars($rawTitle) . "</b>\n\n" : '';
 
-            \App\Services\NotifyUser::send($targetUser, 'system', $inAppTitle, strip_tags($rawMessage), '📩', $inAppLink);
+            $singleTelegramMessage = "📩 <b>Admin sizga shaxsiy xabar yubordi:</b>\n\n"
+                . "Hurmatli <b>{$safeUserName}</b>,\n\n"
+                . $titleLine
+                . $rawMessage;
+
+            $singleInAppTitle = '📩 Admin sizga: ' . ($rawTitle !== '' ? $rawTitle : 'Shaxsiy xabar');
+
+            \App\Services\NotifyUser::send($targetUser, 'system', $singleInAppTitle, strip_tags($rawMessage), '📩', $inAppLink);
 
             if (!$targetUser->isTelegramLinked() || $targetUser->isTelegramBlocked()) {
                 return back()->with('error', "'{$targetUser->name}' Telegram botni ulamagan yoki bloklagan. Xabar sayt ichidagi bildirishnomalariga yuborildi.");
@@ -118,7 +127,7 @@ class TelegramAdminController extends Controller
 
             SendTelegramNotificationJob::dispatch(
                 $targetUser->id,
-                $formattedTelegramMessage,
+                $singleTelegramMessage,
                 $options,
                 'security'
             );
@@ -173,13 +182,15 @@ class TelegramAdminController extends Controller
 
         $rawTitle = trim((string) ($validated['title'] ?? ''));
         $rawMessage = trim((string) $validated['message']);
-        $headerTitle = $rawTitle !== '' ? htmlspecialchars($rawTitle) : "Platforma ma'muriyatidan xabar";
+        $safeUserName = htmlspecialchars((string) $user->name);
+        $titleLine = $rawTitle !== '' ? "📌 <b>" . htmlspecialchars($rawTitle) . "</b>\n\n" : '';
 
-        $tgText = "📩 <b>{$headerTitle}</b>\n\n"
-            . "Hurmatli <b>" . htmlspecialchars((string) $user->name) . "</b>,\n\n"
+        $tgText = "📩 <b>Admin sizga shaxsiy xabar yubordi:</b>\n\n"
+            . "Hurmatli <b>{$safeUserName}</b>,\n\n"
+            . $titleLine
             . $rawMessage;
 
-        $inAppTitle = $rawTitle !== '' ? $rawTitle : "📩 Ma'muriyatdan shaxsiy xabar";
+        $inAppTitle = '📩 Admin sizga: ' . ($rawTitle !== '' ? $rawTitle : 'Shaxsiy xabar');
         $inAppLink = $validated['button_url'] ?? '/dashboard';
 
         // Sayt ichiga ham bildirishnoma yuboramiz
