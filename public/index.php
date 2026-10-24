@@ -172,6 +172,54 @@ require $autoloadPath;
 
 /*
 |--------------------------------------------------------------------------
+| Environment & Storage Self-Healing (For Shared/Container Hosts)
+|--------------------------------------------------------------------------
+|
+| Automatically ensure .env exists with APP_KEY and critical storage
+| directories are created with proper permissions so container deployments
+| without SSH/Terminal access do not crash on boot.
+|
+*/
+
+$envPath = __DIR__ . '/../.env';
+$envExamplePath = __DIR__ . '/../.env.example';
+$defaultKey = 'base64:KWY111hC634/QACZEGSh0jJp0c2z1ceXVbdXn/JwZQw=';
+
+if (! file_exists($envPath)) {
+    if (file_exists($envExamplePath)) {
+        $envData = @file_get_contents($envExamplePath) ?: '';
+        if (! str_contains($envData, 'APP_KEY=base64:')) {
+            $envData = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $defaultKey, $envData);
+        }
+        @file_put_contents($envPath, $envData);
+    }
+} else {
+    $envData = @file_get_contents($envPath);
+    if ($envData !== false && (preg_match('/^APP_KEY=\s*$/m', $envData) || ! str_contains($envData, 'APP_KEY='))) {
+        if (preg_match('/^APP_KEY=.*$/m', $envData)) {
+            $envData = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY=' . $defaultKey, $envData);
+        } else {
+            $envData = "APP_KEY={$defaultKey}\n" . $envData;
+        }
+        @file_put_contents($envPath, $envData);
+    }
+}
+
+// Ensure required framework storage directories exist
+foreach ([
+    __DIR__ . '/../storage/framework/views',
+    __DIR__ . '/../storage/framework/cache/data',
+    __DIR__ . '/../storage/framework/sessions',
+    __DIR__ . '/../storage/logs',
+    __DIR__ . '/../bootstrap/cache',
+] as $storageDir) {
+    if (! is_dir($storageDir)) {
+        @mkdir($storageDir, 0777, true);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
 | Run The Application
 |--------------------------------------------------------------------------
 |

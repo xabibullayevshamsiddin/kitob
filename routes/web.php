@@ -283,6 +283,82 @@ Route::prefix('errors')->group(function () {
     Route::get('/503', fn() => response()->view('errors.503', [], 503))->name('error.503');
 });
 
+// Server / Deploy Setup Endpoint (Terminal / SSH ruxsati bo'lmagan hostinglar uchun)
+Route::get('/system/setup', function (\Illuminate\Http\Request $request) {
+    $token = (string) $request->query('token', '');
+    $secretToken = env('SETUP_TOKEN', 'kitobxon2026');
+    $appKey = (string) config('app.key', '');
+
+    if (empty($token) || ($token !== $secretToken && $token !== $appKey)) {
+        abort(403, 'Maxsus ruxsat belgisi (token) xato. URL oxiriga ?token=kitobxon2026 qo\'shing.');
+    }
+
+    $results = [
+        'status'    => 'active',
+        'timestamp' => now()->toIso8601String(),
+        'php'       => PHP_VERSION,
+        'app_key'   => !empty($appKey) ? 'Mavjud (O\'rnatilgan)' : 'BO\'SH',
+    ];
+
+    // 1. Directory permissions
+    $directories = [
+        'storage_views'    => storage_path('framework/views'),
+        'storage_cache'    => storage_path('framework/cache'),
+        'storage_sessions' => storage_path('framework/sessions'),
+        'storage_logs'     => storage_path('logs'),
+        'bootstrap_cache'  => base_path('bootstrap/cache'),
+    ];
+    $dirStatus = [];
+    foreach ($directories as $name => $path) {
+        if (!is_dir($path)) {
+            @mkdir($path, 0777, true);
+        }
+        $dirStatus[$name] = is_writable($path) ? 'Ruxsat berilgan (OK)' : 'Ruxsat yo\'q (Not writable)';
+    }
+    $results['storage_directories'] = $dirStatus;
+
+    // 2. Database connection
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $dbName = \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+        $results['database'] = [
+            'connected'     => true,
+            'database_name' => $dbName,
+            'driver'        => \Illuminate\Support\Facades\DB::connection()->getDriverName(),
+        ];
+
+        // Migrations
+        if ($request->has('migrate')) {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            $results['database']['migration_output'] = \Illuminate\Support\Facades\Artisan::output();
+        }
+
+        $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
+        $results['database']['tables_count'] = count($tables);
+
+    } catch (\Throwable $e) {
+        $results['database'] = [
+            'connected' => false,
+            'error'     => $e->getMessage(),
+            'hint'      => '.env faylida DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD parametrlarini tekshiring.',
+        ];
+    }
+
+    // 3. Cache clearing
+    if ($request->has('clear')) {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        $results['optimize_clear'] = \Illuminate\Support\Facades\Artisan::output();
+    }
+
+    // 4. Storage link
+    if ($request->has('link')) {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        $results['storage_link'] = \Illuminate\Support\Facades\Artisan::output();
+    }
+
+    return response()->json($results, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+})->name('system.setup');
+
 /*
 |--------------------------------------------------------------------------
 | ONBOARDING
