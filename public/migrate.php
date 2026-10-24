@@ -41,7 +41,18 @@ try {
     $kernel->call('db:seed', ['--force' => true]);
     echo $kernel->output();
 
-    echo "\n4. Keshni tozalash...\n";
+    echo "\n4. Livewire JS assetlarini diskka joylashtirish...\n";
+    $livewirePubDir = __DIR__ . '/livewire';
+    $livewireDistDir = __DIR__ . '/../vendor/livewire/livewire/dist';
+    if (is_dir($livewireDistDir)) {
+        @mkdir($livewirePubDir, 0777, true);
+        @copy($livewireDistDir . '/livewire.js', $livewirePubDir . '/livewire.js');
+        @copy($livewireDistDir . '/livewire.js.map', $livewirePubDir . '/livewire.js.map');
+        @copy($livewireDistDir . '/manifest.json', $livewirePubDir . '/manifest.json');
+        echo "✅ Livewire JS aktivlashtirildi: public/livewire/livewire.js\n";
+    }
+
+    echo "\n5. Keshni tozalash...\n";
     $kernel->call('optimize:clear');
     echo $kernel->output();
 

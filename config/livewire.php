@@ -40,7 +40,7 @@ return [
     |
     */
 
-    'asset_url' => env('LIVEWIRE_ASSET_URL', rtrim(env('APP_URL', ''), '/')),
+    'asset_url' => env('LIVEWIRE_ASSET_URL', null),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,7 +51,7 @@ return [
     |
     */
 
-    'app_url' => rtrim(env('LIVEWIRE_APP_URL', env('APP_URL', '')), '/'),
+    'app_url' => env('LIVEWIRE_APP_URL', null),
 
     /*
     |--------------------------------------------------------------------------

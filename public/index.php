@@ -218,6 +218,16 @@ foreach ([
     }
 }
 
+// Ensure Livewire static JS assets exist on disk so Nginx static file rules do not 404
+$livewirePubDir = __DIR__ . '/livewire';
+$livewireDistDir = __DIR__ . '/../vendor/livewire/livewire/dist';
+if (! file_exists($livewirePubDir . '/livewire.js') && file_exists($livewireDistDir . '/livewire.js')) {
+    @mkdir($livewirePubDir, 0777, true);
+    @copy($livewireDistDir . '/livewire.js', $livewirePubDir . '/livewire.js');
+    @copy($livewireDistDir . '/livewire.js.map', $livewirePubDir . '/livewire.js.map');
+    @copy($livewireDistDir . '/manifest.json', $livewirePubDir . '/manifest.json');
+}
+
 /*
 |--------------------------------------------------------------------------
 | Run The Application

@@ -30,8 +30,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Render (va boshqa proxy-based hostlar) uchun HTTPS majburiy qilish
-        if (config('app.env') === 'production') {
+        // HTTPS protokoli majburiy qilish (Proxy / Cloudflare / EliteHost uchun)
+        if (
+            config('app.env') === 'production'
+            || request()->header('X-Forwarded-Proto') === 'https'
+            || request()->isSecure()
+            || str_contains(request()->getHost(), 'elitehost.uz')
+            || str_contains(config('app.url'), 'https://')
+        ) {
             URL::forceScheme('https');
         }
 
