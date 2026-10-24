@@ -56,8 +56,10 @@ class SendTelegramNotificationJob implements ShouldQueue
             return;
         }
 
-        // Jim soatlar (Quiet Hours: 23:00 - 07:00 Asia/Tashkent) tekshiruvi (security bundan mustasno)
-        if ($this->type !== 'security' && $user->isInTelegramQuietHours()) {
+        $isImmediate = in_array($this->type, ['security', 'ban_status', 'live_stream'], true);
+
+        // Jim soatlar (Quiet Hours: 23:00 - 07:00 Asia/Tashkent) tekshiruvi (shoshilinch turlar bundan mustasno)
+        if (!$isImmediate && $user->isInTelegramQuietHours()) {
             Log::info("Telegram bildirishnomasi jim soatlar sababli yuborilmadi: User #{$user->id}, tur: " . ($this->type ?? 'general'));
             return;
         }
@@ -73,7 +75,7 @@ class SendTelegramNotificationJob implements ShouldQueue
 
         // Tungi vaqtda (23:00 - 07:00) ovozsiz bildirishnoma (disable_notification)
         $currentHour = (int) now('Asia/Tashkent')->format('G');
-        if ($this->type !== 'security' && ($currentHour >= 23 || $currentHour < 7) && !isset($options['disable_notification'])) {
+        if (!$isImmediate && ($currentHour >= 23 || $currentHour < 7) && !isset($options['disable_notification'])) {
             $options['disable_notification'] = true;
         }
 

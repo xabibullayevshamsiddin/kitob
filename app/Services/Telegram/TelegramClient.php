@@ -43,7 +43,60 @@ class TelegramClient
             'disable_web_page_preview' => true,
         ], $options);
 
-        return $this->request('sendMessage', $payload, $chatId);
+        try {
+            return $this->request('sendMessage', $payload, $chatId);
+        } catch (TelegramApiException $e) {
+            // Lokal muhitda (http://localhost) Telegram inline_keyboard ichidagi url tugmalarni rad etsa,
+            // url tugmalarni matnga ilova qilib, xabarni xatosiz yetkazib beramiz.
+            if ($e->getCode() === 400 && isset($payload['reply_markup']['inline_keyboard'])) {
+                $fallbackUrls = [];
+                $cleanRows = [];
+
+                foreach ($payload['reply_markup']['inline_keyboard'] as $row) {
+                    $cleanRow = [];
+                    foreach ($row as $btn) {
+                        if (isset($btn['url'])) {
+                            $fallbackUrls[] = ($btn['text'] ?? 'Havola') . ': ' . $btn['url'];
+                        } else {
+                            $cleanRow[] = $btn;
+                        }
+                    }
+                    if (!empty($cleanRow)) {
+                        $cleanRows[] = $cleanRow;
+                    }
+                }
+
+                if (!empty($fallbackUrls)) {
+                    $payload['text'] .= "\n\n" . implode("\n", $fallbackUrls);
+                }
+
+                if (!empty($cleanRows)) {
+                    $payload['reply_markup']['inline_keyboard'] = $cleanRows;
+                } else {
+                    unset($payload['reply_markup']);
+                }
+
+                return $this->request('sendMessage', $payload, $chatId);
+            }
+
+            throw $e;
+        }
+    }
+
+    /**
+     * Mavjud xabar matnini va inline tugmalarini tahrirlash (editMessageText).
+     */
+    public function editMessageText(int|string $chatId, int $messageId, string $text, array $options = []): array
+    {
+        $payload = array_merge([
+            'chat_id'                  => $chatId,
+            'message_id'               => $messageId,
+            'text'                     => $text,
+            'parse_mode'               => 'HTML',
+            'disable_web_page_preview' => true,
+        ], $options);
+
+        return $this->request('editMessageText', $payload, $chatId);
     }
 
     /**

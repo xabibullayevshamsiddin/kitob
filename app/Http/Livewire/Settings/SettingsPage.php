@@ -309,6 +309,27 @@ class SettingsPage extends Component
         $this->toastSuccess(__('site.settings.avatar_removed'));
     }
 
+    /**
+     * Telegram bildirishnoma turini tezkor yoqish/o'chirish.
+     */
+    public function toggleTelegramPref(string $key): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return;
+        }
+
+        $enabled = $user->toggleTelegramPreference($key);
+
+        if ($key === 'all_on') {
+            $this->toastSuccess('Barcha Telegram bildirishnomalari yoqildi! 🔔');
+        } elseif ($key === 'all_off') {
+            $this->toastInfo('Telegram bildirishnomalari o\'chirildi! 🔕');
+        } else {
+            $this->toastSuccess($enabled ? 'Bildirishnoma yoqildi! ✅' : 'Bildirishnoma o\'chirildi! 🔕');
+        }
+    }
+
     public function render()
     {
         return view('livewire.settings.settings-page')

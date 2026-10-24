@@ -109,6 +109,9 @@ class ProfilePage extends Component
                 'following_id' => $this->user->id,
             ]);
             $this->isFollowing = true;
+            if (Auth::user()) {
+                \App\Services\NotifyUser::notifyNewFollower($this->user, Auth::user());
+            }
             $this->toastSuccess("{$this->user->name} ga muvaffaqiyatli obuna bo'ldingiz! ✨");
         }
     }

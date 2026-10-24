@@ -150,6 +150,12 @@ class LiveDetail extends Component
         ]);
         $this->event->refresh();
 
+        if ($this->event->group_id && $this->event->group) {
+            \App\Services\NotifyUser::notifyGroupLiveStreamStarted($this->event, Auth::user(), $this->event->group);
+        } else {
+            \App\Services\NotifyUser::notifyLiveStreamStarted($this->event, Auth::user());
+        }
+
         $this->toast('success', 'Jonli efir qayta boshlandi!');
     }
 
@@ -263,6 +269,11 @@ class LiveDetail extends Component
         } else {
             Follow::firstOrCreate(['follower_id' => $userId, 'following_id' => $hostId]);
             $following = true;
+
+            $hostUser = \App\Models\User::find($hostId);
+            if ($hostUser && Auth::user()) {
+                \App\Services\NotifyUser::notifyNewFollower($hostUser, Auth::user());
+            }
         }
 
         return [

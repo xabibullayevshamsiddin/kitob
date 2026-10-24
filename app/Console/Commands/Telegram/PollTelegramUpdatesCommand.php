@@ -42,6 +42,9 @@ class PollTelegramUpdatesCommand extends Command
 
             do {
                 try {
+                    // Vaqtinchalik ban muddati tugaganlarni avtomatik blokdan chiqarish va Telegram xabar yuborish
+                    \App\Models\User::processExpiredBans();
+
                     $response = $client->getUpdates([
                         'offset'  => $offset,
                         'timeout' => (int) $this->option('timeout'),

@@ -429,13 +429,9 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        // If time-limited ban and duration has passed, auto-unban
+        // If time-limited ban and duration has passed, auto-unban and notify
         if ($this->banned_until && $this->banned_until->isPast()) {
-            $this->update([
-                'is_banned'    => false,
-                'banned_until' => null,
-                'ban_reason'   => null,
-            ]);
+            $this->unban();
             return false;
         }
 
@@ -452,21 +448,138 @@ class User extends Authenticatable implements MustVerifyEmail
             default   => null, // permanent
         };
 
+        $finalReason = $reason ? trim($reason) : 'Qoidabuzarlik / Nojo\'ya so\'zlar ishlatilganligi sababli';
+
         $this->update([
             'is_banned'    => true,
             'banned_until' => $until,
-            'ban_reason'   => $reason ? trim($reason) : 'Qoidabuzarlik / Nojo\'ya so\'zlar ishlatilganligi sababli',
+            'ban_reason'   => $finalReason,
             'banned_at'    => now(),
         ]);
+
+        $durationLabel = match ($duration) {
+            '1_hour'  => '1 soat',
+            '1_day'   => '1 kun',
+            '1_week'  => '1 hafta',
+            '1_month' => '1 oy',
+            default   => 'Doimiy (butun umrga)',
+        };
+
+        try {
+            \App\Services\NotifyUser::send(
+                $this,
+                'system',
+                '🚫 Hisobingizga cheklov o\'rnatildi (Ban)',
+                "Muddat: {$durationLabel}. Sabab: {$finalReason}",
+                '🚫',
+                '/dashboard'
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        if ($this->isTelegramLinked()) {
+            try {
+                $safeName = htmlspecialchars((string) $this->name);
+                $safeReason = htmlspecialchars($finalReason);
+                $untilText = $until
+                    ? "• <b>Tugash vaqti:</b> " . $until->copy()->setTimezone('Asia/Tashkent')->format('d.m.Y H:i') . "\n"
+                    : '';
+
+                $tgMessage = "🚫 <b>Hisobingizga cheklov o'rnatildi (Ban)</b>\n\n"
+                    . "Hurmatli <b>{$safeName}</b>, sizning «Kitobxon» platformasidagi hisobingiz vaqtincha yoki doimiy cheklandi:\n\n"
+                    . "• <b>Muddat:</b> {$durationLabel}\n"
+                    . $untilText
+                    . "• <b>Sabab:</b> {$safeReason}\n\n"
+                    . "<i>Cheklov muddati tugashi yoki ma'muriyat tomonidan olib tashlanishi bilan sizga darhol xabar yuboriladi.</i>";
+
+                \App\Jobs\SendTelegramNotificationJob::dispatch($this->id, $tgMessage, [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => '⚙️ Bildirishnoma sozlamalari', 'callback_data' => 'cmd_settings'],
+                            ],
+                        ],
+                    ],
+                ], 'ban_status');
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
     }
 
     public function unban(): void
     {
+        $wasBanned = (bool) $this->is_banned;
+
         $this->update([
             'is_banned'    => false,
             'banned_until' => null,
             'ban_reason'   => null,
         ]);
+
+        if (!$wasBanned) {
+            return;
+        }
+
+        try {
+            \App\Services\NotifyUser::send(
+                $this,
+                'system',
+                '🎉 Hisobingiz blokdan chiqarildi!',
+                'Hisobingizdagi cheklov (ban) yechildi. Endi barcha chatlar va imkoniyatlardan yana to\'liq foydalanishingiz mumkin!',
+                '✅',
+                '/dashboard'
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        if ($this->isTelegramLinked()) {
+            try {
+                $safeName = htmlspecialchars((string) $this->name);
+                $appUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/');
+
+                $tgMessage = "🎉 <b>Xushxabar! Hisobingiz blokdan chiqarildi (Ban yechildi)</b>\n\n"
+                    . "Assalomu alaykum, <b>{$safeName}</b>! 👋\n"
+                    . "Sizning «Kitobxon» platformasidagi hisobingizdan cheklov (ban) muvaffaqiyatli olib tashlandi! ✅\n\n"
+                    . "Endi platformaning barcha imkoniyatlaridan — mutolaa, global chat, guruhlar va jonli efirlardan yana to'liq foydalanishingiz mumkin! 📚✨";
+
+                \App\Jobs\SendTelegramNotificationJob::dispatch($this->id, $tgMessage, [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => '🚀 Platformaga qaytish', 'url' => $appUrl],
+                            ],
+                            [
+                                ['text' => '⚙️ Bildirishnoma sozlamalari', 'callback_data' => 'cmd_settings'],
+                            ],
+                        ],
+                    ],
+                ], 'ban_status');
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+    }
+
+    /**
+     * Muddati tugagan vaqtinchalik banlarni avtomatik yechish va foydalanuvchiga Telegram xabar yuborish.
+     */
+    public static function processExpiredBans(): int
+    {
+        $expiredUsers = static::where('is_banned', true)
+            ->whereNotNull('banned_until')
+            ->where('banned_until', '<=', now())
+            ->get();
+
+        $count = 0;
+        foreach ($expiredUsers as $user) {
+            $user->unban();
+            $count++;
+        }
+
+        return $count;
     }
 
     public function getBanRemainingAttribute(): string
@@ -607,18 +720,14 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->update(['telegram_blocked_at' => null]);
     }
 
-    public function prefersTelegramNotification(?string $type = null): bool
+    public function isTelegramNotificationEnabled(string $type): bool
     {
-        if (!$this->isTelegramLinked() || $this->isTelegramBlocked()) {
-            return false;
+        $prefs = is_array($this->notification_prefs) ? $this->notification_prefs : [];
+
+        if ($type === 'quiet_hours') {
+            return (bool) ($prefs['quiet_hours'] ?? false);
         }
 
-        $prefs = $this->notification_prefs;
-        if (!is_array($prefs)) {
-            return true;
-        }
-
-        // Agar umumiy Telegram bildirishnomalari o'chirilgan bo'lsa (security bundan mustasno)
         if ($type !== 'security') {
             if (array_key_exists('enabled', $prefs) && !$prefs['enabled']) {
                 return false;
@@ -628,11 +737,72 @@ class User extends Authenticatable implements MustVerifyEmail
             }
         }
 
+        return (bool) ($prefs[$type] ?? true);
+    }
+
+    public function prefersTelegramNotification(?string $type = null): bool
+    {
+        if (!$this->isTelegramLinked() || $this->isTelegramBlocked()) {
+            return false;
+        }
+
         if ($type === null || $type === '') {
+            $prefs = is_array($this->notification_prefs) ? $this->notification_prefs : [];
+            if (array_key_exists('enabled', $prefs) && !$prefs['enabled']) {
+                return false;
+            }
+            if (array_key_exists('telegram_enabled', $prefs) && !$prefs['telegram_enabled']) {
+                return false;
+            }
             return true;
         }
 
-        return (bool) ($prefs[$type] ?? true);
+        return $this->isTelegramNotificationEnabled($type);
+    }
+
+    /**
+     * Foydalanuvchining bitta Telegram bildirishnoma turini yoqish/o'chirish (toggle).
+     */
+    public function toggleTelegramPreference(string $key, ?bool $forceValue = null): bool
+    {
+        $prefs = is_array($this->notification_prefs) ? $this->notification_prefs : [];
+        $allowedKeys = [
+            'live_stream',
+            'ban_status',
+            'new_follower',
+            'streak_reminder',
+            'daily_quote',
+            'coin_reward',
+            'quiet_hours',
+        ];
+
+        if ($key === 'all_on' || $key === 'all_off') {
+            $val = $key === 'all_on';
+            foreach ($allowedKeys as $k) {
+                if ($k !== 'quiet_hours') {
+                    $prefs[$k] = $val;
+                }
+            }
+            $prefs['enabled'] = true;
+            $prefs['telegram_enabled'] = true;
+            $this->update(['notification_prefs' => $prefs]);
+            return $val;
+        }
+
+        if (!in_array($key, $allowedKeys, true)) {
+            return false;
+        }
+
+        $current = $this->isTelegramNotificationEnabled($key);
+        $next = $forceValue !== null ? $forceValue : !$current;
+
+        $prefs[$key] = $next;
+        $prefs['enabled'] = true;
+        $prefs['telegram_enabled'] = true;
+
+        $this->update(['notification_prefs' => $prefs]);
+
+        return $next;
     }
 
     /**

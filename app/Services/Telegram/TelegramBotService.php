@@ -168,6 +168,13 @@ class TelegramBotService
             return;
         }
 
+        // 10.1. Bildirishnoma sozlamalari
+        if (in_array($firstWord, ['/settings', '/sozlamalar', '/bildirishnomalar'])
+            || in_array($clean, ['bildirishnomalar', 'sozlamalar', 'settings', 'bildirishnoma sozlamalari'])) {
+            $this->handleSettingsCommand($chatId, $userId);
+            return;
+        }
+
         // 11. Mini App
         if (in_array($firstWord, ['/app', '/miniapp'])
             || in_array($clean, ['app', 'miniapp', 'mini app'])) {
@@ -867,13 +874,97 @@ class TelegramBotService
                 ],
                 [
                     ['text' => '🏆 Reyting'],
-                    ['text' => '❓ Yordam'],
+                    ['text' => '⚙️ Bildirishnomalar'],
                 ],
                 [
+                    ['text' => '❓ Yordam'],
                     ['text' => '❌ Menyuni yopish'],
                 ],
             ],
             'resize_keyboard' => true,
+        ];
+    }
+
+    /**
+     * Bildirishnoma sozlamalari menyusi (/settings yoki ⚙️ Bildirishnomalar).
+     */
+    public function handleSettingsCommand(int|string $chatId, int|string $userId, ?int $editMessageId = null): void
+    {
+        $user = User::where('telegram_id', $userId)->first();
+
+        if (!$user) {
+            $this->client->sendMessage($chatId, "Sizning hisobingiz hali platformaga ulanmagan.\n\nSaytga kiring va <b>Sozlamalar → Telegram hisobi</b> bo'limidan hisobingizni ulang 🔗", [
+                'reply_markup' => [
+                    'inline_keyboard' => [
+                        [['text' => '🌐 Saytga kirish', 'url' => config('app.url')]],
+                    ],
+                ],
+            ]);
+            return;
+        }
+
+        $text = "⚙️ <b>Telegram bildirishnomalarini boshqarish:</b>\n\n"
+            . "Qaysi xabarlarni Telegram orqali olishni xohlaysiz? O'zingizga kerakli turlarni tanlab yoqing (✅) yoki o'chirib qo'ying (❌):\n\n"
+            . "• <b>🔴 Jonli efir (Strim)</b> — Siz obuna bo'lgan kitobxon strim boshlaganda\n"
+            . "• <b>🛡️ Ban / Hisob holati</b> — Hisobingiz bloklanganda yoki ban yechilganda\n"
+            . "• <b>👥 Yangi obunachilar</b> — Kimdir sizga obuna bo'lganda\n"
+            . "• <b>🔥 Streak eslatmasi</b> — Kechki mutolaa eslatmasi\n"
+            . "• <b>✨ Kun hikmati</b> — Har kungi sara iqtiboslar\n"
+            . "• <b>🪙 Tangalar va yutuqlar</b> — Mukofotlar haqida xabar\n"
+            . "• <b>🌙 Tungi jimjitlik</b> — 23:00 dan 07:00 gacha bezovta qilmaslik";
+
+        $markup = $this->getSettingsInlineKeyboard($user);
+
+        if ($editMessageId) {
+            try {
+                $this->client->editMessageText($chatId, $editMessageId, $text, [
+                    'reply_markup' => $markup,
+                ]);
+                return;
+            } catch (\Throwable $e) {
+                // Xabar o'zgarmagan bo'lsa yoki tahrirlab bo'lmasa
+                return;
+            }
+        }
+
+        $this->client->sendMessage($chatId, $text, [
+            'reply_markup' => $markup,
+        ]);
+    }
+
+    /**
+     * Foydalanuvchining bildirishnoma sozlamalari uchun interaktiv inline tugmalar.
+     */
+    public function getSettingsInlineKeyboard(User $user): array
+    {
+        $icon = fn (string $key): string => $user->isTelegramNotificationEnabled($key) ? '✅' : '❌';
+
+        return [
+            'inline_keyboard' => [
+                [
+                    ['text' => $icon('live_stream') . ' 🔴 Obuna strimlari (Jonli efir)', 'callback_data' => 'toggle_pref:live_stream'],
+                ],
+                [
+                    ['text' => $icon('ban_status') . ' 🛡️ Ban va Bandan chiqish xabari', 'callback_data' => 'toggle_pref:ban_status'],
+                ],
+                [
+                    ['text' => $icon('new_follower') . ' 👥 Yangi obunachilar', 'callback_data' => 'toggle_pref:new_follower'],
+                ],
+                [
+                    ['text' => $icon('streak_reminder') . ' 🔥 Streak eslatmasi', 'callback_data' => 'toggle_pref:streak_reminder'],
+                    ['text' => $icon('daily_quote') . ' ✨ Kun hikmati', 'callback_data' => 'toggle_pref:daily_quote'],
+                ],
+                [
+                    ['text' => $icon('coin_reward') . ' 🪙 Tangalar va yutuqlar', 'callback_data' => 'toggle_pref:coin_reward'],
+                ],
+                [
+                    ['text' => $icon('quiet_hours') . ' 🌙 Tungi jimjitlik (23:00–07:00)', 'callback_data' => 'toggle_pref:quiet_hours'],
+                ],
+                [
+                    ['text' => '🔔 Barchasini yoqish', 'callback_data' => 'toggle_pref:all_on'],
+                    ['text' => '🔕 Barchasini o\'chirish', 'callback_data' => 'toggle_pref:all_off'],
+                ],
+            ],
         ];
     }
 
@@ -886,14 +977,45 @@ class TelegramBotService
         $data = $callbackQuery['data'] ?? '';
         $message = $callbackQuery['message'] ?? [];
         $chatId = $message['chat']['id'] ?? null;
+        $messageId = isset($message['message_id']) ? (int) $message['message_id'] : null;
         $userId = $callbackQuery['from']['id'] ?? null;
+
+        if (!$chatId || !$userId) {
+            if ($id) {
+                $this->client->answerCallbackQuery($id);
+            }
+            return;
+        }
+
+        // Bildirishnoma sozlamalarini yoqish / o'chirish (toggle_pref:...)
+        if (str_starts_with($data, 'toggle_pref:')) {
+            $prefKey = substr($data, 12);
+            $user = User::where('telegram_id', $userId)->first();
+
+            if (!$user) {
+                if ($id) {
+                    $this->client->answerCallbackQuery($id, ['text' => 'Hisobingiz ulanmagan!']);
+                }
+                return;
+            }
+
+            $enabled = $user->toggleTelegramPreference($prefKey);
+
+            if ($id) {
+                $toastText = match ($prefKey) {
+                    'all_on'  => '🔔 Barcha bildirishnomalar yoqildi!',
+                    'all_off' => '🔕 Barcha bildirishnomalar o\'chirildi!',
+                    default   => $enabled ? '✅ Bildirishnoma yoqildi!' : '🔕 Bildirishnoma o\'chirildi!',
+                };
+                $this->client->answerCallbackQuery($id, ['text' => $toastText]);
+            }
+
+            $this->handleSettingsCommand($chatId, $userId, $messageId);
+            return;
+        }
 
         if ($id) {
             $this->client->answerCallbackQuery($id);
-        }
-
-        if (!$chatId || !$userId) {
-            return;
         }
 
         // Kirishni tasdiqlash yoki rad etish callback tugmalari
@@ -918,6 +1040,7 @@ class TelegramBotService
             'cmd_leaderboard' => $this->handleLeaderboardCommand($chatId),
             'cmd_shop' => $this->handleShopCommand($chatId),
             'cmd_help' => $this->handleHelpCommand($chatId),
+            'cmd_settings' => $this->handleSettingsCommand($chatId, $userId),
             'cmd_menu' => $this->handleMenuCommand($chatId),
             'cmd_close' => $this->handleCloseMenuCommand($chatId),
             default => null,

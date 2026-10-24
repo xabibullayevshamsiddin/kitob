@@ -154,20 +154,8 @@ class LiveIndex extends Component
         \App\Models\LiveSignal::where('live_event_id', $event->id)->delete();
         \App\Models\LiveSignal::where('created_at', '<', now()->subMinutes(5))->delete();
 
-        // Barcha boshqa foydalanuvchilarga "jonli efir boshlandi" bildirishnomasi
-        \App\Models\User::where('id', '!=', Auth::id())
-            ->whereNull('deleted_at')
-            ->get()
-            ->each(function (\App\Models\User $u) use ($event) {
-                \App\Services\NotifyUser::send(
-                    $u,
-                    'live',
-                    '🔴 Jonli efir boshlandi!',
-                    '"' . $event->title . '" — ustoz ' . Auth::user()->name . ' efirda. Hoziroq qoshiling!',
-                    '📺',
-                    '/live/' . $event->id
-                );
-            });
+        // Barcha boshqa foydalanuvchilarga va obunachilarning Telegramiga "jonli efir boshlandi" bildirishnomasi
+        \App\Services\NotifyUser::notifyLiveStreamStarted($event, Auth::user());
 
         return redirect()->route('live.show', $event)
             ->with('success', 'Jonli efir boshlandi! Mikrofon va kamerangizni sozlang.');

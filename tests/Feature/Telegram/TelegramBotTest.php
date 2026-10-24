@@ -416,4 +416,137 @@ class TelegramBotTest extends TestCase
                 && ($request['reply_markup']['keyboard'][0][0]['request_contact'] ?? false) === true;
         });
     }
+
+    public function test_ban_and_unban_send_immediate_telegram_notifications(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 20]], 200),
+        ]);
+
+        $user = User::factory()->create([
+            'name'        => 'Jasurbek',
+            'telegram_id' => 900100,
+        ]);
+
+        // 1. Ban berish
+        $user->ban('1_day', 'Chatda haqoratli so\'zlar ishlatildi');
+
+        Http::assertSent(function ($request) {
+            return (int) $request['chat_id'] === 900100
+                && str_contains($request['text'], 'cheklov o\'rnatildi (Ban)')
+                && str_contains($request['text'], '1 kun')
+                && str_contains($request['text'], 'Chatda haqoratli');
+        });
+
+        // 2. Bandan chiqarish (Unban)
+        $user->unban();
+
+        Http::assertSent(function ($request) {
+            return (int) $request['chat_id'] === 900100
+                && str_contains($request['text'], 'blokdan chiqarildi (Ban yechildi)');
+        });
+    }
+
+    public function test_expired_ban_auto_unbans_and_notifies_user_on_telegram(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 21]], 200),
+        ]);
+
+        $user = User::factory()->create([
+            'name'         => 'Kamola',
+            'telegram_id'  => 900200,
+            'is_banned'    => true,
+            'banned_until' => now()->subMinute(),
+            'ban_reason'   => 'Spam',
+        ]);
+
+        $unbannedCount = User::processExpiredBans();
+        $this->assertEquals(1, $unbannedCount);
+        $this->assertFalse($user->fresh()->is_banned);
+
+        Http::assertSent(function ($request) {
+            return (int) $request['chat_id'] === 900200
+                && str_contains($request['text'], 'blokdan chiqarildi (Ban yechildi)');
+        });
+    }
+
+    public function test_live_stream_notifies_subscribed_followers_and_respects_preferences(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 22]], 200),
+        ]);
+
+        $host = User::factory()->create([
+            'name'     => 'Ustoz Abror',
+            'username' => 'abror_ustoz',
+        ]);
+
+        $followerEnabled = User::factory()->create([
+            'name'               => 'Obunachi Faol',
+            'telegram_id'        => 300111,
+            'notification_prefs' => ['live_stream' => true],
+        ]);
+
+        $followerDisabled = User::factory()->create([
+            'name'               => 'Obunachi Ochiq',
+            'telegram_id'        => 300222,
+            'notification_prefs' => ['live_stream' => false],
+        ]);
+
+        \App\Models\Follow::create(['follower_id' => $followerEnabled->id, 'following_id' => $host->id]);
+        \App\Models\Follow::create(['follower_id' => $followerDisabled->id, 'following_id' => $host->id]);
+
+        $event = \App\Models\LiveEvent::create([
+            'title'           => 'Alisher Navoiy g\'azallari tahlili',
+            'description'     => 'Jonli savol-javob va muhokama',
+            'host_user_id'    => $host->id,
+            'permission_mode' => 'chat_only',
+            'status'          => \App\Models\LiveEvent::STATUS_LIVE,
+            'scheduled_at'    => now(),
+            'started_at'      => now(),
+        ]);
+
+        \App\Services\NotifyUser::notifyLiveStreamStarted($event, $host);
+
+        // Faqat live_stream yoqilgan obunachiga Telegram xabar ketishi shart
+        Http::assertSent(function ($request) {
+            return (int) $request['chat_id'] === 300111
+                && str_contains($request['text'], 'Ustoz Abror')
+                && str_contains($request['text'], 'Alisher Navoiy');
+        });
+
+        Http::assertNotSent(function ($request) {
+            return (int) ($request['chat_id'] ?? 0) === 300222;
+        });
+    }
+
+    public function test_bot_inline_settings_toggle_preference(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 23]], 200),
+        ]);
+
+        $user = User::factory()->create([
+            'name'               => 'Sardor',
+            'telegram_id'        => 400500,
+            'notification_prefs' => ['live_stream' => true],
+        ]);
+
+        $service = new TelegramBotService();
+        $service->handleUpdate([
+            'update_id' => 5030,
+            'callback_query' => [
+                'id'   => 'cb_pref_1',
+                'data' => 'toggle_pref:live_stream',
+                'from' => ['id' => 400500, 'first_name' => 'Sardor'],
+                'message' => [
+                    'message_id' => 99,
+                    'chat'       => ['id' => 400500],
+                ],
+            ],
+        ]);
+
+        $this->assertFalse($user->fresh()->isTelegramNotificationEnabled('live_stream'));
+    }
 }

@@ -180,24 +180,8 @@ class GroupDetail extends Component
         \App\Models\LiveSignal::where('live_event_id', $event->id)->delete();
         \App\Models\LiveSignal::where('created_at', '<', now()->subMinutes(5))->delete();
 
-        // FAQAT ushbu guruhga a'zo bo'lgan foydalanuvchilarga bildirishnoma yuborish
-        $members = GroupMember::where('group_id', $this->group->id)
-            ->where('user_id', '!=', $user->id)
-            ->with('user')
-            ->get();
-
-        foreach ($members as $gm) {
-            if ($gm->user) {
-                \App\Services\NotifyUser::send(
-                    $gm->user,
-                    'live',
-                    '🔴 Guruhda jonli efir boshlandi!',
-                    '«' . $this->group->name . '» guruhida "' . $event->title . '" jonli efiri boshlandi. Qatnashish uchun kiring!',
-                    '📺',
-                    '/live/' . $event->id
-                );
-            }
-        }
+        // FAQAT ushbu guruhga a'zo bo'lgan foydalanuvchilarga (va obunachilarning Telegramiga) bildirishnoma yuborish
+        \App\Services\NotifyUser::notifyGroupLiveStreamStarted($event, $user, $this->group);
 
         // Guruh chatiga ham xabar yozish
         GroupMessage::create([

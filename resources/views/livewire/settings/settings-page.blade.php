@@ -317,12 +317,64 @@
             <!-- Bildirishnoma sozlamalari -->
             <form method="POST" action="{{ route('settings.telegram.notifications') }}" class="pt-2 space-y-3">
                 @csrf
+                <input type="hidden" name="form_submitted" value="1">
                 <div class="border-t border-ink-border pt-3">
-                    <h4 class="text-xs font-mono uppercase tracking-wider text-mist mb-2.5">Telegram bildirishnomalari</h4>
+                    <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+                        <div>
+                            <h4 class="text-xs font-mono uppercase tracking-wider text-mist">Telegram bildirishnomalarini boshqarish</h4>
+                            <p class="text-[11px] text-mist/70 mt-0.5">Qaysi xabarlar Telegram bot orqali kelishini o'zingiz tanlang:</p>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" wire:click="toggleTelegramPref('all_on')"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 text-[11px] font-mono transition-colors">
+                                🔔 Barchasini yoqish
+                            </button>
+                            <button type="button" wire:click="toggleTelegramPref('all_off')"
+                                class="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 text-[11px] font-mono transition-colors">
+                                🔕 Barchasini o'chirish
+                            </button>
+                        </div>
+                    </div>
                     
                     <div class="space-y-2">
                         <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
-                            <input type="checkbox" name="streak_reminder" value="1" {{ auth()->user()->prefersTelegramNotification('streak_reminder') ? 'checked' : '' }} class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <input type="checkbox" name="live_stream" value="1"
+                                wire:change="toggleTelegramPref('live_stream')"
+                                {{ auth()->user()->isTelegramNotificationEnabled('live_stream') ? 'checked' : '' }}
+                                class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-semibold text-paper">🔴 Obuna bo'lganlarim strim boshlaganda</p>
+                                <p class="text-[11px] text-mist">Siz obuna bo'lgan ustoz yoki kitobxon jonli efir (strim) boshlagan zahoti Telegram orqali darhol xabar keladi.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
+                            <input type="checkbox" name="ban_status" value="1"
+                                wire:change="toggleTelegramPref('ban_status')"
+                                {{ auth()->user()->isTelegramNotificationEnabled('ban_status') ? 'checked' : '' }}
+                                class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-semibold text-paper">🛡️ Hisob holati (Ban berilganda va Ban yechilganda)</p>
+                                <p class="text-[11px] text-mist">Hisobingizga cheklov (ban) qo'yilganda yoki ban muddati tugab/yechilgan zahoti darhol Telegramga xabar keladi.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
+                            <input type="checkbox" name="new_follower" value="1"
+                                wire:change="toggleTelegramPref('new_follower')"
+                                {{ auth()->user()->isTelegramNotificationEnabled('new_follower') ? 'checked' : '' }}
+                                class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-semibold text-paper">👥 Yangi obunachilar</p>
+                                <p class="text-[11px] text-mist">Kimdir sizning profilingizga obuna bo'lganda bot orqali xabardor qilinadi.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
+                            <input type="checkbox" name="streak_reminder" value="1"
+                                wire:change="toggleTelegramPref('streak_reminder')"
+                                {{ auth()->user()->isTelegramNotificationEnabled('streak_reminder') ? 'checked' : '' }}
+                                class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
                             <div class="space-y-0.5">
                                 <p class="text-xs font-semibold text-paper">🔥 Streak xavf ostida eslatmasi</p>
                                 <p class="text-[11px] text-mist">Kechki 20:30 da bugun hali mutolaa qilmagan bo'lsangiz, streakni saqlab qolish uchun bot eslatadi.</p>
@@ -330,7 +382,10 @@
                         </label>
 
                         <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
-                            <input type="checkbox" name="daily_quote" value="1" {{ auth()->user()->prefersTelegramNotification('daily_quote') ? 'checked' : '' }} class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <input type="checkbox" name="daily_quote" value="1"
+                                wire:change="toggleTelegramPref('daily_quote')"
+                                {{ auth()->user()->isTelegramNotificationEnabled('daily_quote') ? 'checked' : '' }}
+                                class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
                             <div class="space-y-0.5">
                                 <p class="text-xs font-semibold text-paper">✨ Kun hikmati</p>
                                 <p class="text-[11px] text-mist">Har kuni ertalab 09:00 da kitoblardan sara iqtiboslarni bot orqali qabul qilish.</p>
@@ -338,10 +393,24 @@
                         </label>
 
                         <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
-                            <input type="checkbox" name="coin_reward" value="1" {{ auth()->user()->prefersTelegramNotification('coin_reward') ? 'checked' : '' }} class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <input type="checkbox" name="coin_reward" value="1"
+                                wire:change="toggleTelegramPref('coin_reward')"
+                                {{ auth()->user()->isTelegramNotificationEnabled('coin_reward') ? 'checked' : '' }}
+                                class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
                             <div class="space-y-0.5">
                                 <p class="text-xs font-semibold text-paper">🪙 Tangalar va yutuqlar</p>
                                 <p class="text-[11px] text-mist">Testlarni topshirganda tanga va yutuqlar haqida bildirishnoma.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-xl bg-ink-950/40 border border-ink-border cursor-pointer hover:bg-ink-950/80 transition-colors">
+                            <input type="checkbox" name="quiet_hours" value="1"
+                                wire:change="toggleTelegramPref('quiet_hours')"
+                                {{ auth()->user()->isTelegramNotificationEnabled('quiet_hours') ? 'checked' : '' }}
+                                class="mt-0.5 w-4 h-4 rounded bg-ink-900 border-ink-border text-amber-500 focus:ring-amber-500">
+                            <div class="space-y-0.5">
+                                <p class="text-xs font-semibold text-paper">🌙 Tungi jimjitlik rejimi (23:00 – 07:00)</p>
+                                <p class="text-[11px] text-mist">Tungi vaqtda odatiy bildirishnomalarni yubormaslik (shoshilinch xabarlardan tashqari).</p>
                             </div>
                         </label>
                     </div>

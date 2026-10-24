@@ -44,6 +44,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('telegram:reconcile-stars')
             ->dailyAt('02:00')
             ->timezone('Asia/Tashkent');
+
+        // Vaqtinchalik ban muddati tugagan foydalanuvchilarni avtomatik blokdan chiqarish va Telegram xabar yuborish
+        $schedule->call(function () {
+            \App\Models\User::processExpiredBans();
+        })->everyMinute();
     }
 
     /**

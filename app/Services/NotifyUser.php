@@ -144,4 +144,202 @@ class NotifyUser
             ->get()
             ->each(fn (User $u) => self::send($u, $type, $title, $body, $icon, $link));
     }
+
+    /**
+     * Jonli efir (strim) boshlanganda obunachilarga Telegram va sayt ichida xabar yuborish.
+     */
+    public static function notifyLiveStreamStarted(\App\Models\LiveEvent $event, User $host): void
+    {
+        $followerIds = \App\Models\Follow::where('following_id', $host->id)
+            ->pluck('follower_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $followerMap = array_flip($followerIds);
+        $link = '/live/' . $event->id;
+        $fullUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/') . $link;
+
+        $safeHostName = htmlspecialchars((string) $host->name);
+        $safeHostUsername = htmlspecialchars((string) ($host->username ?? ''));
+        $safeTitle = htmlspecialchars((string) $event->title);
+        $bookTitle = $event->book?->title ? htmlspecialchars((string) $event->book->title) : null;
+        $safeDesc = !empty($event->description) ? htmlspecialchars(\Illuminate\Support\Str::limit((string) $event->description, 160)) : null;
+
+        // 1. Sayt ichidagi bildirishnoma (barcha faol foydalanuvchilarga, obunachilar uchun maxsus sarlavha bilan)
+        User::where('id', '!=', $host->id)
+            ->whereNull('deleted_at')
+            ->get()
+            ->each(function (User $u) use ($event, $host, $followerMap, $link) {
+                $isFollower = isset($followerMap[(int) $u->id]);
+                $title = $isFollower
+                    ? "🔴 Siz obuna bo'lgan {$host->name} strim boshladi!"
+                    : '🔴 Jonli efir boshlandi!';
+                $body = '"' . $event->title . '" — ' . $host->name . ' jonli efirda. Hoziroq qo\'shiling!';
+
+                self::send($u, 'live', $title, $body, '📺', $link);
+            });
+
+        // 2. Obunachilarning Telegramiga darhol xabar yuborish (agar live_stream yoqilgan bo'lsa)
+        if (!empty($followerIds)) {
+            $followers = User::whereIn('id', $followerIds)
+                ->whereNull('deleted_at')
+                ->whereNotNull('telegram_id')
+                ->get();
+
+            foreach ($followers as $follower) {
+                if (!$follower->prefersTelegramNotification('live_stream')) {
+                    continue;
+                }
+
+                $safeFollowerName = htmlspecialchars((string) $follower->name);
+                $bookLine = $bookTitle ? "• <b>Kitob:</b> 📖 «{$bookTitle}»\n" : '';
+                $descLine = $safeDesc ? "• <b>Tavsif:</b> <i>{$safeDesc}</i>\n" : '';
+                $usernameTag = $safeHostUsername !== '' ? " (@{$safeHostUsername})" : '';
+
+                $tgText = "🔴 <b>Siz obuna bo'lgan muallif jonli efir (strim) boshladi!</b>\n\n"
+                    . "Salom, <b>{$safeFollowerName}</b>! 👋\n"
+                    . "Siz obuna bo'lgan <b>{$safeHostName}</b>{$usernameTag} hozirgina yangi jonli efirni boshladi:\n\n"
+                    . "• <b>Mavzu:</b> 📺 «{$safeTitle}»\n"
+                    . $bookLine
+                    . $descLine . "\n"
+                    . "Hoziroq efirga qo'shiling va jonli suhbatda qatnashing! 👇";
+
+                try {
+                    \App\Jobs\SendTelegramNotificationJob::dispatch($follower->id, $tgText, [
+                        'reply_markup' => [
+                            'inline_keyboard' => [
+                                [
+                                    ['text' => '🔴 Jonli efirga qo\'shilish', 'url' => $fullUrl],
+                                ],
+                                [
+                                    ['text' => '🔕 Strim xabarlarini o\'chirish', 'callback_data' => 'toggle_pref:live_stream'],
+                                ],
+                            ],
+                        ],
+                    ], 'live_stream');
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Guruh ichida jonli efir (strim) boshlanganda guruh a'zolariga (va obunachilarga) xabar yuborish.
+     */
+    public static function notifyGroupLiveStreamStarted(\App\Models\LiveEvent $event, User $host, \App\Models\Group $group): void
+    {
+        $members = \App\Models\GroupMember::where('group_id', $group->id)
+            ->where('user_id', '!=', $host->id)
+            ->with('user')
+            ->get();
+
+        $followerIds = \App\Models\Follow::where('following_id', $host->id)
+            ->pluck('follower_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+        $followerMap = array_flip($followerIds);
+
+        $link = '/live/' . $event->id;
+        $fullUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/') . $link;
+        $safeGroupName = htmlspecialchars((string) $group->name);
+        $safeHostName = htmlspecialchars((string) $host->name);
+        $safeTitle = htmlspecialchars((string) $event->title);
+
+        foreach ($members as $gm) {
+            $memberUser = $gm->user;
+            if (!$memberUser) {
+                continue;
+            }
+
+            self::send(
+                $memberUser,
+                'live',
+                '🔴 Guruhda jonli efir boshlandi!',
+                '«' . $group->name . '» guruhida "' . $event->title . '" jonli efiri boshlandi. Qatnashish uchun kiring!',
+                '📺',
+                $link
+            );
+
+            // Agar guruh a'zosi strim muallifiga obuna bo'lgan bo'lsa yoki live_stream bildirishnomasi yoqilgan bo'lsa
+            if ($memberUser->prefersTelegramNotification('live_stream')) {
+                $isFollower = isset($followerMap[(int) $memberUser->id]);
+                $header = $isFollower
+                    ? "🔴 <b>Siz obuna bo'lgan {$safeHostName} «{$safeGroupName}» guruhida strim boshladi!</b>"
+                    : "🔴 <b>«{$safeGroupName}» guruhida jonli efir boshlandi!</b>";
+
+                $tgText = "{$header}\n\n"
+                    . "• <b>Boshlovchi:</b> {$safeHostName}\n"
+                    . "• <b>Mavzu:</b> 📺 «{$safeTitle}»\n\n"
+                    . "Guruh jonli efiriga qo'shilish uchun pastdagi tugmani bosing 👇";
+
+                try {
+                    \App\Jobs\SendTelegramNotificationJob::dispatch($memberUser->id, $tgText, [
+                        'reply_markup' => [
+                            'inline_keyboard' => [
+                                [
+                                    ['text' => '🔴 Jonli efirga kirish', 'url' => $fullUrl],
+                                ],
+                                [
+                                    ['text' => '🔕 Strim xabarlarini o\'chirish', 'callback_data' => 'toggle_pref:live_stream'],
+                                ],
+                            ],
+                        ],
+                    ], 'live_stream');
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Foydalanuvchiga yangi obunachi qo'shilganda sayt va Telegram orqali xabar yuborish.
+     */
+    public static function notifyNewFollower(User $targetUser, User $follower): void
+    {
+        if ($targetUser->id === $follower->id) {
+            return;
+        }
+
+        $profileLink = '/profile/' . $follower->username;
+        $fullUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/') . $profileLink;
+
+        self::send(
+            $targetUser,
+            'social',
+            '👤 Yangi obunachi!',
+            "{$follower->name} (@{$follower->username}) sizning sahifangizga obuna bo'ldi.",
+            '✨',
+            $profileLink
+        );
+
+        if ($targetUser->prefersTelegramNotification('new_follower')) {
+            $safeTarget = htmlspecialchars((string) $targetUser->name);
+            $safeFollower = htmlspecialchars((string) $follower->name);
+            $safeUsername = htmlspecialchars((string) $follower->username);
+
+            $tgText = "👤 <b>Sizda yangi obunachi bor!</b>\n\n"
+                . "Salom, <b>{$safeTarget}</b>! 👋\n"
+                . "<b>{$safeFollower}</b> (@{$safeUsername}) sizning «Kitobxon» sahifangizga obuna bo'ldi. ✨\n\n"
+                . "<i>Endi siz jonli efir (strim) boshlaganingizda obunachingizga darhol xabar yuboriladi!</i>";
+
+            try {
+                \App\Jobs\SendTelegramNotificationJob::dispatch($targetUser->id, $tgText, [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => '👤 Obunachi profilini ko\'rish', 'url' => $fullUrl],
+                            ],
+                            [
+                                ['text' => '🔕 Obuna xabarlarini o\'chirish', 'callback_data' => 'toggle_pref:new_follower'],
+                            ],
+                        ],
+                    ],
+                ], 'new_follower');
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+    }
 }

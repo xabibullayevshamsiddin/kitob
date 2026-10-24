@@ -344,17 +344,32 @@ class TelegramAuthController extends Controller
             return redirect()->route('login');
         }
 
-        $prefs = [
-            'streak_reminder' => $request->boolean('streak_reminder'),
-            'daily_quote'     => $request->boolean('daily_quote'),
-            'coin_reward'     => $request->boolean('coin_reward'),
-            'security'        => $request->boolean('security', true),
-        ];
+        $existing = is_array($user->notification_prefs) ? $user->notification_prefs : [];
+
+        $prefs = array_merge($existing, [
+            'enabled'          => true,
+            'telegram_enabled' => true,
+            'live_stream'      => $request->has('live_stream') ? $request->boolean('live_stream') : ($existing['live_stream'] ?? true),
+            'ban_status'       => $request->has('ban_status') ? $request->boolean('ban_status') : ($existing['ban_status'] ?? true),
+            'new_follower'     => $request->has('new_follower') ? $request->boolean('new_follower') : ($existing['new_follower'] ?? true),
+            'streak_reminder'  => $request->boolean('streak_reminder'),
+            'daily_quote'      => $request->boolean('daily_quote'),
+            'coin_reward'      => $request->boolean('coin_reward'),
+            'quiet_hours'      => $request->boolean('quiet_hours'),
+            'security'         => $request->boolean('security', true),
+        ]);
+
+        // Formadan yuborilganda checkbox belgilanmagan bo'lsa false bo'lishini ta'minlash (form_submitted bo'lsa)
+        if ($request->boolean('form_submitted')) {
+            $prefs['live_stream']  = $request->boolean('live_stream');
+            $prefs['ban_status']   = $request->boolean('ban_status');
+            $prefs['new_follower'] = $request->boolean('new_follower');
+        }
 
         $user->update([
             'notification_prefs' => $prefs,
         ]);
 
-        return redirect()->route('settings')->with('status', 'Telegram bildirishnoma sozlamalari yangilandi!');
+        return redirect()->route('settings')->with('success', 'Telegram bildirishnoma sozlamalari saqlandi!');
     }
 }
