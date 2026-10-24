@@ -11,6 +11,12 @@ if (file_exists($envPath)) {
     $envContent = file_get_contents($envPath);
     // Force APP_URL to https://kitobxon.elitehost.uz
     $envContent = preg_replace('/^APP_URL=.*$/m', 'APP_URL=https://kitobxon.elitehost.uz', $envContent);
+    // Force APP_DEBUG to true
+    if (preg_match('/^APP_DEBUG=.*$/m', $envContent)) {
+        $envContent = preg_replace('/^APP_DEBUG=.*$/m', 'APP_DEBUG=true', $envContent);
+    } else {
+        $envContent .= "\nAPP_DEBUG=true\n";
+    }
     // Set LIVEWIRE_ASSET_URL to https://kitobxon.elitehost.uz
     if (preg_match('/^LIVEWIRE_ASSET_URL=.*$/m', $envContent)) {
         $envContent = preg_replace('/^LIVEWIRE_ASSET_URL=.*$/m', 'LIVEWIRE_ASSET_URL=https://kitobxon.elitehost.uz', $envContent);

@@ -233,6 +233,20 @@
             <a href="{{ route('home') }}" class="error-message" id="error-message-text" title="{{ __('site.common.back_home') }}">
                 @yield('message', "Bu sahifa kitob javonimizda topilmadi. Keling, sizni mutolaaga qaytaramiz.")
             </a>
+
+            @if(config('app.debug') && isset($exception) && is_object($exception) && method_exists($exception, 'getMessage') && $exception->getMessage())
+                <div style="margin-top: 1.5rem; padding: 1rem; border-radius: 8px; background: rgba(69, 10, 10, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); color: #fecaca; font-family: monospace; font-size: 12px; text-align: left; max-width: 650px; margin-left: auto; margin-right: auto; overflow-x: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                    <div style="font-weight: bold; color: #f87171; margin-bottom: 0.25rem;">
+                        ⚠️ {{ get_class($exception) }}
+                    </div>
+                    <div style="font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 0.5rem; word-break: break-word;">
+                        {{ $exception->getMessage() }}
+                    </div>
+                    <div style="font-size: 11px; color: #fbbf24;">
+                        📍 {{ $exception->getFile() }}:{{ $exception->getLine() }}
+                    </div>
+                </div>
+            @endif
         </section>
     </main>
 
