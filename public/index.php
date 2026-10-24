@@ -228,6 +228,13 @@ if (! file_exists($livewirePubDir . '/livewire.js') && file_exists($livewireDist
     @copy($livewireDistDir . '/manifest.json', $livewirePubDir . '/manifest.json');
 }
 
+// Ensure public/storage symlink exists for uploaded images (avatars, covers, books)
+$storageTarget = __DIR__ . '/../storage/app/public';
+$storageLink = __DIR__ . '/storage';
+if (! file_exists($storageLink) && file_exists($storageTarget)) {
+    @symlink($storageTarget, $storageLink);
+}
+
 /*
 |--------------------------------------------------------------------------
 | Run The Application

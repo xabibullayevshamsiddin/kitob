@@ -106,5 +106,38 @@ if (file_exists($livewireConfig)) {
     echo "6. ✅ config/livewire.php fayli HTTPS uchun yangilandi\n";
 }
 
+// 7. Create storage symlink (php artisan storage:link equivalent in PHP)
+$storageTarget = realpath(__DIR__ . '/../storage/app/public') ?: (__DIR__ . '/../storage/app/public');
+$storageLink = __DIR__ . '/storage';
+
+if (is_link($storageLink) && ! file_exists($storageLink)) {
+    @unlink($storageLink);
+}
+
+if (! file_exists($storageLink) && ! is_link($storageLink)) {
+    if (@symlink($storageTarget, $storageLink)) {
+        echo "7. ✅ Storage symlink muvaffaqiyatli yaratildi (public/storage -> storage/app/public)\n";
+    } else {
+        // Fallback: Agar symlink yaratish taqiqlangan bo'lsa, xabar berish
+        echo "7. ⚠️ Symlink() ruxsat berilmadi yoki xatolik yuz berdi\n";
+    }
+} else {
+    echo "7. ✅ public/storage allaqachon mavjud (" . (is_link($storageLink) ? "symlink" : "jild") . ")\n";
+}
+
+// 8. Ensure fallback storage route in routes/web.php
+$webRoutesPath = __DIR__ . '/../routes/web.php';
+if (file_exists($webRoutesPath)) {
+    $webRoutesContent = file_get_contents($webRoutesPath);
+    if (! str_contains($webRoutesContent, 'storage.fallback')) {
+        $fallbackCode = "\n\n// Fallback storage route\nRoute::get('/storage/{path}', function (\$path) {\n    \$fullPath = storage_path('app/public/' . \$path);\n    if (! file_exists(\$fullPath) || is_dir(\$fullPath)) {\n        abort(404);\n    }\n    return response()->file(\$fullPath);\n})->where('path', '.*')->name('storage.fallback');\n";
+        $webRoutesContent .= $fallbackCode;
+        file_put_contents($webRoutesPath, $webRoutesContent);
+        echo "8. ✅ routes/web.php fayliga zaxira storage marshruti qo'shildi\n";
+    } else {
+        echo "8. ✅ routes/web.php da zaxira storage marshruti mavjud\n";
+    }
+}
+
 echo "\n🎉 BARCHA SOZLAMALAR MUVAFFAQIYATLI YAKUNLANDI!\n";
 echo "</pre><p><a href='/groups' style='display:inline-block;padding:12px 20px;background:#f59e0b;color:#000;text-decoration:none;font-weight:bold;border-radius:6px;'>Guruhlar sahifasiga o'tish →</a></p></div>";

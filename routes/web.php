@@ -273,6 +273,15 @@ Route::get('/live/{event}', LiveDetail::class)->name('live.show');
 Route::post('/live/{event}/signal', [\App\Http\Controllers\LiveSignalController::class, 'send'])->name('live.signal.send');
 Route::get('/live/{event}/signals', [\App\Http\Controllers\LiveSignalController::class, 'poll'])->name('live.signal.poll');
 
+// Fallback storage route (Hostingda symlink bo'lmaganda yoki buzilganda rasmlar 404 bo'lmasligi uchun)
+Route::get('/storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (! file_exists($fullPath) || is_dir($fullPath)) {
+        abort(404);
+    }
+    return response()->file($fullPath);
+})->where('path', '.*')->name('storage.fallback');
+
 // Error sahifalari dizaynini ko'rish (Preview routes)
 Route::prefix('errors')->group(function () {
     Route::get('/404', fn() => response()->view('errors.404', [], 404))->name('error.404');

@@ -28,7 +28,14 @@
             </a>
             <div class="relative group/avatar shrink-0">
                 @if($group->cover_image_url)
-                    <img src="{{ $group->cover_image_url }}" alt="{{ $group->name }}" class="w-12 h-12 rounded-btn object-cover border border-ink-border shadow-soft">
+                    <img src="{{ $group->cover_image_url }}" alt="{{ $group->name }}" class="w-12 h-12 rounded-btn object-cover border border-ink-border shadow-soft" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                    <div class="w-12 h-12 rounded-btn {{ $group->is_private ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300' : 'bg-amber-500/10 border border-amber-500/25 text-amber-400' }} items-center justify-center shadow-soft hidden">
+                        @if($group->is_private)
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        @else
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        @endif
+                    </div>
                 @else
                     <div class="w-12 h-12 rounded-btn {{ $group->is_private ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300' : 'bg-amber-500/10 border border-amber-500/25 text-amber-400' }} flex items-center justify-center shadow-soft">
                         @if($group->is_private)
