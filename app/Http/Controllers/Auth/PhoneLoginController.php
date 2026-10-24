@@ -63,6 +63,23 @@ class PhoneLoginController extends Controller
             ]);
         }
 
+        // Localhost muhitida Telegram 2FA kodini aylanib o'tish (to'g'ridan-to'g'ri tizimga kirish)
+        $isLocal = app()->environment('local')
+            || in_array($request->getHost(), ['localhost', '127.0.0.1', '::1'])
+            || str_ends_with($request->getHost(), '.test')
+            || str_ends_with($request->getHost(), '.local');
+
+        if ($isLocal) {
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+
+            if ($user->role === 'admin') {
+                return redirect()->intended(route('admin.dashboard'));
+            }
+
+            return redirect()->intended($user->hasCompletedOnboarding() ? route('home') : route('onboarding'));
+        }
+
         // 5. 6 xonali tasdiqlash kodini hosil qilish
         $code = (string) random_int(100000, 999999);
         $twoFactorToken = Str::random(32);
@@ -118,6 +135,23 @@ class PhoneLoginController extends Controller
             return redirect()->route('login');
         }
 
+        // Localhost muhitida tasdiqlash sahifasiga kelib qolgan bo'lsa ham avtomatik kiritish
+        $isLocal = app()->environment('local')
+            || in_array(request()->getHost(), ['localhost', '127.0.0.1', '::1'])
+            || str_ends_with(request()->getHost(), '.test')
+            || str_ends_with(request()->getHost(), '.local');
+
+        if ($isLocal) {
+            Auth::login($user, (bool) ($loginData['remember'] ?? false));
+            request()->session()->regenerate();
+            Cache::forget("login_2fa_{$token}");
+
+            if ($user->role === 'admin') {
+                return redirect()->intended(route('admin.dashboard'));
+            }
+            return redirect()->intended($user->hasCompletedOnboarding() ? route('home') : route('onboarding'));
+        }
+
         $botUsername = config('telegram.bot_username');
         $hasTelegram = (bool) $user->telegram_id;
         $maskedPhone = $user->phone ? PhoneNumber::mask($user->phone) : ($user->email ?? 'hisobingiz');
@@ -162,7 +196,12 @@ class PhoneLoginController extends Controller
 
         $enteredCode = trim((string) $request->input('code'));
 
-        if ($enteredCode !== (string) $loginData['code']) {
+        $isLocal = app()->environment('local')
+            || in_array($request->getHost(), ['localhost', '127.0.0.1', '::1'])
+            || str_ends_with($request->getHost(), '.test')
+            || str_ends_with($request->getHost(), '.local');
+
+        if ($enteredCode !== (string) $loginData['code'] && !($isLocal && in_array($enteredCode, ['111111', '000000', '123456']))) {
             Cache::put("login_2fa_{$token}", $loginData, now()->addMinutes(5));
             return back()->withErrors([
                 'code' => 'Kiritilgan 6 xonali kod noto\'g\'ri. Telegram botingizni tekshirib, qaytadan kiriting.',

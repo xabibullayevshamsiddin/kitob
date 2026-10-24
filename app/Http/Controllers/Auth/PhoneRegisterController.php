@@ -79,6 +79,62 @@ class PhoneRegisterController extends Controller
             'password.confirmed'  => "Kiritilgan parollar bir-biriga mos kelmadi.",
         ]);
 
+        // Localhost muhitida Telegram tasdiqlashni aylanib o'tish (to'g'ridan-to'g'ri hisob ochish)
+        $isLocal = app()->environment('local')
+            || in_array($request->getHost(), ['localhost', '127.0.0.1', '::1'])
+            || str_ends_with($request->getHost(), '.test')
+            || str_ends_with($request->getHost(), '.local');
+
+        if ($isLocal) {
+            $welcomeCoins = (int) setting('welcome_coins', 50);
+
+            $user = User::create([
+                'name'              => $request->input('name'),
+                'username'          => $rawUsername,
+                'phone'             => $normalizedPhone,
+                'email'             => $request->input('email') ?: null,
+                'password'          => Hash::make($request->input('password')),
+                'phone_verified_at' => now(),
+                'role'              => 'reader',
+                'total_points'      => 0,
+                'coin_balance'      => $welcomeCoins,
+            ]);
+
+            if ($welcomeCoins > 0) {
+                try {
+                    \App\Models\CoinTransaction::create([
+                        'user_id'     => $user->id,
+                        'coins'       => $welcomeCoins,
+                        'source'      => 'bonus',
+                        'description' => "Ro'yxatdan o'tish uchun xush kelibsiz bonusi 🎁",
+                    ]);
+                } catch (\Throwable $e) {}
+            }
+
+            try {
+                if (method_exists($user, 'assignRole')) {
+                    $user->assignRole('reader');
+                }
+            } catch (\Throwable $e) {}
+
+            \App\Models\UserProfile::create([
+                'user_id'          => $user->id,
+                'privacy_settings' => ['show_stats' => true, 'show_activity' => true],
+            ]);
+
+            \App\Models\UserStreak::create([
+                'user_id'          => $user->id,
+                'current_streak'   => 0,
+                'longest_streak'   => 0,
+                'last_active_date' => null,
+            ]);
+
+            Auth::login($user, true);
+            $request->session()->regenerate();
+
+            return redirect()->route('onboarding')->with('success', "Xush kelibsiz, {$user->name}! Ro'yxatdan o'tish muvaffaqiyatli yakunlandi.");
+        }
+
         // 3. Tasdiqlash tokenini yaratish va keshda vaqtinchalik saqlash (15 daqiqa)
         $regToken = Str::random(32);
 
@@ -108,6 +164,62 @@ class PhoneRegisterController extends Controller
             return redirect()->route('register')->withErrors([
                 'phone' => 'Ro\'yxatdan o\'tish sessiyasi muddati o\'tgan. Iltimos, qaytadan urinib ko\'ring.',
             ]);
+        }
+
+        $isLocal = app()->environment('local')
+            || in_array(request()->getHost(), ['localhost', '127.0.0.1', '::1'])
+            || str_ends_with(request()->getHost(), '.test')
+            || str_ends_with(request()->getHost(), '.local');
+
+        if ($isLocal && $pending) {
+            $welcomeCoins = (int) setting('welcome_coins', 50);
+            $user = User::create([
+                'name'              => $pending['name'],
+                'username'          => $pending['username'],
+                'phone'             => $pending['phone'],
+                'email'             => $pending['email'] ?? null,
+                'password'          => $pending['password'],
+                'phone_verified_at' => now(),
+                'role'              => 'reader',
+                'total_points'      => 0,
+                'coin_balance'      => $welcomeCoins,
+            ]);
+
+            if ($welcomeCoins > 0) {
+                try {
+                    \App\Models\CoinTransaction::create([
+                        'user_id'     => $user->id,
+                        'coins'       => $welcomeCoins,
+                        'source'      => 'bonus',
+                        'description' => "Ro'yxatdan o'tish uchun xush kelibsiz bonusi 🎁",
+                    ]);
+                } catch (\Throwable $e) {}
+            }
+
+            try {
+                if (method_exists($user, 'assignRole')) {
+                    $user->assignRole('reader');
+                }
+            } catch (\Throwable $e) {}
+
+            \App\Models\UserProfile::create([
+                'user_id'          => $user->id,
+                'privacy_settings' => ['show_stats' => true, 'show_activity' => true],
+            ]);
+
+            \App\Models\UserStreak::create([
+                'user_id'          => $user->id,
+                'current_streak'   => 0,
+                'longest_streak'   => 0,
+                'last_active_date' => null,
+            ]);
+
+            Cache::forget("pending_reg_{$token}");
+
+            Auth::login($user, true);
+            request()->session()->regenerate();
+
+            return redirect()->route('onboarding')->with('success', "Xush kelibsiz, {$user->name}! Mahalliy muhitda hisobingiz darhol tasdiqlandi.");
         }
 
         $botUsername = config('telegram.bot_username');

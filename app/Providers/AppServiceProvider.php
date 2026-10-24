@@ -30,15 +30,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // HTTPS protokoli majburiy qilish (Proxy / Cloudflare / EliteHost uchun)
-        if (
-            config('app.env') === 'production'
-            || request()->header('X-Forwarded-Proto') === 'https'
-            || request()->isSecure()
-            || str_contains(request()->getHost(), 'elitehost.uz')
-            || str_contains(config('app.url'), 'https://')
-        ) {
-            URL::forceScheme('https');
+        // HTTPS protokoli majburiy qilish (Faqat production / Cloudflare / EliteHost uchun)
+        // Localhost yoki local muhitda hech qachon HTTPS majburlanmaydi!
+        if (! $this->app->runningInConsole() && $this->app->has('request')) {
+            $request = request();
+            $host = $request->getHost();
+            $isLocalHost = in_array($host, ['localhost', '127.0.0.1', '::1'])
+                || str_ends_with($host, '.test')
+                || str_ends_with($host, '.local')
+                || config('app.env') === 'local';
+
+            if (! $isLocalHost) {
+                if (
+                    config('app.env') === 'production'
+                    || $request->header('X-Forwarded-Proto') === 'https'
+                    || $request->isSecure()
+                    || str_contains($host, 'elitehost.uz')
+                ) {
+                    URL::forceScheme('https');
+                }
+            }
         }
 
         \Illuminate\Pagination\Paginator::useTailwind();
