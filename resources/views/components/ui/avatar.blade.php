@@ -84,14 +84,15 @@
     $initial = mb_substr($userName, 0, 1);
 
     $targetUrl = $href ?? (($link && $user && !empty($user->username)) ? route('profile.show', $user->username) : null);
+    $displayClass = str_contains((string) $class, 'hidden') ? '' : 'inline-block';
 @endphp
 
 @if($targetUrl)
 <a href="{{ $targetUrl }}"
    title="{{ $userName }} profilini ko'rish"
-   class="relative inline-block shrink-0 select-none {{ $class }} hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer">
+   class="relative {{ $displayClass }} shrink-0 select-none {{ $class }} hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer">
 @else
-<div class="relative inline-block shrink-0 select-none {{ $class }}">
+<div class="relative {{ $displayClass }} shrink-0 select-none {{ $class }}">
 @endif
 
     @if($avatarUrl)

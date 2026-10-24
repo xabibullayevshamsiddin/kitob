@@ -285,7 +285,7 @@
     <x-nav.main-header />
 
     <!-- ── 1. KITOBXON CINEMATIC FULLSCREEN VIDEO HERO SECTION ── -->
-    <section class="relative w-full min-h-screen -mt-16 flex flex-col justify-between overflow-hidden bg-[hsl(var(--background))] text-[hsl(var(--foreground))] select-none max-w-full">
+    <section data-no-reveal class="relative w-full min-h-screen -mt-16 flex flex-col justify-between overflow-hidden bg-[hsl(var(--background))] text-[hsl(var(--foreground))] select-none max-w-full">
         
         <!-- Fullscreen Looping Video Background -->
         <video 
@@ -922,12 +922,12 @@
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div>
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[11px] uppercase tracking-wider mb-2">
-                        <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-badge bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[11px] uppercase tracking-wider mb-2">
+                        <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
                         <span>{{ __('site.home.hall_of_fame_badge') }}</span>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-bold font-serif text-paper">
-                        {{ __('site.home.hall_of_fame_title') }} <span class="text-amber-400 font-sans text-xl sm:text-2xl font-normal">(Top 5)</span>
+                        {{ __('site.home.hall_of_fame_title') }} <span class="text-amber-600 dark:text-amber-400 font-sans text-xl sm:text-2xl font-normal">(Top 5)</span>
                     </h2>
                     <p class="text-mist text-xs sm:text-sm mt-1 max-w-xl">
                         {{ __('site.home.hall_of_fame_sub') }}

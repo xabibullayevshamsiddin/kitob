@@ -62,7 +62,7 @@
     </style>
 @include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-slate-200 font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
 
     <!-- ── Page Transition & Loader ── -->
     @include('components.page-loader')
@@ -78,24 +78,24 @@
     <!-- ── Hero Section (Chiqib keluvchi Editorial Missiya) ── -->
     <section class="py-20 md:py-28 noise-bg">
         <div class="max-w-5xl mx-auto px-6 text-center space-y-6">
-            <div class="about-hero-item inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/10 border border-amber-400/25 text-amber-400 font-mono text-xs tracking-wider shadow-sm">
+            <div class="about-hero-item inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/25 text-gold font-mono text-xs tracking-wider shadow-sm">
                 <span>{{ __('site.about.badge') }}</span>
             </div>
             
-            <h1 class="about-hero-item text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.08]">
+            <h1 class="about-hero-item text-4xl sm:text-6xl lg:text-7xl font-extrabold text-paper tracking-tight leading-[1.08]">
                 {{ __('site.about.hero_1') }}<br class="hidden sm:block">
-                <span class="text-amber-400 italic font-serif">{{ __('site.about.hero_b') }}</span>{{ __('site.about.hero_2') }}
+                <span class="text-gold italic font-serif">{{ __('site.about.hero_b') }}</span>{{ __('site.about.hero_2') }}
             </h1>
             
-            <p class="about-hero-item text-base sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            <p class="about-hero-item text-base sm:text-xl text-paper-muted max-w-2xl mx-auto leading-relaxed">
                 {{ __('site.about.hero_sub') }}
             </p>
 
             <div class="about-hero-item pt-4 flex flex-wrap justify-center gap-4">
-                <a href="{{ route('register') }}" class="px-7 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-lg shadow-amber-500/25">
+                <a href="{{ route('register') }}" class="px-7 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-lg shadow-amber-500/25">
                     {{ __('site.about.join_cta') }}
                 </a>
-                <a href="{{ route('books.public') }}" class="px-6 py-3.5 rounded-xl bg-ink-800/80 hover:bg-ink-700 text-slate-200 font-semibold text-xs border border-white/10 transition-all duration-200 active:scale-95">
+                <a href="{{ route('books.public') }}" class="px-6 py-3.5 rounded-xl bg-ink-800/80 hover:bg-ink-700 text-paper font-semibold text-xs border border-ink-border transition-all duration-200 active:scale-95">
                     {{ __('site.about.books_list') }}
                 </a>
             </div>
@@ -103,36 +103,36 @@
     </section>
 
     <!-- ── Key Stats Row (ScrollTrigger Rolling Counters) ── -->
-    <section class="py-14 border-y border-white/[0.08] bg-ink-900/50">
+    <section class="py-14 border-y border-ink-border bg-ink-900/50">
         <div class="max-w-7xl mx-auto px-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                 
-                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
-                    <p class="text-4xl sm:text-5xl font-black text-amber-400 font-mono tracking-tight">
+                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-ink-border hover:border-amber-400/30 transition-all spotlight-card">
+                    <p class="text-4xl sm:text-5xl font-black text-gold font-mono tracking-tight">
                         <span class="counter-element" data-target="{{ $booksCount ?? 0 }}">{{ $booksCount ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_books') }}</p>
+                    <p class="text-xs text-mist mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_books') }}</p>
                 </div>
 
-                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
-                    <p class="text-4xl sm:text-5xl font-black text-white font-mono tracking-tight">
+                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-ink-border hover:border-amber-400/30 transition-all spotlight-card">
+                    <p class="text-4xl sm:text-5xl font-black text-paper font-mono tracking-tight">
                         <span class="counter-element" data-target="{{ $usersCount ?? 0 }}">{{ $usersCount ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_readers') }}</p>
+                    <p class="text-xs text-mist mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_readers') }}</p>
                 </div>
 
-                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
-                    <p class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono tracking-tight">
+                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-ink-border hover:border-amber-400/30 transition-all spotlight-card">
+                    <p class="text-4xl sm:text-5xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
                         <span class="counter-element" data-target="{{ $maxStreak ?? 0 }}">{{ $maxStreak ?? 0 }}</span> {{ __('site.common.days') }}
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_streak') }}</p>
+                    <p class="text-xs text-mist mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_streak') }}</p>
                 </div>
 
-                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-white/10 hover:border-amber-400/30 transition-all spotlight-card">
-                    <p class="text-4xl sm:text-5xl font-black text-indigo-400 font-mono tracking-tight">
+                <div class="about-stat-card p-6 sm:p-8 rounded-3xl bg-ink-950/70 border border-ink-border hover:border-amber-400/30 transition-all spotlight-card">
+                    <p class="text-4xl sm:text-5xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-tight">
                         <span class="counter-element" data-target="{{ $totalMinutes ?? 0 }}">{{ $totalMinutes ?? 0 }}</span>
                     </p>
-                    <p class="text-xs text-slate-400 mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_minutes') }}</p>
+                    <p class="text-xs text-mist mt-2 uppercase tracking-wider font-mono">{{ __('site.about.stat_minutes') }}</p>
                 </div>
 
             </div>
@@ -143,9 +143,9 @@
     <section class="py-24 md:py-32">
         <div class="max-w-7xl mx-auto px-6 space-y-12">
             <div class="values-header space-y-2">
-                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">{{ __('site.about.values_badge') }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{{ __('site.about.values_title') }}</h2>
-                <p class="text-sm text-slate-400">{{ __('site.about.values_sub') }}</p>
+                <span class="text-xs font-mono text-gold uppercase tracking-widest block">{{ __('site.about.values_badge') }}</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-paper tracking-tight">{{ __('site.about.values_title') }}</h2>
+                <p class="text-sm text-mist">{{ __('site.about.values_sub') }}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -188,24 +188,24 @@
     </section>
 
     <!-- ── Team Section (Interactive Expert Cards) ── -->
-    <section class="py-24 border-t border-white/[0.07] bg-ink-900/40">
+    <section class="py-24 border-t border-ink-border bg-ink-900/40">
         <div class="max-w-7xl mx-auto px-6 space-y-12">
             <div class="team-header space-y-2">
-                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">{{ __('site.about.team_badge') }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{{ __('site.about.team_title') }}</h2>
-                <p class="text-sm text-slate-400">{{ __('site.about.team_sub') }}</p>
+                <span class="text-xs font-mono text-gold uppercase tracking-widest block">{{ __('site.about.team_badge') }}</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-paper tracking-tight">{{ __('site.about.team_title') }}</h2>
+                <p class="text-sm text-mist">{{ __('site.about.team_sub') }}</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 
                 <div class="team-card spotlight-card rounded-3xl p-6 flex items-center gap-5">
-                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-ink-950 font-black text-2xl shrink-0 shadow-lg shadow-amber-500/20">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black text-2xl shrink-0 shadow-lg shadow-amber-500/20">
                         XS
                     </div>
                     <div>
-                        <h4 class="font-bold text-white text-base">Xabibullayev Shamsiddin</h4>
-                        <p class="text-xs text-amber-400 font-mono mt-0.5">{{ __('site.about.t1_role') }}</p>
-                        <p class="text-xs text-slate-400 mt-1">{{ __('site.about.t1_desc') }}</p>
+                        <h4 class="font-bold text-paper text-base">Xabibullayev Shamsiddin</h4>
+                        <p class="text-xs text-gold font-mono mt-0.5">{{ __('site.about.t1_role') }}</p>
+                        <p class="text-xs text-mist mt-1">{{ __('site.about.t1_desc') }}</p>
                     </div>
                 </div>
 
@@ -214,9 +214,9 @@
                         DK
                     </div>
                     <div>
-                        <h4 class="font-bold text-white text-base">Dilshod Karimov</h4>
-                        <p class="text-xs text-indigo-300 font-mono mt-0.5">{{ __('site.about.t2_role') }}</p>
-                        <p class="text-xs text-slate-400 mt-1">{{ __('site.about.t2_desc') }}</p>
+                        <h4 class="font-bold text-paper text-base">Dilshod Karimov</h4>
+                        <p class="text-xs text-indigo-600 dark:text-indigo-300 font-mono mt-0.5">{{ __('site.about.t2_role') }}</p>
+                        <p class="text-xs text-mist mt-1">{{ __('site.about.t2_desc') }}</p>
                     </div>
                 </div>
 
@@ -225,9 +225,9 @@
                         NR
                     </div>
                     <div>
-                        <h4 class="font-bold text-white text-base">Nodira Rahimova</h4>
-                        <p class="text-xs text-emerald-300 font-mono mt-0.5">{{ __('site.about.t3_role') }}</p>
-                        <p class="text-xs text-slate-400 mt-1">{{ __('site.about.t3_desc') }}</p>
+                        <h4 class="font-bold text-paper text-base">Nodira Rahimova</h4>
+                        <p class="text-xs text-emerald-600 dark:text-emerald-300 font-mono mt-0.5">{{ __('site.about.t3_role') }}</p>
+                        <p class="text-xs text-mist mt-1">{{ __('site.about.t3_desc') }}</p>
                     </div>
                 </div>
 

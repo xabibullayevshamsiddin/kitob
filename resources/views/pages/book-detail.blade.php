@@ -166,14 +166,14 @@
             <!-- Book Info & Actions -->
             <div class="flex-1 min-w-0 space-y-4 text-center sm:text-left">
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <span class="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-mono font-bold rounded-badge uppercase tracking-wider">
+                    <span class="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold rounded-badge uppercase tracking-wider">
                         {{ $book->week_number }}-Hafta kitobi
                     </span>
                     <span class="px-2.5 py-0.5 bg-ink-950 border border-ink-border text-mist text-xs font-mono rounded-badge">
                         {{ $book->genre }}
                     </span>
                     @if($averageRating > 0)
-                        <span class="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 text-xs font-mono rounded-badge flex items-center gap-1 border border-amber-500/25">
+                        <span class="px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-mono rounded-badge flex items-center gap-1 border border-amber-500/25">
                             <span>⭐</span>
                             <span class="font-bold">{{ $averageRating }}</span>
                             <span class="text-mist text-[10px]">({{ $ratingsCount }} baho)</span>
@@ -186,7 +186,7 @@
                         <span x-text="totalComments + ' ta izoh'">{{ $totalCommentsCount }} ta izoh</span>
                     </button>
                     <template x-if="savedCount > 0">
-                        <span class="px-2.5 py-0.5 bg-amber-500/10 text-amber-300 text-xs font-mono rounded-badge flex items-center gap-1 border border-amber-500/20">
+                        <span class="px-2.5 py-0.5 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-mono rounded-badge flex items-center gap-1 border border-amber-500/20">
                             <span>📌</span>
                             <span x-text="@js(__('site.saved_books.saved_by_readers', ['count' => '___CNT___'])).replace('___CNT___', savedCount)"></span>
                         </span>
@@ -211,7 +211,7 @@
                     @if($bookAiReady)
                         <button type="button"
                                 @click="showAiDrawer = true; $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); })"
-                                class="px-3.5 py-2 rounded-btn bg-emerald-500/15 hover:bg-emerald-500 text-emerald-300 hover:text-ink-950 border border-emerald-500/40 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md"
+                                class="px-3.5 py-2 rounded-btn bg-emerald-500/15 hover:bg-emerald-500 text-emerald-700 dark:text-emerald-300 hover:text-ink-950 border border-emerald-500/40 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md"
                                 title="{{ __('site.books.ai_assistant_tooltip') }}">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
@@ -221,7 +221,7 @@
                     @elseif(auth()->check() && auth()->user()->isAdmin())
                         <button type="button"
                                 @click="showAiDrawer = true; $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); })"
-                                class="px-3.5 py-2 rounded-btn bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 transition-all"
+                                class="px-3.5 py-2 rounded-btn bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-xs font-bold inline-flex items-center gap-1.5 transition-all"
                                 title="{{ __('site.books.ai_assistant_tooltip') }}">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"/>
@@ -233,7 +233,7 @@
                     <!-- Izoh qoldirish (Smooth scroll to comments) -->
                     <button type="button"
                             @click="activeTab = 'comments'; $nextTick(() => { document.getElementById('book-comments')?.scrollIntoView({ behavior: 'smooth' }); document.getElementById('comment-textarea')?.focus(); })"
-                            class="ks-btn-ghost inline-flex items-center gap-1.5 text-xs text-amber-300 border-amber-500/30 hover:border-amber-400"
+                            class="ks-btn-ghost inline-flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-300 border-amber-500/30 hover:border-amber-400"
                             title="{{ __('site.books.leave_comment') }}">
                         <span>💬</span>
                         <span>{{ __('site.books.leave_comment') }}</span>
@@ -245,7 +245,7 @@
                             :disabled="savingBookmark"
                             :class="isSaved 
                                 ? 'bg-amber-500 text-ink-950 font-bold border-amber-400 shadow-md shadow-amber-500/20' 
-                                : 'ks-btn-ghost text-amber-400 border-amber-500/30 hover:border-amber-400'"
+                                : 'ks-btn-ghost text-amber-600 dark:text-amber-400 border-amber-500/30 hover:border-amber-400'"
                             class="px-3.5 py-2 rounded-btn text-xs font-semibold inline-flex items-center gap-2 transition-all active:scale-95"
                             :title="isSaved ? @js(__('site.saved_books.remove_title')) : @js(__('site.saved_books.save_title'))">
                         <span x-show="!isSaved">📌</span>
@@ -257,7 +257,7 @@
                     @if($book->pdf_path || $book->chapters()->where('is_published', true)->exists())
                         <button type="button"
                                 @click="showDownloadModal = true"
-                                class="ks-btn-ghost inline-flex items-center gap-2 text-rose-300 border-rose-500/30 hover:border-rose-500/50"
+                                class="ks-btn-ghost inline-flex items-center gap-2 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50"
                                 title="Kitobni PDF sifatida yuklab olish">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             <span>PDF yuklab olish</span>
@@ -423,7 +423,7 @@
 
                 @if($book->pdf_path)
                     <a href="{{ route('books.flipbook', $book->id) }}"
-                        class="ks-btn-ghost py-1.5 px-3 text-xs text-amber-400 flex items-center gap-1.5"
+                        class="ks-btn-ghost py-1.5 px-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5"
                         title="To'liq ekranda ochish">
                         <span>⛶ To'liq ekran</span>
                     </a>
@@ -432,7 +432,7 @@
                 @if($bookAiReady)
                     <button type="button"
                             @click="showAiDrawer = !showAiDrawer; if (showAiDrawer) { $nextTick(() => { document.getElementById('book-ai-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }); }"
-                            :class="showAiDrawer ? 'bg-emerald-500 text-ink-950 font-bold border-emerald-400' : 'ks-btn-ghost text-emerald-300 border-emerald-500/35 hover:border-emerald-400'"
+                            :class="showAiDrawer ? 'bg-emerald-500 text-ink-950 font-bold border-emerald-400' : 'ks-btn-ghost text-emerald-700 dark:text-emerald-300 border-emerald-500/35 hover:border-emerald-400'"
                             class="py-1.5 px-3 text-xs rounded-btn flex items-center gap-1.5 transition-all shadow-md"
                             title="Kitob bo'yicha AI yordamchi oynasini ochish / yopish">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -445,7 +445,7 @@
                 <!-- Kitobxonlar bilan suhbatlashish (Chat Drawer toggle) -->
                 <button type="button"
                         @click="showChatDrawer = !showChatDrawer; $nextTick(() => { window.dispatchEvent(new CustomEvent('book-chat-scroll-bottom')); })"
-                        :class="showChatDrawer ? 'bg-amber-500 text-ink-950 font-bold border-amber-400' : 'ks-btn-ghost text-amber-300 border-amber-500/30 hover:border-amber-400'"
+                        :class="showChatDrawer ? 'bg-amber-500 text-ink-950 font-bold border-amber-400' : 'ks-btn-ghost text-amber-700 dark:text-amber-300 border-amber-500/30 hover:border-amber-400'"
                         class="py-1.5 px-3 text-xs rounded-btn flex items-center gap-1.5 transition-all shadow-md"
                         title="Kitobxonlar bilan jonli suhbatlashish va izohlar">
                     <span>💬</span>

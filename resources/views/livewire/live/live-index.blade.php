@@ -10,16 +10,16 @@
         @if (auth()->check() && auth()->user()->isAdminOrTeacher())
             <div class="flex items-center gap-2 shrink-0">
                 <button wire:click="openStudioModal"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-btn bg-[#C1392B] hover:bg-[#a63024] text-paper font-mono font-bold text-xs uppercase tracking-wider shadow-sm transition-all">
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-btn bg-[#C1392B] hover:bg-[#a63024] text-white font-mono font-bold text-xs uppercase tracking-wider shadow-sm transition-all">
                     <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-paper opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-paper"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                     </span>
                     <span>{{ __('site.live.start_btn') }}</span>
                 </button>
 
                 <button wire:click="endAllLiveStreams" wire:confirm="{{ __('site.live.end_all_confirm') }}"
-                    class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-btn bg-ink-900 hover:bg-[#C1392B]/20 border border-ink-border hover:border-rose-500/40 text-mist hover:text-rose-300 font-mono text-xs uppercase tracking-wider transition-all"
+                    class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-btn bg-ink-900 hover:bg-[#C1392B]/20 border border-ink-border hover:border-rose-500/40 text-mist hover:text-rose-600 dark:hover:text-rose-300 font-mono text-xs uppercase tracking-wider transition-all"
                     title="{{ __('site.live.end_all_title') }}">
                     {{ __('site.live.end_all') }}
                 </button>
@@ -123,7 +123,7 @@
                                 {{ __('site.live.cancel') }}
                             </button>
                             <button type="submit"
-                                class="px-4 py-1.5 rounded-btn bg-[#C1392B] hover:bg-[#a63024] text-paper font-mono font-bold text-xs uppercase tracking-wider transition-all">
+                                class="px-4 py-1.5 rounded-btn bg-[#C1392B] hover:bg-[#a63024] text-white font-mono font-bold text-xs uppercase tracking-wider transition-all">
                                 {{ __('site.live.start_now') }}
                             </button>
                         </div>
@@ -138,26 +138,26 @@
     <div class="ks-panel bg-ink-900 border border-ink-border p-4 sm:p-5 space-y-3.5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <!-- Status Tabs -->
-            <div class="flex items-center gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto no-scrollbar">
+            <div class="flex items-center gap-1 sm:gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto no-scrollbar max-w-full">
                 <button type="button" wire:click="setStatusFilter('all')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $statusFilter === 'all' ? 'bg-ink-800 text-amber-400 border border-ink-border shadow-sm' : 'text-mist hover:text-paper' }}">
+                    class="px-2 sm:px-3 py-1.5 rounded-btn text-[11px] sm:text-xs font-mono font-medium transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap {{ $statusFilter === 'all' ? 'bg-ink-800 text-amber-600 dark:text-amber-400 border border-ink-border shadow-sm' : 'text-mist hover:text-paper' }}">
                     <span>{{ __('site.live.filter_all') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] {{ $statusFilter === 'all' ? 'bg-ink-900 text-amber-400' : 'bg-ink-800 text-mist' }}">
+                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] {{ $statusFilter === 'all' ? 'bg-ink-900 text-amber-600 dark:text-amber-400' : 'bg-ink-800 text-mist' }}">
                         {{ $totalActiveCount }}
                     </span>
                 </button>
                 <button type="button" wire:click="setStatusFilter('live')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $statusFilter === 'live' ? 'bg-[#C1392B]/15 text-rose-300 border border-rose-500/30' : 'text-mist hover:text-rose-300' }}">
-                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+                    class="px-2 sm:px-3 py-1.5 rounded-btn text-[11px] sm:text-xs font-mono font-medium transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap {{ $statusFilter === 'live' ? 'bg-[#C1392B]/15 text-rose-600 dark:text-rose-300 border border-rose-500/30' : 'text-mist hover:text-rose-600 dark:hover:text-rose-300' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400 animate-pulse shrink-0"></span>
                     <span>{{ __('site.live.filter_live') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-rose-500/20 text-rose-300">
+                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-rose-500/20 text-rose-600 dark:text-rose-300">
                         {{ $liveCount }}
                     </span>
                 </button>
                 <button type="button" wire:click="setStatusFilter('scheduled')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $statusFilter === 'scheduled' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-amber-400' }}">
+                    class="px-2 sm:px-3 py-1.5 rounded-btn text-[11px] sm:text-xs font-mono font-medium transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap {{ $statusFilter === 'scheduled' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25' : 'text-mist hover:text-amber-600 dark:hover:text-amber-400' }}">
                     <span>{{ __('site.live.filter_scheduled') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-amber-500/20 text-amber-400">
+                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-amber-500/20 text-amber-600 dark:text-amber-400">
                         {{ $scheduledCount }}
                     </span>
                 </button>
@@ -239,17 +239,17 @@
         @foreach ($upcoming as $event)
             <div class="p-6 sm:p-8 rounded-panel bg-ink-900 border {{ $event->is_live ? 'border-[#C1392B]/50' : 'border-ink-border' }} text-paper shadow-soft relative overflow-hidden space-y-4" wire:key="event-{{ $event->id }}">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-pill {{ $event->is_live ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-300' : 'bg-ink-800 border border-ink-border text-mist' }} text-[11px] font-mono font-bold uppercase tracking-wider">
-                        <span class="w-1.5 h-1.5 rounded-full {{ $event->is_live ? 'bg-rose-400 animate-pulse' : 'bg-mist' }}"></span>
+                    <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-pill {{ $event->is_live ? 'bg-[#C1392B]/15 border border-rose-500/30 text-rose-600 dark:text-rose-300' : 'bg-ink-800 border border-ink-border text-mist' }} text-[11px] font-mono font-bold uppercase tracking-wider">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $event->is_live ? 'bg-rose-500 dark:bg-rose-400 animate-pulse' : 'bg-mist' }}"></span>
                         <span>{{ $event->is_live ? __('site.live.now_live') : __('site.live.next_up', ['time' => $event->scheduled_at?->timezone('Asia/Tashkent')->format('d M, H:i')]) }}</span>
                     </div>
 
                     <div class="flex items-center gap-2">
                         @if($event->is_live)
                             {{-- Jonli tomoshabinlar soni --}}
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/25 text-amber-400 font-mono text-[11px] font-bold"
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-bold"
                                 title="Jonli tomoshabinlar soni">
-                                <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                     <circle cx="12" cy="12" r="3"/>
                                 </svg>
@@ -258,7 +258,7 @@
                         @endif
 
                         {{-- Jami like'lar — efir ro'yxatida ham ko'rinadi --}}
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill bg-rose-500/10 border border-rose-500/25 text-rose-300 font-mono text-[11px] font-bold"
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-300 font-mono text-[11px] font-bold"
                             title="{{ __('site.live.likes_total_title') }}">
                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             <span wire:key="likes-count-{{ $event->id }}">{{ (int) ($event->likes_count ?? 0) }}</span>
@@ -274,7 +274,7 @@
                         </span>
 
                         @if($event->group)
-                            <span class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-pill bg-amber-500/15 border border-amber-500/30 text-amber-400 font-medium">
+                            <span class="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-pill bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium">
                                 <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <span>{{ $event->group->name }}</span>
                             </span>
@@ -290,7 +290,7 @@
 
                 <div class="flex flex-wrap items-center gap-4 text-xs font-mono text-mist">
                     @if ($event->book)
-                        <span class="text-amber-400 font-medium flex items-center gap-1.5">
+                        <span class="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                             <span>{{ $event->book->title }}</span>
                         </span>
@@ -302,7 +302,7 @@
 
                 <div class="pt-2 flex flex-wrap items-center gap-2.5">
                     <a href="{{ route('live.show', $event) }}"
-                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C1392B] hover:bg-[#a63024] text-paper font-mono font-bold text-xs uppercase tracking-wider rounded-btn transition-all">
+                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C1392B] hover:bg-[#a63024] text-white font-mono font-bold text-xs uppercase tracking-wider rounded-btn transition-all">
                         <span>{{ __('site.live.enter_hall') }}</span>
                         <span>→</span>
                     </a>

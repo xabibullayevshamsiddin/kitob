@@ -80,7 +80,7 @@
     </style>
 @include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-slate-200 font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
 
     <!-- ── Page Transition & Loader ── -->
     @include('components.page-loader')
@@ -98,13 +98,13 @@
         <div class="max-w-7xl mx-auto px-6 space-y-12">
             
             <div class="books-header max-w-2xl space-y-3">
-                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/10 border border-amber-400/25 text-amber-400 font-mono text-xs tracking-wider">
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/10 border border-amber-400/25 text-gold font-mono text-xs tracking-wider">
                     {{ __('site.books.badge') }}
                 </span>
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
-                    {{ __('site.books.title_1') }}<span class="text-amber-400 italic font-serif">{{ __('site.books.title_b') }}</span>{{ __('site.books.title_2') }}
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-paper tracking-tight leading-tight">
+                    {{ __('site.books.title_1') }}<span class="text-gold italic font-serif">{{ __('site.books.title_b') }}</span>{{ __('site.books.title_2') }}
                 </h1>
-                <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+                <p class="text-paper-muted text-sm sm:text-base leading-relaxed">
                     {{ __('site.books.sub') }}
                 </p>
             </div>

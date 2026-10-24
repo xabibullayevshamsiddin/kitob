@@ -14,9 +14,12 @@
         if (window.toast) window.toast({ type, message });
         else window.dispatchEvent(new CustomEvent('toast', { detail: { type, message } }));
     };
+    const swUrl = @json(asset('sw.js'));
+    const pingUrl = @json(route('pwa.ping'));
+    const offlinePageUrl = @json(asset('offline/index.html'));
     if ('serviceWorker' in navigator) {
         if (enabled) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {}));
+            window.addEventListener('load', () => navigator.serviceWorker.register(swUrl).catch(() => {}));
         } else {
             navigator.serviceWorker.getRegistrations().then((registrations) => Promise.all(registrations
                 .map((registration) => registration.unregister()))).catch(() => {});
@@ -29,7 +32,7 @@
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 3500);
         try {
-            const response = await fetch('/ping', {
+            const response = await fetch(pingUrl, {
                 method: 'GET',
                 cache: 'no-store',
                 signal: controller.signal,
@@ -59,7 +62,7 @@
             indicator.setAttribute('role', 'status');
             indicator.innerHTML = '<span class="kitob-pwa-dot" aria-hidden="true"></span><span class="kitob-pwa-label"></span><a href="#">' + @js(__('site.common.open_offline_page')) + '</a><button type="button" class="kitob-pwa-close" aria-label="' + @js(__('site.common.close')) + '">&times;</button>';
             document.body.appendChild(indicator);
-            indicator.querySelector('a').href = '/offline/index.html?reason=offline&from=' + encodeURIComponent(location.pathname + location.search);
+            indicator.querySelector('a').href = offlinePageUrl + '?reason=offline&from=' + encodeURIComponent(location.pathname + location.search);
             indicator.querySelector('.kitob-pwa-close').addEventListener('click', () => { indicator.hidden = true; });
         }
         indicator.classList.toggle('is-offline', offline);

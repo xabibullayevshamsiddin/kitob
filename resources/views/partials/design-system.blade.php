@@ -336,6 +336,10 @@
         background-color: #E5DEC0 !important;
     }
 
+    html.light:not(.force-dark) .text-ink-950 {
+        color: #181613 !important;
+    }
+
     /* Spotlight cards & sections in Light Mode */
     html.light:not(.force-dark) .spotlight-card {
         background: #F9F6F0 !important;

@@ -42,7 +42,7 @@
     </style>
 @include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-slate-200 font-sans antialiased min-h-screen noise-bg selection:bg-amber-500 selection:text-ink-950">
+<body class="bg-ink-950 text-paper font-sans antialiased min-h-screen noise-bg selection:bg-amber-500 selection:text-ink-950">
     @include('components.page-loader')
     <div id="smooth-page-wrapper">
     <x-nav.main-header />
@@ -150,14 +150,14 @@
     <main class="py-16 max-w-5xl mx-auto px-6 space-y-12">
 
         <!-- 1-Modda -->
-        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-white/10 space-y-4">
+        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-ink-border space-y-4">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
+                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-gold border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
                     01
                 </span>
-                <h2 class="text-xl font-bold text-white">{{ __('site.terms.a1_title') }}</h2>
+                <h2 class="text-xl font-bold text-paper">{{ __('site.terms.a1_title') }}</h2>
             </div>
-            <div class="text-sm text-slate-300 leading-relaxed space-y-3 pl-0 sm:pl-11">
+            <div class="text-sm text-paper-muted leading-relaxed space-y-3 pl-0 sm:pl-11">
                 <p>{!! __('site.terms.a1_p1') !!}</p>
                 <p>{{ __('site.terms.a1_p2') }}</p>
                 <p>{{ __('site.terms.a1_p3') }}</p>
@@ -165,14 +165,14 @@
         </article>
 
         <!-- 2-Modda -->
-        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-white/10 space-y-4">
+        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-ink-border space-y-4">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
+                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-gold border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
                     02
                 </span>
-                <h2 class="text-xl font-bold text-white">{{ __('site.terms.a2_title') }}</h2>
+                <h2 class="text-xl font-bold text-paper">{{ __('site.terms.a2_title') }}</h2>
             </div>
-            <div class="text-sm text-slate-300 leading-relaxed space-y-3 pl-0 sm:pl-11">
+            <div class="text-sm text-paper-muted leading-relaxed space-y-3 pl-0 sm:pl-11">
                 <p>{{ __('site.terms.a2_p1') }}</p>
                 <p>{{ __('site.terms.a2_p2') }}</p>
                 <p>{{ __('site.terms.a2_p3') }}</p>
@@ -180,14 +180,14 @@
         </article>
 
         <!-- 3-Modda -->
-        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-white/10 space-y-4">
+        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-ink-border space-y-4">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
+                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-gold border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
                     03
                 </span>
-                <h2 class="text-xl font-bold text-white">{{ __('site.terms.a3_title') }}</h2>
+                <h2 class="text-xl font-bold text-paper">{{ __('site.terms.a3_title') }}</h2>
             </div>
-            <div class="text-sm text-slate-300 leading-relaxed space-y-3 pl-0 sm:pl-11">
+            <div class="text-sm text-paper-muted leading-relaxed space-y-3 pl-0 sm:pl-11">
                 <p>{{ __('site.terms.a3_p1') }}</p>
                 <p>{{ __('site.terms.a3_p2') }}</p>
                 <p>{{ __('site.terms.a3_p3') }}</p>
@@ -195,14 +195,14 @@
         </article>
 
         <!-- 4-Modda -->
-        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-white/10 space-y-4">
+        <article class="p-8 sm:p-10 rounded-3xl bg-ink-900/70 border border-ink-border space-y-4">
             <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
+                <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-gold border border-amber-500/25 flex items-center justify-center font-mono font-bold text-sm">
                     04
                 </span>
-                <h2 class="text-xl font-bold text-white">{{ __('site.terms.a4_title') }}</h2>
+                <h2 class="text-xl font-bold text-paper">{{ __('site.terms.a4_title') }}</h2>
             </div>
-            <div class="text-sm text-slate-300 leading-relaxed space-y-3 pl-0 sm:pl-11">
+            <div class="text-sm text-paper-muted leading-relaxed space-y-3 pl-0 sm:pl-11">
                 <p>{!! __('site.terms.a4_p1') !!}</p>
                 <p>{{ __('site.terms.a4_p2') }}</p>
                 <p>{{ __('site.terms.a4_p3') }}</p>
@@ -211,22 +211,22 @@
 
         <!-- ── 5-MODDA: ASOSIY BAN ME'YORLARI JADVALI ── -->
         <article class="p-8 sm:p-10 rounded-panel bg-ink-900 border border-gold/30 shadow-card-depth relative overflow-hidden">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-ink-border">
                 <div class="flex items-center gap-3">
                     <span class="w-10 h-10 rounded-btn bg-gold/10 text-gold border border-gold/25 flex items-center justify-center font-bold text-lg">
                         <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
                     </span>
                     <div>
                         <h2 class="text-xl sm:text-2xl font-serif font-bold text-paper">{{ __('site.terms.a5_title') }}</h2>
-                        <p class="text-xs text-gold/80 mt-0.5 font-mono">{{ __('site.terms.a5_sub') }}</p>
+                        <p class="text-xs text-gold mt-0.5 font-mono">{{ __('site.terms.a5_sub') }}</p>
                     </div>
                 </div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-btn bg-vermilion/10 border border-vermilion/20 text-rose-300 text-xs font-bold font-mono">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-btn bg-vermilion/10 border border-vermilion/20 text-rose-600 dark:text-rose-300 text-xs font-bold font-mono">
                     <span>{{ __('site.terms.a5_tiers') }}</span>
                 </div>
             </div>
 
-            <div class="mt-6 text-sm text-slate-300 leading-relaxed mb-6">
+            <div class="mt-6 text-sm text-paper-muted leading-relaxed mb-6">
                 {{ __('site.terms.a5_intro') }}
             </div>
 
@@ -237,24 +237,24 @@
                 <div class="p-5 sm:p-6 rounded-2xl bg-ink-950/80 border border-amber-500/30 hover:border-amber-500/60 transition-colors">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                         <div class="flex items-center gap-2.5">
-                            <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-mono font-black text-xs border border-amber-500/30">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono font-black text-xs border border-amber-500/30">
                                 {{ __('site.terms.t1_badge') }}
                             </span>
-                            <h3 class="text-sm sm:text-base font-bold text-white">{{ __('site.terms.t1_title') }}</h3>
+                            <h3 class="text-sm sm:text-base font-bold text-paper">{{ __('site.terms.t1_title') }}</h3>
                         </div>
-                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+                        <span class="text-[11px] font-mono text-mist bg-ink-900 px-2 py-0.5 rounded border border-ink-border">
                             {{ __('site.terms.t1_tag') }}
                         </span>
                     </div>
-                    <ul class="text-xs sm:text-sm text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+                    <ul class="text-xs sm:text-sm text-paper-muted space-y-2 list-disc list-inside leading-relaxed">
                         <li>{!! __('site.terms.t1_i1') !!}</li>
                         <li>{!! __('site.terms.t1_i2') !!}</li>
                         <li>{!! __('site.terms.t1_i3') !!}</li>
                         <li>{!! __('site.terms.t1_i4') !!}</li>
                     </ul>
-                    <div class="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-amber-400/90 font-mono">
+                    <div class="mt-3 pt-3 border-t border-ink-border flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 font-mono">
                         <span>{{ __('site.terms.t1_goal') }}</span>
-                        <span class="text-slate-400">{{ __('site.terms.t1_note') }}</span>
+                        <span class="text-mist">{{ __('site.terms.t1_note') }}</span>
                     </div>
                 </div>
 
@@ -262,24 +262,24 @@
                 <div class="p-5 sm:p-6 rounded-2xl bg-ink-950/80 border border-orange-500/30 hover:border-orange-500/60 transition-colors">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                         <div class="flex items-center gap-2.5">
-                            <span class="px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 font-mono font-black text-xs border border-orange-500/30">
+                            <span class="px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-700 dark:text-orange-300 font-mono font-black text-xs border border-orange-500/30">
                                 {{ __('site.terms.t2_badge') }}
                             </span>
-                            <h3 class="text-sm sm:text-base font-bold text-white">{{ __('site.terms.t2_title') }}</h3>
+                            <h3 class="text-sm sm:text-base font-bold text-paper">{{ __('site.terms.t2_title') }}</h3>
                         </div>
-                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+                        <span class="text-[11px] font-mono text-mist bg-ink-900 px-2 py-0.5 rounded border border-ink-border">
                             {{ __('site.terms.t2_tag') }}
                         </span>
                     </div>
-                    <ul class="text-xs sm:text-sm text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+                    <ul class="text-xs sm:text-sm text-paper-muted space-y-2 list-disc list-inside leading-relaxed">
                         <li>{!! __('site.terms.t2_i1') !!}</li>
                         <li>{!! __('site.terms.t2_i2') !!}</li>
                         <li>{!! __('site.terms.t2_i3') !!}</li>
                         <li>{!! __('site.terms.t2_i4') !!}</li>
                     </ul>
-                    <div class="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-orange-400/90 font-mono">
+                    <div class="mt-3 pt-3 border-t border-ink-border flex items-center justify-between text-xs text-orange-700 dark:text-orange-400 font-mono">
                         <span>{{ __('site.terms.t2_goal') }}</span>
-                        <span class="text-slate-400">{{ __('site.terms.t2_note') }}</span>
+                        <span class="text-mist">{{ __('site.terms.t2_note') }}</span>
                     </div>
                 </div>
 
@@ -287,24 +287,24 @@
                 <div class="p-5 sm:p-6 rounded-2xl bg-ink-950/80 border border-rose-500/40 hover:border-rose-500/70 transition-colors">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                         <div class="flex items-center gap-2.5">
-                            <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 font-mono font-black text-xs border border-rose-500/30">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-700 dark:text-rose-300 font-mono font-black text-xs border border-rose-500/30">
                                 {{ __('site.terms.t3_badge') }}
                             </span>
-                            <h3 class="text-sm sm:text-base font-bold text-white">{{ __('site.terms.t3_title') }}</h3>
+                            <h3 class="text-sm sm:text-base font-bold text-paper">{{ __('site.terms.t3_title') }}</h3>
                         </div>
-                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+                        <span class="text-[11px] font-mono text-mist bg-ink-900 px-2 py-0.5 rounded border border-ink-border">
                             {{ __('site.terms.t3_tag') }}
                         </span>
                     </div>
-                    <ul class="text-xs sm:text-sm text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+                    <ul class="text-xs sm:text-sm text-paper-muted space-y-2 list-disc list-inside leading-relaxed">
                         <li>{!! __('site.terms.t3_i1') !!}</li>
                         <li>{!! __('site.terms.t3_i2') !!}</li>
                         <li>{!! __('site.terms.t3_i3') !!}</li>
                         <li>{!! __('site.terms.t3_i4') !!}</li>
                     </ul>
-                    <div class="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-rose-400/90 font-mono">
+                    <div class="mt-3 pt-3 border-t border-ink-border flex items-center justify-between text-xs text-rose-700 dark:text-rose-400 font-mono">
                         <span>{{ __('site.terms.t3_goal') }}</span>
-                        <span class="text-slate-400">{{ __('site.terms.t3_note') }}</span>
+                        <span class="text-mist">{{ __('site.terms.t3_note') }}</span>
                     </div>
                 </div>
 
@@ -312,49 +312,49 @@
                 <div class="p-5 sm:p-6 rounded-2xl bg-ink-950/80 border border-purple-500/40 hover:border-purple-500/70 transition-colors">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                         <div class="flex items-center gap-2.5">
-                            <span class="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 font-mono font-black text-xs border border-purple-500/30">
+                            <span class="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-700 dark:text-purple-300 font-mono font-black text-xs border border-purple-500/30">
                                 {{ __('site.terms.t4_badge') }}
                             </span>
-                            <h3 class="text-sm sm:text-base font-bold text-white">{{ __('site.terms.t4_title') }}</h3>
+                            <h3 class="text-sm sm:text-base font-bold text-paper">{{ __('site.terms.t4_title') }}</h3>
                         </div>
-                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+                        <span class="text-[11px] font-mono text-mist bg-ink-900 px-2 py-0.5 rounded border border-ink-border">
                             {{ __('site.terms.t4_tag') }}
                         </span>
                     </div>
-                    <ul class="text-xs sm:text-sm text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
+                    <ul class="text-xs sm:text-sm text-paper-muted space-y-2 list-disc list-inside leading-relaxed">
                         <li>{!! __('site.terms.t4_i1') !!}</li>
                         <li>{!! __('site.terms.t4_i2') !!}</li>
                         <li>{!! __('site.terms.t4_i3') !!}</li>
                         <li>{!! __('site.terms.t4_i4') !!}</li>
                     </ul>
-                    <div class="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-purple-400/90 font-mono">
+                    <div class="mt-3 pt-3 border-t border-ink-border flex items-center justify-between text-xs text-purple-700 dark:text-purple-400 font-mono">
                         <span>{{ __('site.terms.t4_goal') }}</span>
-                        <span class="text-slate-400">{{ __('site.terms.t4_note') }}</span>
+                        <span class="text-mist">{{ __('site.terms.t4_note') }}</span>
                     </div>
                 </div>
 
                 <!-- Tier 5 -->
-                <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-red-950/80 to-ink-950 border border-red-500/50 hover:border-red-500 transition-colors">
+                <div class="p-5 sm:p-6 rounded-2xl bg-rose-500/10 border border-red-500/50 hover:border-red-500 transition-colors">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                         <div class="flex items-center gap-2.5">
                             <span class="px-2.5 py-1 rounded-lg bg-red-600 text-white font-mono font-black text-xs shadow-lg shadow-red-600/30">
                                 {{ __('site.terms.t5_badge') }}
                             </span>
-                            <h3 class="text-sm sm:text-base font-black text-red-300">{{ __('site.terms.t5_title') }}</h3>
+                            <h3 class="text-sm sm:text-base font-black text-red-700 dark:text-red-300">{{ __('site.terms.t5_title') }}</h3>
                         </div>
-                        <span class="text-[11px] font-mono text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/25">
+                        <span class="text-[11px] font-mono text-red-700 dark:text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/25">
                             {{ __('site.terms.t5_tag') }}
                         </span>
                     </div>
-                    <ul class="text-xs sm:text-sm text-red-100/90 space-y-2 list-disc list-inside leading-relaxed">
+                    <ul class="text-xs sm:text-sm text-paper-muted space-y-2 list-disc list-inside leading-relaxed">
                         <li>{!! __('site.terms.t5_i1') !!}</li>
                         <li>{!! __('site.terms.t5_i2') !!}</li>
                         <li>{!! __('site.terms.t5_i3') !!}</li>
                         <li>{!! __('site.terms.t5_i4') !!}</li>
                     </ul>
-                    <div class="mt-3 pt-3 border-t border-red-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-red-300 font-mono gap-1">
+                    <div class="mt-3 pt-3 border-t border-red-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-red-700 dark:text-red-300 font-mono gap-1">
                         <span>{{ __('site.terms.t5_goal') }}</span>
-                        <span class="text-red-400 font-bold">{{ __('site.terms.t5_note') }}</span>
+                        <span class="text-red-700 dark:text-red-400 font-bold">{{ __('site.terms.t5_note') }}</span>
                     </div>
                 </div>
 

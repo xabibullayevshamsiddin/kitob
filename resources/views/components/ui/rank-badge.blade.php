@@ -39,9 +39,12 @@
         'lg' => 'text-xs sm:text-sm px-2.5 py-1',
         default => 'text-[10px] px-1.5 py-0.5',
     };
+
+    $passedClass = (string) $attributes->get('class', '');
+    $displayClass = str_contains($passedClass, 'hidden') ? '' : 'inline-flex';
 @endphp
 
-<span class="inline-flex items-center gap-1 font-mono font-bold rounded {{ $containerClasses }} {{ $textSizes }} select-none shrink-0"
+<span {{ $attributes->merge(['class' => trim("{$displayClass} items-center gap-1 font-mono font-bold rounded {$containerClasses} {$textSizes} select-none shrink-0")]) }}
       title="{{ $rank }}-o'rin (Peshqadam)">
     {{-- 1-o'rin: Toj (Crown) --}}
     @if($tier === 'gold')

@@ -259,7 +259,7 @@
                         </div>
                     </div>
                 </div>
-                <span class="text-xs font-mono text-mist">{{ __('site.chat.msg_count', ['count' => $messages->count()]) }}</span>
+                <span class="text-xs font-mono text-mist shrink-0 whitespace-nowrap">{{ __('site.chat.msg_count', ['count' => $messages->count()]) }}</span>
             </div>
 
             <!-- Messages Container -->

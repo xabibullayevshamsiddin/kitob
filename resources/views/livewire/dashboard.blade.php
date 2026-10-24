@@ -9,7 +9,7 @@
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-vermilion"></span>
                 </span>
                 <div>
-                    <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-300 block">
+                    <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-600 dark:text-rose-300 block">
                         {{ $upcomingLive->status === 'live' ? 'Hozir jonli efirda' : 'Navbatdagi jonli efir' }}
                     </span>
                     <p class="text-sm font-serif font-bold text-paper">{{ $upcomingLive->title }}</p>

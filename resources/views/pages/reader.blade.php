@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
       x-data="readerApp(@js($bookmarks->toArray()), @js($notes->toArray()))" 
-      :class="{ 'dark': theme === 'dark', 'reader-sepia': theme === 'sepia', 'reader-light': theme === 'light' }">
+      :class="{ 'dark': theme === 'dark', 'light': theme !== 'dark', 'reader-sepia': theme === 'sepia', 'reader-light': theme === 'light' }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -98,29 +98,29 @@
 <body class="bg-ink-950 text-paper min-h-screen flex flex-col font-sans transition-colors duration-200">
 
     <!-- Fixed Reader Top Bar -->
-    <header class="sticky top-0 z-40 backdrop-blur-md border-b px-2 sm:px-4 py-2.5 sm:py-3 reader-topbar">
-        <div class="max-w-4xl mx-auto flex items-center justify-between gap-1.5 sm:gap-4">
+    <header class="sticky top-0 z-40 backdrop-blur-md border-b px-2 sm:px-4 py-2 sm:py-3 reader-topbar">
+        <div class="max-w-4xl mx-auto flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-4">
             <!-- Left: Back link & chapter info -->
             <div class="flex items-center gap-1.5 sm:gap-3 min-w-0">
                 <a href="{{ route('books.show', $book->slug) }}" class="p-1 sm:p-1.5 rounded-btn text-mist hover:text-paper transition-colors shrink-0" title="{{ __('site.reader.back_to_book') }}">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 </a>
                 <div class="min-w-0">
-                    <h2 class="text-xs font-bold font-serif text-paper truncate max-w-[90px] sm:max-w-xs">{{ $chapter->title }}</h2>
+                    <h2 class="text-xs font-bold font-serif text-paper truncate max-w-[110px] sm:max-w-xs">{{ $chapter->title }}</h2>
                     <span class="text-[10px] sm:text-[11px] font-mono text-mist truncate hidden sm:block">«{{ $book->title }}»</span>
                 </div>
             </div>
 
             <!-- Active Reading Timer Pill -->
-            <div class="flex items-center gap-1 sm:gap-2 px-2 py-0.5 sm:px-3 sm:py-1 rounded-badge bg-ink-900 border border-ink-border text-amber-400 font-mono text-[11px] sm:text-xs shrink-0"
+            <div class="flex items-center gap-1 sm:gap-2 px-2 py-0.5 sm:px-3 sm:py-1 rounded-badge bg-ink-900 border border-ink-border text-amber-600 dark:text-amber-400 font-mono text-[11px] sm:text-xs shrink-0"
                  :class="{ 'opacity-50': isIdle }">
                 <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" :class="isIdle ? 'bg-amber-500' : 'bg-emerald-400 animate-pulse'"></span>
                 <span x-text="formatTime(activeSeconds)">00:00</span>
-                <span x-show="isIdle" class="text-[9px] sm:text-[10px] text-amber-400 font-sans hidden sm:inline">{{ __('site.reader.pause') }}</span>
+                <span x-show="isIdle" class="text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-400 font-sans hidden sm:inline">{{ __('site.reader.pause') }}</span>
             </div>
 
             <!-- Right Controls: Font size, Serif/Sans, Theme, Music -->
-            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+            <div class="flex items-center justify-end gap-1 sm:gap-2 shrink-0 w-full sm:w-auto pt-1 sm:pt-0 border-t border-black/5 dark:border-white/5 sm:border-0">
                 <!-- Ambient Music Quick Toggle in Topbar -->
                 <button type="button" 
                         @click="window.dispatchEvent(new CustomEvent('open-ambient-music'))" 
@@ -358,7 +358,7 @@
     <script>
         function readerApp(initialBookmarks = [], initialNotes = []) {
             return {
-                theme: localStorage.getItem('reader_theme') || 'dark',
+                theme: localStorage.getItem('reader_theme') || (localStorage.getItem('kitob_theme') === 'light' ? 'light' : 'dark'),
                 fontFamily: localStorage.getItem('reader_font') || 'merriweather',
                 fontSize: parseInt(localStorage.getItem('reader_size')) || 19,
                 fontOptions: [

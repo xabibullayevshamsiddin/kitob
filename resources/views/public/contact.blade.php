@@ -62,7 +62,7 @@
     </style>
 @include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-slate-200 font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
+<body class="bg-ink-950 text-paper font-sans selection:bg-amber-400 selection:text-ink-950 antialiased min-h-screen relative overflow-x-hidden">
 
     <!-- ── Page Transition & Loader ── -->
     @include('components.page-loader')
@@ -80,12 +80,12 @@
         <div class="max-w-7xl mx-auto px-6">
             
             <div class="contact-header max-w-2xl mb-12 space-y-3">
-                <span class="text-xs font-mono text-amber-400 uppercase tracking-widest block">{{ __('site.contact.badge') }}</span>
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+                <span class="text-xs font-mono text-gold uppercase tracking-widest block">{{ __('site.contact.badge') }}</span>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-paper tracking-tight leading-tight">
                     {{ __('site.contact.hero_1') }} <br>
-                    <span class="text-amber-400 italic font-serif">{{ __('site.contact.hero_b') }}</span>
+                    <span class="text-gold italic font-serif">{{ __('site.contact.hero_b') }}</span>
                 </h1>
-                <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+                <p class="text-paper-muted text-sm sm:text-base leading-relaxed">
                     {{ __('site.contact.hero_sub') }}
                 </p>
             </div>
@@ -192,62 +192,62 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">
+                                <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-paper-muted font-mono mb-2">
                                     <span>{{ __('site.contact.form_name') }}</span>
                                     @if($isLockedIdentity)
-                                        <span class="text-[10px] text-amber-400/90 font-mono normal-case flex items-center gap-1">🔒 O'zgartirib bo'lmaydi</span>
+                                        <span class="text-[10px] text-gold font-mono normal-case flex items-center gap-1">🔒 O'zgartirib bo'lmaydi</span>
                                     @endif
                                 </label>
                                 <div class="relative">
                                     <input type="text" name="name" value="{{ $prefillName }}" required
                                            @if($isLockedIdentity) readonly tabindex="-1" @endif
                                            placeholder="Ali Valiyev"
-                                           class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm transition-colors {{ $isLockedIdentity ? 'pr-10 cursor-not-allowed opacity-80 select-none focus:outline-none' : 'focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400' }}">
+                                           class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-ink-border text-paper placeholder-mist text-sm transition-colors {{ $isLockedIdentity ? 'pr-10 cursor-not-allowed opacity-80 select-none focus:outline-none' : 'focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400' }}">
                                     @if($isLockedIdentity)
-                                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">🔒</span>
+                                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-mist pointer-events-none text-xs">🔒</span>
                                     @endif
                                 </div>
-                                @error('name') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                                @error('name') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">
+                                <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-paper-muted font-mono mb-2">
                                     <span>Telefon raqam</span>
                                     @if($isLockedIdentity)
-                                        <span class="text-[10px] text-amber-400/90 font-mono normal-case flex items-center gap-1">🔒 O'zgartirib bo'lmaydi</span>
+                                        <span class="text-[10px] text-gold font-mono normal-case flex items-center gap-1">🔒 O'zgartirib bo'lmaydi</span>
                                     @endif
                                 </label>
                                 <div class="relative">
                                     <input type="text" name="phone" value="{{ $prefillPhone }}"
                                            @if($isLockedIdentity) readonly tabindex="-1" @else required @endif
                                            placeholder="+998 90 123 45 67"
-                                           class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white font-mono placeholder-slate-500 text-sm transition-colors {{ $isLockedIdentity ? 'pr-10 cursor-not-allowed opacity-80 select-none focus:outline-none' : 'focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400' }}">
+                                           class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-ink-border text-paper font-mono placeholder-mist text-sm transition-colors {{ $isLockedIdentity ? 'pr-10 cursor-not-allowed opacity-80 select-none focus:outline-none' : 'focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400' }}">
                                     @if($isLockedIdentity)
-                                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">🔒</span>
+                                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-mist pointer-events-none text-xs">🔒</span>
                                     @endif
                                 </div>
-                                @error('phone') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                                @error('phone') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_subject') }}</label>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-paper-muted font-mono mb-2">{{ __('site.contact.form_subject') }}</label>
                             <input type="text" name="subject" value="{{ old('subject', $defaultSubject) }}" required 
                                    placeholder="{{ $isAppeal ? 'Ban bo\'yicha apellyatsiya' : __('site.contact.form_subject_ph') }}"
-                                   class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
-                            @error('subject') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                                   class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-ink-border text-paper placeholder-mist text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
+                            @error('subject') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_message') }}</label>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-paper-muted font-mono mb-2">{{ __('site.contact.form_message') }}</label>
                             <textarea name="message" rows="8" required 
                                       placeholder="{{ $isAppeal ? 'Nima sababdan ban noto\'g\'ri berilgan deb hisoblaysiz? Batafsil yozib qoldiring...' : __('site.contact.form_message_ph') }}"
-                                      class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors resize-none font-sans leading-relaxed">{{ $defaultMessage }}</textarea>
-                            @error('message') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                                      class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-ink-border text-paper placeholder-mist text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors resize-none font-sans leading-relaxed">{{ $defaultMessage }}</textarea>
+                            @error('message') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         <button type="submit" 
-                                class="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-lg shadow-amber-500/25 hover:shadow-glow-amber flex items-center justify-center gap-2 group">
+                                class="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-lg shadow-amber-500/25 hover:shadow-glow-amber flex items-center justify-center gap-2 group">
                             <span>{{ __('site.contact.form_send') }}</span>
                             <svg class="w-4 h-4 group-hover:translate-x-1.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </button>
@@ -294,8 +294,8 @@
                     </div>
 
                     <!-- Instant Community Help Callout -->
-                    <div class="contact-info-card p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 via-ink-900 to-indigo-950/40 border border-amber-400/20 text-xs text-slate-300 flex items-center gap-4">
-                        <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+                    <div class="contact-info-card p-6 rounded-3xl bg-amber-500/10 border border-amber-400/25 text-xs text-paper-muted flex items-center gap-4">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
                         <p>{{ __('site.contact.support_note') }}</p>
                     </div>
 

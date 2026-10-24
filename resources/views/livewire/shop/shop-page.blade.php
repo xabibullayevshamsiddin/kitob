@@ -54,18 +54,18 @@
             </div>
 
             {{-- Balance Pills --}}
-            <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:flex items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
                 {{-- Coin Balance Pill --}}
-                <div class="flex-1 sm:flex-initial flex items-center gap-3 px-4 py-3 rounded-card bg-ink-950/80 border border-amber-500/30 shadow-lg shadow-black/20">
+                <div class="flex items-center gap-3 px-4 py-3 rounded-card bg-ink-950/80 border border-amber-500/30 shadow-lg shadow-black/10">
                     <div class="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="12" cy="12" r="9"/>
                             <path d="M12 7v10M15 9.5a3 3 0 0 0-6 0c0 3 6 2 6 5a3 3 0 0 1-6 0"/>
                         </svg>
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <div class="text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-mist">Mening tangalarim</div>
-                        <div class="font-mono text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-400 leading-none mt-0.5 flex items-baseline gap-1">
+                        <div class="font-mono text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-400 leading-none mt-0.5 flex items-baseline gap-1 whitespace-nowrap">
                             <span x-text="coinCount.toLocaleString()">{{ number_format($user->coin_balance) }}</span>
                             <span class="text-xs text-amber-700/80 dark:text-amber-500/80 font-sans font-normal">tanga</span>
                         </div>
@@ -75,19 +75,19 @@
                 {{-- Available Points Pill (Clickable -> opens Exchange tab) --}}
                 <button wire:click="setTab('exchange')"
                         type="button"
-                        class="flex-1 sm:flex-initial flex items-center gap-3 px-4 py-3 rounded-card bg-ink-950/80 border border-ink-border hover:border-purple-500/50 shadow-lg shadow-black/20 transition-all text-left group focus:outline-none"
+                        class="flex items-center gap-3 px-4 py-3 rounded-card bg-ink-950/80 border border-ink-border hover:border-purple-500/50 shadow-lg shadow-black/10 transition-all text-left group focus:outline-none"
                         title="{{ trans('shop.tabs.exchange') }}">
                     <div class="w-10 h-10 rounded-full bg-purple-500/15 border border-purple-500/30 group-hover:border-purple-500/60 flex items-center justify-center shrink-0 transition-colors">
                         <svg class="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                         </svg>
                     </div>
-                    <div>
+                    <div class="min-w-0">
                         <div class="text-[10px] font-mono uppercase tracking-wider text-stone-600 dark:text-mist flex items-center gap-1">
-                            <span>{{ trans('shop.exchange.available_points') }}</span>
-                            <span class="text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+                            <span class="truncate">{{ trans('shop.exchange.available_points') }}</span>
+                            <span class="text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform shrink-0">&rarr;</span>
                         </div>
-                        <div class="font-mono text-xl sm:text-2xl font-bold text-paper leading-none mt-0.5 flex items-baseline gap-1">
+                        <div class="font-mono text-xl sm:text-2xl font-bold text-paper leading-none mt-0.5 flex items-baseline gap-1 whitespace-nowrap">
                             <span>{{ number_format($user->available_points) }}</span>
                             <span class="text-xs text-stone-600 dark:text-mist font-sans font-normal">{{ trans('shop.points') }}</span>
                         </div>

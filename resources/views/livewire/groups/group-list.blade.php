@@ -8,7 +8,7 @@
                 @auth
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-pill text-xs font-mono {{ ($myMembershipLimit !== null && $myJoinedCount >= $myMembershipLimit) ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'bg-ink-800 text-mist border border-ink-border' }}">
                         <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span>{{ __('site.groups.membership') }}:</span>
+                        <span>{{ rtrim(__('site.groups.membership'), ': ') }}:</span>
                         <strong class="text-paper">{{ $myJoinedCount }} / {{ $myMembershipLimit === null ? '∞' : $myMembershipLimit }}</strong>
                     </span>
                 @endauth
@@ -17,8 +17,8 @@
         </div>
         <button wire:click="openCreateModal"
             class="ks-btn-primary text-xs py-2 px-3.5 inline-flex items-center gap-1.5 shadow-sm shrink-0">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            <span>{{ __('site.groups.create_btn') }}</span>
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            <span>{{ ltrim(__('site.groups.create_btn'), '+ ') }}</span>
         </button>
     </div>
 
@@ -27,44 +27,44 @@
     <div class="ks-panel bg-ink-900 border border-ink-border p-4 sm:p-5 space-y-3.5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <!-- Privacy & Membership Tabs -->
-            <div class="flex items-center gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto no-scrollbar">
+            <div class="flex items-center gap-1 sm:gap-1.5 p-1 bg-ink-950/80 border border-ink-border rounded-btn overflow-x-auto no-scrollbar max-w-full">
                 <button type="button" wire:click="setAllFilters"
-                    class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ ($privacyFilter === 'all' && $membershipFilter === 'all') ? 'bg-ink-800 text-amber-400 border border-ink-border shadow-sm' : 'text-mist hover:text-paper' }}">
+                    class="px-2.5 sm:px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {{ ($privacyFilter === 'all' && $membershipFilter === 'all') ? 'bg-ink-800 text-amber-600 dark:text-amber-400 border border-ink-border shadow-sm' : 'text-mist hover:text-paper' }}">
                     <span>{{ __('site.groups.all') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] {{ ($privacyFilter === 'all' && $membershipFilter === 'all') ? 'bg-ink-900 text-amber-400' : 'bg-ink-800 text-mist' }}">
+                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] {{ ($privacyFilter === 'all' && $membershipFilter === 'all') ? 'bg-ink-900 text-amber-600 dark:text-amber-400' : 'bg-ink-800 text-mist' }}">
                         {{ $totalGroupsCount }}
                     </span>
                 </button>
                 <button type="button" wire:click="setPrivacyFilter('public')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $privacyFilter === 'public' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'text-mist hover:text-emerald-400' }}">
-                    <svg class="w-3 h-3 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    class="px-2.5 sm:px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {{ $privacyFilter === 'public' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' : 'text-mist hover:text-emerald-600 dark:hover:text-emerald-400' }}">
+                    <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                     <span>{{ __('site.groups.public') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-emerald-500/20 text-emerald-400">
+                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
                         {{ $publicGroupsCount }}
                     </span>
                 </button>
                 <button type="button" wire:click="setPrivacyFilter('private')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $privacyFilter === 'private' ? 'bg-[#C1392B]/15 text-rose-300 border border-rose-500/30' : 'text-mist hover:text-rose-300' }}">
-                    <svg class="w-3 h-3 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    class="px-2.5 sm:px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {{ $privacyFilter === 'private' ? 'bg-[#C1392B]/15 text-rose-700 dark:text-rose-300 border border-rose-500/30' : 'text-mist hover:text-rose-600 dark:hover:text-rose-300' }}">
+                    <svg class="w-3 h-3 text-rose-500 dark:text-rose-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <span>{{ __('site.groups.private') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-rose-500/20 text-rose-300">
+                    <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-rose-500/20 text-rose-700 dark:text-rose-300">
                         {{ $privateGroupsCount }}
                     </span>
                 </button>
                 @auth
                     <button type="button" wire:click="setMembershipFilter('joined')"
-                        class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $membershipFilter === 'joined' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-amber-400' }}">
-                        <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        class="px-2.5 sm:px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {{ $membershipFilter === 'joined' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30' : 'text-mist hover:text-amber-600 dark:hover:text-amber-400' }}">
+                        <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span>{{ __('site.groups.joined') }}</span>
-                        <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-amber-500/20 text-amber-400">
+                        <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400">
                             {{ $myJoinedCount }}
                         </span>
                     </button>
                     <button type="button" wire:click="setMembershipFilter('my_groups')"
-                        class="px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap {{ $membershipFilter === 'my_groups' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-amber-400' }}">
-                        <svg class="w-3 h-3 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                        class="px-2.5 sm:px-3 py-1.5 rounded-btn text-xs font-mono font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {{ $membershipFilter === 'my_groups' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30' : 'text-mist hover:text-amber-600 dark:hover:text-amber-400' }}">
+                        <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
                         <span>{{ __('site.groups.my_groups') }}</span>
-                        <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-amber-500/20 text-amber-400">
+                        <span class="px-1.5 py-0.2 rounded-pill text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400">
                             {{ $myGroupCount }}
                         </span>
                     </button>
@@ -88,10 +88,10 @@
 
         <!-- 2-qator: Saralash va filtrlarni tozalash -->
         <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-ink-border text-xs font-mono">
-            <div class="flex items-center gap-2">
-                <span class="text-mist">{{ __('site.groups.sort_by') }}</span>
+            <div class="flex items-center gap-2 min-w-0 max-w-full">
+                <span class="text-mist shrink-0 whitespace-nowrap">{{ __('site.groups.sort_by') }}</span>
                 <select wire:model="sortBy"
-                    class="px-2.5 py-1 bg-ink-950/80 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none">
+                    class="px-2.5 py-1 bg-ink-950/80 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none min-w-0">
                     <option value="latest">{{ __('site.groups.sort_latest') }}</option>
                     <option value="popular">{{ __('site.groups.sort_popular') }}</option>
                     <option value="name">{{ __('site.groups.sort_name') }}</option>
@@ -195,9 +195,9 @@
                     @else
                         @if($group->is_private)
                             <button wire:click="openJoinModal({{ $group->id }})"
-                                class="px-3 py-1.5 rounded-btn bg-[#C1392B]/15 hover:bg-[#C1392B]/25 text-rose-300 border border-rose-500/30 text-xs font-mono font-medium transition-all flex items-center gap-1.5 shrink-0">
-                                <svg class="w-3 h-3 text-rose-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                <span>{{ __('site.groups.join_with_password') }}</span>
+                                class="px-3 py-1.5 rounded-btn bg-[#C1392B]/15 hover:bg-[#C1392B]/25 text-rose-600 dark:text-rose-300 border border-rose-500/30 text-xs font-mono font-medium transition-all flex items-center gap-1.5 shrink-0">
+                                <svg class="w-3 h-3 text-rose-600 dark:text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                <span>{{ ltrim(__('site.groups.join_with_password'), '🔒 ') }}</span>
                             </button>
                         @else
                             <button wire:click="join({{ $group->id }})"
