@@ -639,4 +639,59 @@ class TelegramBotTest extends TestCase
         $res2->assertSessionHasErrors('code');
         Http::assertSentCount(1);
     }
+
+    public function test_ban_notification_includes_appeal_link_and_contact_highlights_banned_users(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 35]], 200),
+        ]);
+
+        $admin = User::factory()->create([
+            'name' => 'Admin',
+            'role' => 'admin',
+        ]);
+        try {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+            $admin->assignRole('admin');
+        } catch (\Throwable $e) {}
+
+        $bannedUser = User::factory()->create([
+            'name'        => 'Jasur',
+            'username'    => 'jasur_reader',
+            'telegram_id' => 800111,
+        ]);
+
+        // 1. Foydalanuvchiga ban berilganda Telegram xabarda apellyatsiya havolasi (/contact?appeal=1) borligini tekshiramiz
+        $bannedUser->ban('1_day', 'Xato tushunmovchilik');
+
+        Http::assertSent(function ($request) use ($bannedUser) {
+            return (int) ($request['chat_id'] ?? 0) === 800111
+                && str_contains($request['text'], 'Noto\'g\'ri ban berildimi?')
+                && str_contains($request['text'], '/contact?appeal=1&user_id=' . $bannedUser->id);
+        });
+
+        // 2. Ban olgan foydalanuvchi Aloqa bo'limi orqali apellyatsiya yuboradi
+        $contactResponse = $this->actingAs($bannedUser)->post(route('contact.send'), [
+            'is_appeal'      => '1',
+            'appeal_user_id' => $bannedUser->id,
+            'name'           => $bannedUser->name,
+            'email'          => '@jasur_reader',
+            'subject'        => '⚖️ Noto\'g\'ri berilgan ban bo\'yicha apellyatsiya',
+            'message'        => 'Assalomu alaykum, men haqorat qilmagan edim, iltimos banni yeching.',
+        ]);
+
+        $contactResponse->assertRedirect(route('contact'));
+
+        $this->assertDatabaseHas('reports', [
+            'reporter_id'      => $bannedUser->id,
+            'reported_user_id' => $bannedUser->id,
+            'source'           => 'Ban Apellyatsiyasi',
+        ]);
+
+        // 3. Admin /admin/reports?filter=banned sahifasiga kirganda ban olgan foydalanuvchi murojaati alohida ajratib ko'rsatiladi
+        $adminPage = $this->actingAs($admin)->get(route('admin.reports.index', ['filter' => 'banned']));
+        $adminPage->assertStatus(200);
+        $adminPage->assertSee('BAN OLGAN FOYDALANUVCHI');
+        $adminPage->assertSee('Assalomu alaykum, men haqorat qilmagan edim');
+    }
 }

@@ -107,7 +107,26 @@
                         // "Shikoyat rejimi" faqat chatdagi 🚩 tugmasidan kelgan haqiqiy ma'lumotlar
                         // (reported_user_id) bilan, bo'sh footer havolasi bilan emas, faollashadi.
                         $isReport = request('report') == 1 && request('reported_user_id');
-                        $defaultSubject = $isReport ? "🚩 Qoidabuzarlik / Haqorat bo'yicha shikoyat (#" . request('reported_user_id') . ")" : old('subject');
+
+                        // Ban bo'yicha apellyatsiya (e'tiroz) rejimi
+                        $appealUser = null;
+                        if (auth()->check() && auth()->user()->isBanned()) {
+                            $appealUser = auth()->user();
+                        } elseif (request()->filled('user_id')) {
+                            $candidate = \App\Models\User::find(request('user_id'));
+                            if ($candidate && $candidate->isBanned()) {
+                                $appealUser = $candidate;
+                            }
+                        }
+                        $isAppeal = !$isReport && (request('appeal') == 1 || $appealUser !== null);
+
+                        if ($isReport) {
+                            $defaultSubject = "🚩 Qoidabuzarlik / Haqorat bo'yicha shikoyat (#" . request('reported_user_id') . ")";
+                        } elseif ($isAppeal) {
+                            $defaultSubject = "⚖️ Noto'g'ri berilgan ban bo'yicha apellyatsiya" . ($appealUser ? " (#{$appealUser->id} - @{$appealUser->username})" : "");
+                        } else {
+                            $defaultSubject = old('subject');
+                        }
                         
                         $defaultMessage = old('message');
                         if ($isReport && empty($defaultMessage)) {
@@ -119,10 +138,13 @@
                                 . "💬 Qoidabuzar yozgan xabar matni:\n\"" . request('message_text', '') . "\"\n\n"
                                 . "⚠️ Shikoyat sababi: Chatda haqoratli/nojo'ya so'zlar ishlatildi. Iltimos, ushbu foydalanuvchiga nisbatan chora ko'rishingizni (ban berishingizni) so'rayman!";
                         }
+
+                        $prefillName = old('name', auth()->user()?->name ?? $appealUser?->name);
+                        $prefillContact = old('email', auth()->user()?->email ?? auth()->user()?->phone ?? $appealUser?->email ?? $appealUser?->phone ?? ($appealUser ? '@' . $appealUser->username : ''));
                     @endphp
 
                     @if($isReport)
-                        <div class="p-4 rounded-panel bg-amber-500/10 border border-amber-500/30 text-amber-300 space-y-1.5 animate-fade-in">
+                        <div class="mb-6 p-4 rounded-panel bg-amber-500/10 border border-amber-500/30 text-amber-300 space-y-1.5 animate-fade-in">
                             <div class="flex items-center gap-2 font-bold text-xs font-mono text-amber-400">
                                 <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
                                 <span>Qoidabuzarlik bo'yicha tezkor shikoyat tayyorlandi!</span>
@@ -131,12 +153,35 @@
                                 Qoidabuzar foydalanuvchi ma'lumotlari va u yozgan nojo'ya xabar shaklga avtomatik to'ldirildi. Ma'lumotlarni ko'rib chiqing va ma'muriyatga jo'natish uchun pastdagi tugmani bosing.
                             </p>
                         </div>
+                    @elseif($isAppeal)
+                        <div class="mb-6 p-4 rounded-panel bg-rose-500/10 border border-rose-500/35 text-rose-200 space-y-2 animate-fade-in">
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <div class="flex items-center gap-2 font-bold text-xs font-mono text-rose-300">
+                                    <span>⚖️ Noto'g'ri berilgan ban bo'yicha murojaat (Apellyatsiya)</span>
+                                </div>
+                                @if($appealUser)
+                                    <span class="px-2 py-0.5 rounded-badge bg-rose-500/20 border border-rose-500/40 text-[10px] font-mono font-bold text-rose-200">
+                                        🚫 Qolgan vaqt: {{ $appealUser->ban_remaining }}
+                                    </span>
+                                @endif
+                            </div>
+                            @if($appealUser && $appealUser->ban_reason)
+                                <p class="text-xs text-rose-300 font-mono">
+                                    Ko'rsatilgan sabab: "{{ $appealUser->ban_reason }}"
+                                </p>
+                            @endif
+                            <p class="text-xs text-mist font-sans leading-relaxed">
+                                Agar hisobingizga xatolik bilan yoki nohaq ban berilgan deb hisoblasangiz, quyida sababini batafsil yozib qoldiring. Sizning xabaringiz ma'muriyatga <strong class="text-rose-300">«🚫 Ban olgan foydalanuvchi murojaati»</strong> sifatida alohida ajratib ko'rsatiladi.
+                            </p>
+                        </div>
                     @endif
 
                     <form action="{{ route('contact.send') }}" method="POST" class="space-y-6">
                         @csrf
 
                         <input type="hidden" name="is_report" value="{{ $isReport ? '1' : '0' }}">
+                        <input type="hidden" name="is_appeal" value="{{ $isAppeal ? '1' : '0' }}">
+                        <input type="hidden" name="appeal_user_id" value="{{ $appealUser?->id ?? request('user_id') }}">
                         <input type="hidden" name="reported_user_id" value="{{ request('reported_user_id') }}">
                         <input type="hidden" name="source" value="{{ request('source') }}">
                         <input type="hidden" name="link" value="{{ request('url') }}">
@@ -144,16 +189,16 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_name') }}</label>
-                                <input type="text" name="name" value="{{ old('name', auth()->user()?->name) }}" required 
+                                <input type="text" name="name" value="{{ $prefillName }}" required 
                                        placeholder="Ali Valiyev"
                                        class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
                                 @error('name') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_email') }}</label>
-                                <input type="email" name="email" value="{{ old('email', auth()->user()?->email) }}" required 
-                                       placeholder="ali@misol.uz"
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">Email yoki Telefon / Username</label>
+                                <input type="text" name="email" value="{{ $prefillContact }}"
+                                       placeholder="+998 90 123 45 67 yoki ali@misol.uz"
                                        class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
                                 @error('email') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                             </div>
@@ -162,7 +207,7 @@
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_subject') }}</label>
                             <input type="text" name="subject" value="{{ old('subject', $defaultSubject) }}" required 
-                                   placeholder="{{ __('site.contact.form_subject_ph') }}"
+                                   placeholder="{{ $isAppeal ? 'Ban bo\'yicha apellyatsiya' : __('site.contact.form_subject_ph') }}"
                                    class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
                             @error('subject') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
@@ -170,7 +215,7 @@
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_message') }}</label>
                             <textarea name="message" rows="8" required 
-                                      placeholder="{{ __('site.contact.form_message_ph') }}"
+                                      placeholder="{{ $isAppeal ? 'Nima sababdan ban noto\'g\'ri berilgan deb hisoblaysiz? Batafsil yozib qoldiring...' : __('site.contact.form_message_ph') }}"
                                       class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors resize-none font-sans leading-relaxed">{{ $defaultMessage }}</textarea>
                             @error('message') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>

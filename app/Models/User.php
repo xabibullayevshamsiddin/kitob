@@ -465,14 +465,16 @@ class User extends Authenticatable implements MustVerifyEmail
             default   => 'Doimiy (butun umrga)',
         };
 
+        $appealUrl = url('/contact?appeal=1&user_id=' . $this->id);
+
         try {
             \App\Services\NotifyUser::send(
                 $this,
                 'system',
                 '🚫 Hisobingizga cheklov o\'rnatildi (Ban)',
-                "Muddat: {$durationLabel}. Sabab: {$finalReason}",
+                "Muddat: {$durationLabel}. Sabab: {$finalReason}. Noto'g'ri ban berilgan bo'lsa, Aloqa bo'limiga yozib qoldiring.",
                 '🚫',
-                '/dashboard'
+                '/contact?appeal=1&user_id=' . $this->id
             );
         } catch (\Throwable $e) {
             report($e);
@@ -491,15 +493,24 @@ class User extends Authenticatable implements MustVerifyEmail
                     . "• <b>Muddat:</b> {$durationLabel}\n"
                     . $untilText
                     . "• <b>Sabab:</b> {$safeReason}\n\n"
+                    . "⚖️ <b>Noto'g'ri ban berildimi?</b>\n"
+                    . "Agar sizga xatolik bilan yoki nohaq ban berilgan deb hisoblasangiz, mana bu joyga yozib qoldiring:\n"
+                    . "👉 <a href=\"{$appealUrl}\">📩 Aloqa bo'limiga yozish (Apellyatsiya)</a>\n\n"
                     . "<i>Cheklov muddati tugashi yoki ma'muriyat tomonidan olib tashlanishi bilan sizga darhol xabar yuboriladi.</i>";
+
+                $inlineKeyboard = [];
+                if (!str_contains($appealUrl, 'localhost') && !str_contains($appealUrl, '127.0.0.1')) {
+                    $inlineKeyboard[] = [
+                        ['text' => '📩 Noto\'g\'ri ban berildimi? (Aloqa)', 'url' => $appealUrl],
+                    ];
+                }
+                $inlineKeyboard[] = [
+                    ['text' => '⚙️ Bildirishnoma sozlamalari', 'callback_data' => 'cmd_settings'],
+                ];
 
                 \App\Jobs\SendTelegramNotificationJob::dispatch($this->id, $tgMessage, [
                     'reply_markup' => [
-                        'inline_keyboard' => [
-                            [
-                                ['text' => '⚙️ Bildirishnoma sozlamalari', 'callback_data' => 'cmd_settings'],
-                            ],
-                        ],
+                        'inline_keyboard' => $inlineKeyboard,
                     ],
                 ], 'ban_status');
             } catch (\Throwable $e) {

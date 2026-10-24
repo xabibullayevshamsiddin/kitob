@@ -99,7 +99,8 @@ Route::get('/contact', function () {
 Route::post('/contact', function (\Illuminate\Http\Request $req) {
     $req->validate([
         'name'    => 'required|string|max:100',
-        'email'   => 'required|email',
+        'email'   => 'nullable|string|max:150',
+        'subject' => 'nullable|string|max:250',
         'message' => 'required|string|max:4000',
     ]);
 
@@ -116,6 +117,67 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
 
         return redirect()->route('contact')->with('success', '🚩 Qoidabuzarlik bo\'yicha shikoyatingiz ma\'muriyatga yetkazildi! Moderatorlar tez orada tekshirib, tegishli chora (ban) ko\'rishadi.');
     }
+
+    // Yuboruvchi foydalanuvchini aniqlash (avtorizatsiya qilingan bo'lsa, yoki appeal_user_id / kontakt orqali)
+    $senderUser = auth()->user();
+
+    if (!$senderUser && $req->filled('appeal_user_id')) {
+        $senderUser = \App\Models\User::find($req->input('appeal_user_id'));
+    }
+
+    if (!$senderUser && $req->filled('email')) {
+        $contactInput = trim((string) $req->input('email'));
+        $cleanUsername = ltrim($contactInput, '@');
+        $normalizedPhone = \App\Support\PhoneNumber::normalize($contactInput);
+
+        $senderUser = \App\Models\User::where('email', $contactInput)
+            ->orWhere('username', strtolower($cleanUsername))
+            ->when($normalizedPhone, fn ($q) => $q->orWhere('phone', $normalizedPhone))
+            ->first();
+    }
+
+    $isBannedSender = ($senderUser && $senderUser->isBanned()) || $req->input('is_appeal') == '1';
+
+    if ($isBannedSender) {
+        $headerInfo = $senderUser
+            ? "👤 Foydalanuvchi: {$senderUser->name} (@{$senderUser->username}, ID: #{$senderUser->id})\n"
+              . "🚫 Ban holati: " . ($senderUser->isBanned() ? $senderUser->ban_remaining : 'Faol emas') . "\n"
+              . "⚠️ Ban sababi: " . ($senderUser->ban_reason ?? 'Ko\'rsatilmagan') . "\n"
+            : "👤 Yuboruvchi: " . $req->input('name') . ($req->filled('email') ? " (" . $req->input('email') . ")" : "") . "\n";
+
+        $fullContent = "[⚖️ BAN BO'YICHA APELLYATSIYA / MUROJAAT]\n"
+            . $headerInfo
+            . ($req->filled('subject') ? "📌 Mavzu: " . $req->input('subject') . "\n" : "")
+            . "\n💬 Murojaat matni:\n" . $req->input('message');
+
+        \App\Models\Report::create([
+            'reporter_id'      => $senderUser?->id ?? auth()->id(),
+            'reported_user_id' => $senderUser?->id ?? auth()->id(),
+            'source'           => 'Ban Apellyatsiyasi',
+            'message_content'  => $fullContent,
+            'link'             => null,
+            'reason'           => $req->input('subject') ?: '⚖️ Noto\'g\'ri ban bo\'yicha apellyatsiya',
+            'status'           => 'pending',
+        ]);
+
+        return redirect()->route('contact')->with('success', '⚖️ Ban bo\'yicha apellyatsiyangiz (murojaatingiz) ma\'muriyatga yuborildi! Moderatorlar tez orada ko\'rib chiqib, natijasini ma\'lum qilishadi.');
+    }
+
+    // Oddiy aloqa xabarini ham ma'muriyat "Aloqa va shikoyatlar" bo'limiga saqlaymiz
+    $contactContent = "[✉️ ALOQA BO'LIMIDAN XABAR]\n"
+        . "👤 Yuboruvchi: " . $req->input('name') . ($req->filled('email') ? " (" . $req->input('email') . ")" : "") . "\n"
+        . ($req->filled('subject') ? "📌 Mavzu: " . $req->input('subject') . "\n" : "")
+        . "\n💬 Xabar:\n" . $req->input('message');
+
+    \App\Models\Report::create([
+        'reporter_id'      => $senderUser?->id ?? auth()->id(),
+        'reported_user_id' => $senderUser?->id ?? auth()->id(),
+        'source'           => 'Aloqa bo\'limi',
+        'message_content'  => $contactContent,
+        'link'             => null,
+        'reason'           => $req->input('subject') ?: '✉️ Aloqa xabari',
+        'status'           => 'pending',
+    ]);
 
     return back()->with('success', 'Xabaringiz qabul qilindi! Tez orada javob beramiz.');
 })->name('contact.send');
@@ -1032,9 +1094,33 @@ Route::prefix('admin')
         ->name('users.telegram-message');
 
     // Shikoyatlar (Reports) boshqaruvi
-    Route::get('/reports', function () {
-        $reports = \App\Models\Report::with(['reporter', 'reportedUser'])->latest()->paginate(20);
-        return view('admin.reports.index', compact('reports'));
+    Route::get('/reports', function (\Illuminate\Http\Request $request) {
+        $filter = (string) $request->query('filter', 'all');
+
+        $bannedAppealsQuery = fn ($q) => $q->where(function ($sub) {
+            $sub->where('source', 'Ban Apellyatsiyasi')
+                ->orWhereHas('reporter', fn ($u) => $u->where('is_banned', true))
+                ->orWhere(function ($s2) {
+                    $s2->where('source', 'Aloqa bo\'limi')
+                        ->whereHas('reportedUser', fn ($u) => $u->where('is_banned', true));
+                });
+        });
+
+        $bannedAppealsCount = \App\Models\Report::tap($bannedAppealsQuery)->count();
+
+        $query = \App\Models\Report::with(['reporter', 'reportedUser']);
+
+        if ($filter === 'banned') {
+            $bannedAppealsQuery($query);
+        } elseif ($filter === 'reports') {
+            $query->whereNotIn('source', ['Ban Apellyatsiyasi', 'Aloqa bo\'limi']);
+        } elseif ($filter === 'contact') {
+            $query->where('source', 'Aloqa bo\'limi');
+        }
+
+        $reports = $query->latest()->paginate(20)->withQueryString();
+
+        return view('admin.reports.index', compact('reports', 'filter', 'bannedAppealsCount'));
     })->name('reports.index');
 
     Route::post('/reports/{report}/resolve', function (\App\Models\Report $report) {

@@ -74,7 +74,7 @@
                     <div>
                         <h4 class="text-sm font-bold text-rose-300">Sizning profilingiz cheklangan (Bloklangan)</h4>
                         <p class="text-xs text-mist mt-0.5">
-                            Qoidabuzarlik tufayli chat va jamoaviy bo'limlarda xabar yuborish huquqingiz cheklangan.
+                            Qoidabuzarlik tufayli chat va jamoaviy bo'limlarda xabar yuborish huquqingiz cheklangan. Agar sizga noto'g'ri ban berilgan bo'lsa, Aloqa bo'limiga yozib qoldiring.
                         </p>
                         <div class="mt-2 flex flex-wrap items-center gap-3 text-xs">
                             <span class="px-2 py-0.5 rounded-badge bg-ink-950 border border-rose-500/30 font-mono text-rose-300 text-[11px]">
@@ -88,8 +88,9 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('contact') }}" class="ks-btn-ghost py-1.5 px-3 text-xs text-rose-300 border-rose-500/30 hover:border-rose-500/50 flex-shrink-0">
-                    Bog'lanish
+                <a href="{{ route('contact', ['appeal' => 1, 'user_id' => auth()->id()]) }}" class="ks-btn-ghost py-2 px-3.5 text-xs font-semibold text-rose-200 bg-rose-500/15 border-rose-500/40 hover:bg-rose-500/25 hover:border-rose-500/60 flex-shrink-0 flex items-center gap-1.5">
+                    <span>📩 Noto'g'ri ban berildimi? (Aloqa)</span>
+                    <span>→</span>
                 </a>
             </div>
         @endif

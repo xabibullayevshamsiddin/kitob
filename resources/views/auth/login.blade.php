@@ -9,11 +9,20 @@
 </div>
 
 @if ($errors->any())
-    <div class="mb-4 p-3 bg-ink-950 border border-rose-500/30 text-rose-300 rounded-card text-xs space-y-1">
+    <div class="mb-4 p-3 bg-ink-950 border border-rose-500/30 text-rose-300 rounded-card text-xs space-y-2">
         @foreach ($errors->all() as $error)
-            <div class="flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>{{ $error }}</span>
+            <div class="flex items-start gap-2">
+                <svg class="w-3.5 h-3.5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="space-y-1.5">
+                    <span>{{ $error }}</span>
+                    @if(str_contains(mb_strtolower($error), 'bloklangan'))
+                        <div>
+                            <a href="{{ route('contact', ['appeal' => 1]) }}" class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400 hover:text-amber-300 underline">
+                                <span>⚖️ Noto'g'ri ban berildimi? Aloqa bo'limiga yozib qoldiring →</span>
+                            </a>
+                        </div>
+                    @endif
+                </div>
             </div>
         @endforeach
     </div>

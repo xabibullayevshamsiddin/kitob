@@ -101,7 +101,7 @@ class FortifyServiceProvider extends ServiceProvider
 
             // 3. Parolni tekshirish
             if ($user && !empty($user->password) && \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
-                if ($user->is_banned) {
+                if ($user->isBanned()) {
                     $reason = $user->ban_reason ? ": {$user->ban_reason}" : '';
                     throw \Illuminate\Validation\ValidationException::withMessages([
                         'email' => "Hisobingiz ma'muriyat tomonidan bloklangan{$reason}.",

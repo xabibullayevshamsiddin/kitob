@@ -433,7 +433,25 @@
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                 </button>
             </form>
-            @error('message') <p class="text-rose-300 text-xs mt-1 font-mono">{{ $message }}</p> @enderror
+            @if(auth()->check() && auth()->user()->isBanned())
+                <div class="mt-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="space-y-0.5">
+                        <p class="text-rose-300 font-mono">
+                            Siz bloklangansiz! Qolgan vaqt: {{ auth()->user()->ban_remaining }}. Sabab: {{ auth()->user()->ban_reason ?? 'Qoidabuzarlik' }}
+                        </p>
+                        <p class="text-[11px] text-mist font-sans">
+                            ⚖️ Agar sizga noto'g'ri ban berilgan bo'lsa, mana bu joyga yozib qoldiring:
+                        </p>
+                    </div>
+                    <a href="{{ route('contact', ['appeal' => 1, 'user_id' => auth()->id()]) }}"
+                       class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 font-bold text-xs shrink-0 transition-colors">
+                        <span>📩 Aloqa bo'limi</span>
+                        <span>→</span>
+                    </a>
+                </div>
+            @elseif($errors->has('message'))
+                @error('message') <p class="text-rose-300 text-xs mt-1 font-mono">{{ $message }}</p> @enderror
+            @endif
         @else
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-ink-900 rounded-card border border-ink-border">
                 <div class="flex items-center gap-2 text-xs text-mist font-sans">
