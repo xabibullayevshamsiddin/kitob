@@ -67,7 +67,7 @@ class TelegramBotService
 
         // Agar foydalanuvchi o'z kontaktini ulashgan bo'lsa (Telefon raqamni tasdiqlash)
         if (isset($message['contact'])) {
-            $this->handleContact($chatId, $userId, $message['contact']);
+            $this->handleContact($chatId, $userId, $message['contact'], $from);
             return;
         }
 
@@ -101,9 +101,13 @@ class TelegramBotService
             return;
         }
 
-        // 2.1. Menyuni yopish (klaviaturani yashirish)
+        // 2.1. Menyuni yopish (klaviaturani yashirish) yoki Bekor qilish
         if (in_array($firstWord, ['/close', '/yopish'])
             || in_array($clean, ['menyuni yopish', 'yopish', 'close', 'menyu yopish', 'bekor qilish', 'bekor', 'cancel'])) {
+            Cache::forget("tg_reg_token_{$userId}");
+            Cache::forget("tg_reg_prompt_just_sent_{$userId}");
+            Cache::forget("tg_user_verifying_{$userId}");
+            Cache::forget("tg_verify_prompt_just_sent_{$userId}");
             $this->handleCloseMenuCommand($chatId);
             return;
         }
@@ -179,6 +183,10 @@ class TelegramBotService
 
         // 13. Bekor qilish (Menyuni yopish)
         if (in_array($clean, ['bekor qilish', 'bekor', 'cancel'])) {
+            Cache::forget("tg_reg_token_{$userId}");
+            Cache::forget("tg_reg_prompt_just_sent_{$userId}");
+            Cache::forget("tg_user_verifying_{$userId}");
+            Cache::forget("tg_verify_prompt_just_sent_{$userId}");
             $this->handleCloseMenuCommand($chatId);
             return;
         }
@@ -205,12 +213,12 @@ class TelegramBotService
             $pending = Cache::get("pending_reg_{$token}");
 
             if ($pending) {
-                // Agar bu foydalanuvchi allaqachon ro'yxatdan o'tib, telefonini tasdiqlagan bo'lsa
-                $existingUser = User::where('telegram_id', $userId)
-                    ->orWhere('phone', $pending['phone'])
+                // Agar aynan shu kiritilgan telefon raqami allaqachon tasdiqlangan bo'lsa
+                $existingUser = User::where('phone', $pending['phone'])
+                    ->whereNotNull('phone_verified_at')
                     ->first();
 
-                if ($existingUser && $existingUser->phone_verified_at) {
+                if ($existingUser) {
                     $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$name}</b>! 👋📚\n\nSizning telefon raqamingiz allaqachon muvaffaqiyatli tasdiqlangan va hisobingiz faol! ✅\n\nPastdagi menyu yoki to'rtburchak (⊞) tugmasi orqali kerakli bo'limni tanlashingiz mumkin 👇", [
                         'reply_markup' => $this->getMainMenuKeyboard(),
                     ]);
@@ -218,17 +226,11 @@ class TelegramBotService
                 }
 
                 Cache::put("tg_reg_token_{$userId}", $token, now()->addMinutes(15));
+                Cache::put("tg_reg_prompt_just_sent_{$userId}", true, now()->addSeconds(15));
                 $masked = PhoneNumber::mask($pending['phone']);
 
-                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$pending['name']}</b>! 👋📚\n\nPlatformada ro'yxatdan o'tish uchun <b>{$masked}</b> telefon raqamingizni tasdiqlashingiz lozim.\n\nIltimos, pastdagi <b>«📲 Raqamni ulashish (Tasdiqlash)»</b> tugmasini bosing:", [
-                    'reply_markup' => [
-                        'keyboard' => [
-                            [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]],
-                            [['text' => '❌ Bekor qilish']]
-                        ],
-                        'resize_keyboard'   => true,
-                        'one_time_keyboard' => true,
-                    ]
+                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$pending['name']}</b>! 👋📚\n\nPlatformada ro'yxatdan o'tish uchun <b>{$masked}</b> telefon raqamingizni tasdiqlashingiz lozim.\n\nIltimos, pastdagi <b>«📲 Raqamni ulashish (Tasdiqlash)»</b> tugmasini bosing 👇", [
+                    'reply_markup' => $this->getContactRequestKeyboard(),
                 ]);
                 return;
             } else {
@@ -271,16 +273,10 @@ class TelegramBotService
 
             if ($appUserId) {
                 Cache::put("tg_user_verifying_{$userId}", $appUserId, now()->addMinutes(15));
+                Cache::put("tg_verify_prompt_just_sent_{$userId}", true, now()->addSeconds(12));
 
-                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$name}</b>! 👋\n\nPlatformadagi hisobingiz uchun telefon raqamingizni tasdiqlashga tayyormiz.\n\nIltimos, pastdagi <b>«📲 Raqamni ulashish»</b> tugmasini bosing:", [
-                    'reply_markup' => [
-                        'keyboard' => [
-                            [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]],
-                            [['text' => '❌ Bekor qilish']]
-                        ],
-                        'resize_keyboard'   => true,
-                        'one_time_keyboard' => true,
-                    ]
+                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$name}</b>! 👋\n\nPlatformadagi hisobingiz uchun telefon raqamingizni tasdiqlashga tayyormiz.\n\nIltimos, pastdagi <b>«📲 Raqamni ulashish (Tasdiqlash)»</b> tugmasini bosing:", [
+                    'reply_markup' => $this->getContactRequestKeyboard(),
                 ]);
                 return;
             } else {
@@ -336,6 +332,30 @@ class TelegramBotService
             }
         }
 
+        // Agar foydalanuvchi hozirgina (oxirgi 12 soniyada) /start reg_... yoki /start verify_... orqali kirgan bo'lsa
+        // va Telegram ketidan ikkinchi oddiy /start yuborgan bo'lsa — Raqamni ulashish tugmasini ustidan bosib yubormaymiz!
+        if ($payload === '') {
+            if (Cache::has("tg_reg_prompt_just_sent_{$userId}") || Cache::has("tg_verify_prompt_just_sent_{$userId}")) {
+                return;
+            }
+
+            $activeRegToken = Cache::get("tg_reg_token_{$userId}");
+            if ($activeRegToken && ($pending = Cache::get("pending_reg_{$activeRegToken}"))) {
+                $masked = PhoneNumber::mask($pending['phone']);
+                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$pending['name']}</b>! 👋📚\n\nPlatformada ro'yxatdan o'tishni yakunlash uchun <b>{$masked}</b> telefon raqamingizni tasdiqlang.\n\nPastdagi <b>«📲 Raqamni ulashish (Tasdiqlash)»</b> tugmasini bosing 👇", [
+                    'reply_markup' => $this->getContactRequestKeyboard(),
+                ]);
+                return;
+            }
+
+            if (Cache::has("tg_user_verifying_{$userId}")) {
+                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$name}</b>! 👋\n\nTelefon raqamingizni tasdiqlash uchun pastdagi <b>«📲 Raqamni ulashish (Tasdiqlash)»</b> tugmasini bosing 👇", [
+                    'reply_markup' => $this->getContactRequestKeyboard(),
+                ]);
+                return;
+            }
+        }
+
         // 3. Standart salomlashuv
         $appUrl = config('app.url', 'https://kitob-9y1h.onrender.com');
         $miniAppUrl = config('telegram.mini_app_url', "{$appUrl}/tg-app");
@@ -376,9 +396,24 @@ class TelegramBotService
     }
 
     /**
+     * Telefon raqamni ulashish klaviaturasi (ReplyKeyboardMarkup).
+     */
+    public function getContactRequestKeyboard(): array
+    {
+        return [
+            'keyboard' => [
+                [['text' => '📲 Raqamni ulashish (Tasdiqlash)', 'request_contact' => true]],
+                [['text' => '❌ Bekor qilish']],
+            ],
+            'resize_keyboard'   => true,
+            'one_time_keyboard' => false,
+        ];
+    }
+
+    /**
      * Foydalanuvchi telefon raqamini yuborganda.
      */
-    protected function handleContact(int|string $chatId, int|string $userId, array $contact): void
+    protected function handleContact(int|string $chatId, int|string $userId, array $contact, array $from = []): void
     {
         $contactUserId = $contact['user_id'] ?? null;
         $rawPhone = $contact['phone_number'] ?? null;
@@ -398,7 +433,7 @@ class TelegramBotService
         }
 
         // 1. Yangi ro'yxatdan o'tish (Registration verification)
-        $regToken = Cache::get("tg_reg_token_{$userId}");
+        $regToken = Cache::get("tg_reg_token_{$userId}") ?: Cache::get("pending_reg_token_by_phone_{$normalized}");
         if ($regToken) {
             $pending = Cache::get("pending_reg_{$regToken}");
             if ($pending) {
@@ -413,20 +448,36 @@ class TelegramBotService
                 User::where('telegram_id', $userId)
                     ->update(['telegram_id' => null, 'telegram_username' => null]);
 
-                $user = User::create([
-                    'name'              => $pending['name'],
-                    'username'          => $pending['username'],
-                    'email'             => $pending['email'] ?? null,
-                    'phone'             => $pending['phone'],
-                    'password'          => $pending['password'],
-                    'phone_verified_at' => now(),
-                    'telegram_id'       => $userId,
-                    'telegram_username' => $from['username'] ?? null,
-                    'telegram_linked_at'=> now(),
-                    'role'              => 'reader',
-                    'total_points'      => 0,
-                    'coin_balance'      => $welcomeCoins,
-                ]);
+                // Agar shu telefon raqami bilan avval tasdiqlanmagan yozuv bo'lsa, uni yangilaymiz yoki yangi ochamiz
+                $existingByPhone = User::where('phone', $pending['phone'])->first();
+                if ($existingByPhone) {
+                    $existingByPhone->update([
+                        'name'              => $pending['name'],
+                        'username'          => $pending['username'],
+                        'email'             => $pending['email'] ?? $existingByPhone->email,
+                        'password'          => $pending['password'],
+                        'phone_verified_at' => now(),
+                        'telegram_id'       => $userId,
+                        'telegram_username' => $from['username'] ?? $existingByPhone->telegram_username,
+                        'telegram_linked_at'=> now(),
+                    ]);
+                    $user = $existingByPhone;
+                } else {
+                    $user = User::create([
+                        'name'              => $pending['name'],
+                        'username'          => $pending['username'],
+                        'email'             => $pending['email'] ?? null,
+                        'phone'             => $pending['phone'],
+                        'password'          => $pending['password'],
+                        'phone_verified_at' => now(),
+                        'telegram_id'       => $userId,
+                        'telegram_username' => $from['username'] ?? null,
+                        'telegram_linked_at'=> now(),
+                        'role'              => 'reader',
+                        'total_points'      => 0,
+                        'coin_balance'      => $welcomeCoins,
+                    ]);
+                }
 
                 if ($welcomeCoins > 0) {
                     try {
@@ -459,6 +510,7 @@ class TelegramBotService
 
                 Cache::put("pending_reg_completed_{$regToken}", $user->id, now()->addMinutes(10));
                 Cache::forget("tg_reg_token_{$userId}");
+                Cache::forget("tg_reg_prompt_just_sent_{$userId}");
 
                 $this->client->sendMessage($chatId, "Tabriklaymiz, <b>{$pending['name']}</b>! 🎉\n\nTelefon raqamingiz muvaffaqiyatli tasdiqlandi va hisobingiz faollashtirildi!\n\nSaytdagi sahifangiz avtomatik ochiladi. Xush kelibsiz! ✅\n\nPastdagi to'rtburchak (⊞) menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
                     'reply_markup' => $this->getMainMenuKeyboard(),
@@ -505,6 +557,9 @@ class TelegramBotService
                 'phone_verified_at'  => now(),
                 'telegram_linked_at' => now(),
             ]);
+
+            Cache::forget("tg_user_verifying_{$userId}");
+            Cache::forget("tg_verify_prompt_just_sent_{$userId}");
 
             $authService = new TelegramAuthService();
             $bonusCoins = $authService->awardWelcomeBonusIfEligible($user->fresh());

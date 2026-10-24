@@ -371,4 +371,49 @@ class TelegramBotTest extends TestCase
                 && $request['reply_markup']['remove_keyboard'] === true;
         });
     }
+
+    public function test_start_reg_followed_by_plain_start_preserves_contact_request_keyboard(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 11]], 200),
+        ]);
+
+        $token = 'reg_token_new_user_123';
+        \Illuminate\Support\Facades\Cache::put("pending_reg_{$token}", [
+            'name'     => 'Ozoda',
+            'username' => 'ozoda_reader',
+            'phone'    => '+998935931523',
+            'password' => 'secret123',
+        ], now()->addMinutes(15));
+
+        $service = new TelegramBotService();
+
+        // 1. Deep-link /start reg_{token}
+        $service->handleUpdate([
+            'update_id' => 5020,
+            'message' => [
+                'chat' => ['id' => 777888],
+                'from' => ['id' => 777888, 'first_name' => 'Озода'],
+                'text' => "/start reg_{$token}",
+            ],
+        ]);
+
+        // 2. Ketidan darhol oddiy /start kelsa (Telegram auto-launch + Start bosilganda)
+        $service->handleUpdate([
+            'update_id' => 5021,
+            'message' => [
+                'chat' => ['id' => 777888],
+                'from' => ['id' => 777888, 'first_name' => 'Озода'],
+                'text' => '/start',
+            ],
+        ]);
+
+        // Faqat bitta xabar ketgan bo'lishi va unda request_contact tugmasi bo'lishi shart!
+        Http::assertSentCount(1);
+        Http::assertSent(function ($request) {
+            return $request['chat_id'] === 777888
+                && str_contains($request['text'], 'Raqamni ulashish (Tasdiqlash)')
+                && ($request['reply_markup']['keyboard'][0][0]['request_contact'] ?? false) === true;
+        });
+    }
 }
