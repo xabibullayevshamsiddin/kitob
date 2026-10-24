@@ -139,8 +139,12 @@
                                 . "⚠️ Shikoyat sababi: Chatda haqoratli/nojo'ya so'zlar ishlatildi. Iltimos, ushbu foydalanuvchiga nisbatan chora ko'rishingizni (ban berishingizni) so'rayman!";
                         }
 
-                        $prefillName = old('name', auth()->user()?->name ?? $appealUser?->name);
-                        $prefillContact = old('email', auth()->user()?->email ?? auth()->user()?->phone ?? $appealUser?->email ?? $appealUser?->phone ?? ($appealUser ? '@' . $appealUser->username : ''));
+                        $activeUser = auth()->user() ?? $appealUser;
+                        $isLockedIdentity = $activeUser !== null;
+                        $prefillName = $activeUser ? $activeUser->name : old('name');
+                        $prefillPhone = $activeUser
+                            ? ($activeUser->phone ?: ('@' . $activeUser->username))
+                            : old('phone', old('email'));
                     @endphp
 
                     @if($isReport)
@@ -188,19 +192,41 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">{{ __('site.contact.form_name') }}</label>
-                                <input type="text" name="name" value="{{ $prefillName }}" required 
-                                       placeholder="Ali Valiyev"
-                                       class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
+                                <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">
+                                    <span>{{ __('site.contact.form_name') }}</span>
+                                    @if($isLockedIdentity)
+                                        <span class="text-[10px] text-amber-400/90 font-mono normal-case flex items-center gap-1">🔒 O'zgartirib bo'lmaydi</span>
+                                    @endif
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="name" value="{{ $prefillName }}" required
+                                           @if($isLockedIdentity) readonly tabindex="-1" @endif
+                                           placeholder="Ali Valiyev"
+                                           class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm transition-colors {{ $isLockedIdentity ? 'pr-10 cursor-not-allowed opacity-80 select-none focus:outline-none' : 'focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400' }}">
+                                    @if($isLockedIdentity)
+                                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">🔒</span>
+                                    @endif
+                                </div>
                                 @error('name') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">Email yoki Telefon / Username</label>
-                                <input type="text" name="email" value="{{ $prefillContact }}"
-                                       placeholder="+998 90 123 45 67 yoki ali@misol.uz"
-                                       class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors">
-                                @error('email') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                                <label class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono mb-2">
+                                    <span>Telefon raqam</span>
+                                    @if($isLockedIdentity)
+                                        <span class="text-[10px] text-amber-400/90 font-mono normal-case flex items-center gap-1">🔒 O'zgartirib bo'lmaydi</span>
+                                    @endif
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="phone" value="{{ $prefillPhone }}"
+                                           @if($isLockedIdentity) readonly tabindex="-1" @else required @endif
+                                           placeholder="+998 90 123 45 67"
+                                           class="w-full px-4 py-3.5 rounded-xl bg-ink-950/80 border border-white/10 text-white font-mono placeholder-slate-500 text-sm transition-colors {{ $isLockedIdentity ? 'pr-10 cursor-not-allowed opacity-80 select-none focus:outline-none' : 'focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400' }}">
+                                    @if($isLockedIdentity)
+                                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">🔒</span>
+                                    @endif
+                                </div>
+                                @error('phone') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
 

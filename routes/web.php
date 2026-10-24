@@ -98,7 +98,8 @@ Route::get('/contact', function () {
 
 Route::post('/contact', function (\Illuminate\Http\Request $req) {
     $req->validate([
-        'name'    => 'required|string|max:100',
+        'name'    => 'nullable|string|max:100',
+        'phone'   => 'nullable|string|max:150',
         'email'   => 'nullable|string|max:150',
         'subject' => 'nullable|string|max:250',
         'message' => 'required|string|max:4000',
@@ -118,32 +119,40 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
         return redirect()->route('contact')->with('success', '🚩 Qoidabuzarlik bo\'yicha shikoyatingiz ma\'muriyatga yetkazildi! Moderatorlar tez orada tekshirib, tegishli chora (ban) ko\'rishadi.');
     }
 
-    // Yuboruvchi foydalanuvchini aniqlash (avtorizatsiya qilingan bo'lsa, yoki appeal_user_id / kontakt orqali)
+    // Yuboruvchi foydalanuvchini aniqlash (avtorizatsiya qilingan bo'lsa, yoki appeal_user_id / telefon orqali)
     $senderUser = auth()->user();
 
     if (!$senderUser && $req->filled('appeal_user_id')) {
         $senderUser = \App\Models\User::find($req->input('appeal_user_id'));
     }
 
-    if (!$senderUser && $req->filled('email')) {
-        $contactInput = trim((string) $req->input('email'));
-        $cleanUsername = ltrim($contactInput, '@');
-        $normalizedPhone = \App\Support\PhoneNumber::normalize($contactInput);
+    $rawContact = trim((string) ($req->input('phone') ?? $req->input('email') ?? ''));
 
-        $senderUser = \App\Models\User::where('email', $contactInput)
-            ->orWhere('username', strtolower($cleanUsername))
+    if (!$senderUser && $rawContact !== '') {
+        $cleanUsername = ltrim($rawContact, '@');
+        $normalizedPhone = \App\Support\PhoneNumber::normalize($rawContact);
+
+        $senderUser = \App\Models\User::where('username', strtolower($cleanUsername))
             ->when($normalizedPhone, fn ($q) => $q->orWhere('phone', $normalizedPhone))
+            ->orWhere('email', $rawContact)
             ->first();
     }
+
+    // Agar foydalanuvchi tizimda aniqlangan bo'lsa, ism va telefon raqamni o'zgartirib bo'lmaydigan qilib bazadan olamiz
+    $finalName = $senderUser ? $senderUser->name : (trim((string) $req->input('name')) ?: 'Mehmon');
+    $finalPhone = $senderUser
+        ? ($senderUser->phone ?: ('@' . $senderUser->username))
+        : ($rawContact ?: 'Ko\'rsatilmagan');
 
     $isBannedSender = ($senderUser && $senderUser->isBanned()) || $req->input('is_appeal') == '1';
 
     if ($isBannedSender) {
         $headerInfo = $senderUser
-            ? "👤 Foydalanuvchi: {$senderUser->name} (@{$senderUser->username}, ID: #{$senderUser->id})\n"
+            ? "👤 Foydalanuvchi: {$finalName} (@{$senderUser->username}, ID: #{$senderUser->id})\n"
+              . "📞 Telefon raqam: {$finalPhone}\n"
               . "🚫 Ban holati: " . ($senderUser->isBanned() ? $senderUser->ban_remaining : 'Faol emas') . "\n"
               . "⚠️ Ban sababi: " . ($senderUser->ban_reason ?? 'Ko\'rsatilmagan') . "\n"
-            : "👤 Yuboruvchi: " . $req->input('name') . ($req->filled('email') ? " (" . $req->input('email') . ")" : "") . "\n";
+            : "👤 Yuboruvchi: {$finalName}\n📞 Telefon raqam: {$finalPhone}\n";
 
         $fullContent = "[⚖️ BAN BO'YICHA APELLYATSIYA / MUROJAAT]\n"
             . $headerInfo
@@ -165,7 +174,8 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
 
     // Oddiy aloqa xabarini ham ma'muriyat "Aloqa va shikoyatlar" bo'limiga saqlaymiz
     $contactContent = "[✉️ ALOQA BO'LIMIDAN XABAR]\n"
-        . "👤 Yuboruvchi: " . $req->input('name') . ($req->filled('email') ? " (" . $req->input('email') . ")" : "") . "\n"
+        . "👤 Yuboruvchi: {$finalName}\n"
+        . "📞 Telefon raqam: {$finalPhone}\n"
         . ($req->filled('subject') ? "📌 Mavzu: " . $req->input('subject') . "\n" : "")
         . "\n💬 Xabar:\n" . $req->input('message');
 

@@ -137,6 +137,9 @@
                                             <a href="{{ route('admin.users.edit', $primaryUser) }}" class="truncate text-xs font-bold text-paper hover:text-amber-400 transition-colors">{{ $primaryUser->name }}</a>
                                         </div>
                                         <p class="font-mono text-[11px] text-mist">{{ '@' . $primaryUser->username }} <span class="text-mist/70">#{{ $primaryUser->id }}</span></p>
+                                        @if($primaryUser->phone)
+                                            <p class="font-mono text-[11px] text-amber-400/90">📞 {{ $primaryUser->phone }}</p>
+                                        @endif
                                         @if($primaryUser->isBanned())
                                             <div class="mt-1 space-y-0.5">
                                                 <span class="inline-block rounded-badge border border-rose-500/40 bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-300">
@@ -162,6 +165,9 @@
                                 <div>
                                     <p class="text-xs font-semibold text-paper">{{ $reporter->name }}</p>
                                     <p class="font-mono text-[11px] text-mist">{{ '@' . $reporter->username }}</p>
+                                    @if($reporter->phone)
+                                        <p class="font-mono text-[11px] text-amber-400/90">📞 {{ $reporter->phone }}</p>
+                                    @endif
                                     @if($reporter->isBanned())
                                         <span class="mt-0.5 inline-block text-[10px] font-mono font-bold text-rose-400">
                                             (Ban olgan)
