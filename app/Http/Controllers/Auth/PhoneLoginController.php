@@ -66,14 +66,19 @@ class PhoneLoginController extends Controller
         // 5. 6 xonali tasdiqlash kodini hosil qilish
         $code = (string) random_int(100000, 999999);
         $twoFactorToken = Str::random(32);
+        $cooldownSeconds = 60;
 
         $loginData = [
-            'user_id'    => $user->id,
-            'code'       => $code,
-            'remember'   => $request->boolean('remember'),
-            'attempts'   => 0,
-            'created_at' => now(),
+            'user_id'             => $user->id,
+            'code'                => $code,
+            'remember'            => $request->boolean('remember'),
+            'attempts'            => 0,
+            'created_at'          => now(),
+            'resend_available_at' => now()->addSeconds($cooldownSeconds)->timestamp,
         ];
+
+        $throttleKey = 'resend_2fa_' . $user->id;
+        RateLimiter::hit($throttleKey, $cooldownSeconds);
 
         // 6. Kodni Telegram bot orqali yuborish
         if ($user->telegram_id) {
@@ -118,7 +123,14 @@ class PhoneLoginController extends Controller
         $maskedPhone = $user->phone ? PhoneNumber::mask($user->phone) : ($user->email ?? 'hisobingiz');
         $tgUrl = "https://t.me/{$botUsername}?start=login_code_{$token}";
 
-        return view('auth.login-verify-code', compact('token', 'user', 'botUsername', 'hasTelegram', 'maskedPhone', 'tgUrl'));
+        $throttleKey = 'resend_2fa_' . $user->id;
+        $rateLimiterRemaining = RateLimiter::tooManyAttempts($throttleKey, 1)
+            ? RateLimiter::availableIn($throttleKey)
+            : 0;
+        $storedRemaining = max(0, (int) (($loginData['resend_available_at'] ?? 0) - now()->timestamp));
+        $cooldownSeconds = max($rateLimiterRemaining, $storedRemaining);
+
+        return view('auth.login-verify-code', compact('token', 'user', 'botUsername', 'hasTelegram', 'maskedPhone', 'tgUrl', 'cooldownSeconds'));
     }
 
     /**
@@ -185,10 +197,11 @@ class PhoneLoginController extends Controller
         }
 
         $throttleKey = 'resend_2fa_' . $loginData['user_id'];
-        if (RateLimiter::tooManyAttempts($throttleKey, 1)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+        $storedRemaining = max(0, (int) (($loginData['resend_available_at'] ?? 0) - now()->timestamp));
+        if (RateLimiter::tooManyAttempts($throttleKey, 1) || $storedRemaining > 0) {
+            $seconds = max(RateLimiter::availableIn($throttleKey), $storedRemaining, 1);
             return back()->withErrors([
-                'code' => "Iltimos, yangi kod so'rashdan oldin {$seconds} soniya kuting.",
+                'code' => "🔒 Kodni qayta yuborish vaqtincha qulflangan. Iltimos, {$seconds} soniya kuting.",
             ]);
         }
 
@@ -197,6 +210,7 @@ class PhoneLoginController extends Controller
         $newCode = (string) random_int(100000, 999999);
         $loginData['code'] = $newCode;
         $loginData['attempts'] = 0;
+        $loginData['resend_available_at'] = now()->addSeconds(60)->timestamp;
         Cache::put("login_2fa_{$token}", $loginData, now()->addMinutes(5));
 
         $user = User::find($loginData['user_id']);

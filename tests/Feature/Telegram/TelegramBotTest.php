@@ -606,4 +606,37 @@ class TelegramBotTest extends TestCase
                 && str_contains($request['text'], 'mutolaani boshlang!');
         });
     }
+
+    public function test_resend_code_enforces_one_minute_cooldown_lock(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 31]], 200),
+        ]);
+
+        $user = User::factory()->create([
+            'name'        => 'Dilnoza',
+            'phone'       => '+998901112233',
+            'telegram_id' => 700111,
+        ]);
+
+        $token = 'test_2fa_token_cooldown';
+        \Illuminate\Support\Facades\Cache::put("login_2fa_{$token}", [
+            'user_id'             => $user->id,
+            'code'                => '123456',
+            'remember'            => false,
+            'attempts'            => 0,
+            'created_at'          => now(),
+            'resend_available_at' => now()->subSecond()->timestamp,
+        ], now()->addMinutes(5));
+
+        // 1. Birinchi marta qayta yuborish muvaffaqiyatli o'tadi
+        $res1 = $this->post(route('login.resend-code', ['token' => $token]));
+        $res1->assertSessionHas('status');
+        Http::assertSentCount(1);
+
+        // 2. Darhol ikkinchi marta bosilganda 60 soniyalik qulf ishlab, server Telegramga qayta so'rov yubormaydi!
+        $res2 = $this->post(route('login.resend-code', ['token' => $token]));
+        $res2->assertSessionHasErrors('code');
+        Http::assertSentCount(1);
+    }
 }

@@ -38,6 +38,7 @@ class SettingsPage extends Component
     public string $currentPassword = '';
     public string $verificationCode = '';
     public bool $codeSent = false;
+    public int $resendCooldown = 0;
 
     public function mount(): void
     {
@@ -200,8 +201,20 @@ class SettingsPage extends Component
             return;
         }
 
-        // 3. Shart: Agar Telegram ulangan bo'lsa -> Bot orqali 6 xonali tasdiqlash kodi
+        // 3. Shart: Agar Telegram ulangan bo'lsa -> Bot orqali 6 xonali tasdiqlash kodi (1 daqiqalik qulf bilan)
         if ($user->telegram_id) {
+            $cooldownKey = "phone_change_cooldown_" . $user->id;
+            $availableAt = (int) Cache::get($cooldownKey, 0);
+            $remaining = max(0, $availableAt - now()->timestamp);
+
+            if ($remaining > 0) {
+                $this->resendCooldown = $remaining;
+                $msg = "🔒 Kodni qayta yuborish vaqtincha qulflangan. Iltimos, {$remaining} soniya kuting.";
+                $this->addError('verificationCode', $msg);
+                $this->toastError($msg);
+                return;
+            }
+
             $code = (string) random_int(100000, 999999);
             Cache::put("phone_change_" . $user->id, [
                 'phone' => $normalized,
@@ -220,7 +233,10 @@ class SettingsPage extends Component
 
                 $client->sendMessage($user->telegram_id, $message);
 
+                Cache::put($cooldownKey, now()->addSeconds(60)->timestamp, now()->addSeconds(60));
+                $this->resendCooldown = 60;
                 $this->codeSent = true;
+                $this->dispatchBrowserEvent('phone-code-sent', ['cooldown' => 60]);
                 $this->toastSuccess("Telegram botingizga 6 xonali tasdiqlash kodi yuborildi!");
             } catch (\Throwable $e) {
                 report($e);

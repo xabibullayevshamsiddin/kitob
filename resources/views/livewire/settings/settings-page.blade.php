@@ -246,10 +246,43 @@
                             @error('verificationCode') <p class="text-rose-400 text-center font-mono text-[11px] mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        <!-- Tugmalar -->
-                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-ink-border">
-                            <button type="button" wire:click="requestPhoneChange" class="text-xs text-amber-400 hover:underline font-mono">
-                                Kod kelmadimi? Qayta yuborish ↻
+                        <!-- Tugmalar (1 daqiqalik qulf bilan) -->
+                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-ink-border"
+                             x-data="{
+                                 cooldown: @entangle('resendCooldown').defer,
+                                 timer: null,
+                                 startTimer(sec) {
+                                     this.cooldown = sec || 60;
+                                     if (this.timer) clearInterval(this.timer);
+                                     this.timer = setInterval(() => {
+                                         if (this.cooldown > 0) {
+                                             this.cooldown--;
+                                         } else {
+                                             clearInterval(this.timer);
+                                         }
+                                     }, 1000);
+                                 },
+                                 init() {
+                                     if (!this.cooldown || this.cooldown <= 0) {
+                                         this.cooldown = 60;
+                                     }
+                                     this.startTimer(this.cooldown);
+                                 }
+                             }"
+                             @phone-code-sent.window="startTimer($event.detail.cooldown || 60)">
+                            <button type="button"
+                                    wire:click="requestPhoneChange"
+                                    :disabled="cooldown > 0"
+                                    :class="cooldown > 0
+                                        ? 'text-mist/50 cursor-not-allowed pointer-events-none select-none'
+                                        : 'text-amber-400 hover:underline cursor-pointer'"
+                                    class="text-xs font-mono transition-colors inline-flex items-center gap-1">
+                                <template x-if="cooldown > 0">
+                                    <span>🔒 Qayta yuborish (<span x-text="cooldown"></span>s)</span>
+                                </template>
+                                <template x-if="cooldown <= 0">
+                                    <span>Kod kelmadimi? Qayta yuborish ↻</span>
+                                </template>
                             </button>
                             <div class="flex items-center gap-2">
                                 <button type="button" wire:click="closePhoneModal" class="ks-btn-ghost text-xs py-2 px-3">

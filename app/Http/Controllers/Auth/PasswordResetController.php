@@ -48,8 +48,20 @@ class PasswordResetController extends Controller
             ]);
         }
 
-        // 3. Agar foydalanuvchida Telegram ulangan bo'lsa -> Telegram orqali havola yuborish
+        // 3. Agar foydalanuvchida Telegram ulangan bo'lsa -> Telegram orqali havola yuborish (1 daqiqalik qulf bilan)
         if ($user->isTelegramLinked() && !$user->isTelegramBlocked()) {
+            $cooldownKey = 'tg_pwd_reset_cooldown_' . $user->id;
+            $availableAt = (int) \Illuminate\Support\Facades\Cache::get($cooldownKey, 0);
+            $remaining = max(0, $availableAt - now()->timestamp);
+
+            if ($remaining > 0) {
+                return back()
+                    ->with('cooldown', $remaining)
+                    ->withErrors([
+                        'email' => "🔒 Iltimos, parolni tiklash so'rovini qayta yuborish uchun {$remaining} soniya kuting.",
+                    ]);
+            }
+
             try {
                 // Parol brokeri uchun vaqtinchalik identifikator
                 $tempEmail = $user->email ?? ($user->phone . '@phone.local');
@@ -89,7 +101,11 @@ class PasswordResetController extends Controller
                     ]
                 ]);
 
-                return back()->with('status', "Telegram hisobingizga parolni yangilash havolasi yuborildi! Iltimos, Telegram botingizni tekshiring.");
+                \Illuminate\Support\Facades\Cache::put($cooldownKey, now()->addSeconds(60)->timestamp, now()->addSeconds(60));
+
+                return back()
+                    ->with('cooldown', 60)
+                    ->with('status', "Telegram hisobingizga parolni yangilash havolasi yuborildi! Iltimos, Telegram botingizni tekshiring.");
             } catch (\Throwable $e) {
                 Log::warning('Telegram orqali parol tiklashda xatolik: ' . $e->getMessage());
             }

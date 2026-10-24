@@ -74,12 +74,41 @@
         </button>
     </form>
 
-    <!-- Resend Code -->
-    <div class="flex items-center justify-between pt-2 border-t border-ink-border text-xs">
-        <form method="POST" action="{{ route('login.resend-code', ['token' => $token]) }}">
+    <!-- Resend Code (1 daqiqalik qulf bilan) -->
+    <div class="flex items-center justify-between pt-2 border-t border-ink-border text-xs"
+         x-data="{
+             cooldown: {{ (int) ($cooldownSeconds ?? 60) }},
+             timer: null,
+             init() {
+                 if (this.cooldown > 0) {
+                     this.timer = setInterval(() => {
+                         if (this.cooldown > 0) {
+                             this.cooldown--;
+                         } else {
+                             clearInterval(this.timer);
+                         }
+                     }, 1000);
+                 }
+             }
+         }">
+        <form method="POST" action="{{ route('login.resend-code', ['token' => $token]) }}"
+              @submit="if (cooldown > 0) { $event.preventDefault(); }">
             @csrf
-            <button type="submit" class="text-amber-400 hover:text-amber-300 font-mono transition-colors">
-                Kodni qayta yuborish ↻
+            <button type="submit"
+                    :disabled="cooldown > 0"
+                    :class="cooldown > 0
+                        ? 'text-mist/50 cursor-not-allowed pointer-events-none select-none'
+                        : 'text-amber-400 hover:text-amber-300 cursor-pointer'"
+                    class="font-mono transition-colors inline-flex items-center gap-1.5">
+                <template x-if="cooldown > 0">
+                    <span class="inline-flex items-center gap-1">
+                        <span>🔒</span>
+                        <span>Qayta yuborish (<span x-text="cooldown"></span>s)</span>
+                    </span>
+                </template>
+                <template x-if="cooldown <= 0">
+                    <span>Kodni qayta yuborish ↻</span>
+                </template>
             </button>
         </form>
 

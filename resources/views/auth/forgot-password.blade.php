@@ -27,15 +27,40 @@
 @endif
 
 
-<form method="POST" action="{{ route('password.email') }}" class="space-y-4">
+<form method="POST" action="{{ route('password.email') }}" class="space-y-4"
+      x-data="{
+          cooldown: {{ (int) session('cooldown', session('status') ? 60 : 0) }},
+          timer: null,
+          init() {
+              if (this.cooldown > 0) {
+                  this.timer = setInterval(() => {
+                      if (this.cooldown > 0) {
+                          this.cooldown--;
+                      } else {
+                          clearInterval(this.timer);
+                      }
+                  }, 1000);
+              }
+          }
+      }"
+      @submit="if (cooldown > 0) { $event.preventDefault(); }">
     @csrf
 
     <x-phone-input name="email" id="email" label="Telefon raqam" :required="true" :autofocus="true" help="Telegram ulangan bo'lsa, havola botga yuboriladi." />
 
     <button type="submit"
+        :disabled="cooldown > 0"
+        :class="cooldown > 0 ? 'opacity-60 cursor-not-allowed pointer-events-none select-none' : ''"
         class="ks-btn-primary w-full py-2.5 flex items-center justify-center gap-2">
-        <span>Tiklash havolasini olish</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        <template x-if="cooldown > 0">
+            <span>🔒 Qayta yuborish (<span x-text="cooldown"></span>s)</span>
+        </template>
+        <template x-if="cooldown <= 0">
+            <span class="inline-flex items-center gap-2">
+                <span>Tiklash havolasini olish</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </span>
+        </template>
     </button>
 </form>
 
