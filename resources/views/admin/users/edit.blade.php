@@ -5,10 +5,10 @@
 
 @section('content')
 
-<div class="max-w-7xl mx-auto space-y-6 pb-32">
+<div class="max-w-7xl mx-auto space-y-6 pb-32" x-data="{ tgModalOpen: false }">
 
     {{-- Top Bar: Back Link & Quick Actions --}}
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
         <a href="{{ route('admin.users.index') }}" 
            class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-mist hover:text-paper transition-colors py-2 px-3 rounded-lg bg-ink-900 border border-ink-border hover:bg-ink-800">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,7 +17,13 @@
             <span>Foydalanuvchilar ro'yxatiga qaytish</span>
         </a>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+            <button type="button"
+                    @click="tgModalOpen = true"
+                    class="px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-mono font-bold inline-flex items-center gap-1.5 transition-colors">
+                <span>✈️</span>
+                <span>Botdan shaxsiy xabar / e'lon yuborish</span>
+            </button>
             <span class="text-xs font-mono text-mist hidden sm:inline">Foydalanuvchi ID:</span>
             <span class="px-2.5 py-1 rounded-badge text-xs font-mono font-bold bg-ink-800 text-amber-400 border border-ink-border">
                 #{{ $user->id }}
@@ -81,10 +87,11 @@
                                 <span>{{ \App\Support\PhoneNumber::format($user->phone) }}</span>
                             </a>
                         @endif
-                        @if($user->telegram_username)
-                            <a href="https://t.me/{{ $user->telegram_username }}" target="_blank" class="text-sky-400 hover:underline inline-flex items-center gap-1 font-semibold">
-                                <span>🤖 @</span><span>{{ $user->telegram_username }}</span>
-                            </a>
+                        @if($user->isTelegramLinked())
+                            <button type="button" @click="tgModalOpen = true" class="text-sky-400 hover:underline inline-flex items-center gap-1 font-semibold" title="Telegram Bot (@{{ config('telegram.bot_username') }}) orqali xabar yuborish">
+                                <span>🤖</span>
+                                <span>{{ $user->telegram_username ? '@' . $user->telegram_username : 'TG #' . $user->telegram_id }} (Botdan yozish)</span>
+                            </button>
                         @endif
                         @if($user->email)
                             <span class="text-mist">{{ $user->email }}</span>
@@ -1236,6 +1243,77 @@
 
         </div>
 
+    </div>
+
+    {{-- Telegram Botdan Xabar / E'lon Yuborish Modali --}}
+    <div x-show="tgModalOpen" x-cloak
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
+         @keydown.escape.window="tgModalOpen = false">
+        <div class="ks-panel relative w-full max-w-lg bg-ink-900 border border-ink-border rounded-panel p-5 sm:p-6 shadow-2xl text-left space-y-4"
+             @click.away="tgModalOpen = false">
+            <div class="flex items-center justify-between border-b border-ink-border pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-btn bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+                        <span>✈️</span>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold font-serif text-paper">Telegram Botdan Xabar / E'lon Yuborish</h3>
+                        <p class="text-xs text-mist font-mono mt-0.5">
+                            Qabul qiluvchi: <span class="text-amber-400 font-bold">{{ $user->name }}</span> (&#64;{{ $user->username }})
+                        </p>
+                    </div>
+                </div>
+                <button type="button" @click="tgModalOpen = false" class="text-mist hover:text-paper p-1 rounded-btn">✕</button>
+            </div>
+
+            <div class="p-2.5 rounded-btn bg-sky-500/10 border border-sky-500/25 text-[11px] font-mono text-sky-200">
+                🤖 Xabar shaxsiy lichkadan emas, rasmiy <b>&#64;{{ config('telegram.bot_username', 'kitobxonS_bot') }}</b> boti nomidan yuboriladi.
+                @if(!$user->isTelegramLinked())
+                    <span class="block text-amber-400 mt-1">⚠️ Ushbu foydalanuvchi hali Telegram botni ulamagan — xabar uning sayt ichidagi bildirishnomalariga tushadi.</span>
+                @endif
+            </div>
+
+            <form action="{{ route('admin.users.telegram-message', $user) }}" method="POST" class="space-y-3.5">
+                @csrf
+
+                <div>
+                    <label class="block text-xs font-mono text-mist mb-1">Sarlavha (ixtiyoriy):</label>
+                    <input type="text" name="title" placeholder="Masalan: Ma'muriyatdan xabar yoki Tabriklaymiz!"
+                           class="ks-input text-xs">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-mono text-mist mb-1">Xabar / E'lon matni:</label>
+                    <textarea name="message" rows="4" required
+                              placeholder="Foydalanuvchiga yuboriladigan xabar matnini kiriting..."
+                              class="ks-input text-xs"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-mono text-mist mb-1">Tugma yozuvi (ixtiyoriy):</label>
+                        <input type="text" name="button_text" placeholder="Masalan: 📖 Saytga o'tish"
+                               class="ks-input text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-mist mb-1">Tugma havolasi (ixtiyoriy):</label>
+                        <input type="url" name="button_url" placeholder="https://..."
+                               class="ks-input text-xs">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-2">
+                    <button type="button" @click="tgModalOpen = false"
+                            class="ks-btn-ghost py-1.5 px-3 text-xs">
+                        Bekor qilish
+                    </button>
+                    <button type="submit"
+                            class="ks-btn-primary py-1.5 px-4 text-xs font-mono inline-flex items-center gap-1.5">
+                        <span>🚀 Bot orqali yuborish</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </div>

@@ -549,4 +549,61 @@ class TelegramBotTest extends TestCase
 
         $this->assertFalse($user->fresh()->isTelegramNotificationEnabled('live_stream'));
     }
+
+    public function test_admin_can_send_bot_announcement_to_single_user_or_all_users(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 30]], 200),
+        ]);
+
+        $admin = User::factory()->create([
+            'name' => 'Admin',
+            'role' => 'admin',
+        ]);
+        try {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+            $admin->assignRole('admin');
+        } catch (\Throwable $e) {}
+
+        $user1 = User::factory()->create([
+            'name'        => 'Azizbek',
+            'telegram_id' => 600111,
+        ]);
+
+        $user2 = User::factory()->create([
+            'name'        => 'Madina',
+            'telegram_id' => 600222,
+        ]);
+
+        // 1. Bitta foydalanuvchiga Bot orqali shaxsiy xabar yuborish (/admin/users/{user}/telegram-message)
+        $responseSingle = $this->actingAs($admin)->post(route('admin.users.telegram-message', $user1), [
+            'title'   => 'Maxsus tabrik!',
+            'message' => 'Siz haftalik musobaqada 1-o\'rinni egalladingiz!',
+        ]);
+        $responseSingle->assertRedirect();
+
+        Http::assertSent(function ($request) {
+            return (int) ($request['chat_id'] ?? 0) === 600111
+                && str_contains($request['text'], 'Maxsus tabrik!')
+                && str_contains($request['text'], '1-o\'rinni egalladingiz!');
+        });
+
+        Http::assertNotSent(function ($request) {
+            return (int) ($request['chat_id'] ?? 0) === 600222;
+        });
+
+        // 2. Barcha foydalanuvchilarga Bot orqali ommaviy e'lon yuborish (/admin/telegram/broadcast)
+        $responseAll = $this->actingAs($admin)->post(route('admin.telegram.broadcast'), [
+            'target_type' => 'all',
+            'title'       => 'Yangi haftalik kitob',
+            'message'     => 'Yangi kitob platformaga joylandi, mutolaani boshlang!',
+        ]);
+        $responseAll->assertRedirect();
+
+        Http::assertSent(function ($request) {
+            return (int) ($request['chat_id'] ?? 0) === 600222
+                && str_contains($request['text'], 'Yangi haftalik kitob')
+                && str_contains($request['text'], 'mutolaani boshlang!');
+        });
+    }
 }

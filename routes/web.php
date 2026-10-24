@@ -1027,6 +1027,10 @@ Route::prefix('admin')
         return back()->with('success', "'{$user->name}' blokdan chiqarildi! ✅");
     })->name('users.unban');
 
+    // Foydalanuvchiga Telegram Bot nomidan shaxsiy xabar / e'lon yuborish
+    Route::post('/users/{user}/telegram-message', [\App\Http\Controllers\Admin\TelegramAdminController::class, 'sendToUser'])
+        ->name('users.telegram-message');
+
     // Shikoyatlar (Reports) boshqaruvi
     Route::get('/reports', function () {
         $reports = \App\Models\Report::with(['reporter', 'reportedUser'])->latest()->paginate(20);
