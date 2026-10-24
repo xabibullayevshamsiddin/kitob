@@ -74,7 +74,7 @@ Route::get('/', function () {
         'featuredChaptersCount',
         'featuredAudioMinutes'
     ));
-})->name('home');
+})->middleware('onboarding.complete')->name('home');
 
 // Platforma haqida
 Route::get('/about', function () {

@@ -180,6 +180,10 @@ class PhoneLoginController extends Controller
         Auth::login($user, (bool) ($loginData['remember'] ?? false));
         $request->session()->regenerate();
 
+        if (!$user->hasCompletedOnboarding()) {
+            return redirect()->route('onboarding')->with('status', "Xush kelibsiz, {$user->name}! 👋 Keling, shaxsiy mutolaa rejangizni sozlab olamiz.");
+        }
+
         return redirect()->intended(route('home'))->with('status', "Xush kelibsiz, {$user->name}! 👋");
     }
 

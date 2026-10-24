@@ -154,6 +154,56 @@
         </div>
     </div>
 
+    <!-- ── 1.5. Shaxsiy Mutolaa Rejasi va Onboarding Sozlamalari ── -->
+    @php
+        $userProfile = auth()->user()->profile;
+        $userPriv = is_array($userProfile?->privacy_settings) ? $userProfile->privacy_settings : [];
+        $dailyMins = $userPriv['daily_reading_minutes'] ?? 30;
+        $favGenresCount = count($userPriv['favorite_genres'] ?? []);
+        $prefLoc = strtoupper($userPriv['preferred_locale'] ?? app()->getLocale());
+    @endphp
+    <div class="p-6 sm:p-7 rounded-panel bg-ink-900 border border-ink-border shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-lg">🧭</span>
+                <h3 class="text-sm font-bold text-paper font-serif">
+                    @if(app()->getLocale() === 'ru')
+                        Персональный план чтения (Onboarding)
+                    @elseif(app()->getLocale() === 'en')
+                        Personal Reading Plan (Onboarding)
+                    @else
+                        Shaxsiy mutolaa rejasi (Onboarding)
+                    @endif
+                </h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                    {{ $dailyMins }} min/kun • {{ $prefLoc }}
+                </span>
+            </div>
+            <p class="text-xs text-mist leading-relaxed">
+                @if(app()->getLocale() === 'ru')
+                    Настройте языки чтения, любимые жанры ({{ $favGenresCount }}), дневную норму, тему ридера и цели обучения.
+                @elseif(app()->getLocale() === 'en')
+                    Customize your reading languages, favorite genres ({{ $favGenresCount }}), daily target, reader theme, and goals.
+                @else
+                    Mutolaa tillari, sevimli janrlar ({{ $favGenresCount }} ta), kunlik me'yor, mutolaa rejimi va maqsadlaringizni qayta sozlang.
+                @endif
+            </p>
+        </div>
+        <a href="{{ route('onboarding', ['edit' => 1]) }}"
+           class="px-4 py-2.5 rounded-btn bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold transition-all inline-flex items-center gap-2 shrink-0">
+            <span>✨</span>
+            <span>
+                @if(app()->getLocale() === 'ru')
+                    Настроить план →
+                @elseif(app()->getLocale() === 'en')
+                    Customize Plan →
+                @else
+                    Rejani sozlash →
+                @endif
+            </span>
+        </a>
+    </div>
+
     <!-- ── 2. Telefon Raqamini O'zgartirish Xavfsizlik Modali ── -->
     @if($showPhoneModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in"

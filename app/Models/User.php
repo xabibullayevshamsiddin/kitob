@@ -416,7 +416,11 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasCompletedOnboarding(): bool
     {
-        return $this->profile?->reading_place !== null;
+        if ($this->isAdminOrTeacher()) {
+            return true;
+        }
+
+        return !empty($this->profile?->reading_place);
     }
 
     // -------------------------------------------------------------------------

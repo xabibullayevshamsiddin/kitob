@@ -84,12 +84,18 @@ class TelegramAuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
+        $targetRoute = $user->hasCompletedOnboarding() ? 'home' : 'onboarding';
+
         if ($result['is_new'] ?? false) {
             if (($result['bonus_awarded'] ?? 0) > 0) {
-                return redirect()->route('home')->with('status', "Xush kelibsiz! Telegram orqali ro'yxatdan o'tdingiz. 🎁 {$result['bonus_awarded']} tanga bonusingiz hisobingizga qo'shildi!");
+                return redirect()->route($targetRoute)->with('status', "Xush kelibsiz! Telegram orqali ro'yxatdan o'tdingiz. 🎁 {$result['bonus_awarded']} tanga bonusingiz hisobingizga qo'shildi!");
             }
 
-            return redirect()->route('home')->with('status', "Xush kelibsiz! Telegram orqali kirdingiz. 🎁 50 tanga xush kelibsiz bonusini olish uchun Sozlamalar bo'limidan telefon raqamingizni tasdiqlang!");
+            return redirect()->route($targetRoute)->with('status', "Xush kelibsiz! Telegram orqali kirdingiz. 🎁 50 tanga xush kelibsiz bonusini olish uchun Sozlamalar bo'limidan telefon raqamingizni tasdiqlang!");
+        }
+
+        if (!$user->hasCompletedOnboarding()) {
+            return redirect()->route('onboarding');
         }
 
         return redirect()->intended(route('home'));
@@ -229,7 +235,7 @@ class TelegramAuthController extends Controller
 
                 return response()->json([
                     'confirmed'    => true,
-                    'redirect_url' => route('home'),
+                    'redirect_url' => $user->hasCompletedOnboarding() ? route('home') : route('onboarding'),
                 ]);
             }
         }
@@ -290,7 +296,8 @@ class TelegramAuthController extends Controller
                 Cache::forget("tg_auth_confirmed_{$token}");
                 Cache::forget("tg_auth_login_{$token}");
 
-                return redirect()->route('home')->with('status', 'Xush kelibsiz! Telegram orqali muvaffaqiyatli kirdingiz. 🎉');
+                $targetRoute = $user->hasCompletedOnboarding() ? 'home' : 'onboarding';
+                return redirect()->route($targetRoute)->with('status', 'Xush kelibsiz! Telegram orqali muvaffaqiyatli kirdingiz. 🎉');
             }
         }
 

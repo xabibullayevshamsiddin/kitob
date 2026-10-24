@@ -137,7 +137,7 @@ class PhoneRegisterController extends Controller
 
                 return response()->json([
                     'confirmed'    => true,
-                    'redirect_url' => route('home'),
+                    'redirect_url' => $user->hasCompletedOnboarding() ? route('home') : route('onboarding'),
                     'message'      => 'Hisobingiz muvaffaqiyatli tasdiqlandi!',
                 ]);
             }

@@ -12,8 +12,12 @@ class EnsureOnboardingIsComplete
     {
         $user = Auth::user();
 
-        if ($user && (!$user->profile || empty($user->profile->reading_place))) {
-            if (!$request->routeIs('onboarding') && !$request->routeIs('logout')) {
+        if ($user && !$user->isAdminOrTeacher() && !$user->hasCompletedOnboarding()) {
+            if (
+                !$request->routeIs('onboarding', 'logout', 'pwa.ping', 'contact', 'contact.send', 'terms', 'privacy', 'faq')
+                && !$request->is('livewire/*', 'telegram/*', 'auth/telegram/*', 'api/*')
+                && !$request->expectsJson()
+            ) {
                 return redirect()->route('onboarding');
             }
         }

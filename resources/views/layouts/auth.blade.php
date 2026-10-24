@@ -44,39 +44,78 @@
     <div class="relative z-10 w-full max-w-5xl mx-auto px-4 py-8 sm:py-12">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
+            @php
+                $isOnboardingRoute = request()->routeIs('onboarding');
+                $authLoc = app()->getLocale();
+                $brandSubtitle = match($authLoc) {
+                    'ru' => 'Еженедельное чтение',
+                    'en' => 'Weekly Reading Club',
+                    default => 'Haftalik mutolaa',
+                };
+                $brandQuote = match($authLoc) {
+                    'ru' => '"Книги — это самые тихие и постоянные друзья; они самые доступные и мудрые советники и самые терпеливые учителя."',
+                    'en' => '"Books are the quietest and most constant of friends; they are the most accessible and wisest of counselors, and the most patient of teachers."',
+                    default => '"Kitob — eng sokin va doimiy do\'st, eng dono va ochiq maslahatgo\'y hamda eng sabr-toqatli ustozdir."',
+                };
+                $brandAuthor = match($authLoc) {
+                    'ru' => '— Чарльз У. Элиот',
+                    'en' => '— Charles W. Eliot',
+                    default => '— Charlz V. Eliot',
+                };
+                $brandPoint1 = match($authLoc) {
+                    'ru' => 'Каждую неделю — чтение новой избранной книги',
+                    'en' => 'A new curated masterpiece every week',
+                    default => 'Har hafta yangi sara asar mutolaasi',
+                };
+                $brandPoint2 = match($authLoc) {
+                    'ru' => 'Живые обсуждения, разборы и геймификация',
+                    'en' => 'Live discussions, analysis & gamification',
+                    default => 'Jonli muhokama, tahlil va gamifikatsiya',
+                };
+                $brandPoint3 = match($authLoc) {
+                    'ru' => 'Персональный план чтения на 3 языках (UZ / RU / EN)',
+                    'en' => 'Personalized reading plan in 3 languages (UZ / RU / EN)',
+                    default => '3 tilda shaxsiy mutolaa rejasi (UZ / RU / EN)',
+                };
+            @endphp
+
             <!-- Left Side (Editorial Branding, Desktop only) -->
-            <div class="hidden lg:flex lg:col-span-5 flex-col justify-between space-y-8 pr-4">
+            <div class="hidden lg:flex {{ $isOnboardingRoute ? 'lg:col-span-4' : 'lg:col-span-5' }} flex-col justify-between space-y-8 pr-4">
                 <a href="{{ url('/') }}" class="inline-flex items-center gap-3 group">
                     <span class="w-10 h-10 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center transition-transform group-hover:scale-105">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                     </span>
                     <div>
                         <span class="text-2xl font-bold font-serif text-paper block leading-tight">Kitobxon</span>
-                        <span class="text-[10px] font-mono uppercase tracking-widest text-mist">Haftalik mutolaa</span>
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-mist">{{ $brandSubtitle }}</span>
                     </div>
                 </a>
 
                 <div class="space-y-4 border-l-2 border-amber-500/40 pl-5">
                     <blockquote class="text-base text-paper font-serif italic leading-relaxed">
-                        "Kitob — eng sokin va doimiy do'st, eng dono va ochiq maslahatgo'y hamda eng sabr-toqatli ustozdir."
+                        {{ $brandQuote }}
                     </blockquote>
-                    <p class="text-xs font-mono text-mist uppercase tracking-wider">— Charlz V. Eliot</p>
+                    <p class="text-xs font-mono text-mist uppercase tracking-wider">{{ $brandAuthor }}</p>
                 </div>
 
-                <div class="space-y-2 pt-4 border-t border-ink-border">
+                <div class="space-y-2.5 pt-4 border-t border-ink-border">
                     <div class="flex items-center gap-2 text-xs text-mist">
                         <span class="text-amber-500 font-bold">✦</span>
-                        <span>Har hafta yangi sara asar mutolaasi</span>
+                        <span>{{ $brandPoint1 }}</span>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-mist">
                         <span class="text-amber-500 font-bold">✦</span>
-                        <span>Jonli muhokama, tahlil va gamifikatsiya</span>
+                        <span>{{ $brandPoint2 }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-mist">
+                        <span class="text-amber-500 font-bold">✦</span>
+                        <span>{{ $brandPoint3 }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Right Side (Auth Form Container) -->
-            <div class="lg:col-span-7 max-w-md mx-auto w-full">
+            <div class="{{ $isOnboardingRoute ? 'lg:col-span-8 max-w-xl' : 'lg:col-span-7 max-w-md' }} mx-auto w-full">
                 <div class="flex items-center justify-between mb-4">
                     <a href="{{ url('/') }}" class="lg:hidden inline-flex items-center gap-2 text-paper font-serif font-bold text-lg">
                         <span class="w-7 h-7 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
