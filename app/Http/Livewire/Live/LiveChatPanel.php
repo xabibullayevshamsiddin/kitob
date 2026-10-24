@@ -104,6 +104,11 @@ class LiveChatPanel extends Component
             return;
         }
 
+        if (Auth::user()->isBanned()) {
+            $this->toast('error', 'Siz bloklangansiz! Qolgan vaqt: ' . Auth::user()->ban_remaining);
+            return;
+        }
+
         $this->validate();
 
         $wasPriority = $this->isPriority;

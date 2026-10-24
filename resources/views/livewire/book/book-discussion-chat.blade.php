@@ -152,6 +152,35 @@
     <!-- ── Bottom Input & Reply Box ── -->
     <div class="p-3 sm:p-4 bg-ink-950 border-t border-ink-border shrink-0 space-y-2.5">
         @auth
+            @if(auth()->user()->isBanned())
+                <div class="p-3 rounded-xl bg-rose-950/30 border border-rose-500/35 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start sm:items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-width="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="space-y-0.5 min-w-0">
+                            <p class="text-xs font-bold text-rose-300 font-mono flex flex-wrap items-center gap-1.5">
+                                <span>🔒 Izoh yozish qulflangan (Siz bloklangansiz!)</span>
+                                <span class="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/30 text-[10px] text-rose-200">
+                                    {{ auth()->user()->ban_remaining }}
+                                </span>
+                            </p>
+                            <p class="text-[11px] text-mist font-sans">
+                                <span class="text-rose-200/90 font-mono">Sabab: {{ auth()->user()->ban_reason ?? 'Qoidabuzarlik' }}.</span>
+                                ⚖️ Noto'g'ri ban berilgan bo'lsa, mana bu joyga yozib qoldiring:
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{{ route('contact', ['appeal' => 1, 'user_id' => auth()->id()]) }}"
+                       class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 font-bold text-xs shrink-0 transition-colors">
+                        <span>📩 Aloqa bo'limi</span>
+                        <span>→</span>
+                    </a>
+                </div>
+            @else
             <!-- Reply Banner Indicator -->
             @if($replyToId)
                 <div class="flex items-center justify-between px-3 py-1.5 rounded-btn bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300">
@@ -227,6 +256,7 @@
                     </button>
                 </div>
             </form>
+            @endif
         @else
             <div class="p-3 text-center space-y-1.5">
                 <p class="text-xs text-mist">Kitobxonlar suhbatiga qo'shilish va izoh yozish uchun tizimga kiring.</p>

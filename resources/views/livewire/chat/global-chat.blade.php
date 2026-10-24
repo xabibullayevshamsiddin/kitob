@@ -366,90 +366,103 @@
              }
          }">
         @auth
-            {{-- RECORDING ACTIVE BAR --}}
-            <div x-show="isRecording" x-cloak class="flex items-center justify-between gap-3 p-2 bg-ink-900 border border-vermilion/30 rounded-card">
-                <div class="flex items-center gap-3 pl-3">
-                    <span class="relative flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-vermilion opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-vermilion"></span>
-                    </span>
-                    <span class="text-xs font-bold text-rose-300 font-mono tracking-wider" x-text="'Yozilmoqda: ' + formatDur(recordDuration)"></span>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button type="button" @click="cancelRecord()"
-                            class="ks-btn-ghost py-1 px-3 text-xs">
-                        ✕ Bekor qilish
-                    </button>
-                    <button type="button" @click="sendRecord()"
-                            class="ks-btn-primary py-1 px-3 text-xs flex items-center gap-1.5">
-                        <span>Yuborish</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            {{-- UPLOADING SPINNER --}}
-            <div x-show="isUploading" x-cloak class="flex items-center justify-center gap-2 py-3 text-xs font-mono text-amber-400">
-                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                <span>Ovozli xabar yuklanmoqda...</span>
-            </div>
-
-            {{-- STANDARD FORM BAR --}}
-            <form x-show="!isRecording && !isUploading" wire:submit.prevent="sendMessage" @submit="count = 0" class="flex items-center gap-2">
-                <div class="relative flex-1">
-                    <input type="text" 
-                        wire:model.defer="message" 
-                        x-on:input="count = $event.target.value.length"
-                        placeholder="{{ __('site.chat.placeholder') }}" 
-                        maxlength="250"
-                        class="ks-input pr-14 text-xs sm:text-sm">
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-mono select-none"
-                         :class="{
-                             'text-mist': count < 200,
-                             'text-amber-400 font-semibold': count >= 200 && count < 240,
-                             'text-rose-300 font-bold': count >= 240
-                         }">
-                        <span x-text="count">0</span>/250
-                    </div>
-                </div>
-
-                <!-- Voice Recording Mic Button -->
-                <button type="button" @click="startRecord()"
-                    class="ks-btn-ghost p-2.5 text-mist hover:text-amber-400 shrink-0"
-                    title="Ovozli xabar yozish">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-                    </svg>
-                </button>
-
-                <button type="submit" 
-                    x-on:click="count = 0"
-                    class="ks-btn-primary py-2 px-3 sm:px-4 text-xs flex items-center gap-1.5 shrink-0">
-                    <span class="hidden sm:inline">{{ __('site.chat.send') }}</span>
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </button>
-            </form>
-            @if(auth()->check() && auth()->user()->isBanned())
-                <div class="mt-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div class="space-y-0.5">
-                        <p class="text-rose-300 font-mono">
-                            Siz bloklangansiz! Qolgan vaqt: {{ auth()->user()->ban_remaining }}. Sabab: {{ auth()->user()->ban_reason ?? 'Qoidabuzarlik' }}
-                        </p>
-                        <p class="text-[11px] text-mist font-sans">
-                            ⚖️ Agar sizga noto'g'ri ban berilgan bo'lsa, mana bu joyga yozib qoldiring:
-                        </p>
+            @if(auth()->user()->isBanned())
+                {{-- BANNED USER LOCKED INPUT BAR --}}
+                <div class="p-3 rounded-xl bg-rose-950/30 border border-rose-500/35 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start sm:items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-width="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="space-y-0.5 min-w-0">
+                            <p class="text-xs font-bold text-rose-300 font-mono flex flex-wrap items-center gap-1.5">
+                                <span>🔒 Xabar yozish qulflangan (Siz bloklangansiz!)</span>
+                                <span class="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/30 text-[10px] text-rose-200">
+                                    {{ auth()->user()->ban_remaining }}
+                                </span>
+                            </p>
+                            <p class="text-[11px] text-mist font-sans">
+                                <span class="text-rose-200/90 font-mono">Sabab: {{ auth()->user()->ban_reason ?? 'Qoidabuzarlik' }}.</span>
+                                ⚖️ Noto'g'ri ban berilgan bo'lsa, mana bu joyga yozib qoldiring:
+                            </p>
+                        </div>
                     </div>
                     <a href="{{ route('contact', ['appeal' => 1, 'user_id' => auth()->id()]) }}"
-                       class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 font-bold text-xs shrink-0 transition-colors">
+                       class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 font-bold text-xs shrink-0 transition-colors">
                         <span>📩 Aloqa bo'limi</span>
                         <span>→</span>
                     </a>
                 </div>
-            @elseif($errors->has('message'))
+            @else
+                {{-- RECORDING ACTIVE BAR --}}
+                <div x-show="isRecording" x-cloak class="flex items-center justify-between gap-3 p-2 bg-ink-900 border border-vermilion/30 rounded-card">
+                    <div class="flex items-center gap-3 pl-3">
+                        <span class="relative flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-vermilion opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-vermilion"></span>
+                        </span>
+                        <span class="text-xs font-bold text-rose-300 font-mono tracking-wider" x-text="'Yozilmoqda: ' + formatDur(recordDuration)"></span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="cancelRecord()"
+                                class="ks-btn-ghost py-1 px-3 text-xs">
+                            ✕ Bekor qilish
+                        </button>
+                        <button type="button" @click="sendRecord()"
+                                class="ks-btn-primary py-1 px-3 text-xs flex items-center gap-1.5">
+                            <span>Yuborish</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- UPLOADING SPINNER --}}
+                <div x-show="isUploading" x-cloak class="flex items-center justify-center gap-2 py-3 text-xs font-mono text-amber-400">
+                    <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span>Ovozli xabar yuklanmoqda...</span>
+                </div>
+
+                {{-- STANDARD FORM BAR --}}
+                <form x-show="!isRecording && !isUploading" wire:submit.prevent="sendMessage" @submit="count = 0" class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" 
+                            wire:model.defer="message" 
+                            x-on:input="count = $event.target.value.length"
+                            placeholder="{{ __('site.chat.placeholder') }}" 
+                            maxlength="250"
+                            class="ks-input pr-14 text-xs sm:text-sm">
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-mono select-none"
+                             :class="{
+                                 'text-mist': count < 200,
+                                 'text-amber-400 font-semibold': count >= 200 && count < 240,
+                                 'text-rose-300 font-bold': count >= 240
+                             }">
+                            <span x-text="count">0</span>/250
+                        </div>
+                    </div>
+
+                    <!-- Voice Recording Mic Button -->
+                    <button type="button" @click="startRecord()"
+                        class="ks-btn-ghost p-2.5 text-mist hover:text-amber-400 shrink-0"
+                        title="Ovozli xabar yozish">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                        </svg>
+                    </button>
+
+                    <button type="submit" 
+                        x-on:click="count = 0"
+                        class="ks-btn-primary py-2 px-3 sm:px-4 text-xs flex items-center gap-1.5 shrink-0">
+                        <span class="hidden sm:inline">{{ __('site.chat.send') }}</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </button>
+                </form>
                 @error('message') <p class="text-rose-300 text-xs mt-1 font-mono">{{ $message }}</p> @enderror
             @endif
         @else

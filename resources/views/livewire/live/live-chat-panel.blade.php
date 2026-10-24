@@ -308,7 +308,24 @@
 
     <!-- Input Bar -->
     <div class="p-3 bg-ink-900 border-t border-ink-border shrink-0" x-data="{ count: 0 }">
-        @if($this->canWrite)
+        @if(auth()->check() && auth()->user()->isBanned())
+            <div class="p-2.5 rounded-xl bg-rose-950/30 border border-rose-500/35 flex flex-col gap-2">
+                <div class="flex items-center gap-2 text-xs font-bold text-rose-300 font-mono">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke-width="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>🔒 Chat qulflangan ({{ auth()->user()->ban_remaining }})</span>
+                </div>
+                <p class="text-[11px] text-mist font-sans leading-snug">
+                    Sabab: {{ auth()->user()->ban_reason ?? 'Qoidabuzarlik' }}. Noto'g'ri ban berilgan bo'lsa:
+                </p>
+                <a href="{{ route('contact', ['appeal' => 1, 'user_id' => auth()->id()]) }}"
+                   class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 font-bold text-xs transition-colors">
+                    <span>📩 Aloqa bo'limiga yozish →</span>
+                </a>
+            </div>
+        @elseif($this->canWrite)
             @if($this->canMakePriority)
                 <div class="mb-2 flex items-center justify-between">
                     <label class="inline-flex items-center gap-2 cursor-pointer select-none">
