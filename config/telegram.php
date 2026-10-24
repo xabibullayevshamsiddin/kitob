@@ -81,12 +81,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Telegram Mini App URL
+    | Telegram Mini App URL & Security Settings
     |--------------------------------------------------------------------------
     |
-    | Telegram ichida ochiladigan Mini App (TMA) manzili (HTTPS bo'lishi shart).
+    | Telegram ichida ochiladigan Mini App (TMA) manzili (HTTPS bo'lishi shart)
+    | hamda initData / Login Widget imzolarining maksimal amal qilish muddati (soniyada).
     |
     */
-    'mini_app_url' => env('TELEGRAM_MINI_APP_URL', rtrim(env('APP_URL', 'https://kitob-9y1h.onrender.com'), '/') . '/tg-app'),
+    'mini_app_url' => env('TELEGRAM_MINI_APP_URL', rtrim(env('APP_URL', 'https://kitob-9y1h.onrender.com'), '/') . '/tg/app'),
+    'auth_max_age' => (int) env('TELEGRAM_AUTH_MAX_AGE', 3600),
+    'quiet_hours_enabled' => (bool) env('TELEGRAM_QUIET_HOURS_ENABLED', false),
+    'quiet_hours_start' => (int) env('TELEGRAM_QUIET_HOURS_START', 23),
+    'quiet_hours_end' => (int) env('TELEGRAM_QUIET_HOURS_END', 7),
 
 ];

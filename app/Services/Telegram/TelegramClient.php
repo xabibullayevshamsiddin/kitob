@@ -186,6 +186,14 @@ class TelegramClient
     }
 
     /**
+     * Bot haqida ma'lumot olish (getMe).
+     */
+    public function getMe(): array
+    {
+        return $this->request('getMe');
+    }
+
+    /**
      * Telegram Stars to'lovini qaytarish (refundStarPayment).
      */
     public function refundStarPayment(int|string $userId, string $telegramPaymentChargeId): array
@@ -196,6 +204,19 @@ class TelegramClient
         ];
 
         return $this->request('refundStarPayment', $payload);
+    }
+
+    /**
+     * Botning Telegram Stars tranzaksiyalari ro'yxatini olish (getStarTransactions).
+     */
+    public function getStarTransactions(int $offset = 0, int $limit = 100): array
+    {
+        $payload = [
+            'offset' => max(0, $offset),
+            'limit'  => min(100, max(1, $limit)),
+        ];
+
+        return $this->request('getStarTransactions', $payload);
     }
 
     /**

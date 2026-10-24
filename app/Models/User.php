@@ -607,7 +607,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->update(['telegram_blocked_at' => null]);
     }
 
-    public function prefersTelegramNotification(string $type): bool
+    public function prefersTelegramNotification(?string $type = null): bool
     {
         if (!$this->isTelegramLinked() || $this->isTelegramBlocked()) {
             return false;
@@ -618,6 +618,44 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
+        // Agar umumiy Telegram bildirishnomalari o'chirilgan bo'lsa (security bundan mustasno)
+        if ($type !== 'security') {
+            if (array_key_exists('enabled', $prefs) && !$prefs['enabled']) {
+                return false;
+            }
+            if (array_key_exists('telegram_enabled', $prefs) && !$prefs['telegram_enabled']) {
+                return false;
+            }
+        }
+
+        if ($type === null || $type === '') {
+            return true;
+        }
+
         return (bool) ($prefs[$type] ?? true);
+    }
+
+    /**
+     * Foydalanuvchi uchun "Jim soatlar" (Quiet Hours, masalan 23:00 - 07:00) faol ekanligini tekshirish.
+     */
+    public function isInTelegramQuietHours(?\Carbon\Carbon $now = null): bool
+    {
+        $prefs = is_array($this->notification_prefs) ? $this->notification_prefs : [];
+        $quietEnabled = (bool) ($prefs['quiet_hours'] ?? config('telegram.quiet_hours_enabled', false));
+
+        if (!$quietEnabled) {
+            return false;
+        }
+
+        $now = ($now ?? now())->copy()->setTimezone('Asia/Tashkent');
+        $startHour = (int) ($prefs['quiet_hours_start'] ?? config('telegram.quiet_hours_start', 23));
+        $endHour = (int) ($prefs['quiet_hours_end'] ?? config('telegram.quiet_hours_end', 7));
+        $hour = (int) $now->format('G');
+
+        if ($startHour > $endHour) {
+            return $hour >= $startHour || $hour < $endHour;
+        }
+
+        return $hour >= $startHour && $hour < $endHour;
     }
 }

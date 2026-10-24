@@ -14,6 +14,7 @@ function isExcluded(request, url) {
     if (/\/(?:livewire|broadcasting)(?:\/|$)/i.test(path)) return true;
     if (/\/live\/[^/]+\/(?:signal|signals)(?:\/|$)/i.test(path)) return true;
     if (/\/(?:admin|teacher)(?:\/|$)/i.test(path)) return true;
+    if (/\/(?:tg-app|tg\/app|auth\/telegram|api\/telegram)(?:\/|$)/i.test(path)) return true;
     if (/\/ping\/?$/i.test(path)) return true;
     if (/\.(?:mp3|m4a|aac|wav|ogg|opus|mp4|webm|mov|m3u8|mpd)(?:$|\?)/i.test(path)) return true;
     if (request.destination === 'audio' || request.destination === 'video') return true;

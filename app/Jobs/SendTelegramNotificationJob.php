@@ -42,7 +42,7 @@ class SendTelegramNotificationJob implements ShouldQueue
         $this->type = $type;
     }
 
-    public function handle(TelegramClient $client): void
+    public function handle(?TelegramClient $client = null): void
     {
         $user = User::find($this->userId);
 
@@ -50,21 +50,37 @@ class SendTelegramNotificationJob implements ShouldQueue
             return;
         }
 
-        // Foydalanuvchi botni ulamagan yoki bloklagan bo'lsa
-        if (!$user->isTelegramLinked() || $user->isTelegramBlocked()) {
+        // Foydalanuvchi botni ulamagan, bloklagan yoki ushbu turdagi bildirishnomani o'chirgan bo'lsa
+        if (!$user->prefersTelegramNotification($this->type)) {
+            Log::info("Telegram bildirishnomasi bekor qilindi (foydalanuvchi sozlamasi): User #{$user->id}, tur: " . ($this->type ?? 'general'));
             return;
         }
 
-        // Foydalanuvchi ushbu turdagi bildirishnomani o'chirib qo'ygan bo'lsa
-        if ($this->type !== null && !$user->prefersTelegramNotification($this->type)) {
-            Log::info("Telegram bildirishnomasi bekor qilindi (foydalanuvchi sozlamasi): User #{$user->id}, tur: {$this->type}");
+        // Jim soatlar (Quiet Hours: 23:00 - 07:00 Asia/Tashkent) tekshiruvi (security bundan mustasno)
+        if ($this->type !== 'security' && $user->isInTelegramQuietHours()) {
+            Log::info("Telegram bildirishnomasi jim soatlar sababli yuborilmadi: User #{$user->id}, tur: " . ($this->type ?? 'general'));
             return;
+        }
+
+        if ($client === null) {
+            if (empty(config('telegram.bot_token'))) {
+                return;
+            }
+            $client = new TelegramClient();
+        }
+
+        $options = $this->options;
+
+        // Tungi vaqtda (23:00 - 07:00) ovozsiz bildirishnoma (disable_notification)
+        $currentHour = (int) now('Asia/Tashkent')->format('G');
+        if ($this->type !== 'security' && ($currentHour >= 23 || $currentHour < 7) && !isset($options['disable_notification'])) {
+            $options['disable_notification'] = true;
         }
 
         try {
-            $client->sendMessage($user->telegram_id, $this->message, $this->options);
+            $client->sendMessage($user->telegram_id, $this->message, $options);
         } catch (TelegramBlockedException $e) {
-            Log::warning("Telegram bot foydalanuvchi tomonidan bloklangan: User #{$user->id}, TG: {$user->telegram_id}");
+            Log::warning("Telegram bot foydalanuvchi tomonidan bloklangan: User #{$user->id}");
             $user->markTelegramBlocked();
         } catch (TelegramRateLimitException $e) {
             Log::warning("Telegram rate limit: {$e->getRetryAfter()} soniya kutilmoqda. Job navbatga qaytarildi.");

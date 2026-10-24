@@ -10,11 +10,14 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramBotService
 {
-    protected TelegramClient $client;
+    protected ?TelegramClient $client;
 
-    public function __construct(?TelegramClient $client = null)
+    /**
+     * @param TelegramClient|null $client
+     */
+    public function __construct($client = null)
     {
-        $this->client = $client ?? new TelegramClient();
+        $this->client = $client instanceof TelegramClient ? $client : new TelegramClient();
     }
 
     /**
@@ -289,35 +292,47 @@ class TelegramBotService
         }
 
         // 2. Agar bu parolsiz kirish (auth) deep-linki bo'lsa: /start auth_{token}
+        // Xavfsizlik: Darhol tasdiqlamasdan, qurilma va kodni ko'rsatib "Tasdiqlaysizmi?" so'rovini yuboramiz!
         if (str_starts_with($payload, 'auth_')) {
             $token = substr($payload, 5);
             $authData = Cache::get("tg_auth_login_{$token}");
 
-            if ($authData) {
-                // Foydalanuvchini topish yoki yaratish
-                $authService = new TelegramAuthService();
-                $findResult = $authService->findOrCreateUser([
+            if (is_array($authData)) {
+                $authData['pending_from'] = [
                     'id'         => $userId,
                     'first_name' => $from['first_name'] ?? '',
                     'last_name'  => $from['last_name'] ?? '',
                     'username'   => $from['username'] ?? null,
+                ];
+                Cache::put("tg_auth_login_{$token}", $authData, now()->addMinutes(15));
+
+                $device = htmlspecialchars((string) ($authData['device'] ?? 'Brauzer'));
+                $ip = htmlspecialchars((string) ($authData['ip'] ?? 'Noma\'lum'));
+                $code = htmlspecialchars((string) ($authData['code'] ?? ''));
+
+                $codeLine = $code !== '' ? "• Tasdiqlash kodi: <b>{$code}</b>\n" : '';
+                $confirmLabel = $code !== '' ? "✅ Ha, tasdiqlayman ({$code})" : "✅ Ha, tasdiqlayman";
+
+                $promptText = "🔐 <b>Saytga kirishni tasdiqlaysizmi?</b>\n\n"
+                    . "Salom, <b>{$name}</b>! Sizning Telegram hisobingiz orqali platformaga kirish so'rovi kelib tushdi:\n\n"
+                    . "• Qurilma: <b>{$device}</b>\n"
+                    . "• IP manzil: <code>{$ip}</code>\n"
+                    . $codeLine . "\n"
+                    . "⚠️ <i>Agar ushbu so'rovni siz boshlamagan bo'lsangiz yoki saytdagi kod mos kelmasa, darhol «❌ Yo'q, bekor qilish» tugmasini bosing!</i>";
+
+                $this->client->sendMessage($chatId, $promptText, [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => $confirmLabel, 'callback_data' => "auth_confirm:{$token}"],
+                            ],
+                            [
+                                ['text' => "❌ Yo'q, bekor qilish", 'callback_data' => "auth_reject:{$token}"],
+                            ],
+                        ],
+                    ],
                 ]);
-
-                if ($findResult['success']) {
-                    Cache::put("tg_auth_confirmed_{$token}", $findResult['user']->id, now()->addMinutes(10));
-                    $completeUrl = route('auth.telegram.complete', ['token' => $token]);
-
-                    $this->client->sendMessage($chatId, "Salom, <b>{$name}</b>! ✅\n\nSaytga kirishingiz muvaffaqiyatli tasdiqlandi!\n\nBrauzer sahifangiz avtomatik yangilanadi. Agar yangilanmasa, quyidagi tugma orqali to'g'ridan-to'g'ri saytga kiring:", [
-                        'reply_markup' => [
-                            'inline_keyboard' => [
-                                [
-                                    ['text' => '🚀 Saytga kirish', 'url' => $completeUrl]
-                                ]
-                            ]
-                        ]
-                    ]);
-                    return;
-                }
+                return;
             }
         }
 
@@ -462,6 +477,28 @@ class TelegramBotService
         }
 
         if ($user) {
+            // Noyob telefon tekshiruvi: boshqa hisobda bu raqam band emasmi?
+            $collisionUser = User::where('phone', $normalized)
+                ->where('id', '!=', $user->id)
+                ->first();
+
+            if ($collisionUser) {
+                $collisions = Cache::get('telegram_phone_collisions', []);
+                array_unshift($collisions, [
+                    'phone'           => PhoneNumber::mask($normalized),
+                    'user_id'         => $user->id,
+                    'existing_user_id'=> $collisionUser->id,
+                    'telegram_id'     => $userId,
+                    'occurred_at'     => now()->toDateTimeString(),
+                ]);
+                Cache::put('telegram_phone_collisions', array_slice($collisions, 0, 50), now()->addDays(30));
+
+                $this->client->sendMessage($chatId, "⚠️ Ushbu telefon raqami (<b>" . PhoneNumber::mask($normalized) . "</b>) allaqachon boshqa hisobga ulangan.", [
+                    'reply_markup' => $this->getMainMenuKeyboard(),
+                ]);
+                return;
+            }
+
             $user->update([
                 'telegram_id'        => $userId,
                 'phone'              => $normalized,
@@ -469,7 +506,11 @@ class TelegramBotService
                 'telegram_linked_at' => now(),
             ]);
 
-            $this->client->sendMessage($chatId, "Tabriklaymiz! 🎉\n\nTelefon raqamingiz (<b>" . PhoneNumber::mask($normalized) . "</b>) muvaffaqiyatli tasdiqlandi va Telegram hisobingizga ulandi! ✅\n\nPastdagi menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
+            $authService = new TelegramAuthService();
+            $bonusCoins = $authService->awardWelcomeBonusIfEligible($user->fresh());
+            $bonusText = $bonusCoins > 0 ? "\n\n🎁 Hisobingizga <b>+{$bonusCoins} 🪙 xush kelibsiz bonusi</b> qo'shildi!" : '';
+
+            $this->client->sendMessage($chatId, "Tabriklaymiz! 🎉\n\nTelefon raqamingiz (<b>" . PhoneNumber::mask($normalized) . "</b>) muvaffaqiyatli tasdiqlandi va Telegram hisobingizga ulandi! ✅{$bonusText}\n\nPastdagi menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
                 'reply_markup' => $this->getMainMenuKeyboard(),
             ]);
         } else {
@@ -800,6 +841,19 @@ class TelegramBotService
             return;
         }
 
+        // Kirishni tasdiqlash yoki rad etish callback tugmalari
+        if (str_starts_with($data, 'auth_confirm:')) {
+            $token = substr($data, 13);
+            $this->handleAuthConfirmCallback($chatId, $userId, $callbackQuery['from'] ?? [], $token);
+            return;
+        }
+
+        if (str_starts_with($data, 'auth_reject:')) {
+            $token = substr($data, 12);
+            $this->handleAuthRejectCallback($chatId, $userId, $token);
+            return;
+        }
+
         match ($data) {
             'cmd_profil' => $this->handleProfileCommand($chatId, $userId),
             'cmd_streak' => $this->handleStreakCommand($chatId, $userId),
@@ -813,5 +867,73 @@ class TelegramBotService
             'cmd_close' => $this->handleCloseMenuCommand($chatId),
             default => null,
         };
+    }
+
+    /**
+     * Foydalanuvchi "Ha, tasdiqlayman" inline tugmasini bosganda kirishni yakunlash.
+     */
+    protected function handleAuthConfirmCallback(int|string $chatId, int|string $userId, array $from, string $token): void
+    {
+        $authData = Cache::get("tg_auth_login_{$token}");
+        if (!is_array($authData)) {
+            $this->client->sendMessage($chatId, "⚠️ Kirish so'rovi muddati tugagan yoki allaqachon yakunlangan.");
+            return;
+        }
+
+        $pendingFrom = $authData['pending_from'] ?? null;
+        if (is_array($pendingFrom) && isset($pendingFrom['id']) && (int) $pendingFrom['id'] !== (int) $userId) {
+            $this->client->sendMessage($chatId, "⚠️ Xavfsizlik xatosi: ushbu kirish so'rovi boshqa foydalanuvchiga tegishli.");
+            return;
+        }
+
+        $authService = new TelegramAuthService();
+        $findResult = $authService->findOrCreateUser([
+            'id'         => $userId,
+            'first_name' => $from['first_name'] ?? ($pendingFrom['first_name'] ?? ''),
+            'last_name'  => $from['last_name'] ?? ($pendingFrom['last_name'] ?? ''),
+            'username'   => $from['username'] ?? ($pendingFrom['username'] ?? null),
+        ]);
+
+        if (!$findResult['success']) {
+            $this->client->sendMessage($chatId, "⚠️ " . ($findResult['message'] ?? "Kirishda xatolik yuz berdi."));
+            return;
+        }
+
+        $user = $findResult['user'];
+        Cache::put("tg_auth_confirmed_{$token}", $user->id, now()->addMinutes(10));
+
+        $completeUrl = route('auth.telegram.complete', ['token' => $token]);
+        if (!empty($authData['browser_secret'])) {
+            $completeUrl .= '?s=' . urlencode((string) $authData['browser_secret']);
+        }
+
+        $name = htmlspecialchars($from['first_name'] ?? $user->name);
+        $phoneNote = !$user->hasVerifiedPhone()
+            ? "\n\n🎁 <b>50 tanga xush kelibsiz bonusini</b> olish uchun telefon raqamingizni tasdiqlashni unutmang!"
+            : '';
+
+        $this->client->sendMessage($chatId, "Salom, <b>{$name}</b>! ✅\n\nSaytga kirishingiz muvaffaqiyatli tasdiqlandi!{$phoneNote}\n\nBrauzer sahifangiz avtomatik yangilanadi. Agar yangilanmasa, quyidagi tugma orqali to'g'ridan-to'g'ri saytga kiring:", [
+            'reply_markup' => [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '🚀 Saytga kirish', 'url' => $completeUrl],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Foydalanuvchi "Yo'q, bekor qilish" inline tugmasini bosganda kirishni bloklash.
+     */
+    protected function handleAuthRejectCallback(int|string $chatId, int|string $userId, string $token): void
+    {
+        Cache::forget("tg_auth_login_{$token}");
+        Cache::forget("tg_auth_confirmed_{$token}");
+        Cache::put("tg_auth_rejected_{$token}", true, now()->addMinutes(5));
+
+        $this->client->sendMessage($chatId, "🛑 <b>Kirish so'rovi bekor qilindi!</b>\n\nHisobingiz xavfsizlikda. Brauzerdagi kirish oynasi avtomatik yopildi.", [
+            'reply_markup' => $this->getMainMenuKeyboard(),
+        ]);
     }
 }

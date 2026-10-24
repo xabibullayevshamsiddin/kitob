@@ -12,11 +12,27 @@ use Illuminate\Support\Str;
 
 class TelegramPaymentService
 {
-    protected TelegramClient $client;
+    protected ?TelegramClient $client;
 
-    public function __construct(?TelegramClient $client = null)
+    /**
+     * @param TelegramClient|null $client
+     */
+    public function __construct($client = null)
     {
-        $this->client = $client ?? new TelegramClient();
+        $this->client = $client instanceof TelegramClient ? $client : null;
+    }
+
+    /**
+     * TelegramClient ob'ektini faqat API chaqirilganda lazy yaratish.
+     * Bu token sozlanmagan muhitlarda /shop sahifasi yiqilishining oldini oladi.
+     */
+    protected function client(): TelegramClient
+    {
+        if ($this->client === null) {
+            $this->client = new TelegramClient();
+        }
+
+        return $this->client;
     }
 
     /**
@@ -114,7 +130,7 @@ class TelegramPaymentService
 
         // 2. Telegram Bot API createInvoiceLink chaqirish
         try {
-            $invoiceLink = $this->client->createInvoiceLink(
+            $invoiceLink = $this->client()->createInvoiceLink(
                 $pack['title'],
                 $pack['description'],
                 $uniquePayload,
@@ -158,7 +174,7 @@ class TelegramPaymentService
         $totalAmount = (int) ($query['total_amount'] ?? 0);
 
         if (!$this->isPaymentsEnabled()) {
-            $this->client->answerPreCheckoutQuery($queryId, false, 'Telegram Stars to\'lovlari vaqtincha to\'xtatilgan.');
+            $this->client()->answerPreCheckoutQuery($queryId, false, 'Telegram Stars to\'lovlari vaqtincha to\'xtatilgan.');
             return false;
         }
 
@@ -167,17 +183,17 @@ class TelegramPaymentService
             ->first();
 
         if (!$payment) {
-            $this->client->answerPreCheckoutQuery($queryId, false, 'Buyurtma topilmadi yoki muddati o\'tgan.');
+            $this->client()->answerPreCheckoutQuery($queryId, false, 'Buyurtma topilmadi yoki muddati o\'tgan.');
             return false;
         }
 
         if ($payment->stars_amount !== $totalAmount) {
-            $this->client->answerPreCheckoutQuery($queryId, false, 'To\'lov miqdori mos kelmadi.');
+            $this->client()->answerPreCheckoutQuery($queryId, false, 'To\'lov miqdori mos kelmadi.');
             return false;
         }
 
         // To'lovni tasdiqlash
-        $this->client->answerPreCheckoutQuery($queryId, true);
+        $this->client()->answerPreCheckoutQuery($queryId, true);
         return true;
     }
 
@@ -259,7 +275,7 @@ class TelegramPaymentService
                       . "Platformadagi do'kon bo'limidan sara imtiyozlarni xarid qilishingiz mumkin! 🛍";
 
                 try {
-                    $this->client->sendMessage($user->telegram_id, $text);
+                    $this->client()->sendMessage($user->telegram_id, $text);
                 } catch (\Throwable $e) {
                     Log::warning("Telegram Stars chek xabarini yuborishda xato: " . $e->getMessage());
                 }
@@ -302,7 +318,7 @@ class TelegramPaymentService
 
         // 1. Telegram API refundStarPayment chaqirish
         try {
-            $this->client->refundStarPayment($user->telegram_id, $payment->telegram_payment_charge_id);
+            $this->client()->refundStarPayment($user->telegram_id, $payment->telegram_payment_charge_id);
         } catch (TelegramApiException $e) {
             Log::error("Telegram refundStarPayment xatosi: " . $e->getMessage());
             return [
@@ -346,5 +362,67 @@ class TelegramPaymentService
                 'message' => 'Telegram Stars to\'lovi muvaffaqiyatli qaytarildi.',
             ];
         });
+    }
+
+    /**
+     * getStarTransactions orqali to'langan, lekin webhook yetib kelmagan (pending)
+     * to'lovlarni kunlik solishtirish va tiklash (Reconciliation).
+     */
+    public function reconcileStarTransactions(int $limit = 100): array
+    {
+        try {
+            $response = $this->client()->getStarTransactions(0, $limit);
+        } catch (\Throwable $e) {
+            Log::error('Telegram getStarTransactions xatosi: ' . $e->getMessage());
+            return [
+                'success'   => false,
+                'fulfilled' => 0,
+                'checked'   => 0,
+                'message'   => $e->getMessage(),
+            ];
+        }
+
+        $transactions = $response['result']['transactions'] ?? [];
+        $fulfilled = 0;
+        $checked = 0;
+
+        foreach ($transactions as $tx) {
+            $checked++;
+            $chargeId = (string) ($tx['id'] ?? '');
+            $amount = (int) ($tx['amount'] ?? 0);
+            $source = $tx['source'] ?? [];
+            $invoicePayload = (string) ($source['invoice_payload'] ?? '');
+
+            // Faqat kiruvchi user to'lovlari va invoice_payload bor tranzaksiyalarni tekshiramiz
+            if ($amount <= 0 || empty($invoicePayload) || empty($chargeId)) {
+                continue;
+            }
+
+            $pendingPayment = TelegramStarPayment::where('payload', $invoicePayload)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($pendingPayment && $pendingPayment->stars_amount === $amount) {
+                $ok = $this->handleSuccessfulPayment([
+                    'successful_payment' => [
+                        'currency'                   => 'XTR',
+                        'total_amount'               => $amount,
+                        'invoice_payload'            => $invoicePayload,
+                        'telegram_payment_charge_id' => $chargeId,
+                        'reconciled_at'              => now()->toIso8601String(),
+                    ],
+                ]);
+
+                if ($ok) {
+                    $fulfilled++;
+                }
+            }
+        }
+
+        return [
+            'success'   => true,
+            'checked'   => $checked,
+            'fulfilled' => $fulfilled,
+        ];
     }
 }

@@ -148,4 +148,34 @@ class TelegramNotificationTest extends TestCase
                 && str_contains($job->message, 'Alkimyogar');
         });
     }
+
+    public function test_notification_job_respects_quiet_hours_for_non_security_messages(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 100]], 200),
+        ]);
+
+        // Toshkent vaqti bilan 23:30 (jim soatlar ichida)
+        Carbon::setTestNow(Carbon::create(2026, 10, 24, 23, 30, 0, 'Asia/Tashkent'));
+
+        $user = User::factory()->create([
+            'telegram_id'        => 555009,
+            'notification_prefs' => [
+                'streak_reminder' => true,
+                'quiet_hours'     => true,
+            ],
+        ]);
+
+        // Oddiy bildirishnoma jim soatlarda yuborilmasligi kerak
+        $job = new SendTelegramNotificationJob($user->id, 'Tungi eslatma', [], 'streak_reminder');
+        $job->handle(new TelegramClient());
+        Http::assertNothingSent();
+
+        // Xavfsizlik (security) xabari esa jim soatlarda ham yuborilishi shart
+        $secJob = new SendTelegramNotificationJob($user->id, 'Xavfsizlik kodi: 1234', [], 'security');
+        $secJob->handle(new TelegramClient());
+        Http::assertSentCount(1);
+
+        Carbon::setTestNow();
+    }
 }

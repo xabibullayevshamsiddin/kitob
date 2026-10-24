@@ -111,6 +111,7 @@
                 'stats'     => '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
                 'settings'  => '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
                 'shop'      => '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+                'telegram'  => '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
             ];
             return '<svg class="nav-icon w-4 h-4 flex-shrink-0 text-mist transition-colors duration-base" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' . ($paths[$name] ?? '') . '</svg>';
         };
@@ -133,8 +134,9 @@
                 ['route' => 'admin.stats',     'match' => 'admin.stats',      'label' => 'Statistika', 'icon' => 'stats'],
             ],
             'Tizim' => [
-                ['route' => 'admin.shop.index', 'match' => 'admin.shop.*', 'label' => 'Do\'kon boshqaruvi', 'icon' => 'shop'],
-                ['route' => 'admin.settings',   'match' => 'admin.settings', 'label' => 'Sozlamalar', 'icon' => 'settings'],
+                ['route' => 'admin.shop.index',     'match' => 'admin.shop.*',     'label' => 'Do\'kon boshqaruvi', 'icon' => 'shop'],
+                ['route' => 'admin.telegram.index', 'match' => 'admin.telegram.*', 'label' => 'Telegram bot',       'icon' => 'telegram'],
+                ['route' => 'admin.settings',       'match' => 'admin.settings',   'label' => 'Sozlamalar',         'icon' => 'settings'],
             ],
         ];
     @endphp

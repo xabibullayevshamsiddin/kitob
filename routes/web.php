@@ -1232,6 +1232,12 @@ Route::prefix('admin')
     Route::post('/shop/items/{item}/toggle', [\App\Http\Controllers\Admin\ShopController::class, 'toggleActive'])->name('shop.items.toggle');
     Route::post('/shop/settings', [\App\Http\Controllers\Admin\ShopController::class, 'updateSettings'])->name('shop.settings.update');
     Route::post('/shop/refund', [\App\Http\Controllers\Admin\ShopController::class, 'refundUserItem'])->name('shop.refund');
+
+    // ── Telegram Bot & Stars Boshqaruvi (Admin Telegram Management) ──
+    Route::get('/telegram', [\App\Http\Controllers\Admin\TelegramAdminController::class, 'index'])->name('telegram.index');
+    Route::post('/telegram/broadcast', [\App\Http\Controllers\Admin\TelegramAdminController::class, 'broadcast'])->name('telegram.broadcast');
+    Route::post('/telegram/reconcile', [\App\Http\Controllers\Admin\TelegramAdminController::class, 'reconcile'])->name('telegram.reconcile');
+    Route::post('/telegram/payments/{payment}/refund', [\App\Http\Controllers\Admin\TelegramAdminController::class, 'refund'])->name('telegram.refund');
 });
 
 // Alias for profile.edit
@@ -1323,7 +1329,13 @@ Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetControl
     ->middleware('guest')
     ->name('password.email');
 
-// Telegram Mini App (TMA)
+// Telegram Mini App (TMA) — /tg/app va /tg-app manzillari qo'llab-quvvatlanadi
+Route::get('/tg/app', [\App\Http\Controllers\Telegram\TelegramMiniAppController::class, 'index'])
+    ->name('tg.app');
+
+Route::post('/tg/app/auth', [\App\Http\Controllers\Telegram\TelegramMiniAppController::class, 'authenticate'])
+    ->name('tg.app.auth');
+
 Route::get('/tg-app', [\App\Http\Controllers\Telegram\TelegramMiniAppController::class, 'index'])
     ->name('tg-app');
 

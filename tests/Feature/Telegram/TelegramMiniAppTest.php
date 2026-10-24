@@ -89,8 +89,8 @@ class TelegramMiniAppTest extends TestCase
     public function test_verify_init_data_rejects_expired_auth_date(): void
     {
         $service = new TelegramAuthService();
-        // 25 hours ago
-        $initData = $this->generateInitData(['id' => 12345678], time() - (25 * 3600));
+        // 1 soatdan ortiq (3700 soniya oldin)
+        $initData = $this->generateInitData(['id' => 12345678], time() - 3700);
 
         $result = $service->verifyInitData($initData);
 
@@ -168,5 +168,16 @@ class TelegramMiniAppTest extends TestCase
 
         $response->assertStatus(403);
         $this->assertFalse(Auth::check());
+    }
+
+    public function test_tg_slash_app_and_admin_telegram_dashboard_work(): void
+    {
+        $res = $this->get('/tg/app');
+        $res->assertStatus(200);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $adminRes = $this->actingAs($admin)->get(route('admin.telegram.index'));
+        $adminRes->assertStatus(200);
+        $adminRes->assertSee('Telegram Integratsiyasi');
     }
 }

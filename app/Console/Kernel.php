@@ -39,6 +39,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('telegram:send-streak-reminders')
             ->dailyAt('20:30')
             ->timezone('Asia/Tashkent');
+
+        // Kunlik Telegram Stars to'lovlarini getStarTransactions bilan solishtirish (har kecha 02:00 da)
+        $schedule->command('telegram:reconcile-stars')
+            ->dailyAt('02:00')
+            ->timezone('Asia/Tashkent');
     }
 
     /**

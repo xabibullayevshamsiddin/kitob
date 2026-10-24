@@ -78,8 +78,8 @@ class TelegramAuthTest extends TestCase
     public function test_telegram_auth_service_rejects_expired_auth_date(): void
     {
         $service = new TelegramAuthService();
-        // 25 soat oldingi auth_date (86400 soniyadan ortiq)
-        $payload = $this->generateWidgetPayload(['auth_date' => time() - 90000]);
+        // 1 soatdan ortiq (3600 soniyadan eski) auth_date rad etilishi kerak
+        $payload = $this->generateWidgetPayload(['auth_date' => time() - 3700]);
 
         $this->assertFalse($service->verifyWidgetData($payload));
     }
@@ -99,7 +99,7 @@ class TelegramAuthTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_telegram_callback_creates_and_logs_in_new_user(): void
+    public function test_telegram_callback_creates_and_logs_in_new_user_without_giving_bonus_until_phone_verified(): void
     {
         $payload = $this->generateWidgetPayload([
             'id'         => 888999111,
@@ -119,7 +119,155 @@ class TelegramAuthTest extends TestCase
         $this->assertEquals('sardor_r', $user->username);
         $this->assertNull($user->email);
         $this->assertNull($user->password);
+        $this->assertNull($user->phone);
+        // Noyob telefon tasdiqlanmaguncha 50 tanga bonus berilmaydi
+        $this->assertEquals(0, $user->coin_balance);
+
+        // Endi foydalanuvchi botda o'z noyob telefon raqamini tasdiqlaganda 50 tanga bonus beriladi
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]], 200),
+        ]);
+        $botService = new \App\Services\Telegram\TelegramBotService();
+        $botService->handleUpdate([
+            'update_id' => 9001,
+            'message'   => [
+                'chat'    => ['id' => 888999111],
+                'from'    => ['id' => 888999111, 'first_name' => 'Sardor'],
+                'contact' => [
+                    'user_id'      => 888999111,
+                    'phone_number' => '+998901239988',
+                ],
+            ],
+        ]);
+
+        $user->refresh();
+        $this->assertEquals('+998901239988', $user->phone);
+        $this->assertNotNull($user->phone_verified_at);
         $this->assertEquals((int) setting('welcome_bonus_coins', 50), $user->coin_balance);
+    }
+
+    public function test_oidc_redirect_and_callback_with_pkce_state_and_nonce(): void
+    {
+        Config::set('telegram.login_client_id', 'tg_oidc_client_123');
+        Config::set('telegram.login_client_secret', 'tg_oidc_secret_456');
+
+        // 1. Redirect OIDC parametrlarini (state, nonce, code_challenge) yaratishi kerak
+        $redirectRes = $this->get(route('auth.telegram.redirect'));
+        $redirectRes->assertStatus(302);
+        $location = (string) $redirectRes->headers->get('Location');
+        $this->assertStringContainsString('https://oauth.telegram.org/auth', $location);
+        $this->assertStringContainsString('code_challenge_method=S256', $location);
+
+        $state = session('oauth_telegram_state');
+        $nonce = session('oauth_telegram_nonce');
+        $this->assertNotEmpty($state);
+        $this->assertNotEmpty($nonce);
+
+        // 2. Noto'g'ri state bilan callback rad etilishi kerak
+        $badCallback = $this->get(route('auth.telegram.callback', [
+            'code'  => 'auth_code_xyz',
+            'state' => 'wrong_state_value',
+        ]));
+        $badCallback->assertRedirect(route('login'));
+        $this->assertGuest();
+
+        // 3. To'g'ri state, PKCE va ID token bilan kirish muvaffaqiyatli bo'lishi kerak
+        $this->withSession([
+            'oauth_telegram_state'         => 'valid_state_abc',
+            'oauth_telegram_nonce'         => 'valid_nonce_xyz',
+            'oauth_telegram_code_verifier' => 'verifier_1234567890',
+        ]);
+
+        $headerB64 = rtrim(strtr(base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])), '+/', '-_'), '=');
+        $payloadB64 = rtrim(strtr(base64_encode(json_encode([
+            'iss'                => 'https://oauth.telegram.org',
+            'aud'                => 'tg_oidc_client_123',
+            'sub'                => '777888999',
+            'id'                 => 777888999,
+            'name'               => 'Otabek Umarov',
+            'preferred_username' => 'otabek_u',
+            'phone_number'       => '+998907778899',
+            'nonce'              => 'valid_nonce_xyz',
+            'exp'                => time() + 3600,
+        ])), '+/', '-_'), '=');
+        $fakeIdToken = "{$headerB64}.{$payloadB64}.signature";
+
+        Http::fake([
+            'https://oauth.telegram.org/token' => Http::response([
+                'access_token' => 'access_tok_1',
+                'id_token'     => $fakeIdToken,
+                'token_type'   => 'Bearer',
+            ], 200),
+        ]);
+
+        $okCallback = $this->get(route('auth.telegram.callback', [
+            'code'  => 'valid_auth_code_123',
+            'state' => 'valid_state_abc',
+        ]));
+
+        $okCallback->assertRedirect(route('home'));
+        $this->assertAuthenticated();
+        $oidcUser = User::where('telegram_id', 777888999)->first();
+        $this->assertNotNull($oidcUser);
+        $this->assertEquals('+998907778899', $oidcUser->phone);
+        $this->assertEquals((int) setting('welcome_bonus_coins', 50), $oidcUser->coin_balance);
+    }
+
+    public function test_bot_deeplink_login_requires_confirmation_and_prevents_session_fixation(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/bot*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]], 200),
+        ]);
+
+        $token = 'secure_token_test_123';
+        $browserSecret = 'browser_bound_secret_xyz';
+
+        Cache::put("tg_auth_login_{$token}", [
+            'created_at'     => now()->toIso8601String(),
+            'ip'             => '127.0.0.1',
+            'device'         => 'Chrome (Windows)',
+            'code'           => '4829',
+            'browser_secret' => $browserSecret,
+        ], now()->addMinutes(15));
+
+        $botService = new \App\Services\Telegram\TelegramBotService();
+
+        // 1. /start auth_{token} bosilganda darhol tasdiqlanmasligi kerak — "Tasdiqlaysizmi?" so'rovi chiqadi
+        $botService->handleUpdate([
+            'update_id' => 9101,
+            'message'   => [
+                'chat' => ['id' => 444555666],
+                'from' => ['id' => 444555666, 'first_name' => 'Rustam'],
+                'text' => "/start auth_{$token}",
+            ],
+        ]);
+
+        $this->assertNull(Cache::get("tg_auth_confirmed_{$token}"));
+
+        // 2. Foydalanuvchi "✅ Ha, tasdiqlayman" inline tugmasini bosgandagina tasdiqlanadi
+        $botService->handleUpdate([
+            'update_id'      => 9102,
+            'callback_query' => [
+                'id'      => 'cb_1',
+                'from'    => ['id' => 444555666, 'first_name' => 'Rustam'],
+                'message' => ['chat' => ['id' => 444555666]],
+                'data'    => "auth_confirm:{$token}",
+            ],
+        ]);
+
+        $this->assertNotNull(Cache::get("tg_auth_confirmed_{$token}"));
+
+        // 3. Begona brauzer (browser_secret mos kelmasa) check endpoint orqali kira olmaydi (403)
+        $hijackAttempt = $this->withSession(['tg_auth_secret_' . $token => 'wrong_attacker_secret'])
+            ->getJson(route('auth.telegram.check', ['token' => $token]));
+        $hijackAttempt->assertStatus(403);
+        $this->assertGuest();
+
+        // 4. Haqiqiy brauzer (browser_secret mos kelsa) muvaffaqiyatli kiradi
+        $legitAttempt = $this->withSession(['tg_auth_secret_' . $token => $browserSecret])
+            ->getJson(route('auth.telegram.check', ['token' => $token]));
+        $legitAttempt->assertStatus(200)->assertJson(['confirmed' => true]);
+        $this->assertAuthenticated();
     }
 
     public function test_telegram_callback_rejects_banned_user(): void

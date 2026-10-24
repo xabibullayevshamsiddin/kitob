@@ -256,4 +256,63 @@ class TelegramPaymentTest extends TestCase
             'source'  => 'telegram_stars_refund',
         ]);
     }
+
+    public function test_reconcile_star_transactions_fulfills_pending_paid_orders(): void
+    {
+        Config::set('telegram.payments_enabled', true);
+
+        $user = User::factory()->create([
+            'telegram_id'  => 334455,
+            'coin_balance' => 10,
+        ]);
+
+        $payment = TelegramStarPayment::create([
+            'user_id'       => $user->id,
+            'payload'       => 'star_coin_pack_50_missed_webhook',
+            'title'         => '50 ta Oltin tanga',
+            'stars_amount'  => 25,
+            'coins_awarded' => 50,
+            'status'        => 'pending',
+        ]);
+
+        Http::fake([
+            'https://api.telegram.org/bot*/getStarTransactions' => Http::response([
+                'ok'     => true,
+                'result' => [
+                    'transactions' => [
+                        [
+                            'id'     => 'reconciled_charge_999',
+                            'amount' => 25,
+                            'date'   => time() - 120,
+                            'source' => [
+                                'type'            => 'user',
+                                'invoice_payload' => 'star_coin_pack_50_missed_webhook',
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+            'https://api.telegram.org/bot*/sendMessage' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->artisan('telegram:reconcile-stars')
+            ->assertExitCode(0);
+
+        $payment->refresh();
+        $user->refresh();
+
+        $this->assertEquals('completed', $payment->status);
+        $this->assertEquals('reconciled_charge_999', $payment->telegram_payment_charge_id);
+        $this->assertEquals(60, $user->coin_balance);
+    }
+
+    public function test_shop_page_works_without_telegram_bot_token(): void
+    {
+        Config::set('telegram.bot_token', null);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->get(route('shop.index'));
+
+        $response->assertStatus(200);
+    }
 }

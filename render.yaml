@@ -37,6 +37,8 @@ services:
         value: file
       - key: CACHE_DRIVER
         value: file
+      - key: QUEUE_CONNECTION
+        value: sync
       - key: FILESYSTEM_DISK
         value: public
       - key: AI_ENABLED

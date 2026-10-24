@@ -6,8 +6,16 @@
 <div class="text-center space-y-6">
     <div class="space-y-1.5">
         <h1 class="text-2xl font-bold font-serif text-paper">Telegram orqali kirish</h1>
-        <p class="text-xs text-mist font-sans">Telegram botingiz ochilmoqda. Kirishni tasdiqlash uchun botda <b>«Start»</b> tugmasini bosing.</p>
+        <p class="text-xs text-mist font-sans">Telegram botingiz ochilmoqda. Kirishni tasdiqlash uchun botda <b>«Start»</b> va <b>«✅ Tasdiqlash»</b> tugmasini bosing.</p>
     </div>
+
+    @if(!empty($securityCode))
+    <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 max-w-xs mx-auto space-y-1">
+        <span class="text-[11px] text-amber-300 font-mono uppercase tracking-wider block">Xavfsizlik tasdiqlash kodi</span>
+        <div class="text-2xl font-black font-mono tracking-[0.25em] text-amber-400">{{ $securityCode }}</div>
+        <p class="text-[11px] text-mist">Botda chiqqan kod ushbu kod bilan bir xil ekanligiga ishonch hosil qiling.</p>
+    </div>
+    @endif
 
     <!-- Animated Telegram Icon Pulse -->
     <div class="relative py-6 flex justify-center">
@@ -109,9 +117,9 @@
                     setTimeout(() => {
                         window.location.href = data.redirect_url || '/';
                     }, 400);
-                } else if (data.banned) {
+                } else if (data.banned || data.rejected) {
                     clearInterval(pollTimer);
-                    alert(data.message || "Hisob bloklangan");
+                    alert(data.message || "Kirish bekor qilindi");
                     window.location.href = '/login';
                 } else if (data.expired) {
                     clearInterval(pollTimer);
