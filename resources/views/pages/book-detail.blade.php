@@ -32,148 +32,166 @@
 @endpush
 
 @section('content')
-<div class="max-w-6xl mx-auto space-y-8 pb-16" x-data="{
-        readerMode: '3d',
-        isSaved: {{ $isSaved ? 'true' : 'false' }},
-        savedCount: {{ (int) $savedCount }},
-        savingBookmark: false,
-        paperTheme: 'ivory',
-        autoPlayActive: false,
-        autoPlayDelay: 7000,
-        showShortcutsModal: false,
-        showDownloadModal: false,
-        showReviewModal: false,
-        showChatDrawer: false,
-        showAiDrawer: {{ $bookAiReady ? 'true' : 'false' }},
-        showAiSummaryModal: false,
-        aiSummaryLoading: false,
-        aiSummaryCopied: false,
-        aiSummaryText: @json($book->ai_summary ?? ''),
-        async openAiSummary() {
-            this.showAiSummaryModal = true;
-            if (this.aiSummaryText && this.aiSummaryText.length > 30) {
-                return;
-            }
-            this.aiSummaryLoading = true;
-            try {
-                const res = await fetch('{{ route('books.ai-summary', $book->id) }}');
-                const data = await res.json();
-                if (data.ok && data.summary) {
-                    this.aiSummaryText = data.summary;
-                }
-            } catch (err) {
-                this.aiSummaryText = 'Konspektni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.';
-            } finally {
-                this.aiSummaryLoading = false;
-            }
-        },
-        copyAiSummary() {
-            if (!this.aiSummaryText) return;
-            navigator.clipboard.writeText(this.aiSummaryText);
-            this.aiSummaryCopied = true;
-            setTimeout(() => { this.aiSummaryCopied = false; }, 2500);
-            if (window.showToast) window.showToast('AI konspekt nusxalandi! 📋', 'success');
-        },
-        activeTab: 'desc',
-        totalComments: {{ (int) $totalCommentsCount }},
-        selectedRating: 5,
-        hoverRating: 0,
-        replyToId: null,
+<script>
+(function() {
+    function initBookDetailPage() {
+        if (!window.Alpine) return;
+        window.Alpine.data('bookDetailPage', () => ({
+            readerMode: '3d',
+            isSaved: {{ $isSaved ? 'true' : 'false' }},
+            savedCount: {{ (int) $savedCount }},
+            savingBookmark: false,
+            paperTheme: 'ivory',
+            autoPlayActive: false,
+            autoPlayDelay: 7000,
+            showShortcutsModal: false,
+            showDownloadModal: false,
+            showReviewModal: false,
+            showChatDrawer: false,
+            showAiDrawer: {{ $bookAiReady ? 'true' : 'false' }},
+            showAiSummaryModal: false,
+            aiSummaryLoading: false,
+            aiSummaryCopied: false,
+            aiSummaryText: @json($book->ai_summary ?? ''),
 
-        async toggleCommentLike(commentId) {
-            try {
-                const res = await fetch('/book-comments/' + commentId + '/like', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+            async openAiSummary() {
+                this.showAiSummaryModal = true;
+                if (this.aiSummaryText && this.aiSummaryText.length > 30) {
+                    return;
+                }
+                this.aiSummaryLoading = true;
+                try {
+                    const res = await fetch('{{ route('books.ai-summary', $book->id) }}');
+                    const data = await res.json();
+                    if (data.ok && data.summary) {
+                        this.aiSummaryText = data.summary;
                     }
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const countEl = document.getElementById('comment-likes-count-' + commentId);
-                    const iconEl = document.getElementById('comment-like-icon-' + commentId);
-                    if (countEl) countEl.innerText = data.likes_count;
-                    if (iconEl) {
-                        if (data.liked) {
-                            iconEl.classList.add('text-rose-500', 'fill-rose-500');
-                            iconEl.classList.remove('text-mist');
-                        } else {
-                            iconEl.classList.remove('text-rose-500', 'fill-rose-500');
-                            iconEl.classList.add('text-mist');
+                } catch (err) {
+                    this.aiSummaryText = 'Konspektni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.';
+                } finally {
+                    this.aiSummaryLoading = false;
+                }
+            },
+
+            copyAiSummary() {
+                if (!this.aiSummaryText) return;
+                navigator.clipboard.writeText(this.aiSummaryText);
+                this.aiSummaryCopied = true;
+                setTimeout(() => { this.aiSummaryCopied = false; }, 2500);
+                if (window.showToast) window.showToast('AI konspekt nusxalandi! 📋', 'success');
+            },
+
+            activeTab: 'desc',
+            totalComments: {{ (int) $totalCommentsCount }},
+            selectedRating: 5,
+            hoverRating: 0,
+            replyToId: null,
+
+            async toggleCommentLike(commentId) {
+                try {
+                    const res = await fetch('/book-comments/' + commentId + '/like', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        const countEl = document.getElementById('comment-likes-count-' + commentId);
+                        const iconEl = document.getElementById('comment-like-icon-' + commentId);
+                        if (countEl) countEl.innerText = data.likes_count;
+                        if (iconEl) {
+                            if (data.liked) {
+                                iconEl.classList.add('text-rose-500', 'fill-rose-500');
+                                iconEl.classList.remove('text-mist');
+                            } else {
+                                iconEl.classList.remove('text-rose-500', 'fill-rose-500');
+                                iconEl.classList.add('text-mist');
+                            }
                         }
                     }
+                } catch(e) {
+                    console.error(e);
                 }
-            } catch(e) {
-                console.error(e);
-            }
-        },
+            },
 
-        async toggleSaveBook() {
-            if (this.savingBookmark) return;
-            this.savingBookmark = true;
-            try {
-                const res = await fetch('{{ route('books.toggle-save', $book) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+            async toggleSaveBook() {
+                if (this.savingBookmark) return;
+                this.savingBookmark = true;
+                try {
+                    const res = await fetch('{{ route('books.toggle-save', $book) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.isSaved = data.is_saved;
+                        this.savedCount = data.total_saved;
+                        if (window.showToast) {
+                            window.showToast(data.message, this.isSaved ? 'success' : 'info');
+                        }
+                    }
+                } catch(e) {
+                    console.error(e);
+                } finally {
+                    this.savingBookmark = false;
+                }
+            },
+
+            setPaperTheme(theme) {
+                this.paperTheme = theme;
+                if (window.fbSetPaperTheme) {
+                    window.fbSetPaperTheme(theme);
+                }
+            },
+
+            toggleAutoPlay(delay) {
+                if (delay) this.autoPlayDelay = delay;
+                if (window.fbToggleAutoPlay) {
+                    this.autoPlayActive = window.fbToggleAutoPlay(this.autoPlayDelay);
+                }
+            },
+
+            init() {
+                if (window.location.hash === '#book-comments') {
+                    this.activeTab = 'comments';
+                }
+                window.addEventListener('flipbook:autoplay', (e) => {
+                    this.autoPlayActive = !!(e.detail && e.detail.active);
+                });
+                window.addEventListener('flipbook:themechange', (e) => {
+                    if (e.detail && e.detail.theme) this.paperTheme = e.detail.theme;
+                });
+                window.addEventListener('book-ai-jump-page', (e) => {
+                    const p = (e.detail && e.detail.page) ? parseInt(e.detail.page, 10) : 1;
+                    if (typeof window.fbGoToPage === 'function') {
+                        setTimeout(() => window.fbGoToPage(p), 180);
+                    }
+                    const pdfFrame = document.getElementById('bookPdfFrame');
+                    if (pdfFrame && pdfFrame.src) {
+                        const base = pdfFrame.src.split('#')[0];
+                        pdfFrame.src = base + '#page=' + p + '&view=FitH&pagemode=none';
                     }
                 });
-                const data = await res.json();
-                if (data.success) {
-                    this.isSaved = data.is_saved;
-                    this.savedCount = data.total_saved;
-                    if (window.showToast) {
-                        window.showToast(data.message, this.isSaved ? 'success' : 'info');
-                    }
-                }
-            } catch(e) {
-                console.error(e);
-            } finally {
-                this.savingBookmark = false;
             }
-        },
+        }));
+    }
 
-        setPaperTheme(theme) {
-            this.paperTheme = theme;
-            if (window.fbSetPaperTheme) {
-                window.fbSetPaperTheme(theme);
-            }
-        },
+    if (window.Alpine) {
+        initBookDetailPage();
+    } else {
+        document.addEventListener('alpine:init', initBookDetailPage, { once: true });
+    }
+})();
+</script>
 
-        toggleAutoPlay(delay) {
-            if (delay) this.autoPlayDelay = delay;
-            if (window.fbToggleAutoPlay) {
-                this.autoPlayActive = window.fbToggleAutoPlay(this.autoPlayDelay);
-            }
-        },
-
-        init() {
-            if (window.location.hash === '#book-comments') {
-                this.activeTab = 'comments';
-            }
-            window.addEventListener('flipbook:autoplay', (e) => {
-                this.autoPlayActive = !!(e.detail && e.detail.active);
-            });
-            window.addEventListener('flipbook:themechange', (e) => {
-                if (e.detail && e.detail.theme) this.paperTheme = e.detail.theme;
-            });
-            window.addEventListener('book-ai-jump-page', (e) => {
-                const p = (e.detail && e.detail.page) ? parseInt(e.detail.page, 10) : 1;
-                if (typeof window.fbGoToPage === 'function') {
-                    setTimeout(() => window.fbGoToPage(p), 180);
-                }
-                const pdfFrame = document.getElementById('bookPdfFrame');
-                if (pdfFrame && pdfFrame.src) {
-                    const base = pdfFrame.src.split('#')[0];
-                    pdfFrame.src = base + '#page=' + p + '&view=FitH&pagemode=none';
-                }
-            });
-        }
-    }">
+<div class="max-w-6xl mx-auto space-y-8 pb-16" x-data="bookDetailPage()">
 
     <!-- ── 1. Editorial Hero Book Banner ── -->
     <div class="ks-panel p-6 sm:p-10 bg-ink-900 border border-ink-border text-paper relative overflow-hidden shadow-2xl">
