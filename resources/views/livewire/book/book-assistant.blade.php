@@ -254,9 +254,6 @@
                                 this.stepInterval = setInterval(() => {
                                     this.step = (this.step + 1) % this.steps.length;
                                 }, 2200);
-                                if (typeof window.playAiTypingSound === 'function') {
-                                    window.playAiTypingSound();
-                                }
                             }
                         }"
                         x-init="start()"

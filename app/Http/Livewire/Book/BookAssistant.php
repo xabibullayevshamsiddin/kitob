@@ -68,6 +68,10 @@ class BookAssistant extends Component
         if ($result['status'] === 'error') {
             $this->errorMessage = $result['answer'];
             $this->toastError($result['answer']);
+            $this->dispatchBrowserEvent('book-ai-updated', [
+                'bookId' => $book->id,
+                'status' => 'error',
+            ]);
             return;
         }
 

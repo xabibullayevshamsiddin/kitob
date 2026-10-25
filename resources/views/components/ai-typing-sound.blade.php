@@ -1,31 +1,19 @@
 {{-- AI Typing Keyboard Sound Effect Component --}}
-<div id="ai-typing-sound-root" class="hidden" aria-hidden="true" wire:ignore>
-    <audio id="aiTypingAudioElement"
-           preload="auto"
-           loop
-           class="hidden">
-        <source src="{{ asset('sounds/dragon-studio-keyboard-typing-sound-effect-335503.mp3') }}" type="audio/mpeg">
-    </audio>
-</div>
-
 <script>
 (function() {
     const SOUND_URL = "{{ asset('sounds/dragon-studio-keyboard-typing-sound-effect-335503.mp3') }}";
     let typingAudio = null;
     let fadeTimer = null;
+    let safetyTimer = null;
     let isMuted = false;
+
     try {
         isMuted = localStorage.getItem('ai_typing_sound_muted') === 'true';
     } catch(e) {}
 
     function getAudio() {
         if (!typingAudio) {
-            const el = document.getElementById('aiTypingAudioElement');
-            if (el) {
-                typingAudio = el;
-            } else {
-                typingAudio = new Audio(SOUND_URL);
-            }
+            typingAudio = new Audio(SOUND_URL);
             typingAudio.loop = true;
             typingAudio.volume = 0.35;
             typingAudio.preload = 'auto';
@@ -45,21 +33,29 @@
                 clearInterval(fadeTimer);
                 fadeTimer = null;
             }
+            if (safetyTimer) {
+                clearTimeout(safetyTimer);
+                safetyTimer = null;
+            }
+
             audio.volume = Math.max(0.05, Math.min(1.0, volume));
 
             if (audio.paused) {
-                // Natural variance: offset slightly (0 - 2.5s) so the typing rhythm feels dynamic
                 if (audio.currentTime === 0 && audio.duration > 3) {
                     audio.currentTime = Math.random() * 2.5;
                 }
                 const p = audio.play();
                 if (p && typeof p.catch === 'function') {
                     p.catch(function(err) {
-                        // Suppressed by browser autoplay policy before user interaction
                         console.debug('[AI Typing Sound] play suppressed:', err);
                     });
                 }
             }
+
+            // Safety timer: maximum 20 seconds, guarantees audio will NEVER loop indefinitely
+            safetyTimer = setTimeout(function() {
+                window.stopAiTypingSound(true);
+            }, 20000);
         } catch (e) {
             console.debug('[AI Typing Sound] play error:', e);
         }
@@ -71,8 +67,12 @@
      */
     window.stopAiTypingSound = function(fade = true) {
         try {
-            const audio = typingAudio || document.getElementById('aiTypingAudioElement');
-            if (!audio || audio.paused) return;
+            if (safetyTimer) {
+                clearTimeout(safetyTimer);
+                safetyTimer = null;
+            }
+
+            if (!typingAudio || typingAudio.paused) return;
 
             if (fadeTimer) {
                 clearInterval(fadeTimer);
@@ -80,21 +80,21 @@
             }
 
             if (!fade) {
-                audio.pause();
-                audio.currentTime = 0;
+                typingAudio.pause();
+                typingAudio.currentTime = 0;
                 return;
             }
 
-            const step = audio.volume / 6;
+            const step = typingAudio.volume / 6;
             fadeTimer = setInterval(function() {
-                if (audio.volume > step) {
-                    audio.volume = Math.max(0, audio.volume - step);
+                if (typingAudio.volume > step) {
+                    typingAudio.volume = Math.max(0, typingAudio.volume - step);
                 } else {
                     clearInterval(fadeTimer);
                     fadeTimer = null;
-                    audio.pause();
-                    audio.currentTime = 0;
-                    audio.volume = 0.35;
+                    typingAudio.pause();
+                    typingAudio.currentTime = 0;
+                    typingAudio.volume = 0.35;
                 }
             }, 30);
         } catch (e) {
@@ -131,6 +131,19 @@
         return isMuted;
     };
 
+    // Ensure audio is stopped on page refresh, unload, or tab switch
+    window.addEventListener('beforeunload', function() {
+        window.stopAiTypingSound(false);
+    });
+    window.addEventListener('pagehide', function() {
+        window.stopAiTypingSound(false);
+    });
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            window.stopAiTypingSound(false);
+        }
+    });
+
     /**
      * Attach Livewire listeners for BookAssistant
      */
@@ -139,24 +152,28 @@
         window.__aiTypingLivewireHooked = true;
 
         window.Livewire.hook('message.sent', function(message, component) {
-            const name = (component && component.fingerprint && component.fingerprint.name) ? component.fingerprint.name : '';
             const updates = (message && message.updateQueue) ? message.updateQueue : [];
-            const isAiAction = updates.some(function(u) {
-                const method = u.payload ? u.payload.method : '';
-                return method === 'ask' || method === 'clearHistory';
+            const isAskAction = updates.some(function(u) {
+                return u.payload && u.payload.method === 'ask';
             });
 
-            if (name.includes('book-assistant') || isAiAction) {
+            // ONLY play if the user is explicitly executing an 'ask' method
+            if (isAskAction) {
                 window.playAiTypingSound(0.35);
             }
         });
 
         window.Livewire.hook('message.processed', function(message, component) {
+            const updates = (message && message.updateQueue) ? message.updateQueue : [];
+            const isAskAction = updates.some(function(u) {
+                return u.payload && (u.payload.method === 'ask' || u.payload.method === 'clearHistory');
+            });
             const name = (component && component.fingerprint && component.fingerprint.name) ? component.fingerprint.name : '';
-            if (name.includes('book-assistant')) {
+
+            if (isAskAction || name.includes('book-assistant')) {
                 setTimeout(function() {
                     window.stopAiTypingSound(true);
-                }, 500);
+                }, 400);
             }
         });
 
