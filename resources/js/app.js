@@ -9,6 +9,24 @@ if (!window.Alpine) {
     Alpine.start();
 }
 
+// Automatically re-initialize Alpine on Livewire DOM updates
+function hookLivewireAlpine() {
+    if (window.Livewire && window.Livewire.hook) {
+        window.Livewire.hook('message.processed', (message, component) => {
+            if (window.Alpine && typeof window.Alpine.initTree === 'function' && component && component.el) {
+                try {
+                    window.Alpine.initTree(component.el);
+                } catch (e) {}
+            }
+        });
+    }
+}
+if (window.Livewire) {
+    hookLivewireAlpine();
+} else {
+    document.addEventListener('livewire:load', hookLivewireAlpine);
+}
+
 // Load GSAP & StPageFlip only on the landing page; its scroll scene is not needed elsewhere.
 if (document.getElementById('book-reveal-section') || document.getElementById('scrolly-book-stage')) {
     Promise.all([import('gsap'), import('gsap/ScrollTrigger'), import('page-flip')])

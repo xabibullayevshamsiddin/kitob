@@ -133,5 +133,7 @@
     <x-ai-typing-sound />
     <!-- ── Universal Custom Confirmation Modal (Root Level) ── -->
     <x-confirm-modal />
+    <!-- ── Universal Voice Note Player & Livewire-Alpine Integration ── -->
+    <x-voice-player-script />
 </body>
 </html>

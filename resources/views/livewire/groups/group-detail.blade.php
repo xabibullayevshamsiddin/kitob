@@ -231,7 +231,10 @@
                  let stick = true;
                  c.addEventListener('scroll', () => { stick = c.scrollHeight - c.scrollTop - c.clientHeight < 120; });
                  if (window.Livewire) {
-                     Livewire.hook('message.processed', () => {
+                     Livewire.hook('message.processed', (message, component) => {
+                        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                            try { window.Alpine.initTree(c); } catch (e) {}
+                        }
                          if (stick && document.body.contains(c)) {
                              requestAnimationFrame(() => { c.scrollTop = c.scrollHeight; });
                          }
@@ -370,64 +373,28 @@
 
                             @if($msg->audio_path)
                                 <div class="p-3 rounded-panel shadow-sm {{ $isMe ? 'bg-ink-800 border border-ink-border text-paper rounded-tr-none' : 'bg-ink-950/80 border border-ink-border text-paper rounded-tl-none' }}"
-                                     x-data="{
-                                         playing: false,
-                                         progress: 0,
-                                         duration: {{ $msg->audio_duration ?: 0 }},
-                                         currentTime: 0,
-                                         audio: null,
-                                         init() {
-                                             this.audio = new Audio('{{ $msg->audio_url }}');
-                                             this.audio.addEventListener('loadedmetadata', () => {
-                                                 if (!this.duration) this.duration = Math.round(this.audio.duration);
-                                             });
-                                             this.audio.addEventListener('timeupdate', () => {
-                                                 this.currentTime = Math.round(this.audio.currentTime);
-                                                 if (this.duration) {
-                                                     this.progress = (this.audio.currentTime / this.duration) * 100;
-                                                 }
-                                             });
-                                             this.audio.addEventListener('ended', () => {
-                                                 this.playing = false;
-                                                 this.progress = 0;
-                                                 this.currentTime = 0;
-                                             });
-                                         },
-                                         toggle() {
-                                             if (!this.audio) return;
-                                             if (this.playing) {
-                                                 this.audio.pause();
-                                                 this.playing = false;
-                                             } else {
-                                                 document.querySelectorAll('audio').forEach(a => a.pause());
-                                                 this.audio.play();
-                                                 this.playing = true;
-                                             }
-                                         },
-                                         formatTime(sec) {
-                                             const m = Math.floor(sec / 60);
-                                             const s = Math.floor(sec % 60);
-                                             return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-                                         }
-                                     }">
+                                     wire:key="grp-audio-bubble-{{ $msg->id }}"
+                                     x-data="voicePlayer('{{ $msg->audio_url }}', {{ (int) ($msg->audio_duration ?: 0) }})">
                                     <div class="flex items-center gap-3 min-w-[210px] sm:min-w-[260px]">
-                                        <button type="button" @click="toggle()"
-                                                class="w-9 h-9 rounded-btn flex items-center justify-center shrink-0 transition-transform active:scale-95 bg-amber-400 text-ink-950 hover:bg-amber-300">
-                                            <template x-if="!playing">
-                                                <svg class="w-3.5 h-3.5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                                            </template>
-                                            <template x-if="playing">
-                                                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                                            </template>
+                                        <button type="button"
+                                                @click="toggle()"
+                                                onclick="if(!this.closest('[x-data]')?._x_dataStack && window.fallbackVoiceToggle){ window.fallbackVoiceToggle(this); }"
+                                                class="w-9 h-9 rounded-btn flex items-center justify-center shrink-0 transition-transform active:scale-95 bg-amber-400 text-ink-950 hover:bg-amber-300"
+                                                title="Ovozli xabarni ijro etish / to'xtatish">
+                                            <svg x-show="!playing" class="w-3.5 h-3.5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                            <svg x-show="playing" x-cloak class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                         </button>
                                         <div class="flex-1 space-y-1">
                                             <div class="flex items-center gap-0.5 h-5 cursor-pointer"
-                                                 @click="if(audio && duration) { const r = $el.getBoundingClientRect(); const p = Math.max(0, Math.min(1, ($event.clientX - r.left) / r.width)); audio.currentTime = p * duration; }">
-                                                <template x-for="(h, i) in [35, 65, 45, 90, 75, 40, 85, 100, 70, 50, 85, 95, 60, 45, 75, 55, 80, 40]" :key="i">
+                                                 @click="seek($event)">
+                                                @php
+                                                    $voiceWavesGrp = [35, 65, 45, 90, 75, 40, 85, 100, 70, 50, 85, 95, 60, 45, 75, 55, 80, 40];
+                                                @endphp
+                                                @foreach($voiceWavesGrp as $wIdx => $wH)
                                                     <span class="flex-1 rounded-full transition-all"
-                                                          :style="'height: ' + h + '%;'"
-                                                          :class="(i / 18 * 100) <= progress ? 'bg-amber-400' : 'bg-ink-800'"></span>
-                                                </template>
+                                                          style="height: {{ $wH }}%;"
+                                                          :class="({{ $wIdx }} / 18 * 100) <= progress ? 'bg-amber-400' : 'bg-ink-800'"></span>
+                                                @endforeach
                                             </div>
                                             <div class="flex items-center justify-between text-[10px] font-mono text-mist">
                                                 <span x-text="playing ? formatTime(currentTime) : 'Ovozli xabar'">Ovozli xabar</span>
@@ -534,7 +501,17 @@
                          .then(data => {
                              this.isUploading = false;
                              if (data.success && data.path) {
-                                 $wire.sendVoiceMessage(data.path, data.duration || dur);
+                                 const p = $wire.sendVoiceMessage(data.path, data.duration || dur);
+                                 if (p && typeof p.then === 'function') {
+                                     p.then(() => {
+                                         setTimeout(() => {
+                                             const c = document.getElementById('group-chat-container');
+                                             if (c && window.Alpine && typeof window.Alpine.initTree === 'function') {
+                                                 window.Alpine.initTree(c);
+                                             }
+                                         }, 50);
+                                     });
+                                 }
                              } else {
                                  alert('Ovozli xabarni yuklashda xatolik yuz berdi.');
                              }
