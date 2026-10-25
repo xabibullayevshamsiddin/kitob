@@ -227,6 +227,19 @@ class EliteHost
         }
     }
 
+    public static function command(string $command): bool
+    {
+        $res = self::request('POST', '/servers/' . self::SERVER_ID . '/command', [
+            'command' => $command,
+        ]);
+        if ($res['code'] === 204) {
+            echo "✅ Buyruq server konsoliga yuborildi: {$command}\n";
+            return true;
+        }
+        echo "❌ Buyruq yuborilmadi (HTTP {$res['code']})\n{$res['body']}\n";
+        return false;
+    }
+
     public static function deleteFiles(string $root, array $files): bool
     {
         $res = self::request('POST', '/servers/' . self::SERVER_ID . '/files/delete', [
@@ -260,6 +273,15 @@ switch ($action) {
 
     case 'restart':
         EliteHost::restart();
+        break;
+
+    case 'cmd':
+    case 'command':
+        $cmd = $argv[2] ?? null;
+        if (!$cmd) {
+            die("Foydalanish: php scripts/elitehost.php cmd <command>\n");
+        }
+        EliteHost::command($cmd);
         break;
 
     case 'list':
