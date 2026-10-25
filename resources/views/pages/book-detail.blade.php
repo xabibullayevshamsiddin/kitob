@@ -56,6 +56,13 @@
             aiSummaryTyping: false,
             aiSummaryInterval: null,
             aiSummaryHasTyped: false,
+            isSoundMuted: (typeof window.isAiTypingSoundMuted === 'function') ? window.isAiTypingSoundMuted() : false,
+
+            toggleSound() {
+                if (typeof window.toggleAiTypingSoundMute === 'function') {
+                    this.isSoundMuted = window.toggleAiTypingSoundMute();
+                }
+            },
 
             async openAiSummary() {
                 this.showAiSummaryModal = true;
@@ -223,6 +230,12 @@
             },
 
             init() {
+                if (typeof window.isAiTypingSoundMuted === 'function') {
+                    this.isSoundMuted = window.isAiTypingSoundMuted();
+                }
+                window.addEventListener('ai-typing-mute-changed', (e) => {
+                    this.isSoundMuted = !!(e.detail && e.detail.isMuted);
+                });
                 if (window.location.hash === '#book-comments') {
                     this.activeTab = 'comments';
                 }
@@ -1033,7 +1046,19 @@
                         <p class="text-[11px] font-mono text-mist truncate max-w-xs">{{ $book->title }} • {{ $book->author }}</p>
                     </div>
                 </div>
-                <button type="button" @click="closeAiSummaryModal()" class="text-mist hover:text-paper text-xl font-mono p-1">×</button>
+                <div class="flex items-center gap-2">
+                    {{-- Sound Mute Toggle --}}
+                    <button type="button" 
+                            @click="toggleSound()" 
+                            class="px-2.5 py-1 rounded-btn border text-xs font-mono transition-colors flex items-center gap-1.5"
+                            :class="isSoundMuted ? 'border-ink-border text-mist hover:text-paper bg-ink-950/60' : 'border-amber-500/30 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20'"
+                            :title="isSoundMuted ? 'Klaviatura ovozini yoqish' : 'Klaviatura ovozini o\'chirish'">
+                        <span x-text="isSoundMuted ? '🔇' : '🔊'"></span>
+                        <span class="hidden sm:inline text-[10px]" x-text="isSoundMuted ? 'Ovoz: O\'chiq' : 'Ovoz: Yoniq'"></span>
+                    </button>
+
+                    <button type="button" @click="closeAiSummaryModal()" class="text-mist hover:text-paper text-xl font-mono p-1">×</button>
+                </div>
             </div>
 
             <!-- Modal Body -->

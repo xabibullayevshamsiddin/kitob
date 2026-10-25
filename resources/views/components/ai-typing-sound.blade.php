@@ -14,6 +14,9 @@
     let typingAudio = null;
     let fadeTimer = null;
     let isMuted = false;
+    try {
+        isMuted = localStorage.getItem('ai_typing_sound_muted') === 'true';
+    } catch(e) {}
 
     function getAudio() {
         if (!typingAudio) {
@@ -100,13 +103,31 @@
     };
 
     /**
-     * Toggle sound muting
+     * Check if sound is muted
+     */
+    window.isAiTypingSoundMuted = function() {
+        return isMuted;
+    };
+
+    /**
+     * Toggle sound muting and remember preference
      */
     window.toggleAiTypingSoundMute = function() {
         isMuted = !isMuted;
+        try {
+            localStorage.setItem('ai_typing_sound_muted', isMuted ? 'true' : 'false');
+        } catch(e) {}
+
         if (isMuted) {
             window.stopAiTypingSound(false);
         }
+
+        window.dispatchEvent(new CustomEvent('ai-typing-mute-changed', { detail: { isMuted: isMuted } }));
+
+        if (window.showToast) {
+            window.showToast(isMuted ? "AI klaviatura ovozi o'chirildi 🔇" : "AI klaviatura ovozi yoqildi 🔊", "info");
+        }
+
         return isMuted;
     };
 

@@ -34,6 +34,18 @@
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
+            {{-- AI Typing Sound Mute Toggle --}}
+            <button
+                type="button"
+                @click="toggleSound()"
+                class="px-2 py-1 rounded-btn border text-[11px] font-mono inline-flex items-center gap-1.5 transition-colors"
+                :class="isSoundMuted ? 'border-ink-border bg-ink-900 text-mist hover:text-paper' : 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'"
+                :title="isSoundMuted ? 'AI klaviatura ovozini yoqish' : 'AI klaviatura ovozini o\'chirish'"
+            >
+                <span x-text="isSoundMuted ? '🔇' : '🔊'"></span>
+                <span class="hidden sm:inline" x-text="isSoundMuted ? 'Ovoz: O\'chiq' : 'Ovoz: Yoniq'"></span>
+            </button>
+
             @auth
                 <span
                     class="px-2.5 py-1 rounded-badge {{ $remainingToday > 0 ? 'bg-ink-900 border-ink-border text-mist' : 'bg-rose-500/15 border-rose-500/35 text-rose-300' }} text-[11px] font-mono inline-flex items-center gap-1.5"
@@ -260,10 +272,10 @@
                             </span>
 
                             <div class="flex items-center gap-2">
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[10px] font-mono text-amber-300">
-                                    <span class="animate-pulse">⌨️</span>
-                                    <span>AI javob yozmoqda...</span>
-                                </span>
+                                <button type="button" @click="toggleSound()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-mono transition-colors cursor-pointer" :class="isSoundMuted ? 'bg-ink-900 border-ink-border text-mist' : 'bg-amber-500/10 border-amber-500/25 text-amber-300'" :title="isSoundMuted ? 'Ovozni yoqish' : 'Ovozni o\'chirish'">
+                                    <span x-text="isSoundMuted ? '🔇' : '⌨️'"></span>
+                                    <span x-text="isSoundMuted ? 'Ovoz o\'chiq' : 'AI javob yozmoqda...'"></span>
+                                </button>
                                 {{-- 3 Wave Bouncing Dots --}}
                                 <div class="flex items-center gap-1" aria-hidden="true">
                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0s;"></span>
@@ -437,6 +449,12 @@
                         bookId: bookId,
                         charCount: 0,
                         isSubmitting: false,
+                        isSoundMuted: (typeof window.isAiTypingSoundMuted === 'function') ? window.isAiTypingSoundMuted() : false,
+                        toggleSound() {
+                            if (typeof window.toggleAiTypingSoundMute === 'function') {
+                                this.isSoundMuted = window.toggleAiTypingSoundMute();
+                            }
+                        },
                         scrollToBottom() {
                             const box = this.$refs.messagesBox;
                             if (box) {
@@ -512,6 +530,12 @@
                             });
                         },
                         initAssistant() {
+                            if (typeof window.isAiTypingSoundMuted === 'function') {
+                                this.isSoundMuted = window.isAiTypingSoundMuted();
+                            }
+                            window.addEventListener('ai-typing-mute-changed', (e) => {
+                                this.isSoundMuted = !!(e.detail && e.detail.isMuted);
+                            });
                             window.__bookAiSeenIds = window.__bookAiSeenIds || new Set();
                             const wrappers = this.$el.querySelectorAll('.ai-msg-wrapper[data-msg-id]');
                             wrappers.forEach(w => {
