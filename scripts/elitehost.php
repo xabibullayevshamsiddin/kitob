@@ -178,6 +178,35 @@ class EliteHost
         return $res;
     }
 
+    public static function setupOptionA(): void
+    {
+        echo "⏰ A-variant bo'yicha jadvallarni o'rnatish:\n\n";
+
+        // 1. Avtomatik Zaxira (Backup) - Har kecha Toshkent vaqti bilan 03:00 (22:00 UTC)
+        self::createSchedule('Avtomatik Zaxira (Har kecha 03:00)', '0', '22', [
+            [
+                'action'              => 'backup',
+                'payload'             => '',
+                'time_offset'         => 0,
+                'continue_on_failure' => true,
+            ]
+        ]);
+
+        echo "\n";
+
+        // 2. Kechki Qayta Yuklash (Restart) - Har kecha Toshkent vaqti bilan 04:00 (23:00 UTC)
+        self::createSchedule('Kechki Qayta Yuklash (Har kecha 04:00)', '0', '23', [
+            [
+                'action'              => 'power',
+                'payload'             => 'restart',
+                'time_offset'         => 0,
+                'continue_on_failure' => false,
+            ]
+        ]);
+
+        echo "\n🎉 Jadvallar muvaffaqiyatli o'rnatildi!\n";
+    }
+
     public static function listSchedules(): void
     {
         $res = self::request('GET', '/servers/' . self::SERVER_ID . '/schedules');
@@ -217,6 +246,10 @@ class EliteHost
 $action = $argv[1] ?? 'status';
 
 switch ($action) {
+    case 'setup-a':
+        EliteHost::setupOptionA();
+        break;
+
     case 'schedules':
         EliteHost::listSchedules();
         break;
