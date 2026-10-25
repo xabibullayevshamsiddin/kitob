@@ -5,117 +5,122 @@
 <div x-data="kitobxonConfirmManager()"
      x-cloak
      @kitobxon:confirm.window="open($event.detail)"
-     @keydown.escape.window="if(isOpen) cancel()"
-     class="relative z-[10000]">
+     @keydown.escape.window="if(isOpen) cancel()">
 
-    <!-- Backdrop Overlay -->
-    <div x-show="isOpen"
-         x-transition:enter="transition ease-out duration-250"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-ink-950/80 backdrop-blur-md"
-         @click="cancel()"></div>
-
-    <!-- Modal Dialog -->
-    <div x-show="isOpen"
-         x-transition:enter="transition ease-out duration-250"
-         x-transition:enter-start="opacity-0 scale-95 translate-y-3"
-         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-         x-transition:leave-end="opacity-0 scale-95 translate-y-3"
-         class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none select-none">
-
-        <div class="pointer-events-auto w-full max-w-md rounded-2xl bg-ink-900 border border-ink-border/90 shadow-[0_25px_70px_rgba(0,0,0,0.85)] p-5 sm:p-6 text-paper space-y-4 ring-1 ring-white/10"
-             @click.outside="cancel()"
-             role="dialog"
+    <template x-teleport="body">
+        <div x-show="isOpen"
+             class="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto"
+             style="z-index: 999999 !important;"
              aria-modal="true"
-             :aria-label="title">
+             role="dialog">
 
-            <!-- Modal Header -->
-            <div class="flex items-start justify-between border-b border-ink-border/70 pb-3.5 gap-3">
-                <div class="flex items-center gap-3">
-                    <!-- Warning Icon -->
-                    <template x-if="type === 'warning'">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
+            <!-- Backdrop Overlay with blur -->
+            <div x-show="isOpen"
+                 x-transition:enter="transition ease-out duration-250"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 bg-ink-950/85 backdrop-blur-md"
+                 style="z-index: 999998 !important;"
+                 @click="cancel()"></div>
+
+            <!-- Modal Dialog Container -->
+            <div x-show="isOpen"
+                 x-transition:enter="transition ease-out duration-250"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-3"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-3"
+                 class="relative w-full max-w-md rounded-2xl bg-ink-900 border border-ink-border/90 shadow-[0_25px_70px_rgba(0,0,0,0.95)] p-5 sm:p-6 text-paper space-y-4 ring-1 ring-white/10 my-auto"
+                 style="z-index: 999999 !important;"
+                 @click.outside="cancel()"
+                 :aria-label="title">
+
+                <!-- Modal Header -->
+                <div class="flex items-start justify-between border-b border-ink-border/70 pb-3.5 gap-3">
+                    <div class="flex items-center gap-3">
+                        <!-- Warning Icon -->
+                        <template x-if="type === 'warning'">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                        </template>
+
+                        <!-- Danger Icon -->
+                        <template x-if="type === 'danger'">
+                            <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </div>
+                        </template>
+
+                        <!-- Info Icon -->
+                        <template x-if="type === 'info'">
+                            <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </template>
+
+                        <!-- Success Icon -->
+                        <template x-if="type === 'success'">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </template>
+
+                        <div>
+                            <h3 class="text-sm sm:text-base font-bold font-serif text-paper leading-tight" x-text="title"></h3>
+                            <p class="text-[11px] font-mono text-mist mt-0.5">Tasdiqlash oynasi</p>
                         </div>
-                    </template>
-
-                    <!-- Danger Icon -->
-                    <template x-if="type === 'danger'">
-                        <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </div>
-                    </template>
-
-                    <!-- Info Icon -->
-                    <template x-if="type === 'info'">
-                        <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                    </template>
-
-                    <!-- Success Icon -->
-                    <template x-if="type === 'success'">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                    </template>
-
-                    <div>
-                        <h3 class="text-sm sm:text-base font-bold font-serif text-paper leading-tight" x-text="title"></h3>
-                        <p class="text-[11px] font-mono text-mist mt-0.5">Tasdiqlash oynasi</p>
                     </div>
+
+                    <button type="button"
+                            @click="cancel()"
+                            class="w-7 h-7 rounded-btn text-mist hover:text-paper hover:bg-white/5 flex items-center justify-center transition-colors text-sm cursor-pointer shrink-0"
+                            title="Yopish">
+                        ✕
+                    </button>
                 </div>
 
-                <button type="button"
-                        @click="cancel()"
-                        class="w-7 h-7 rounded-btn text-mist hover:text-paper hover:bg-white/5 flex items-center justify-center transition-colors text-sm cursor-pointer shrink-0"
-                        title="Yopish">
-                    ✕
-                </button>
-            </div>
+                <!-- Modal Body / Message -->
+                <div class="text-xs sm:text-sm text-paper/90 leading-relaxed whitespace-pre-line bg-ink-950/70 border border-ink-border/70 rounded-xl p-3.5 sm:p-4 font-sans select-text max-h-[60vh] overflow-y-auto"
+                     x-text="message">
+                </div>
 
-            <!-- Modal Body / Message -->
-            <div class="text-xs sm:text-sm text-paper/90 leading-relaxed whitespace-pre-line bg-ink-950/70 border border-ink-border/70 rounded-xl p-3.5 sm:p-4 font-sans select-text"
-                 x-text="message">
-            </div>
+                <!-- Modal Action Buttons -->
+                <div class="flex items-center justify-end gap-2.5 pt-1">
+                    <button type="button"
+                            @click="cancel()"
+                            class="px-4 py-2.5 text-xs font-semibold rounded-btn border border-ink-border bg-ink-800 hover:bg-ink-700 text-paper transition-all cursor-pointer">
+                        <span x-text="cancelText"></span>
+                    </button>
 
-            <!-- Modal Action Buttons -->
-            <div class="flex items-center justify-end gap-2.5 pt-1">
-                <button type="button"
-                        @click="cancel()"
-                        class="px-4 py-2.5 text-xs font-semibold rounded-btn border border-ink-border bg-ink-800 hover:bg-ink-700 text-paper transition-all cursor-pointer">
-                    <span x-text="cancelText"></span>
-                </button>
-
-                <button type="button"
-                        x-ref="confirmButton"
-                        @click="confirm()"
-                        class="px-4 py-2.5 text-xs font-bold rounded-btn transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
-                        :class="{
-                            'bg-amber-500 hover:bg-amber-400 text-ink-950': type === 'warning',
-                            'bg-rose-600 hover:bg-rose-500 text-white': type === 'danger',
-                            'bg-sky-500 hover:bg-sky-400 text-ink-950': type === 'info',
-                            'bg-emerald-500 hover:bg-emerald-400 text-ink-950': type === 'success'
-                        }">
-                    <span x-text="confirmText"></span>
-                </button>
+                    <button type="button"
+                            x-ref="confirmButton"
+                            @click="confirm()"
+                            class="px-4 py-2.5 text-xs font-bold rounded-btn transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
+                            :class="{
+                                'bg-amber-500 hover:bg-amber-400 text-ink-950': type === 'warning',
+                                'bg-rose-600 hover:bg-rose-500 text-white': type === 'danger',
+                                'bg-sky-500 hover:bg-sky-400 text-ink-950': type === 'info',
+                                'bg-emerald-500 hover:bg-emerald-400 text-ink-950': type === 'success'
+                            }">
+                        <span x-text="confirmText"></span>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+    </template>
 </div>
 
 <script>

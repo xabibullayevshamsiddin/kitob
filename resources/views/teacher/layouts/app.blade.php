@@ -190,9 +190,6 @@
                 <!-- ── Universal Toast Notification Container ── -->
                 <x-toast-container />
 
-                <!-- ── Universal Custom Confirmation Modal ── -->
-                <x-confirm-modal />
-
                 {{ $slot ?? '' }}
                 @yield('content')
             </div>
@@ -205,5 +202,7 @@
     </div>
 </div>
 
+    <!-- ── Universal Custom Confirmation Modal (Root Level) ── -->
+    <x-confirm-modal />
 </body>
 </html>
