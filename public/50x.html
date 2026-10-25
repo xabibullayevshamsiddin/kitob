@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server nosozligi | Kitobxon</title>
+    <style>
+        :root {
+            --bg-fallback: #000000;
+            --text-color: #ffffff;
+            --divider-color: rgba(255, 255, 255, 0.4);
+            --gradient-start: rgb(255, 255, 255);
+            --gradient-end: rgba(255, 255, 255, 0.4);
+            --bg-overlay: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.48) 0%, rgba(0, 0, 0, 0.85) 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 100svh;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-weight: 600;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-error-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 1;
+            z-index: 0;
+            filter: brightness(0.82);
+            pointer-events: none;
+        }
+
+        .bg-error-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-overlay);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .error-center-content {
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 28px;
+            width: min(calc(100% - 32px), 520px);
+            padding: 20px;
+        }
+
+        .error-heading {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 700;
+            font-size: clamp(120px, 24vw, 240px);
+            line-height: 0.95;
+            letter-spacing: -12px;
+            text-align: center;
+            background-image: linear-gradient(247deg, #ffffff 2%, rgba(255, 255, 255, 0.35) 95%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 0;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8));
+        }
+
+        .error-divider {
+            width: min(100%, 360px);
+            height: 1px;
+            background-color: var(--divider-color);
+        }
+
+        .error-message {
+            font-size: clamp(15px, 2.5vw, 19px);
+            line-height: 1.4;
+            letter-spacing: -0.5px;
+            color: #f3efe7;
+            text-decoration: none;
+            display: block;
+            max-width: 440px;
+        }
+
+        .countdown-badge {
+            font-size: 11px;
+            font-family: ui-monospace, monospace;
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            padding: 5px 14px;
+            border-radius: 9999px;
+            letter-spacing: 0.5px;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .btn-retry {
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            color: #fbbf24;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-retry:hover {
+            background: rgba(251, 191, 36, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .btn-home {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-home:hover {
+            background: rgba(255, 255, 255, 0.16);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Video -->
+    <video autoplay loop muted playsinline preload="metadata" poster="/media/errors/poster-500.webp" class="bg-error-video">
+        <source src="/media/errors/bg-500.webm" type="video/webm">
+        <source src="/media/errors/bg-500.mp4" type="video/mp4">
+    </video>
+
+    <!-- Overlay -->
+    <div class="bg-error-overlay"></div>
+
+    <main class="error-center-content">
+        <h1 class="error-heading" id="error-code-heading">502</h1>
+        <div class="error-divider"></div>
+        <p class="error-message">
+            Server bilan aloqa vaqtincha uzildi. Tizim avtomatik qayta ishga tushmoqda, kuting...
+        </p>
+
+        <div class="countdown-badge" id="countdown-badge">
+            ⏳ Qayta tekshirish: <span id="timer-sec">6</span>s
+        </div>
+
+        <div class="action-group">
+            <button type="button" onclick="location.reload()" class="btn-retry">
+                🔄 Qayta urinish
+            </button>
+            <a href="/" class="btn-home">
+                🏠 Bosh sahifa
+            </a>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            var timeLeft = 6;
+            var timerEl = document.getElementById('timer-sec');
+            var interval = setInterval(function() {
+                timeLeft--;
+                if (timerEl) timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    location.reload();
+                }
+            }, 1000);
+        })();
+    </script>
+</body>
+</html>

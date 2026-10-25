@@ -195,8 +195,8 @@
 
     @php
         $errCode = trim($__env->yieldContent('code', '404'));
-        $validErrorCodes = ['403', '404', '419', '429', '500', '503'];
-        $bgCode = in_array($errCode, $validErrorCodes) ? $errCode : '404';
+        $validErrorCodes = ['403', '404', '419', '429', '500', '502', '503', '504'];
+        $bgCode = in_array($errCode, ['502', '504']) ? '500' : (in_array($errCode, $validErrorCodes) ? $errCode : '404');
     @endphp
 
     <!-- Semantic Full-Page Background Video (Code-Specific Literary Stone Engraving) -->
@@ -233,6 +233,17 @@
             <a href="{{ route('home') }}" class="error-message" id="error-message-text" title="{{ __('site.common.back_home') }}">
                 @yield('message', "Bu sahifa kitob javonimizda topilmadi. Keling, sizni mutolaaga qaytaramiz.")
             </a>
+
+            @if(in_array($errCode, ['500', '502', '503', '504']))
+                <div style="display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: 4px;">
+                    <button type="button" onclick="location.reload()" style="background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.4); color: #fbbf24; font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 24px; border-radius: 9999px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(251,191,36,0.3)'" onmouseout="this.style.background='rgba(251,191,36,0.15)'">
+                        🔄 Qayta urinish
+                    </button>
+                    <a href="{{ route('home') }}" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #ffffff; text-decoration: none; font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 24px; border-radius: 9999px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                        🏠 Bosh sahifa
+                    </a>
+                </div>
+            @endif
 
             @if(config('app.debug') && isset($exception) && is_object($exception) && method_exists($exception, 'getMessage') && $exception->getMessage())
                 <div style="margin-top: 1.5rem; padding: 1rem; border-radius: 8px; background: rgba(69, 10, 10, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); color: #fecaca; font-family: monospace; font-size: 12px; text-align: left; max-width: 650px; margin-left: auto; margin-right: auto; overflow-x: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
