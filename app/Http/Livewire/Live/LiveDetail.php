@@ -58,6 +58,14 @@ class LiveDetail extends Component
             $this->event->update(['started_at' => $this->event->created_at ?? now()]);
             $this->event->refresh();
         }
+
+        // 5 soatlik limitga yetgan bo'lsa darhol yakunlash
+        if ($this->event->status === LiveEvent::STATUS_LIVE && $this->event->hasExceededMaxDuration()) {
+            $groupId = $this->event->group_id;
+            $this->event->endAndCleanup('Maksimal 5 soatlik efir vaqti tugadi.');
+            session()->flash('warning', 'Ushbu jonli efir maksimal vaqti (5 soat) ga yetgani sababli avtomatik yakunlandi.');
+            return redirect()->route($groupId ? 'groups.show' : 'live.index', $groupId ? ['group' => $groupId] : []);
+        }
     }
 
     /**
@@ -117,7 +125,9 @@ class LiveDetail extends Component
 
     public function endLiveStream()
     {
-        if (!$this->canManage) {
+        $isMaxDuration = $this->event->hasExceededMaxDuration();
+
+        if (!$this->canManage && !$isMaxDuration) {
             $this->toast('error', 'Faqat efir muallifi efirni yakunlashi mumkin.');
             return null;
         }
@@ -125,11 +135,11 @@ class LiveDetail extends Component
         $groupId = $this->event->group_id;
 
         // Foydalanuvchi talabi: o'tib ketgan / yakunlangan efirlar saytda saqlanib qolmasin
-        $this->event->questions()->delete();
-        \App\Models\LiveSignal::where('live_event_id', $this->event->id)->delete();
-        $this->event->delete();
+        $this->event->endAndCleanup($isMaxDuration ? '5 soatlik efir vaqti tugadi.' : null);
 
-        session()->flash('success', 'Jonli efir muvaffaqiyatli yakunlandi va saytdan o\'chirildi.');
+        session()->flash('success', $isMaxDuration
+            ? 'Jonli efir 5 soatlik maksimal limitga yetgani sababli avtomatik yakunlandi va saytdan o\'chirildi.'
+            : 'Jonli efir muvaffaqiyatli yakunlandi va saytdan o\'chirildi.');
 
         if ($groupId) {
             return redirect()->route('groups.show', $groupId);

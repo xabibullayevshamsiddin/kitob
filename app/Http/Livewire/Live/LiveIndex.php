@@ -269,16 +269,8 @@ class LiveIndex extends Component
             })
             ->delete();
 
-        // Bir kundan ortiq "live" holatda qotib qolgan (tugatilmagan) efirlarni ham tozalaymiz
-        LiveEvent::where('status', LiveEvent::STATUS_LIVE)
-            ->where('started_at', '<', now()->subDay())
-            ->get()
-            ->each(function ($e) {
-                // HasMany::delete() bool qaytaradi, shuning uchun zanjirlab chaqirib bo'lmaydi
-                $e->questions()->delete();
-                $e->signals()->delete();
-                $e->delete();
-            });
+        // 5 soatdan ortiq davom etgan (yoki qotib qolgan) efirlarni avtomatik tugatamiz va tozalaymiz
+        LiveEvent::terminateExpiredLiveStreams();
 
         // Efirlar ro'yxati: Global efirlar barcha uchun, guruh efirlari esa FAQAT o'sha guruh a'zolari uchun ko'rinadi
         $myGroupIds = Auth::check()

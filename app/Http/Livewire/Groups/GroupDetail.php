@@ -103,6 +103,9 @@ class GroupDetail extends Component
             return;
         }
 
+        // 5 soatlik muddati o'tgan efirlarni tozalash
+        LiveEvent::terminateExpiredLiveStreams();
+
         // Agar allaqachon faol efir ketayotgan bo'lsa — to'g'ridan-to'g'ri unga yo'naltiramiz
         $activeLive = LiveEvent::where('group_id', $this->group->id)
             ->where('status', LiveEvent::STATUS_LIVE)
@@ -623,6 +626,8 @@ class GroupDetail extends Component
         $canSendVoice = $this->group->canUserSendVoice($user);
         $isOwner = $user && ($this->group->created_by === $user->id);
         $topFiveIds = app(\App\Services\LeaderboardService::class)->getTopFiveIds();
+
+        LiveEvent::terminateExpiredLiveStreams();
 
         $activeGroupLive = LiveEvent::where('group_id', $this->group->id)
             ->where('status', LiveEvent::STATUS_LIVE)

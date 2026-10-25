@@ -18,6 +18,9 @@ class LiveEvent extends Model
     public const STATUS_LIVE      = 'live';
     public const STATUS_ENDED     = 'ended';
 
+    // Jonli efirning maksimal davomiyligi (5 soat)
+    public const MAX_DURATION_HOURS = 5;
+
     protected $fillable = [
         'book_id',
         'host_user_id',
@@ -114,7 +117,115 @@ class LiveEvent extends Model
 
     public function scopeLive(Builder $query): Builder
     {
-        return $query->where('status', self::STATUS_LIVE);
+        $cutoff = now()->subHours(self::MAX_DURATION_HOURS);
+
+        return $query->where('status', self::STATUS_LIVE)
+                     ->where(function ($q) use ($cutoff) {
+                         $q->where('started_at', '>', $cutoff)
+                           ->orWhere(function ($sub) use ($cutoff) {
+                               $sub->whereNull('started_at')
+                                   ->where('created_at', '>', $cutoff);
+                           });
+                     });
+    }
+
+    /**
+     * Efir 5 soatlik maksimal vaqt chegarasiga yetgan yoki undan oshganligini tekshirish.
+     */
+    public function hasExceededMaxDuration(): bool
+    {
+        if ($this->status !== self::STATUS_LIVE) {
+            return false;
+        }
+
+        $startTime = $this->started_at ?? $this->created_at;
+        if (!$startTime) {
+            return false;
+        }
+
+        return $startTime->copy()->addHours(self::MAX_DURATION_HOURS)->isPast();
+    }
+
+    /**
+     * 5 soatlik limitgacha qolgan soniyalar miqdori.
+     */
+    public function getRemainingSecondsAttribute(): int
+    {
+        if ($this->status !== self::STATUS_LIVE) {
+            return 0;
+        }
+
+        $startTime = $this->started_at ?? $this->created_at;
+        if (!$startTime) {
+            return self::MAX_DURATION_HOURS * 3600;
+        }
+
+        $deadline = $startTime->copy()->addHours(self::MAX_DURATION_HOURS);
+        return max(0, now()->diffInSeconds($deadline, false));
+    }
+
+    /**
+     * Jonli efirni avtomatik yoki qo'lda yakunlab, barcha aloqador yozuvlarini tozalab, bazadan o'chirish.
+     */
+    public function endAndCleanup(?string $reason = null): void
+    {
+        // Tomoshabinlarga efir yakunlangani haqida oxirgi signalni qoldiramiz
+        try {
+            LiveSignal::create([
+                'live_event_id' => $this->id,
+                'sender_id'     => 'server_system',
+                'receiver_id'   => 'all',
+                'type'          => 'stream-status',
+                'payload'       => json_encode([
+                    'active' => false,
+                    'ended'  => true,
+                    'reason' => $reason ?? 'Jonli efir 5 soatlik maksimal vaqtga yetdi va avtomatik yakunlandi.',
+                ]),
+                'created_at'    => now(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        try {
+            $this->questions()->delete();
+        } catch (\Throwable $e) {}
+
+        try {
+            $this->signals()->delete();
+        } catch (\Throwable $e) {}
+
+        try {
+            $this->eventLikes()->delete();
+        } catch (\Throwable $e) {}
+
+        \Illuminate\Support\Facades\Cache::forget("live_event_{$this->id}_viewers");
+
+        $this->delete();
+    }
+
+    /**
+     * 5 soatdan ortiq davom etgan barcha faol efirlarni avtomatik topib, darhol yakunlaydi va tozalaydi.
+     */
+    public static function terminateExpiredLiveStreams(): int
+    {
+        $cutoff = now()->subHours(self::MAX_DURATION_HOURS);
+
+        $expired = self::where('status', self::STATUS_LIVE)
+            ->where(function ($q) use ($cutoff) {
+                $q->where('started_at', '<=', $cutoff)
+                  ->orWhere(function ($sub) use ($cutoff) {
+                      $sub->whereNull('started_at')
+                          ->where('created_at', '<=', $cutoff);
+                  });
+            })
+            ->get();
+
+        $count = 0;
+        foreach ($expired as $event) {
+            $event->endAndCleanup('Maksimal efir vaqti (5 soat) tugadi va efir avtomatik yakunlandi.');
+            $count++;
+        }
+
+        return $count;
     }
 
     public function scopeEnded(Builder $query): Builder

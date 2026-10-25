@@ -49,6 +49,11 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             \App\Models\User::processExpiredBans();
         })->everyMinute();
+
+        // Jonli efirlar maksimal 5 soat bo'lishi bilan avtomatik yakunlash va saytdan o'chirish
+        $schedule->call(function () {
+            \App\Models\LiveEvent::terminateExpiredLiveStreams();
+        })->everyMinute();
     }
 
     /**

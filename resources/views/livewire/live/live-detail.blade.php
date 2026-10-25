@@ -199,7 +199,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-paper font-serif">{{ __('site.live.ended_title') }}</h3>
-                        <p class="text-xs text-mist font-mono mt-1 max-w-sm">{{ __('site.live.ended_sub') }}</p>
+                        <p class="text-xs text-mist font-mono mt-1 max-w-sm" x-text="streamEndedReason || '{{ __('site.live.ended_sub') }}'">{{ __('site.live.ended_sub') }}</p>
                     </div>
                     <a :href="liveIndexUrl"
                         class="ks-btn-primary text-xs py-2 px-4 font-mono">
@@ -250,7 +250,10 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-paper animate-ping"></span>
                         <span>LIVE</span>
                     </div>
-                    <div class="px-2.5 py-0.5 rounded-pill bg-ink-950/80 backdrop-blur-md text-paper font-mono text-xs border border-ink-border" x-text="formattedDuration">
+                    <div class="px-2.5 py-0.5 rounded-pill bg-ink-950/80 backdrop-blur-md text-paper font-mono text-xs border border-ink-border transition-colors"
+                         :class="{ 'text-amber-400 border-amber-500/40 font-bold': durationSeconds >= (4.75 * 3600) }"
+                         :title="'Efir davomiyligi (maksimal: 5 soat)'"
+                         x-text="formattedDuration">
                         00:00:00
                     </div>
                     <div class="px-2.5 py-0.5 rounded-pill bg-ink-950/80 backdrop-blur-md text-amber-400 font-mono text-xs border border-ink-border flex items-center gap-1.5 shadow-md"
@@ -1326,6 +1329,7 @@ function liveStudioController(config) {
         csrfToken: config.csrfToken,
         connectionAttempts: 0,
         streamEnded: false,
+        streamEndedReason: '',
         liveIndexUrl: config.liveIndexUrl || '/live',
         isHostOnline: isHost ? true : false,
         pendingViewerIds: new Set(),
@@ -1389,10 +1393,16 @@ function liveStudioController(config) {
             // 1. Duration Synchronizer (server-clock aligned)
             const clientNow = Math.floor(Date.now() / 1000);
             const clockSkew = clientNow - serverNow;
+            const maxDurationSec = 5 * 3600; // 5 soatlik maksimal limit (18,000 soniya)
             const updateTimer = () => {
                 const nowSec = Math.floor(Date.now() / 1000) - clockSkew;
                 this.durationSeconds = Math.max(0, nowSec - startedAt);
                 this.updateStartedAgo();
+
+                // 5 soat bo'lishi bilan efir darhol avtomatik yakunlanadi
+                if (this.durationSeconds >= maxDurationSec && !this.streamEnded) {
+                    this.handleMaxDurationReached();
+                }
             };
             updateTimer();
             this.durationInterval = setInterval(updateTimer, 1000);
@@ -1798,13 +1808,17 @@ function liveStudioController(config) {
                 const res = await fetch(url, {
                     headers: { 'Accept': 'application/json' }
                 });
-                if (res.status === 404) {
-                    // Efir o'chirilgan (host tugatgan) — "Efir tugadi" ekranini ko'rsat
-                    this.showStreamEnded();
+                if (res.status === 404 || res.status === 410) {
+                    // Efir o'chirilgan yoki 5 soatlik limitga yetgan — "Efir tugadi" ekranini ko'rsat
+                    this.showStreamEnded('Jonli efir 5 soatlik maksimal limitga yetdi va avtomatik yakunlandi.');
                     return;
                 }
                 if (!res.ok) return;
                 const data = await res.json();
+                if (data.stream_ended) {
+                    this.showStreamEnded(data.reason || 'Jonli efir 5 soatlik maksimal limitga yetdi va avtomatik yakunlandi.');
+                    return;
+                }
                 if (data.signals && data.signals.length > 0) {
                     for (const sig of data.signals) {
                         if (sig.id > this.lastSignalId) {
@@ -1818,10 +1832,29 @@ function liveStudioController(config) {
             }
         },
 
+        // 5 soatlik maksimal vaqtga yetganda avtomatik yakunlash
+        handleMaxDurationReached() {
+            if (this.streamEnded) return;
+            console.log('[LIVE] 5 soatlik limitga yetildi. Efir avtomatik yakunlanmoqda...');
+            this.showStreamEnded('Jonli efir 5 soatlik maksimal limitga yetdi va avtomatik yakunlandi.');
+
+            if (this.isHost) {
+                this.sendSignal('stream-status', 'all', {
+                    active: false,
+                    ended: true,
+                    reason: 'Jonli efir 5 soatlik maksimal vaqtga yetdi va avtomatik yakunlandi.'
+                });
+                if (window.Livewire) {
+                    @this.call('endLiveStream');
+                }
+            }
+        },
+
         // Efir tugadi: polling/WebRTC to'xtatiladi, "Efir tugadi" overlay ko'rsatiladi
-        showStreamEnded() {
+        showStreamEnded(reason) {
             if (this.streamEnded) return;
             this.streamEnded = true;
+            if (reason) this.streamEndedReason = reason;
             try { localStorage.removeItem('kitobxon_live_state'); } catch (e) {}
             console.log('[LIVE] Efir tugadi — overlay ko\'rsatilmoqda');
             // Barcha polling/heartbeat/WebRTC ni to'xtatish

@@ -14,6 +14,15 @@ class LiveSignalController extends Controller
      */
     public function send(Request $request, LiveEvent $event): JsonResponse
     {
+        // 5 soatlik maksimal vaqt tekshiruvi — 5 soat to'lishi bilan darhol yakunlash
+        if ($event->status === LiveEvent::STATUS_LIVE && $event->hasExceededMaxDuration()) {
+            $event->endAndCleanup('Maksimal efir vaqti (5 soat) tugadi.');
+            return response()->json([
+                'error'        => 'Jonli efir 5 soatlik maksimal vaqtga yetdi va avtomatik yakunlandi.',
+                'stream_ended' => true,
+            ], 410);
+        }
+
         if ($event->group_id) {
             $user = $request->user();
             if (!$user) {
@@ -78,6 +87,28 @@ class LiveSignalController extends Controller
      */
     public function poll(Request $request, LiveEvent $event): JsonResponse
     {
+        // 5 soatlik maksimal vaqt tekshiruvi — 5 soat to'lishi bilan darhol yakunlash
+        if ($event->status === LiveEvent::STATUS_LIVE && $event->hasExceededMaxDuration()) {
+            $event->endAndCleanup('Maksimal efir vaqti (5 soat) tugadi.');
+            return response()->json([
+                'signals' => [
+                    [
+                        'id'          => 999999999,
+                        'sender_id'   => 'server_system',
+                        'receiver_id' => 'all',
+                        'type'        => 'stream-status',
+                        'payload'     => [
+                            'active' => false,
+                            'ended'  => true,
+                            'reason' => 'Jonli efir 5 soatlik maksimal vaqtga yetdi va avtomatik yakunlandi.'
+                        ],
+                    ]
+                ],
+                'stream_ended' => true,
+                'server_time'  => now()->timestamp,
+            ]);
+        }
+
         if ($event->group_id) {
             $user = $request->user();
             if (!$user) {
