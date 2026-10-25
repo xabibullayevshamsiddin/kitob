@@ -133,7 +133,10 @@
 
                                     {{-- O'chirish --}}
                                     <form action="{{ route('admin.quizzes.destroy', $quiz->id) }}" method="POST"
-                                          onsubmit="return confirm('Rostdan ham ushbu testni va undagi barcha savollarni o\'chirmoqchimisiz?')" class="inline-block">
+                                          data-confirm="Rostdan ham ushbu testni va undagi barcha savollarni o'chirmoqchimisiz?"
+                                          data-confirm-title="Testni o'chirish"
+                                          data-confirm-type="danger"
+                                          data-confirm-btn="Ha, o'chirish" class="inline-block">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"

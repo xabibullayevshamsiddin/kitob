@@ -408,7 +408,11 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.settings.maintenance') }}">
+                    <form method="POST" action="{{ route('admin.settings.maintenance') }}"
+                          data-confirm="Saytni barcha tashrif buyuruvchilar uchun jonli rejimga qaytarishni tasdiqlaysizmi?"
+                          data-confirm-title="Saytni jonli rejimga ochish"
+                          data-confirm-type="success"
+                          data-confirm-btn="✅ Ha, saytni ochish">
                         @csrf
                         <input type="hidden" name="maintenance" value="0">
                         <button type="submit"
@@ -435,7 +439,10 @@
                     </div>
 
                     <form method="POST" action="{{ route('admin.settings.maintenance') }}"
-                          onsubmit="return confirm('Haqiqatdan ham saytni texnik xizmat rejimiga o\'tkazmoqchimisiz?\n\nOddiy foydalanuvchilarga 503 sahifasi ko\'rsatiladi, adminlar esa boshqaruv panelida bemalol ishlay oladi.')">
+                          data-confirm="Haqiqatdan ham saytni texnik xizmat rejimiga o'tkazmoqchimisiz?&#10;&#10;Oddiy foydalanuvchilarga 503 sahifasi ko'rsatiladi, adminlar esa boshqaruv panelida bemalol ishlay oladi."
+                          data-confirm-title="Texnik xizmat rejimini yoqish"
+                          data-confirm-type="warning"
+                          data-confirm-btn="⚠️ Ha, rejimni yoqish">
                         @csrf
                         <input type="hidden" name="maintenance" value="1">
                         <button type="submit"

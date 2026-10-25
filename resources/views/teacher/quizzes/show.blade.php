@@ -13,7 +13,11 @@
             <h1 class="mt-1 break-words font-serif text-2xl font-bold text-paper">{{ $quiz->title }}</h1>
             <p class="mt-1 text-sm text-mist">{{ $quiz->book?->title ?? 'Mustaqil test' }} <span class="px-1 text-slate-600">·</span> {{ ucfirst($quiz->difficulty) }} daraja</p>
         </div>
-        <form action="{{ route('teacher.quizzes.destroy', $quiz->id) }}" method="POST" onsubmit="return confirm('Ushbu test va uning savollari butunlay o‘chiriladi. Davam ettiraymi?');">
+        <form action="{{ route('teacher.quizzes.destroy', $quiz->id) }}" method="POST"
+              data-confirm="Ushbu test va uning savollari butunlay o‘chiriladi. Davom ettiraymi?"
+              data-confirm-title="Testni o'chirish"
+              data-confirm-type="danger"
+              data-confirm-btn="Ha, o'chirish">
             @csrf
             @method('DELETE')
             <button type="submit" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-btn border border-rose-500/25 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/20 focus:outline-none focus:ring-2 focus:ring-rose-300">

@@ -311,7 +311,10 @@
 
                                         {{-- Delete --}}
                                         <form action="{{ route('admin.books.music.destroy', ['book' => $book->id, 'music' => $music->id]) }}" method="POST"
-                                              onsubmit="return confirm('«{{ addslashes($music->title) }}» fon musiqasini o\'chirishni xohlaysizmi?')">
+                                              data-confirm="«{{ addslashes($music->title) }}» fon musiqasini o'chirishni xohlaysizmi?"
+                                              data-confirm-title="Musiqani o'chirish"
+                                              data-confirm-type="danger"
+                                              data-confirm-btn="Ha, o'chirish">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-1.5 rounded-btn border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors" title="O'chirish">

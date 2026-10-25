@@ -109,7 +109,11 @@
                     <p class="text-[10px] text-slate-400 font-mono">ID: {{ auth()->user()->telegram_id }} • Ulandi: {{ auth()->user()->telegram_linked_at?->format('d.m.Y') }}</p>
                 </div>
 
-                <form method="POST" action="{{ route('auth.telegram.unlink') }}" onsubmit="return confirm('Haqiqatan ham Telegram hisobingizni uzmoqchimisiz?');">
+                <form method="POST" action="{{ route('auth.telegram.unlink') }}"
+                      data-confirm="Haqiqatan ham Telegram hisobingizni uzmoqchimisiz?"
+                      data-confirm-title="Telegram hisobni uzish"
+                      data-confirm-type="danger"
+                      data-confirm-btn="Ha, uzish">
                     @csrf
                     <button type="submit" class="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold transition-all">
                         Telegramni uzish

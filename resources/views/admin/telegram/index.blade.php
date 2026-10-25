@@ -287,7 +287,10 @@
                                     <form action="{{ route('admin.telegram.refund', $payment) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit"
-                                                onclick="return confirm('Haqiqatan ham ushbu Stars to\'lovini qaytarmoqchimisiz?')"
+                                                data-confirm="Haqiqatan ham ushbu Stars to'lovini qaytarmoqchimisiz?"
+                                                data-confirm-title="To'lovni qaytarish"
+                                                data-confirm-type="danger"
+                                                data-confirm-btn="Ha, qaytarish"
                                                 class="px-2.5 py-1 rounded bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 font-mono text-[11px]">
                                             ↩️ Qaytarish
                                         </button>

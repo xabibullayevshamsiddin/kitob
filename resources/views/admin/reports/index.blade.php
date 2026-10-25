@@ -250,7 +250,11 @@
                                 @endif
 
                                 {{-- Delete --}}
-                                <form action="{{ route('admin.reports.destroy', $report) }}" method="POST" onsubmit="return confirm('Ushbu shikoyatni o\'chirasizmi?');">
+                                <form action="{{ route('admin.reports.destroy', $report) }}" method="POST"
+                                      data-confirm="Ushbu shikoyatni o'chirasizmi?"
+                                      data-confirm-title="Shikoyatni o'chirish"
+                                      data-confirm-type="danger"
+                                      data-confirm-btn="Ha, o'chirish">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" aria-label="Shikoyatni o'chirish" class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-ink-border text-mist transition-colors hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400" title="O'chirish">

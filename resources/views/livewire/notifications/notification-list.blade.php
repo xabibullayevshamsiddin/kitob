@@ -64,9 +64,14 @@
                 </button>
             @endif
             @if ($notifications->total() > 0)
-                <button wire:click="clearAll" 
-                        onclick="return confirm('Barcha bildirishnomalarni tozalashni tasdiqlaysizmi?') || event.stopImmediatePropagation()"
-                        class="text-xs font-mono text-mist hover:text-rose-400 transition-colors">
+                <button type="button"
+                        @click="window.confirmModal({
+                            title: 'Bildirishnomalarni tozalash',
+                            message: 'Barcha bildirishnomalarni tozalashni tasdiqlaysizmi?',
+                            type: 'danger',
+                            confirmText: 'Ha, tozalash'
+                        }).then(ok => { if (ok) $wire.clearAll(); })"
+                        class="text-xs font-mono text-mist hover:text-rose-400 transition-colors cursor-pointer">
                     Tozalash
                 </button>
             @endif

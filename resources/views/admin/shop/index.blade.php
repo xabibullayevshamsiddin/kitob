@@ -552,7 +552,10 @@
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-right">
                                         <form method="POST" action="{{ route('admin.shop.refund') }}"
-                                              onsubmit="return confirm('Haqiqatan ham «{{ $uItem->user->name ?? 'Foydalanuvchi' }}»dan «{{ $uItem->shopItem->name_text ?? 'bu buyum' }}»ni qaytarib olib, tangalarini qaytarmoqchimisiz?');"
+                                              data-confirm="Haqiqatan ham «{{ $uItem->user->name ?? 'Foydalanuvchi' }}»dan «{{ $uItem->shopItem->name_text ?? 'bu buyum' }}»ni qaytarib olib, tangalarini qaytarmoqchimisiz?"
+                                              data-confirm-title="Buyumni qaytarib olish"
+                                              data-confirm-type="warning"
+                                              data-confirm-btn="Ha, qaytarish"
                                               class="inline-flex items-center gap-2">
                                             @csrf
                                             <input type="hidden" name="user_id" value="{{ $uItem->user_id }}">

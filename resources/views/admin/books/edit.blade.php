@@ -230,7 +230,11 @@
                 </form>
 
                 @if($aiStatus !== 'none' || $aiChunksCount > 0)
-                    <form action="{{ route('admin.books.ai.clear', $book->id) }}" method="POST" onsubmit="return confirm('Haqiqatan ham «{{ addslashes($book->title) }}» kitobining AI indeksini va barcha bo\'laklarini o\'chirmoqchimisiz? AI yordamchi o\'chiriladi.')">
+                    <form action="{{ route('admin.books.ai.clear', $book->id) }}" method="POST"
+                          data-confirm="Haqiqatan ham «{{ addslashes($book->title) }}» kitobining AI indeksini va barcha bo'laklarini o'chirmoqchimisiz? AI yordamchi o'chiriladi."
+                          data-confirm-title="AI indeksni tozalash"
+                          data-confirm-type="danger"
+                          data-confirm-btn="Ha, indeksni o'chirish">
                         @csrf
                         <button type="submit"
                                 :disabled="indexing"

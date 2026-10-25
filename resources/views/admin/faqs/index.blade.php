@@ -179,7 +179,10 @@
                                     </a>
 
                                     <form method="POST" action="{{ route('admin.faqs.destroy', $faq) }}"
-                                          onsubmit="return confirm('Rostdan ham ushbu savol-javobni o‘chirmoqchimisiz?')"
+                                          data-confirm="Rostdan ham ushbu savol-javobni o'chirmoqchimisiz?"
+                                          data-confirm-title="Savol-javobni o'chirish"
+                                          data-confirm-type="danger"
+                                          data-confirm-btn="Ha, o'chirish"
                                           class="inline-block">
                                         @csrf
                                         @method('DELETE')

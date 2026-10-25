@@ -285,6 +285,9 @@
             <!-- ── Universal Toast Notification Container ── -->
             <x-toast-container />
 
+            <!-- ── Universal Custom Confirmation Modal ── -->
+            <x-confirm-modal />
+
             <!-- PAGE CONTENT -->
             <main class="admin-main flex-1 min-w-0 overflow-x-hidden overflow-y-auto bg-ink-950">
                 <div class="w-full min-w-0 px-3 py-4 sm:p-4 lg:p-5 animate-fade-in">

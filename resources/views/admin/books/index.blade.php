@@ -194,7 +194,11 @@
                                     </form>
 
                                     @if($aiStatus === 'ready' || $chunksCount > 0 || $aiStatus === 'failed')
-                                        <form method="POST" action="{{ route('admin.books.ai.clear', $book->id) }}" onsubmit="return confirm('Faqat «{{ addslashes($book->title) }}» kitobining AI indeksini o\'chirmoqchimisiz?')">
+                                        <form method="POST" action="{{ route('admin.books.ai.clear', $book->id) }}"
+                                              data-confirm="Faqat «{{ addslashes($book->title) }}» kitobining AI indeksini o'chirmoqchimisiz?"
+                                              data-confirm-title="AI indeksni tozalash"
+                                              data-confirm-type="danger"
+                                              data-confirm-btn="Ha, o'chirish">
                                             @csrf
                                             <button type="submit"
                                                     class="text-[10px] font-mono text-rose-400 hover:text-rose-300 underline transition-colors"

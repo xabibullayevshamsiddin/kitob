@@ -81,7 +81,10 @@
 
                             <td class="px-5 py-4 text-right">
                                 <form action="{{ route('admin.audios.destroy', $audio->id) }}" method="POST"
-                                      onsubmit="return confirm('Rostdan ham ushbu audioni o\'chirmoqchimisiz?')" class="inline-block">
+                                      data-confirm="Rostdan ham ushbu audioni o'chirmoqchimisiz?"
+                                      data-confirm-type="danger"
+                                      data-confirm-btn="Ha, o'chirish"
+                                      data-confirm-title="Audioni o'chirish" class="inline-block">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"

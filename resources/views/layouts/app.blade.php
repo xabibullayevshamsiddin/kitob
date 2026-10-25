@@ -103,6 +103,9 @@
     <!-- ── Universal Toast Notification Container ── -->
     <x-toast-container />
 
+    <!-- ── Universal Custom Confirmation Modal ── -->
+    <x-confirm-modal />
+
     <!-- ── Universal Book Share Modal ── -->
     <x-book-share-modal />
 

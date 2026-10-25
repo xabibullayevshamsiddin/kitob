@@ -105,8 +105,14 @@
             @endif
 
             @if(!$isOwner)
-                <button wire:click="leaveGroup" onclick="return confirm('Rostdan ham guruhni tark etmoqchimisiz?')"
-                    class="px-3.5 py-2 bg-ink-900 hover:bg-rose-950/30 text-mist hover:text-rose-300 border border-ink-border hover:border-rose-500/30 text-xs font-mono font-medium rounded-btn transition-all flex items-center gap-2">
+                <button type="button"
+                    @click="window.confirmModal({
+                        title: 'Guruhni tark etish',
+                        message: 'Rostdan ham guruhni tark etmoqchimisiz?',
+                        type: 'danger',
+                        confirmText: 'Ha, tark etish'
+                    }).then(ok => { if (ok) $wire.leaveGroup(); })"
+                    class="px-3.5 py-2 bg-ink-900 hover:bg-rose-950/30 text-mist hover:text-rose-300 border border-ink-border hover:border-rose-500/30 text-xs font-mono font-medium rounded-btn transition-all flex items-center gap-2 cursor-pointer">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
                     </svg>
