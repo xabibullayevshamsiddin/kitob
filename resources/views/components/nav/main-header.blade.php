@@ -78,12 +78,12 @@
                     <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $moreActive ? 'bg-amber-500' : 'bg-transparent' }}"></span>
                 </button>
                 <div x-show="moreOpen" x-cloak
-                     x-transition:enter="transition ease-out duration-base"
-                     x-transition:enter-start="opacity-0 -translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-out duration-micro"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
+                     x-transition:enter="ks-menu-blur-enter-active"
+                     x-transition:enter-start="ks-menu-blur-enter"
+                     x-transition:enter-end="ks-menu-blur-enter-end"
+                     x-transition:leave="ks-menu-blur-leave-active"
+                     x-transition:leave-start="ks-menu-blur-leave"
+                     x-transition:leave-end="ks-menu-blur-leave-end"
                      class="header-dropdown-menu absolute top-full left-0 mt-px w-56 py-1.5 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50">
                     <div class="px-3.5 pt-1.5 pb-2 ks-eyebrow border-b border-ink-border mb-1">
                         {{ __('site.nav.sections') }}

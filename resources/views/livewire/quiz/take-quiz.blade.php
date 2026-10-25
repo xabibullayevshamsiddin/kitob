@@ -249,14 +249,24 @@
 
             </div>
             @if($confirmFinishOpen && !$finished)
-                <div
-                     wire:click.self="cancelFinish"
-                     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md ks-backdrop-fade-anim"
+                <div x-data="{
+                         closing: false,
+                         closeModal() {
+                             if (this.closing) return;
+                             this.closing = true;
+                             setTimeout(() => { $wire.cancelFinish(); }, 300);
+                         }
+                     }"
+                     @keydown.escape.window="closeModal()"
+                     @click.self="closeModal()"
+                     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
+                     :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
                      role="presentation">
                     <section role="dialog"
                              aria-modal="true"
                              aria-labelledby="quiz-finish-title"
-                             class="w-full max-w-md space-y-5 rounded-2xl border border-amber-400/20 bg-ink-900 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] ks-blur-dialog-anim">
+                             class="w-full max-w-md space-y-5 rounded-2xl border border-amber-400/20 bg-ink-900 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)]"
+                             :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
                         <div class="flex items-start gap-4">
                             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-xl text-amber-500" aria-hidden="true">!</span>
                             <div class="space-y-2">
@@ -266,7 +276,7 @@
                         </div>
                         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                             <button type="button"
-                                    wire:click="cancelFinish"
+                                    @click="closeModal()"
                                     class="inline-flex min-h-11 items-center justify-center rounded-xl border border-ink-border px-5 py-2.5 text-sm font-semibold text-paper transition hover:bg-ink-800">
                                 Testga qaytish
                             </button>

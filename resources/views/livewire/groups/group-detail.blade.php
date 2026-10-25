@@ -690,7 +690,7 @@
                  x-transition:enter="transition-opacity ease-out duration-400"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition-opacity ease-in duration-250"
+                 x-transition:leave="transition-opacity ease-in duration-320"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  @keydown.escape.window="deleteModalOpen = false"
@@ -738,7 +738,7 @@
                  x-transition:enter="transition-opacity ease-out duration-400"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition-opacity ease-in duration-250"
+                 x-transition:leave="transition-opacity ease-in duration-320"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  @keydown.escape.window="banModalOpen = false"
@@ -895,9 +895,21 @@
 
     <!-- Group Settings Modal -->
     @if ($showSettingsModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showSettingsModal', false)"></div>
-            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-5 text-left max-h-[90vh] overflow-y-auto my-auto ks-blur-dialog-anim">
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.set('showSettingsModal', false); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md"
+                 :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
+                 @click="closeModal()"></div>
+            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-5 text-left max-h-[90vh] overflow-y-auto my-auto"
+                 :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
 
                 <div class="flex items-center justify-between border-b border-ink-border/60 pb-3">
                     <div class="flex items-center gap-2.5">
@@ -912,7 +924,7 @@
                             <p class="text-[11px] font-mono text-mist">Guruh parametrlari va ruxsatlarini boshqarish</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="$set('showSettingsModal', false)" class="text-mist hover:text-paper p-1 rounded-btn hover:bg-ink-800 transition-colors">
+                    <button type="button" @click="closeModal()" class="text-mist hover:text-paper p-1 rounded-btn hover:bg-ink-800 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -1035,7 +1047,7 @@
                     </div>
 
                     <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-ink-border/60">
-                        <button type="button" wire:click="$set('showSettingsModal', false)"
+                        <button type="button" @click="closeModal()"
                                 class="py-1.5 px-3.5 rounded-btn border border-ink-border hover:bg-ink-800 text-xs font-mono text-mist hover:text-paper transition-colors">
                             Bekor qilish
                         </button>
@@ -1052,9 +1064,21 @@
 
     <!-- Remove Member Confirmation Modal -->
     @if ($showRemoveMemberModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showRemoveMemberModal', false)"></div>
-            <div class="relative w-full max-w-sm p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto ks-blur-dialog-anim">
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.set('showRemoveMemberModal', false); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md"
+                 :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
+                 @click="closeModal()"></div>
+            <div class="relative w-full max-w-sm p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto"
+                 :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
 
                 <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1072,7 +1096,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-2.5 pt-2">
-                    <button type="button" wire:click="$set('showRemoveMemberModal', false)"
+                    <button type="button" @click="closeModal()"
                         class="flex-1 py-1.5 px-3 rounded-btn border border-ink-border hover:bg-ink-800 text-xs font-mono text-mist hover:text-paper transition-colors">
                         Bekor qilish
                     </button>
@@ -1088,9 +1112,21 @@
 
     <!-- Delete Group Confirmation Modal -->
     @if ($showDeleteModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showDeleteModal', false)"></div>
-            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto ks-blur-dialog-anim">
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.set('showDeleteModal', false); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md"
+                 :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
+                 @click="closeModal()"></div>
+            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto"
+                 :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
 
                 <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1108,7 +1144,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-2.5 pt-2">
-                    <button type="button" wire:click="$set('showDeleteModal', false)"
+                    <button type="button" @click="closeModal()"
                         class="flex-1 py-1.5 px-3 rounded-btn border border-ink-border hover:bg-ink-800 text-xs font-mono text-mist hover:text-paper transition-colors">
                         {{ __('site.chat.cancel') }}
                     </button>
@@ -1124,9 +1160,21 @@
 
     <!-- Group Live Stream Studio Modal -->
     @if ($showLiveModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="closeLiveModal"></div>
-            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-5 my-auto ks-blur-dialog-anim">
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.closeLiveModal(); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md"
+                 :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
+                 @click="closeModal()"></div>
+            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-5 my-auto"
+                 :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
 
                 <div class="flex items-center justify-between pb-3 border-b border-ink-border">
                     <div class="flex items-center gap-2.5">
@@ -1141,7 +1189,7 @@
                             <p class="text-[11px] font-mono text-mist">«{{ $group->name }}» a'zolari uchun maxsus</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closeLiveModal" class="p-1 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors">
+                    <button type="button" @click="closeModal()" class="p-1 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors">
                         ✕
                     </button>
                 </div>
@@ -1189,7 +1237,7 @@
                     </div>
 
                     <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-ink-border">
-                        <button type="button" wire:click="closeLiveModal"
+                        <button type="button" @click="closeModal()"
                             class="py-2 px-4 rounded-btn border border-ink-border hover:bg-ink-800 text-xs font-mono text-mist hover:text-paper transition-colors">
                             Bekor qilish
                         </button>

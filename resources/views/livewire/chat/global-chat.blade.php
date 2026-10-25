@@ -492,7 +492,7 @@
          x-transition:enter="transition-opacity ease-out duration-400"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave="transition-opacity ease-in duration-320"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
 
@@ -542,7 +542,7 @@
          x-transition:enter="transition-opacity ease-out duration-400"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave="transition-opacity ease-in duration-320"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
 

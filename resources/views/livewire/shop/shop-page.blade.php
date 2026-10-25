@@ -790,10 +790,20 @@
             $pAmbient = $pPayload['banner_ambient'] ?? 'none';
             $pAvatarRing = $pPayload['avatar_ring'] ?? 'ring-2 ring-amber-400/80';
         @endphp
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim overflow-y-auto"
-             @keydown.escape.window="$wire.closePreview()"
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.closePreview(); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto"
+             :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
              role="dialog" aria-modal="true" aria-labelledby="preview-modal-title">
-            <div class="relative w-full max-w-lg rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-xl space-y-6 my-auto ks-blur-dialog-anim">
+            <div class="relative w-full max-w-lg rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-xl space-y-6 my-auto"
+                 :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
                     <div class="flex items-center gap-2">
@@ -802,7 +812,7 @@
                             {{ $previewItem->name_text }} (Ko‘rinishini sinash)
                         </h3>
                     </div>
-                    <button wire:click="closePreview" type="button" class="text-mist hover:text-paper p-1 rounded-btn" aria-label="Yopish">
+                    <button @click="closeModal()" type="button" class="text-mist hover:text-paper p-1 rounded-btn" aria-label="Yopish">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -873,10 +883,20 @@
             $payload = $purchaseItem->payload ?? [];
             $badgeColor = $purchaseItem->safeColor('badge_color', $purchaseItem->safeColor('color', $purchaseItem->safeColor('accent_color', '#FBBF24')));
         @endphp
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim overflow-y-auto"
-             @keydown.escape.window="$wire.closePurchaseModal()"
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.closePurchaseModal(); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto"
+             :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
              role="dialog" aria-modal="true" aria-labelledby="purchase-modal-title">
-            <div class="relative w-full max-w-md rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-xl space-y-5 my-auto ks-blur-dialog-anim">
+            <div class="relative w-full max-w-md rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-xl space-y-5 my-auto"
+                 :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
                     <h3 id="purchase-modal-title" class="font-serif font-bold text-lg text-paper flex items-center gap-2">
@@ -886,7 +906,7 @@
                         </svg>
                         <span>Xaridni tasdiqlash</span>
                     </h3>
-                    <button wire:click="closePurchaseModal" type="button" class="text-stone-500 dark:text-mist hover:text-paper p-1 rounded-btn" aria-label="Bekor qilish">
+                    <button @click="closeModal()" type="button" class="text-stone-500 dark:text-mist hover:text-paper p-1 rounded-btn" aria-label="Bekor qilish">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -1006,7 +1026,7 @@
 
                 {{-- Confirmation Buttons --}}
                 <div class="flex items-center justify-end gap-3 pt-2">
-                    <button wire:click="closePurchaseModal"
+                    <button @click="closeModal()"
                             type="button"
                             class="px-4 py-2 rounded-btn bg-ink-800 border border-ink-border text-xs text-stone-700 dark:text-mist hover:text-paper transition-colors">
                         Bekor qilish

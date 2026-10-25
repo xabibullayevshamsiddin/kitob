@@ -9,6 +9,12 @@
 
     <template x-teleport="body">
         <div x-show="isOpen"
+             x-transition:enter="transition-opacity ease-out duration-400"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-in duration-320"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
              class="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto"
              style="z-index: 999999 !important;"
              aria-modal="true"
@@ -16,7 +22,7 @@
 
             <!-- Backdrop Overlay with blur -->
             <div x-show="isOpen"
-                 x-transition:enter="transition-opacity ease-out duration-500"
+                 x-transition:enter="transition-opacity ease-out duration-400"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"
                  x-transition:leave="transition-opacity ease-in duration-300"

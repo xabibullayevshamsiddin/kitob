@@ -206,9 +206,19 @@
 
     <!-- ── 2. Telefon Raqamini O'zgartirish Xavfsizlik Modali ── -->
     @if($showPhoneModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim overflow-y-auto"
-             x-data @keydown.escape.window="$wire.closePhoneModal()">
-            <div class="w-full max-w-md bg-ink-900 border border-ink-border rounded-panel p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 relative my-auto ks-blur-dialog-anim">
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.closePhoneModal(); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto"
+             :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'">
+            <div class="w-full max-w-md bg-ink-900 border border-ink-border rounded-panel p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 relative my-auto"
+                 :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
                 
                 <!-- Modal Sarlavhasi -->
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
@@ -221,7 +231,7 @@
                             <p class="text-[10px] font-mono text-mist">Xavfsizlik shartlari asosida tasdiqlash</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closePhoneModal" class="text-mist hover:text-paper transition-colors p-1 text-lg leading-none">
+                    <button type="button" @click="closeModal()" class="text-mist hover:text-paper transition-colors p-1 text-lg leading-none">
                         &times;
                     </button>
                 </div>
@@ -264,7 +274,7 @@
 
                         <!-- Tugmalar -->
                         <div class="flex items-center justify-end gap-2 pt-2 border-t border-ink-border">
-                            <button type="button" wire:click="closePhoneModal" class="ks-btn-ghost text-xs py-2 px-3.5">
+                            <button type="button" @click="closeModal()" class="ks-btn-ghost text-xs py-2 px-3.5">
                                 Bekor qilish
                             </button>
                             <button type="button" wire:click="requestPhoneChange" wire:loading.attr="disabled"
@@ -335,7 +345,7 @@
                                 </template>
                             </button>
                             <div class="flex items-center gap-2">
-                                <button type="button" wire:click="closePhoneModal" class="ks-btn-ghost text-xs py-2 px-3">
+                                <button type="button" @click="closeModal()" class="ks-btn-ghost text-xs py-2 px-3">
                                     Bekor qilish
                                 </button>
                                 <button type="button" wire:click="confirmPhoneChange" wire:loading.attr="disabled"

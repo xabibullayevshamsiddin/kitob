@@ -39,12 +39,12 @@
     {{-- Dropdown --}}
     <div
         x-show="langOpen"
-        x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-200"
-        x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
-        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-        x-transition:leave="transition cubic-bezier(0.16, 1, 0.3, 1) duration-150"
-        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-        x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+        x-transition:enter="ks-menu-blur-enter-active"
+        x-transition:enter-start="ks-menu-blur-enter"
+        x-transition:enter-end="ks-menu-blur-enter-end"
+        x-transition:leave="ks-menu-blur-leave-active"
+        x-transition:leave-start="ks-menu-blur-leave"
+        x-transition:leave-end="ks-menu-blur-leave-end"
         x-cloak
         class="header-dropdown-menu absolute right-0 mt-2.5 w-48 p-1.5 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-[99999]"
     >

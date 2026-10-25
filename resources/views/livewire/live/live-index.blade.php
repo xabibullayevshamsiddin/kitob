@@ -30,11 +30,23 @@
 
     <!-- ── EFIRNI SOZLASH VA BOSHLASH MODALI ── -->
     @if($showStudioModal)
-        <div class="fixed inset-0 z-[9999] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="closeStudioModal"></div>
+        <div x-data="{
+                closing: false,
+                closeModal() {
+                    if (this.closing) return;
+                    this.closing = true;
+                    setTimeout(() => { $wire.closeStudioModal(); }, 300);
+                }
+             }"
+             @keydown.escape.window="closeModal()"
+             class="fixed inset-0 z-[9999] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md"
+                 :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
+                 @click="closeModal()"></div>
 
             <div class="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
-                <div class="relative w-full max-w-xl transform rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left my-8 overflow-hidden z-10 ks-blur-dialog-anim"
+                <div class="relative w-full max-w-xl transform rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left my-8 overflow-hidden z-10"
+                     :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'"
                      @click.stop>
 
                     <!-- Modal Header -->
@@ -48,7 +60,7 @@
                                 <p class="text-xs text-mist font-mono">{{ __('site.live.setup_sub') }}</p>
                             </div>
                         </div>
-                        <button type="button" wire:click="closeStudioModal" class="p-1.5 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors">
+                        <button type="button" @click="closeModal()" class="p-1.5 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
@@ -118,7 +130,7 @@
 
                         <!-- Modal Actions Footer -->
                         <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-ink-border">
-                            <button type="button" wire:click="closeStudioModal"
+                            <button type="button" @click="closeModal()"
                                 class="px-3.5 py-1.5 rounded-btn border border-ink-border text-xs font-mono text-mist hover:text-paper transition-colors">
                                 {{ __('site.live.cancel') }}
                             </button>

@@ -90,10 +90,10 @@
     <div x-show="showAfkModal" 
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter="transition ease-out duration-350"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave="transition ease-in duration-320"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
         
