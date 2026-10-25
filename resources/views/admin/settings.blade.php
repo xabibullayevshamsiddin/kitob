@@ -366,57 +366,87 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {{-- Maintenance Mode Card --}}
-        <div class="bg-ink-900 border border-ink-border rounded-panel overflow-hidden shadow-card"
-             x-data="{ maintenance: {{ $isMaintenance ? 'true' : 'false' }} }">
-            <div class="flex items-center gap-3 px-6 py-4 border-b border-ink-border bg-ink-950/50">
-                <div class="w-8 h-8 rounded-btn bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
+        <div class="bg-ink-900 border border-ink-border rounded-panel overflow-hidden shadow-card">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-ink-border bg-ink-950/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-btn bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-semibold text-paper">Texnik xizmat ko'rsatish rejimi</h2>
+                        <p class="text-xs text-mist">Saytni vaqtincha yopish yoki ochish (Maintenance mode)</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-sm font-semibold text-paper">Texnik xizmat ko'rsatish rejimi</h2>
-                    <p class="text-xs text-mist">Saytni vaqtincha yopish yoki ochish (Maintenance mode)</p>
-                </div>
+                @if($isMaintenance)
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        Rejim: Yopiq
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        Rejim: Ochiq
+                    </span>
+                @endif
             </div>
 
             <div class="p-6 space-y-4">
-                <div class="p-4 rounded-card border"
-                     :class="maintenance ? 'bg-amber-500/10 border-amber-500/30' : 'bg-ink-800 border-ink-border'">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl" x-text="maintenance ? '⚠️' : '✅'"></span>
+                @if($isMaintenance)
+                    <div class="p-4 rounded-card border bg-amber-500/10 border-amber-500/30">
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl leading-none">⚠️</span>
                             <div>
-                                <p class="text-sm font-semibold" :class="maintenance ? 'text-amber-400' : 'text-emerald-400'">
-                                    <span x-text="maintenance ? 'Texnik xizmat rejimi yoqilgan' : 'Platforma barcha foydalanuvchilar uchun ochiq'"></span>
+                                <p class="text-sm font-semibold text-amber-400">
+                                    Texnik xizmat rejimi faol (Sayt yopiq)
                                 </p>
-                                <p class="text-xs text-mist mt-0.5" x-text="maintenance ? 'Oddiy tashrif buyuruvchilarga 503 xizmat sahifasi ko\'rsatiladi. Adminlar to\'liq kira oladi.' : 'Sayt 24/7 normal rejimda ishlamoqda.'"></p>
+                                <p class="text-xs text-mist mt-1 leading-relaxed">
+                                    Hozirda barcha oddiy tashrif buyuruvchilarga <span class="font-mono text-paper">503 Service Unavailable</span> sahifasi ko'rsatilmoqda. Adminlar esa tizimda bemalol ishlashda davom etmoqda.
+                                </p>
                             </div>
                         </div>
-
-                        <button type="button"
-                                @click="maintenance = !maintenance"
-                                :class="maintenance ? 'bg-amber-500' : 'bg-ink-700'"
-                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none">
-                            <span :class="maintenance ? 'translate-x-6' : 'translate-x-1'"
-                                  class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200"></span>
-                        </button>
                     </div>
-                </div>
 
-                <form method="POST" action="{{ route('admin.settings.maintenance') }}">
-                    @csrf
-                    <input type="hidden" name="maintenance" :value="maintenance ? '1' : '0'">
-                    <button type="submit"
-                            :class="maintenance ? 'bg-amber-500 hover:bg-amber-400 text-ink-950 font-bold' : 'bg-ink-800 hover:bg-ink-700 text-paper border border-ink-border'"
-                            class="w-full flex items-center justify-center gap-2 px-5 py-2.5 text-sm rounded-btn transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <span x-text="maintenance ? 'Texnik xizmat rejimini tasdiqlash va saqlash' : 'Saytni ochiq holatga o\'tkazish'"></span>
-                    </button>
-                </form>
+                    <form method="POST" action="{{ route('admin.settings.maintenance') }}">
+                        @csrf
+                        <input type="hidden" name="maintenance" value="0">
+                        <button type="submit"
+                                class="w-full flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold rounded-btn bg-emerald-500 hover:bg-emerald-400 text-ink-950 transition-all shadow-lg shadow-emerald-500/10 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>✅ Saytni ochish (Barcha uchun jonli rejimga qaytarish)</span>
+                        </button>
+                    </form>
+                @else
+                    <div class="p-4 rounded-card border bg-ink-800/80 border-ink-border">
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl leading-none">✅</span>
+                            <div>
+                                <p class="text-sm font-semibold text-emerald-400">
+                                    Platforma barcha foydalanuvchilar uchun ochiq
+                                </p>
+                                <p class="text-xs text-mist mt-1 leading-relaxed">
+                                    Sayt 24/7 normal rejimda ishlamoqda. Yangilanishlar o'tkazish kerak bo'lganda saytni vaqtincha texnik xizmat rejimiga o'tkazishingiz mumkin.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ route('admin.settings.maintenance') }}"
+                          onsubmit="return confirm('Haqiqatdan ham saytni texnik xizmat rejimiga o\'tkazmoqchimisiz?\n\nOddiy foydalanuvchilarga 503 sahifasi ko\'rsatiladi, adminlar esa boshqaruv panelida bemalol ishlay oladi.')">
+                        @csrf
+                        <input type="hidden" name="maintenance" value="1">
+                        <button type="submit"
+                                class="w-full flex items-center justify-center gap-2 px-5 py-3 text-sm font-medium rounded-btn bg-ink-800 hover:bg-amber-500/15 hover:border-amber-500/40 hover:text-amber-300 text-paper border border-ink-border transition-all cursor-pointer">
+                            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span>⚠️ Texnik xizmat rejimiga o'tkazish (Saytni vaqtincha yopish)</span>
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
 
@@ -430,7 +460,7 @@
                 </div>
                 <div>
                     <h2 class="text-sm font-semibold text-paper">Kesh boshqaruvi</h2>
-                    <p class="text-xs text-mist">Tizim tezkor keshlarini tozalash va yangilash</p>
+                    <p class="text-xs text-mist">Tizim tezkor keshlarini tozalash va yangilash (jonli server holati)</p>
                 </div>
             </div>
 
@@ -441,8 +471,11 @@
                         @csrf
                         <input type="hidden" name="action" value="clear">
                         <button type="submit"
-                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-rose-500/40 hover:bg-rose-500/10 text-left transition-colors group">
-                            <span class="text-base">🧹</span>
+                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-rose-500/40 hover:bg-rose-500/10 text-left transition-colors group cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-base">🧹</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 font-mono">To'liq</span>
+                            </div>
                             <p class="text-xs font-semibold text-paper mt-2 group-hover:text-rose-400 transition-colors">Barcha keshlar</p>
                             <p class="text-[10px] text-mist font-mono mt-0.5">optimize:clear</p>
                         </button>
@@ -453,8 +486,15 @@
                         @csrf
                         <input type="hidden" name="action" value="config">
                         <button type="submit"
-                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-sky-500/40 hover:bg-sky-500/10 text-left transition-colors group">
-                            <span class="text-base">⚙️</span>
+                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-sky-500/40 hover:bg-sky-500/10 text-left transition-colors group cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-base">⚙️</span>
+                                @if($systemStats['config_cached'] ?? false)
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono">Kesh faol</span>
+                                @else
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono">Dinamik</span>
+                                @endif
+                            </div>
                             <p class="text-xs font-semibold text-paper mt-2 group-hover:text-sky-400 transition-colors">Config kesh</p>
                             <p class="text-[10px] text-mist font-mono mt-0.5">config:clear</p>
                         </button>
@@ -465,8 +505,15 @@
                         @csrf
                         <input type="hidden" name="action" value="route">
                         <button type="submit"
-                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition-colors group">
-                            <span class="text-base">🧭</span>
+                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition-colors group cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-base">🧭</span>
+                                @if($systemStats['routes_cached'] ?? false)
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono">Kesh faol</span>
+                                @else
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono">Dinamik</span>
+                                @endif
+                            </div>
                             <p class="text-xs font-semibold text-paper mt-2 group-hover:text-emerald-400 transition-colors">Route kesh</p>
                             <p class="text-[10px] text-mist font-mono mt-0.5">route:clear</p>
                         </button>
@@ -477,8 +524,13 @@
                         @csrf
                         <input type="hidden" name="action" value="view">
                         <button type="submit"
-                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-amber-500/40 hover:bg-amber-500/10 text-left transition-colors group">
-                            <span class="text-base">🎨</span>
+                                class="w-full p-3.5 rounded-card bg-ink-800 border border-ink-border hover:border-amber-500/40 hover:bg-amber-500/10 text-left transition-colors group cursor-pointer">
+                            <div class="flex items-center justify-between">
+                                <span class="text-base">🎨</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-mono">
+                                    {{ $systemStats['views_cached_count'] ?? 0 }} ta fayl
+                                </span>
+                            </div>
                             <p class="text-xs font-semibold text-paper mt-2 group-hover:text-amber-400 transition-colors">View kesh</p>
                             <p class="text-[10px] text-mist font-mono mt-0.5">view:clear</p>
                         </button>
@@ -487,7 +539,7 @@
 
                 <div class="mt-4 p-3 rounded-card bg-ink-950/60 border border-ink-border/60">
                     <p class="text-[11px] text-mist leading-relaxed">
-                        💡 Kesh tozalangandan so'ng, tizim yangilangan sozlamalar va andozalarni to'g'ridan-to'g'ri qayta yuklaydi.
+                        💡 Kesh tozalangandan so'ng, tizim yangilangan sozlamalar va andozalarni to'g'ridan-to'g'ri diskdan qayta yuklaydi.
                     </p>
                 </div>
             </div>

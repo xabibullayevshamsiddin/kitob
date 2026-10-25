@@ -52,6 +52,16 @@ class SettingsController extends Controller
             $storageSizeMb = round($storageBytes / 1024 / 1024, 2);
         }
 
+        // Kesh holati diagnostikasi
+        $viewsPath = storage_path('framework/views');
+        $viewsCount = 0;
+        if (File::exists($viewsPath)) {
+            $viewsCount = count(array_filter(File::files($viewsPath), fn($f) => $f->getFilename() !== '.gitignore'));
+        }
+
+        $configCached = File::exists(base_path('bootstrap/cache/config.php'));
+        $routesCached = File::exists(base_path('bootstrap/cache/routes-v7.php'));
+
         $systemStats = [
             'php_version'        => PHP_VERSION,
             'laravel_version'    => app()->version(),
@@ -67,6 +77,9 @@ class SettingsController extends Controller
             'storage_size_mb'    => $storageSizeMb,
             'storage_symlink'    => $isSymlinkValid,
             'is_maintenance'     => $isMaintenance,
+            'views_cached_count' => $viewsCount,
+            'config_cached'      => $configCached,
+            'routes_cached'      => $routesCached,
             'upload_max_filesize'=> ini_get('upload_max_filesize'),
             'post_max_size'      => ini_get('post_max_size'),
             'memory_limit'       => ini_get('memory_limit'),
