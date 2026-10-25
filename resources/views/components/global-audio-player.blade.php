@@ -431,7 +431,59 @@
                 this.fetchBookPlaylist(data.bookId);
             }
 
+            this.updateMediaSession();
+            this.broadcastState();
             this.saveState();
+        },
+
+        updateMediaSession() {
+            if (!('mediaSession' in navigator)) return;
+            try {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: this.currentTrack.title || 'Kitobxon Audio',
+                    artist: this.currentTrack.author || 'Kitobxon',
+                    album: this.currentTrack.chapterTitle || 'Kitobxon Mutolaa',
+                    artwork: [
+                        { src: this.currentTrack.coverUrl || '/icons/kitobxon-512.png', sizes: '512x512', type: 'image/png' },
+                        { src: this.currentTrack.coverUrl || '/icons/kitobxon-192.png', sizes: '192x192', type: 'image/png' }
+                    ]
+                });
+
+                navigator.mediaSession.playbackState = this.isPlaying ? 'playing' : 'paused';
+
+                navigator.mediaSession.setActionHandler('play', () => this.togglePlay());
+                navigator.mediaSession.setActionHandler('pause', () => this.togglePlay());
+                navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+                    this.skip(-(details.seekOffset || 10));
+                });
+                navigator.mediaSession.setActionHandler('seekforward', (details) => {
+                    this.skip(details.seekOffset || 10);
+                });
+                navigator.mediaSession.setActionHandler('previoustrack', () => this.skip(-10));
+                navigator.mediaSession.setActionHandler('nexttrack', () => {
+                    const currentIndex = this.playlist.findIndex(p => p.id === this.currentTrack.id);
+                    if (currentIndex !== -1 && currentIndex + 1 < this.playlist.length) {
+                        this.playPlaylistItem(this.playlist[currentIndex + 1]);
+                    } else {
+                        this.skip(10);
+                    }
+                });
+            } catch(e) {}
+        },
+
+        broadcastState() {
+            window.dispatchEvent(new CustomEvent('global-audio-state-changed', {
+                detail: {
+                    id: this.currentTrack.id,
+                    bookId: this.currentTrack.bookId,
+                    isPlaying: this.isPlaying,
+                    currentTime: this.currentTime,
+                    duration: this.duration,
+                    speed: this.speed,
+                    title: this.currentTrack.title,
+                    chapterTitle: this.currentTrack.chapterTitle
+                }
+            }));
         },
 
         async fetchBookPlaylist(bookId) {
@@ -595,23 +647,41 @@
 
         onPlay() {
             this.isPlaying = true;
+            this.updateMediaSession();
+            this.broadcastState();
             this.saveState();
         },
 
         onPause() {
             this.isPlaying = false;
+            if ('mediaSession' in navigator) {
+                try { navigator.mediaSession.playbackState = 'paused'; } catch(e) {}
+            }
+            this.broadcastState();
             this.saveState();
         },
 
         onTimeUpdate() {
             if (this.$refs.audio) {
                 this.currentTime = this.$refs.audio.currentTime;
+                if ('mediaSession' in navigator && this.duration && !isNaN(this.duration)) {
+                    try {
+                        navigator.mediaSession.setPositionState({
+                            duration: this.duration,
+                            playbackRate: this.speed,
+                            position: Math.min(this.currentTime, this.duration)
+                        });
+                    } catch(e) {}
+                }
+                this.broadcastState();
             }
         },
 
         onLoadedMetadata() {
             if (this.$refs.audio) {
                 this.duration = this.$refs.audio.duration || this.currentTrack.duration || 0;
+                this.updateMediaSession();
+                this.broadcastState();
             }
         },
 

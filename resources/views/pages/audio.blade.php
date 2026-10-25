@@ -67,38 +67,69 @@
                      const s = Math.floor(sec % 60).toString().padStart(2, '0');
                      return `${m}:${s}`;
                  },
-                 play(id, url, dur) {
-                     const el = this.$refs.player;
-                     if (this.currentId === id) {
-                         this.isPlaying ? el.pause() : el.play();
-                         return;
+                 init() {
+                     try {
+                         const saved = localStorage.getItem('kitobxon_audio_state');
+                         if (saved) {
+                             const state = JSON.parse(saved);
+                             if (state.currentTrack && state.currentTrack.bookId == {{ $book->id }}) {
+                                 this.currentId = state.currentTrack.id || this.currentId;
+                                 this.currentTime = state.currentTime || 0;
+                                 this.duration = state.duration || this.duration;
+                                 this.isPlaying = state.isPlaying || false;
+                                 this.speed = state.speed || 1;
+                             }
+                         }
+                     } catch(e) {}
+
+                     window.addEventListener('global-audio-state-changed', (e) => {
+                         if (!e.detail) return;
+                         if (e.detail.bookId == {{ $book->id }}) {
+                             this.currentId = e.detail.id || this.currentId;
+                             this.isPlaying = e.detail.isPlaying;
+                             this.currentTime = e.detail.currentTime;
+                             if (e.detail.duration) this.duration = e.detail.duration;
+                             this.speed = e.detail.speed;
+                         }
+                     });
+                 },
+                 play(id, url, dur, title) {
+                     if (window.playGlobalAudio) {
+                         window.playGlobalAudio({
+                             id: id,
+                             bookId: {{ $book->id }},
+                             title: '{{ addslashes($book->title) }}',
+                             author: '{{ addslashes($book->author) }}',
+                             coverUrl: '{{ $book->cover_url }}',
+                             audioUrl: url,
+                             chapterTitle: title,
+                             duration: dur,
+                             shareUrl: '{{ route('books.show', $book->slug) }}'
+                         });
                      }
-                     this.currentId = id;
-                     this.duration = dur;
-                     this.currentTime = 0;
-                     el.src = url;
-                     el.play();
                  },
                  togglePlay() {
-                     const el = this.$refs.player;
-                     this.isPlaying ? el.pause() : el.play();
+                     const curAudio = {{ json_encode($book->audios->map(fn($a) => ['id' => $a->id, 'url' => $a->file_url, 'duration' => (int)($a->duration ?? 0), 'title' => $a->title ?: 'Audio'])->keyBy('id')) }};
+                     const active = curAudio[this.currentId] || curAudio[{{ $book->audios->first()->id }}];
+                     if (!this.isPlaying && this.currentTime === 0) {
+                         this.play(active.id, active.url, active.duration, active.title);
+                     } else if (window.toggleGlobalAudio) {
+                         window.toggleGlobalAudio();
+                     }
                  },
                  seek(t) {
-                     this.$refs.player.currentTime = t;
+                     const audioEl = document.querySelector('audio');
+                     if (audioEl) audioEl.currentTime = t;
                  },
                  changeSpeed() {
                      let idx = this.speeds.indexOf(this.speed);
                      this.speed = this.speeds[(idx + 1) % this.speeds.length];
-                     this.$refs.player.playbackRate = this.speed;
+                     const audioEl = document.querySelector('audio');
+                     if (audioEl) {
+                         audioEl.playbackRate = this.speed;
+                     }
                  }
              }">
-
-            <audio x-ref="player" preload="metadata"
-                   src="{{ $book->audios->first()->file_url }}"
-                   @play="isPlaying = true"
-                   @pause="isPlaying = false"
-                   @timeupdate="currentTime = $event.target.currentTime"
-                   @loadedmetadata="duration = $event.target.duration"></audio>
 
             <div class="w-32 h-44 mx-auto rounded-panel overflow-hidden shadow-2xl border border-ink-border">
                 <img src="{{ $book->cover_url }}" class="w-full h-full object-cover" alt="{{ $book->title }}">
@@ -150,7 +181,7 @@
         <!-- Track List -->
         <div class="bg-ink-900 rounded-panel border border-ink-border divide-y divide-ink-border overflow-hidden">
             @foreach ($book->audios as $i => $audio)
-                <button @click="play({{ $audio->id }}, '{{ $audio->file_url }}', {{ (int) ($audio->duration ?? 0) }}); if (window.playGlobalAudio) window.playGlobalAudio({ id: {{ $audio->id }}, bookId: {{ $book->id }}, title: '{{ addslashes($book->title) }}', author: '{{ addslashes($book->author) }}', coverUrl: '{{ $book->cover_url }}', audioUrl: '{{ $audio->file_url }}', chapterTitle: '{{ addslashes($audio->title ?? 'Audio ' . ($i + 1)) }}', duration: {{ (int) ($audio->duration ?? 0) }}, shareUrl: '{{ route('books.show', $book->slug) }}' })"
+                <button @click="play({{ $audio->id }}, '{{ $audio->file_url }}', {{ (int) ($audio->duration ?? 0) }}, '{{ addslashes($audio->title ?? 'Audio ' . ($i + 1)) }}')"
                         class="w-full p-3.5 sm:px-5 flex items-center justify-between hover:bg-ink-800/40 transition-colors text-left"
                         :class="currentId === {{ $audio->id }} ? 'bg-amber-500/10 border-l-2 border-amber-400' : ''">
                     <div class="flex items-center gap-3 min-w-0">

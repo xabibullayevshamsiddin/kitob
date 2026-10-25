@@ -16,7 +16,11 @@
         }
     </style>
 
-    <x-seo-meta :title="trim($__env->yieldContent('title'))" />
+    @if(View::hasSection('seo'))
+        @yield('seo')
+    @else
+        <x-seo-meta :title="trim($__env->yieldContent('title'))" />
+    @endif
 
     @include('partials.design-system')
 

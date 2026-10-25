@@ -1,2 +1,9 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /teacher
+Disallow: /settings
+Disallow: /livewire
+Disallow: /livewire/*
+
+Sitemap: https://kitobxon.elitehost.uz/sitemap.xml

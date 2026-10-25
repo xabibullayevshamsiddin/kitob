@@ -84,6 +84,26 @@ class TelegramClient
     }
 
     /**
+     * Telegram chatiga yoki kanaliga rasm bilan xabar yuborish (sendPhoto).
+     */
+    public function sendPhoto(int|string $chatId, string $photoUrl, string $caption = '', array $options = []): array
+    {
+        $payload = array_merge([
+            'chat_id'    => $chatId,
+            'photo'      => $photoUrl,
+            'caption'    => $caption,
+            'parse_mode' => 'HTML',
+        ], $options);
+
+        try {
+            return $this->request('sendPhoto', $payload, $chatId);
+        } catch (\Throwable $e) {
+            // Agar rasm yuborishda xatolik bo'lsa (URL formati yoki rasm hajmi), xabar matn ko'rinishida yuboriladi
+            return $this->sendMessage($chatId, $caption, $options);
+        }
+    }
+
+    /**
      * Mavjud xabar matnini va inline tugmalarini tahrirlash (editMessageText).
      */
     public function editMessageText(int|string $chatId, int $messageId, string $text, array $options = []): array

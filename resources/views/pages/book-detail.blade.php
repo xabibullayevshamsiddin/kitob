@@ -6,14 +6,17 @@
     $bookAiReady = (bool) config('ai.enabled', true) && $book->ai_enabled && in_array($book->ai_index_status, ['ready', 'partial'], true);
 @endphp
 
-@push('styles')
+@section('seo')
     <x-seo-meta 
-        :title="$book->title"
-        :description="$book->description"
+        :title="$book->title . ' — ' . $book->author"
+        :description="Str::limit(strip_tags($book->description ?? ''), 180)"
         :image="$book->cover_url"
         :book="$book"
         type="book"
     />
+@endsection
+
+@push('styles')
 <link rel="stylesheet" href="{{ asset('assets/flipbook/flipbook.css') }}?v={{ filemtime(public_path('assets/flipbook/flipbook.css')) }}">
 @if($bookAiReady)
 <link rel="stylesheet" href="{{ asset('vendor/katex/katex.min.css') }}">
@@ -42,6 +45,35 @@
         showReviewModal: false,
         showChatDrawer: false,
         showAiDrawer: {{ $bookAiReady ? 'true' : 'false' }},
+        showAiSummaryModal: false,
+        aiSummaryLoading: false,
+        aiSummaryCopied: false,
+        aiSummaryText: @json($book->ai_summary ?? ''),
+        async openAiSummary() {
+            this.showAiSummaryModal = true;
+            if (this.aiSummaryText && this.aiSummaryText.length > 30) {
+                return;
+            }
+            this.aiSummaryLoading = true;
+            try {
+                const res = await fetch('{{ route('books.ai-summary', $book->id) }}');
+                const data = await res.json();
+                if (data.ok && data.summary) {
+                    this.aiSummaryText = data.summary;
+                }
+            } catch (err) {
+                this.aiSummaryText = 'Konspektni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.';
+            } finally {
+                this.aiSummaryLoading = false;
+            }
+        },
+        copyAiSummary() {
+            if (!this.aiSummaryText) return;
+            navigator.clipboard.writeText(this.aiSummaryText);
+            this.aiSummaryCopied = true;
+            setTimeout(() => { this.aiSummaryCopied = false; }, 2500);
+            if (window.showToast) window.showToast('AI konspekt nusxalandi! 📋', 'success');
+        },
         activeTab: 'desc',
         totalComments: {{ (int) $totalCommentsCount }},
         selectedRating: 5,
@@ -271,6 +303,16 @@
                             title="Klaviatura tugmalari yordami">
                         <span>⌨️</span>
                         <span>Tugmalar boshqaruvi</span>
+                    </button>
+
+                    <!-- 1 daqiqalik AI Konspekt Tugmasi -->
+                    <button type="button"
+                            @click="openAiSummary()"
+                            class="px-3.5 py-2 rounded-btn bg-gradient-to-r from-violet-600/20 via-amber-500/15 to-violet-600/20 hover:from-violet-600/30 hover:to-amber-500/30 text-amber-300 dark:text-amber-200 border border-violet-400/40 hover:border-amber-400 font-bold font-sans text-xs inline-flex items-center gap-1.5 shadow-md shadow-violet-500/10 transition-all active:scale-95 group"
+                            title="Kitobning 1 daqiqalik qisqacha mazmuni va asosiy saboqlarini o'qish">
+                        <span class="text-sm group-hover:scale-110 transition-transform">🧠</span>
+                        <span>AI Konspekt</span>
+                        <span class="px-1 py-0.2 rounded-badge bg-amber-400/20 text-amber-300 text-[10px] font-mono font-bold">1 daqiqa</span>
                     </button>
 
                     @if($firstAudio = $book->audios->first())
@@ -881,6 +923,76 @@
 
             <div class="pt-2 flex justify-end">
                 <button type="button" @click="showDownloadModal = false" class="ks-btn-ghost py-1.5 px-4 text-xs font-semibold">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 5. MODAL: 1 daqiqalik AI Kitob Konspekti ── -->
+    <div x-show="showAiSummaryModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-ink-950/85 backdrop-blur-md"
+         @keydown.escape.window="showAiSummaryModal = false">
+        <div class="w-full max-w-xl max-h-[85vh] rounded-2xl bg-ink-900 border border-violet-500/30 shadow-[0_25px_60px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden text-paper"
+             @click.away="showAiSummaryModal = false">
+            
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-ink-border/80 flex items-center justify-between bg-gradient-to-r from-violet-950/40 via-ink-900 to-amber-950/30">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-violet-500/20 border border-violet-400/30 flex items-center justify-center text-lg shadow-inner">
+                        🧠
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm sm:text-base font-bold font-serif text-paper">1 daqiqalik AI Konspekt</h3>
+                            <span class="px-1.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[10px] font-mono font-bold">Tezkor</span>
+                        </div>
+                        <p class="text-[11px] font-mono text-mist truncate max-w-xs">{{ $book->title }} • {{ $book->author }}</p>
+                    </div>
+                </div>
+                <button type="button" @click="showAiSummaryModal = false" class="text-mist hover:text-paper text-xl font-mono p-1">×</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm leading-relaxed">
+                <!-- Loading State -->
+                <div x-show="aiSummaryLoading" class="py-12 text-center space-y-4">
+                    <div class="w-12 h-12 mx-auto rounded-full border-2 border-amber-400 border-t-transparent animate-spin"></div>
+                    <div class="space-y-1">
+                        <p class="font-bold text-paper font-serif">Sun'iy intellekt kitobni tahlil qilmoqda...</p>
+                        <p class="text-xs text-mist font-mono">1 daqiqada o'qiladigan asosiy g'oya va 3 ta eng muhim saboq shakllantirilmoqda</p>
+                    </div>
+                </div>
+
+                <!-- Content State -->
+                <div x-show="!aiSummaryLoading" class="space-y-4">
+                    <div class="p-4 rounded-xl bg-ink-950/70 border border-ink-border/70 space-y-3 font-sans">
+                        <div class="whitespace-pre-line text-paper/90 leading-relaxed font-sans" x-text="aiSummaryText"></div>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/80 flex items-center gap-2">
+                        <span>💡</span>
+                        <span>Ushbu konspekt sun'iy intellekt tomonidan kitob mazmunini tez anglab olishingiz uchun tuzildi. To'liq mutolaa zavqi uchun kitobni o'qishni tavsiya etamiz!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3 border-t border-ink-border/80 bg-ink-950/60 flex items-center justify-between">
+                <button type="button"
+                        @click="copyAiSummary()"
+                        :disabled="aiSummaryLoading || !aiSummaryText"
+                        class="ks-btn-ghost py-1.5 px-3 text-xs inline-flex items-center gap-1.5 text-mist hover:text-amber-400">
+                    <span x-show="!aiSummaryCopied">📋 Nusxa olish</span>
+                    <span x-show="aiSummaryCopied" class="text-amber-400 font-bold">✓ Nusxalandi!</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="showAiSummaryModal = false" class="ks-btn-ghost py-1.5 px-4 text-xs font-semibold">Yopish</button>
+                    @if($book->chapters->first())
+                        <a href="{{ route('reader.show', ['book' => $book->id, 'chapter' => $book->chapters->first()->id]) }}"
+                           class="ks-btn-primary py-1.5 px-4 text-xs font-bold inline-flex items-center gap-1">
+                            <span>Kitobni o'qish ➔</span>
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

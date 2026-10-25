@@ -253,6 +253,58 @@ Route::get('/books/{book}/audios-json', function ($bookId) {
 // Kitoblar katalogi (login shart emas — hamma ko'ra oladi)
 Route::get('/catalog', CatalogPage::class)->name('books.catalog');
 
+// Kitob sahifasi (Public — SEO, OpenGraph va qidiruv botlari uchun ochiq)
+Route::get('/books/{slug}', function ($slug) {
+    $book = \App\Models\Book::where('slug', $slug)->firstOrFail();
+    if ($book->published_at && $book->published_at->isFuture()) {
+        $user = auth()->user();
+        $rank = $user ? app(\App\Services\LeaderboardService::class)->getUserRank($user) : null;
+        $canEarlyAccess = ($user && ($user->isAdmin() || (method_exists($user, 'hasRole') && $user->hasRole('admin')) || ($rank !== null && $rank <= 5)));
+        if (!$canEarlyAccess) {
+            abort(403, 'Ushbu kitob hali rasman e\'lon qilinmagan. Top 5 kitobxonlar uchun erta kirish imtiyozi mavjud.');
+        }
+    }
+    $pdfAnnotations = request()->user() ? request()->user()->pdfAnnotations()
+        ->where('book_id', $book->id)
+        ->latest()
+        ->take(100)
+        ->get(['id', 'page_number', 'kind', 'label', 'note_text', 'color', 'created_at'])
+        ->map(fn ($annotation) => [
+            'id' => $annotation->id,
+            'page_number' => $annotation->page_number,
+            'kind' => $annotation->kind,
+            'label' => $annotation->label,
+            'note_text' => $annotation->note_text,
+            'color' => $annotation->color,
+            'created_at' => $annotation->created_at?->format('d.m.Y H:i'),
+        ]) : collect();
+
+    $isSaved = request()->user() ? request()->user()->isBookSaved($book) : false;
+    $savedCount = $book->savedByUsers()->count();
+
+    $bookComments = $book->comments()
+        ->with(['user', 'replies.user', 'replies.likes', 'likes'])
+        ->get();
+    $averageRating = $book->averageRating();
+    $ratingsCount = $book->ratingsCount();
+    $totalCommentsCount = $book->allComments()->count();
+
+    return view('pages.book-detail', compact(
+        'book',
+        'pdfAnnotations',
+        'isSaved',
+        'savedCount',
+        'bookComments',
+        'averageRating',
+        'ratingsCount',
+        'totalCommentsCount'
+    ));
+})->name('books.show');
+
+// 1 daqiqalik AI Kitob Konspekti (Public)
+Route::get('/books/{book}/ai-summary', [\App\Http\Controllers\BookSummaryController::class, 'show'])
+    ->name('books.ai-summary');
+
 // Legacy AI Chat 301 Permanent Redirect -> Katalog sahifasiga yo'naltirish
 Route::get('/ai-chat', AiChatRedirectController::class);
 
@@ -399,54 +451,6 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
 Route::middleware(['auth'])->group(function () {
     // Shop (Tanga Do'koni)
     Route::get('/shop', ShopPage::class)->name('shop.index');
-
-    // Kitoblar va Mutolaa (Barcha login bo'lgan foydalanuvchilar uchun)
-    Route::get('/books/{slug}', function ($slug) {
-        $book = \App\Models\Book::where('slug', $slug)->firstOrFail();
-        if ($book->published_at && $book->published_at->isFuture()) {
-            $user = auth()->user();
-            $rank = $user ? app(\App\Services\LeaderboardService::class)->getUserRank($user) : null;
-            $canEarlyAccess = ($user && ($user->isAdmin() || (method_exists($user, 'hasRole') && $user->hasRole('admin')) || ($rank !== null && $rank <= 5)));
-            if (!$canEarlyAccess) {
-                abort(403, 'Ushbu kitob hali rasman e\'lon qilinmagan. Top 5 kitobxonlar uchun erta kirish imtiyozi mavjud.');
-            }
-        }
-        $pdfAnnotations = request()->user()->pdfAnnotations()
-            ->where('book_id', $book->id)
-            ->latest()
-            ->take(100)
-            ->get(['id', 'page_number', 'kind', 'label', 'note_text', 'color', 'created_at'])
-            ->map(fn ($annotation) => [
-                'id' => $annotation->id,
-                'page_number' => $annotation->page_number,
-                'kind' => $annotation->kind,
-                'label' => $annotation->label,
-                'note_text' => $annotation->note_text,
-                'color' => $annotation->color,
-                'created_at' => $annotation->created_at?->format('d.m.Y H:i'),
-            ]);
-
-        $isSaved = request()->user() ? request()->user()->isBookSaved($book) : false;
-        $savedCount = $book->savedByUsers()->count();
-
-        $bookComments = $book->comments()
-            ->with(['user', 'replies.user', 'replies.likes', 'likes'])
-            ->get();
-        $averageRating = $book->averageRating();
-        $ratingsCount = $book->ratingsCount();
-        $totalCommentsCount = $book->allComments()->count();
-
-        return view('pages.book-detail', compact(
-            'book',
-            'pdfAnnotations',
-            'isSaved',
-            'savedCount',
-            'bookComments',
-            'averageRating',
-            'ratingsCount',
-            'totalCommentsCount'
-        ));
-    })->name('books.show');
 
     // Kitobni "Keyinroq o'qiyman" ro'yxatiga qo'shish / o'chirish (Toggle)
     Route::post('/books/{book}/toggle-save', function (\App\Models\Book $book) {
@@ -1281,7 +1285,7 @@ Route::prefix('admin')
             $coverPath = $req->file('cover_image')->store('books/covers', 'public');
         }
 
-        \App\Models\Book::create([
+        $book = \App\Models\Book::create([
             'title'        => $req->title,
             'author'       => $req->author,
             'description'  => $req->description,
@@ -1295,6 +1299,14 @@ Route::prefix('admin')
             'is_active'    => $req->has('is_active'),
         ]);
 
+        // Telegram kanalga va bot foydalanuvchilariga avtomatik e'lon yuborish
+        if ($book->is_active && $req->boolean('telegram_broadcast', true)) {
+            try {
+                $announcer = new \App\Services\Telegram\TelegramAnnouncementService();
+                $announcer->broadcastNewBook($book);
+            } catch (\Throwable $e) {}
+        }
+
         $msg = "Yangi kitob muvaffaqiyatli qo'shildi!";
         if ($pdfPath && $coverPath) {
             $msg = "Kitob, muqova rasmi va PDF fayl muvaffaqiyatli yuklandi! 📚✨";
@@ -1306,6 +1318,13 @@ Route::prefix('admin')
 
         return redirect()->route('admin.books.index')->with('success', $msg);
     })->name('books.store');
+
+    Route::post('/books/{book}/telegram-broadcast', function (\App\Models\Book $book) {
+        $announcer = new \App\Services\Telegram\TelegramAnnouncementService();
+        $res = $announcer->broadcastNewBook($book);
+        $userMsg = $res['users_count'] > 0 ? " ({$res['users_count']} ta bot foydalanuvchisiga yuborildi)" : '';
+        return back()->with('success', "Kitob haqida e'lon Telegramga muvaffaqiyatli yuborildi!" . $userMsg);
+    })->name('books.telegram-broadcast');
 
     Route::get('/books/{book}/edit', function (\App\Models\Book $book) {
         return view('admin.books.edit', compact('book'));
@@ -1437,41 +1456,76 @@ Route::get('/robots.txt', function () {
 });
 
 Route::get('/sitemap.xml', function () {
-    $books = \App\Models\Book::where('is_active', true)->latest()->get();
-    
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>';
-    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-    
-    // Asosiy sahifalar
-    $staticRoutes = [
-        url('/'),
-        url('/books'),
-        url('/leaderboard'),
-        url('/about'),
-        url('/faq'),
-        url('/contact'),
-    ];
-    
-    foreach ($staticRoutes as $route) {
-        $xml .= '<url>';
-        $xml .= '<loc>' . htmlspecialchars($route) . '</loc>';
-        $xml .= '<changefreq>daily</changefreq>';
-        $xml .= '<priority>' . ($route === url('/') ? '1.0' : '0.8') . '</priority>';
-        $xml .= '</url>';
-    }
-    
-    // Kitob sahifalari
-    foreach ($books as $b) {
-        $xml .= '<url>';
-        $xml .= '<loc>' . htmlspecialchars(route('books.show', $b->slug)) . '</loc>';
-        $xml .= '<lastmod>' . ($b->updated_at ? $b->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
-        $xml .= '<changefreq>weekly</changefreq>';
-        $xml .= '<priority>0.9</priority>';
-        $xml .= '</url>';
-    }
-    
-    $xml .= '</urlset>';
-    
+    $xml = \Illuminate\Support\Facades\Cache::remember('kitobxon_sitemap_xml', 21600, function () {
+        $books = \App\Models\Book::where('is_active', true)->latest()->get();
+        $quizzes = \App\Models\Quiz::latest()->get();
+
+        $content = '<?xml version="1.0" encoding="UTF-8"?>';
+        $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">';
+
+        // 1. Asosiy asosiy sahifalar
+        $staticRoutes = [
+            url('/')             => ['priority' => '1.0', 'freq' => 'daily'],
+            url('/books')        => ['priority' => '0.9', 'freq' => 'daily'],
+            url('/leaderboard')  => ['priority' => '0.8', 'freq' => 'daily'],
+            url('/shop')         => ['priority' => '0.8', 'freq' => 'weekly'],
+            url('/faq')          => ['priority' => '0.7', 'freq' => 'monthly'],
+            url('/about')        => ['priority' => '0.6', 'freq' => 'monthly'],
+            url('/contact')      => ['priority' => '0.5', 'freq' => 'monthly'],
+        ];
+
+        foreach ($staticRoutes as $route => $meta) {
+            $content .= '<url>';
+            $content .= '<loc>' . htmlspecialchars($route) . '</loc>';
+            $content .= '<changefreq>' . $meta['freq'] . '</changefreq>';
+            $content .= '<priority>' . $meta['priority'] . '</priority>';
+            $content .= '</url>';
+        }
+
+        // 2. Kitob sahifalari va ularning rasmlari
+        foreach ($books as $b) {
+            $content .= '<url>';
+            $content .= '<loc>' . htmlspecialchars(route('books.show', $b->slug)) . '</loc>';
+            $content .= '<lastmod>' . ($b->updated_at ? $b->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
+            $content .= '<changefreq>weekly</changefreq>';
+            $content .= '<priority>0.9</priority>';
+
+            $coverUrl = $b->cover_url;
+            if ($coverUrl) {
+                $content .= '<image:image>';
+                $content .= '<image:loc>' . htmlspecialchars($coverUrl) . '</image:loc>';
+                $content .= '<image:title>' . htmlspecialchars($b->title) . '</image:title>';
+                $content .= '<image:caption>' . htmlspecialchars($b->author ?? 'Kitobxon') . '</image:caption>';
+                $content .= '</image:image>';
+            }
+
+            $content .= '</url>';
+
+            // Agar kitobning audiosi bo'lsa
+            if ($b->audios()->exists()) {
+                $content .= '<url>';
+                $content .= '<loc>' . htmlspecialchars(route('books.audio', $b->slug)) . '</loc>';
+                $content .= '<lastmod>' . ($b->updated_at ? $b->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
+                $content .= '<changefreq>weekly</changefreq>';
+                $content .= '<priority>0.8</priority>';
+                $content .= '</url>';
+            }
+        }
+
+        // 3. Testlar (Quizzes)
+        foreach ($quizzes as $q) {
+            $content .= '<url>';
+            $content .= '<loc>' . htmlspecialchars(route('quiz.show', $q->book_id ?? $q->id)) . '</loc>';
+            $content .= '<lastmod>' . ($q->updated_at ? $q->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
+            $content .= '<changefreq>weekly</changefreq>';
+            $content .= '<priority>0.8</priority>';
+            $content .= '</url>';
+        }
+
+        $content .= '</urlset>';
+        return $content;
+    });
+
     return response($xml, 200)->header('Content-Type', 'application/xml');
 })->name('sitemap');
 

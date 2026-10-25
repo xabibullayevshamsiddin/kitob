@@ -53,7 +53,15 @@ class QuizController extends Controller
 
         $quiz = $authoring->create($request, auth()->user()->isAdmin() ? 200 : 50, (int) auth()->id());
 
-        return redirect()->route('teacher.quizzes.show', $quiz)->with('success', 'Test savollari saqlandi.');
+        // Telegram kanalga va bot foydalanuvchilariga e'lon yuborish
+        if ($request->boolean('telegram_broadcast', true)) {
+            try {
+                $announcer = new \App\Services\Telegram\TelegramAnnouncementService();
+                $announcer->broadcastNewQuiz($quiz);
+            } catch (\Throwable $e) {}
+        }
+
+        return redirect()->route('teacher.quizzes.show', $quiz)->with('success', 'Test savollari saqlandi va Telegramga e\'lon qilindi.');
     }
 
     public function show(Quiz $quiz)
