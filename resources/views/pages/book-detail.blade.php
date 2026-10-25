@@ -53,27 +53,91 @@
             aiSummaryLoading: false,
             aiSummaryCopied: false,
             aiSummaryText: @json($book->ai_summary ?? ''),
+            aiSummaryTyping: false,
+            aiSummaryInterval: null,
+            aiSummaryHasTyped: false,
 
             async openAiSummary() {
                 this.showAiSummaryModal = true;
                 if (this.aiSummaryText && this.aiSummaryText.length > 30) {
+                    if (!this.aiSummaryHasTyped) {
+                        this.aiSummaryHasTyped = true;
+                        this.typewriteAiSummary(this.aiSummaryText);
+                    }
                     return;
                 }
                 this.aiSummaryLoading = true;
+                if (typeof window.playAiTypingSound === 'function') {
+                    window.playAiTypingSound();
+                }
                 try {
                     const res = await fetch('{{ route('books.ai-summary', $book->id) }}');
                     const data = await res.json();
                     if (data.ok && data.summary) {
-                        this.aiSummaryText = data.summary;
+                        this.aiSummaryHasTyped = true;
+                        this.typewriteAiSummary(data.summary);
+                    } else {
+                        this.aiSummaryText = data.summary || 'Konspektni yuklashda xatolik yuz berdi.';
+                        if (typeof window.stopAiTypingSound === 'function') window.stopAiTypingSound();
                     }
                 } catch (err) {
                     this.aiSummaryText = 'Konspektni yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.';
+                    if (typeof window.stopAiTypingSound === 'function') window.stopAiTypingSound();
                 } finally {
                     this.aiSummaryLoading = false;
                 }
             },
 
+            typewriteAiSummary(fullText) {
+                if (this.aiSummaryInterval) clearInterval(this.aiSummaryInterval);
+                this.aiSummaryText = '';
+                this.aiSummaryTyping = true;
+                if (typeof window.playAiTypingSound === 'function') {
+                    window.playAiTypingSound();
+                }
+
+                let idx = 0;
+                const len = fullText.length;
+                const step = Math.max(3, Math.ceil(len / 110));
+
+                this.aiSummaryInterval = setInterval(() => {
+                    if (!this.showAiSummaryModal || !this.aiSummaryTyping || idx >= len) {
+                        clearInterval(this.aiSummaryInterval);
+                        this.aiSummaryInterval = null;
+                        this.aiSummaryText = fullText;
+                        this.aiSummaryTyping = false;
+                        if (typeof window.stopAiTypingSound === 'function') {
+                            window.stopAiTypingSound();
+                        }
+                        return;
+                    }
+
+                    idx = Math.min(len, idx + step);
+                    this.aiSummaryText = fullText.slice(0, idx);
+                }, 28);
+            },
+
+            finishAiTyping() {
+                if (this.aiSummaryTyping) {
+                    if (this.aiSummaryInterval) clearInterval(this.aiSummaryInterval);
+                    this.aiSummaryInterval = null;
+                    this.aiSummaryTyping = false;
+                    if (typeof window.stopAiTypingSound === 'function') {
+                        window.stopAiTypingSound();
+                    }
+                }
+            },
+
+            closeAiSummaryModal() {
+                this.finishAiTyping();
+                this.showAiSummaryModal = false;
+                if (typeof window.stopAiTypingSound === 'function') {
+                    window.stopAiTypingSound();
+                }
+            },
+
             copyAiSummary() {
+                this.finishAiTyping();
                 if (!this.aiSummaryText) return;
                 navigator.clipboard.writeText(this.aiSummaryText);
                 this.aiSummaryCopied = true;
@@ -951,9 +1015,9 @@
     <!-- ── 5. MODAL: 1 daqiqalik AI Kitob Konspekti ── -->
     <div x-show="showAiSummaryModal" x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-ink-950/85 backdrop-blur-md"
-         @keydown.escape.window="showAiSummaryModal = false">
+         @keydown.escape.window="closeAiSummaryModal()">
         <div class="w-full max-w-xl max-h-[85vh] rounded-2xl bg-ink-900 border border-violet-500/30 shadow-[0_25px_60px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden text-paper"
-             @click.away="showAiSummaryModal = false">
+             @click.away="closeAiSummaryModal()">
             
             <!-- Modal Header -->
             <div class="px-5 py-4 border-b border-ink-border/80 flex items-center justify-between bg-gradient-to-r from-violet-950/40 via-ink-900 to-amber-950/30">
@@ -969,24 +1033,47 @@
                         <p class="text-[11px] font-mono text-mist truncate max-w-xs">{{ $book->title }} • {{ $book->author }}</p>
                     </div>
                 </div>
-                <button type="button" @click="showAiSummaryModal = false" class="text-mist hover:text-paper text-xl font-mono p-1">×</button>
+                <button type="button" @click="closeAiSummaryModal()" class="text-mist hover:text-paper text-xl font-mono p-1">×</button>
             </div>
 
             <!-- Modal Body -->
             <div class="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm leading-relaxed">
                 <!-- Loading State -->
                 <div x-show="aiSummaryLoading" class="py-12 text-center space-y-4">
-                    <div class="w-12 h-12 mx-auto rounded-full border-2 border-amber-400 border-t-transparent animate-spin"></div>
+                    <div class="relative w-14 h-14 mx-auto flex items-center justify-center">
+                        <div class="w-14 h-14 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-2xl animate-pulse">
+                            ⌨️
+                        </div>
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                        </span>
+                    </div>
                     <div class="space-y-1">
-                        <p class="font-bold text-paper font-serif">Sun'iy intellekt kitobni tahlil qilmoqda...</p>
-                        <p class="text-xs text-mist font-mono">1 daqiqada o'qiladigan asosiy g'oya va 3 ta eng muhim saboq shakllantirilmoqda</p>
+                        <p class="font-bold text-paper font-serif flex items-center justify-center gap-2">
+                            <span>Sun'iy intellekt konspekt yozmoqda...</span>
+                        </p>
+                        <p class="text-xs text-mist font-mono">1 daqiqalik eng asosiy g'oyalar va saboqlar shakllantirilmoqda</p>
                     </div>
                 </div>
 
                 <!-- Content State -->
                 <div x-show="!aiSummaryLoading" class="space-y-4">
+                    <div class="flex items-center justify-between" x-show="aiSummaryTyping">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-[10px] font-mono text-violet-300">
+                            <span class="animate-pulse">⌨️</span>
+                            <span>AI yozmoqda...</span>
+                        </span>
+                        <button type="button" @click="finishAiTyping()" class="text-[10px] font-mono text-amber-400 hover:underline">
+                            To'liq ochish ⏭
+                        </button>
+                    </div>
+
                     <div class="p-4 rounded-xl bg-ink-950/70 border border-ink-border/70 space-y-3 font-sans">
-                        <div class="whitespace-pre-line text-paper/90 leading-relaxed font-sans" x-text="aiSummaryText"></div>
+                        <div class="whitespace-pre-line text-paper/90 leading-relaxed font-sans">
+                            <span x-text="aiSummaryText"></span>
+                            <span x-show="aiSummaryTyping" class="inline-block w-2 h-4 bg-amber-400 ml-1 animate-pulse align-middle"></span>
+                        </div>
                     </div>
 
                     <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/80 flex items-center gap-2">
@@ -1006,7 +1093,7 @@
                     <span x-show="aiSummaryCopied" class="text-amber-400 font-bold">✓ Nusxalandi!</span>
                 </button>
                 <div class="flex items-center gap-2">
-                    <button type="button" @click="showAiSummaryModal = false" class="ks-btn-ghost py-1.5 px-4 text-xs font-semibold">Yopish</button>
+                    <button type="button" @click="closeAiSummaryModal()" class="ks-btn-ghost py-1.5 px-4 text-xs font-semibold">Yopish</button>
                     @if($book->chapters->first())
                         <a href="{{ route('reader.show', ['book' => $book->id, 'chapter' => $book->chapters->first()->id]) }}"
                            class="ks-btn-primary py-1.5 px-4 text-xs font-bold inline-flex items-center gap-1">

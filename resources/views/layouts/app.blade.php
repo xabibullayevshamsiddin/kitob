@@ -128,5 +128,8 @@
         @livewireScripts
     @endif
     @stack('scripts')
+
+    <!-- ── AI Keyboard Typing Sound Effect ── -->
+    <x-ai-typing-sound />
 </body>
 </html>

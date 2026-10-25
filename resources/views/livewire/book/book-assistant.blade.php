@@ -85,6 +85,7 @@
                     title="{{ __('ai.limit_depleted_tooltip', ['time' => $resetRemainingHuman]) }}"
                     class="px-2.5 py-1 rounded-badge bg-ink-950/60 border border-ink-border/60 text-xs text-mist/40 font-sans shrink-0 inline-flex items-center gap-1.5 opacity-50 cursor-not-allowed"
                 @else
+                    @click="if (typeof window.playAiTypingSound === 'function') window.playAiTypingSound()"
                     wire:click="ask({{ json_encode($sq) }})"
                     wire:loading.attr="disabled"
                     class="px-2.5 py-1 rounded-badge bg-ink-950 hover:bg-amber-500/15 border border-ink-border hover:border-amber-400/50 text-xs text-paper hover:text-amber-300 font-sans transition-colors shrink-0 inline-flex items-center gap-1.5"
@@ -241,6 +242,9 @@
                                 this.stepInterval = setInterval(() => {
                                     this.step = (this.step + 1) % this.steps.length;
                                 }, 2200);
+                                if (typeof window.playAiTypingSound === 'function') {
+                                    window.playAiTypingSound();
+                                }
                             }
                         }"
                         x-init="start()"
@@ -255,11 +259,17 @@
                                 <span>{{ __('ai.thinking') }}</span>
                             </span>
 
-                            {{-- 3 Wave Bouncing Dots --}}
-                            <div class="flex items-center gap-1" aria-hidden="true">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0s;"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0.16s;"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0.32s;"></span>
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[10px] font-mono text-amber-300">
+                                    <span class="animate-pulse">⌨️</span>
+                                    <span>AI javob yozmoqda...</span>
+                                </span>
+                                {{-- 3 Wave Bouncing Dots --}}
+                                <div class="flex items-center gap-1" aria-hidden="true">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0s;"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0.16s;"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0.32s;"></span>
+                                </div>
                             </div>
                         </div>
 
@@ -440,6 +450,9 @@
                             if (!val || this.isSubmitting) return;
 
                             this.isSubmitting = true;
+                            if (typeof window.playAiTypingSound === 'function') {
+                                window.playAiTypingSound();
+                            }
                             try {
                                 const res = this.$wire.ask(val);
                                 if (res && typeof res.then === 'function') {
@@ -447,12 +460,14 @@
                                         this.isSubmitting = false;
                                     }).catch(() => {
                                         this.isSubmitting = false;
+                                        if (typeof window.stopAiTypingSound === 'function') window.stopAiTypingSound();
                                     });
                                 } else {
                                     setTimeout(() => { this.isSubmitting = false; }, 800);
                                 }
                             } catch (e) {
                                 this.isSubmitting = false;
+                                if (typeof window.stopAiTypingSound === 'function') window.stopAiTypingSound();
                             }
 
                             input.value = '';
@@ -520,6 +535,11 @@
                                 this.$nextTick(() => {
                                     this.animateNewMessage();
                                     this.scrollToBottom();
+                                    setTimeout(() => {
+                                        if (typeof window.stopAiTypingSound === 'function') {
+                                            window.stopAiTypingSound(true);
+                                        }
+                                    }, 400);
                                 });
                             }
                         }
