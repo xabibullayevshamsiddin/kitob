@@ -267,7 +267,21 @@ class TelegramBotService
                         'telegram_linked_at' => now(),
                     ]);
 
-                    $this->client->sendMessage($chatId, "Salom, <b>{$name}</b>! 🔐\n\nPlatformaga kirish uchun 6 xonali tasdiqlash kodingiz:\n👉 <code>{$loginData['code']}</code> 👈\n\nUshbu kodni saytga kiriting. Amal qilish muddati: 5 daqiqa.");
+                    // Eski ro'yxatdan o'tish yoki raqam ulashish keshlarini tozalaymiz
+                    Cache::forget("tg_reg_token_{$userId}");
+                    Cache::forget("tg_user_verifying_{$userId}");
+                    Cache::forget("tg_reg_prompt_just_sent_{$userId}");
+                    Cache::forget("tg_verify_prompt_just_sent_{$userId}");
+
+                    $this->client->sendMessage(
+                        $chatId,
+                        "Salom, <b>{$name}</b>! 🔐\n\nPlatformaga kirish uchun 6 xonali tasdiqlash kodingiz:\n👉 <code>{$loginData['code']}</code> 👈\n\nUshbu kodni saytga kiriting. Amal qilish muddati: 5 daqiqa.",
+                        [
+                            'reply_markup' => [
+                                'remove_keyboard' => true,
+                            ],
+                        ]
+                    );
                     return;
                 }
             }
@@ -342,6 +356,23 @@ class TelegramBotService
         // Agar foydalanuvchi hozirgina (oxirgi 12 soniyada) /start reg_... yoki /start verify_... orqali kirgan bo'lsa
         // va Telegram ketidan ikkinchi oddiy /start yuborgan bo'lsa — Raqamni ulashish tugmasini ustidan bosib yubormaymiz!
         if ($payload === '') {
+            // Agar foydalanuvchi allaqachon ro'yxatdan o'tgan va telefon raqami tasdiqlangan bo'lsa
+            $existingVerifiedUser = User::where('telegram_id', $userId)
+                ->whereNotNull('phone_verified_at')
+                ->first();
+
+            if ($existingVerifiedUser) {
+                Cache::forget("tg_reg_token_{$userId}");
+                Cache::forget("tg_user_verifying_{$userId}");
+                Cache::forget("tg_reg_prompt_just_sent_{$userId}");
+                Cache::forget("tg_verify_prompt_just_sent_{$userId}");
+
+                $this->client->sendMessage($chatId, "Assalomu alaykum, <b>{$name}</b>! 👋📚\n\nSizning telefon raqamingiz allaqachon tasdiqlangan va hisobingiz faol! ✅\n\nPastdagi menyu orqali kerakli bo'limni tanlashingiz mumkin 👇", [
+                    'reply_markup' => $this->getMainMenuKeyboard(),
+                ]);
+                return;
+            }
+
             if (Cache::has("tg_reg_prompt_just_sent_{$userId}") || Cache::has("tg_verify_prompt_just_sent_{$userId}")) {
                 return;
             }

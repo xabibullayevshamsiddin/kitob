@@ -100,13 +100,24 @@ class PhoneLoginController extends Controller
         // 6. Kodni Telegram bot orqali yuborish
         if ($user->telegram_id) {
             try {
+                // Eski "Raqamni ulashish" keshlarini tozalash
+                Cache::forget("tg_reg_token_{$user->telegram_id}");
+                Cache::forget("tg_user_verifying_{$user->telegram_id}");
+                Cache::forget("tg_reg_prompt_just_sent_{$user->telegram_id}");
+                Cache::forget("tg_verify_prompt_just_sent_{$user->telegram_id}");
+
                 $client = new TelegramClient();
                 $message = "🔐 <b>Kitobxon platformasiga kirish tasdig'i:</b>\n\n"
                          . "Sizning bir martalik 6 xonali tasdiqlash kodingiz:\n"
                          . "👉 <code>{$code}</code> 👈\n\n"
                          . "Ushbu kodni hech kimga bermang! Kod amal qilish muddati: 5 daqiqa.";
 
-                $client->sendMessage($user->telegram_id, $message);
+                // "Raqamni ulashish" klaviaturasini Telegramdan butunlay olib tashlaymiz
+                $client->sendMessage($user->telegram_id, $message, [
+                    'reply_markup' => [
+                        'remove_keyboard' => true,
+                    ],
+                ]);
             } catch (\Throwable $e) {
                 // Xatolik yuz bersa ham davom etadi
             }
@@ -259,12 +270,22 @@ class PhoneLoginController extends Controller
         $user = User::find($loginData['user_id']);
         if ($user && $user->telegram_id) {
             try {
+                // Eski "Raqamni ulashish" keshlarini tozalash
+                Cache::forget("tg_reg_token_{$user->telegram_id}");
+                Cache::forget("tg_user_verifying_{$user->telegram_id}");
+                Cache::forget("tg_reg_prompt_just_sent_{$user->telegram_id}");
+                Cache::forget("tg_verify_prompt_just_sent_{$user->telegram_id}");
+
                 $client = new TelegramClient();
                 $message = "🔐 <b>Yangi kirish kodi:</b>\n\n"
                          . "Sizning yangi tasdiqlash kodingiz:\n"
                          . "👉 <code>{$newCode}</code> 👈\n\n"
                          . "Amal qilish muddati: 5 daqiqa.";
-                $client->sendMessage($user->telegram_id, $message);
+                $client->sendMessage($user->telegram_id, $message, [
+                    'reply_markup' => [
+                        'remove_keyboard' => true,
+                    ],
+                ]);
             } catch (\Throwable $e) {}
         }
 
