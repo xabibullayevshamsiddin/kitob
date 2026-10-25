@@ -553,7 +553,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($this->isTelegramLinked()) {
             try {
                 $safeName = htmlspecialchars((string) $this->name);
-                $appUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/');
+                $appUrl = rtrim((string) config('app.url', 'https://kitobxon.elitehost.uz'), '/');
 
                 $tgMessage = "🎉 <b>Xushxabar! Hisobingiz blokdan chiqarildi (Ban yechildi)</b>\n\n"
                     . "Assalomu alaykum, <b>{$safeName}</b>! 👋\n"

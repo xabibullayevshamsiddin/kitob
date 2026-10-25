@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# Render provides the $PORT environment variable (usually 10000). Default to 80 if unset.
+# Default port to 80 if unset
 PORT="${PORT:-80}"
 echo "==> Configuring Nginx port to ${PORT}..."
 sed -i "s/PORT_PLACEHOLDER/${PORT}/g" /etc/nginx/nginx.conf
@@ -23,7 +23,7 @@ if [ ! -L /var/www/html/public/storage ]; then
     php artisan storage:link || true
 fi
 
-# Always clear cached config so fresh env vars are used from Render
+# Always clear cached config so fresh env vars are used
 echo "==> Clearing old config/route/view caches..."
 php artisan config:clear || true
 php artisan cache:clear || true

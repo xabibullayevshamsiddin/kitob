@@ -72,9 +72,9 @@ class PasswordResetController extends Controller
 
                 $token = Password::broker()->createToken($user);
 
-                $publicBase = config('app.url', 'https://kitob-9y1h.onrender.com');
+                $publicBase = config('app.url', 'https://kitobxon.elitehost.uz');
                 if (str_contains($publicBase, 'localhost') || str_contains($publicBase, '127.0.0.1')) {
-                    $publicBase = 'https://kitob-9y1h.onrender.com';
+                    $publicBase = 'https://kitobxon.elitehost.uz';
                 }
                 $publicResetUrl = rtrim($publicBase, '/') . '/reset-password/' . $token . '?email=' . urlencode($user->email);
                 $localResetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);

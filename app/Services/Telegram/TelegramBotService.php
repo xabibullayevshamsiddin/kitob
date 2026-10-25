@@ -364,7 +364,7 @@ class TelegramBotService
         }
 
         // 3. Standart salomlashuv
-        $appUrl = config('app.url', 'https://kitob-9y1h.onrender.com');
+        $appUrl = config('app.url', 'https://kitobxon.elitehost.uz');
         $miniAppUrl = config('telegram.mini_app_url', "{$appUrl}/tg-app");
 
         $text = "Assalomu alaykum, <b>{$name}</b>! 👋📚\n\n"
@@ -850,7 +850,7 @@ class TelegramBotService
      */
     public function getMainMenuKeyboard(): array
     {
-        $appUrl = config('app.url', 'https://kitob-9y1h.onrender.com');
+        $appUrl = config('app.url', 'https://kitobxon.elitehost.uz');
         $miniAppUrl = config('telegram.mini_app_url', rtrim($appUrl, '/') . '/tg-app');
 
         $row1 = [];

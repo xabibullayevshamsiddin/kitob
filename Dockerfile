@@ -99,7 +99,6 @@ RUN mkdir -p /var/www/html/storage/framework/cache/data \
     chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Render assigns port dynamically via $PORT (defaults to 10000 or 80)
-EXPOSE 80 10000
+EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

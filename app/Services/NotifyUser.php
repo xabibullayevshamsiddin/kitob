@@ -157,7 +157,7 @@ class NotifyUser
 
         $followerMap = array_flip($followerIds);
         $link = '/live/' . $event->id;
-        $fullUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/') . $link;
+        $fullUrl = rtrim((string) config('app.url', 'https://kitobxon.elitehost.uz'), '/') . $link;
 
         $safeHostName = htmlspecialchars((string) $host->name);
         $safeHostUsername = htmlspecialchars((string) ($host->username ?? ''));
@@ -241,7 +241,7 @@ class NotifyUser
         $followerMap = array_flip($followerIds);
 
         $link = '/live/' . $event->id;
-        $fullUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/') . $link;
+        $fullUrl = rtrim((string) config('app.url', 'https://kitobxon.elitehost.uz'), '/') . $link;
         $safeGroupName = htmlspecialchars((string) $group->name);
         $safeHostName = htmlspecialchars((string) $host->name);
         $safeTitle = htmlspecialchars((string) $event->title);
@@ -303,7 +303,7 @@ class NotifyUser
         }
 
         $profileLink = '/profile/' . $follower->username;
-        $fullUrl = rtrim((string) config('app.url', 'https://kitob-9y1h.onrender.com'), '/') . $profileLink;
+        $fullUrl = rtrim((string) config('app.url', 'https://kitobxon.elitehost.uz'), '/') . $profileLink;
 
         self::send(
             $targetUser,

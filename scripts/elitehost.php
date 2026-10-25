@@ -138,16 +138,64 @@ class EliteHost
         return self::putFile($remotePath, $content);
     }
 
-    public static function replaceInFile(string $remotePath, string $search, string $replace): bool
+    public static function createSchedule(string $name, string $minute, string $hour, array $tasks = []): array
     {
-        $content = self::getFile($remotePath);
-        if ($content === '') return false;
-        $newContent = str_replace($search, $replace, $content);
-        if ($newContent === $content) {
-            echo "ℹ️ O'zgartirish shart emas, matn allaqachon to'g'ri: {$remotePath}\n";
-            return true;
+        $payload = [
+            'name'             => $name,
+            'is_active'        => true,
+            'minute'           => $minute,
+            'hour'             => $hour,
+            'day_of_month'     => '*',
+            'month'            => '*',
+            'day_of_week'      => '*',
+            'only_when_online' => false,
+        ];
+
+        $res = self::request('POST', '/servers/' . self::SERVER_ID . '/schedules', $payload);
+        if ($res['code'] !== 200 && $res['code'] !== 201) {
+            echo "❌ Jadval yaratilmadi: HTTP {$res['code']}\n{$res['body']}\n";
+            return $res;
         }
-        return self::putFile($remotePath, $newContent);
+
+        $scheduleId = $res['json']['attributes']['id'];
+        echo "✅ Jadval yaratildi: [{$scheduleId}] {$name} ({$hour}:{$minute})\n";
+
+        foreach ($tasks as $task) {
+            $taskPayload = [
+                'action'               => $task['action'], // 'power', 'backup', 'command'
+                'payload'              => $task['payload'] ?? '',
+                'time_offset'          => (int) ($task['time_offset'] ?? 0),
+                'continue_on_failure'  => (bool) ($task['continue_on_failure'] ?? false),
+            ];
+            $tRes = self::request('POST', '/servers/' . self::SERVER_ID . '/schedules/' . $scheduleId . '/tasks', $taskPayload);
+            if ($tRes['code'] === 200 || $tRes['code'] === 201) {
+                echo "   ➕ Vazifa qo'shildi: {$task['action']} ({$task['payload']})\n";
+            } else {
+                echo "   ⚠️ Vazifa qo'shilmadi: HTTP {$tRes['code']}\n";
+            }
+        }
+
+        return $res;
+    }
+
+    public static function listSchedules(): void
+    {
+        $res = self::request('GET', '/servers/' . self::SERVER_ID . '/schedules');
+        if ($res['code'] === 200 && isset($res['json']['data'])) {
+            $list = $res['json']['data'];
+            if (empty($list)) {
+                echo "ℹ️ Hozircha birorta ham jadval yaratilmagan.\n";
+                return;
+            }
+            echo "📅 Mavjud Jadvallar:\n";
+            foreach ($list as $s) {
+                $attr = $s['attributes'];
+                $status = $attr['is_active'] ? '🟢 Faol' : '⚪️ Noo\'rin';
+                echo "  [#{$attr['id']}] {$attr['name']} ({$attr['cron']['hour']}:{$attr['cron']['minute']}) — {$status}\n";
+            }
+        } else {
+            echo "❌ Xatolik: HTTP {$res['code']}\n{$res['body']}\n";
+        }
     }
 
     public static function deleteFiles(string $root, array $files): bool
@@ -169,6 +217,10 @@ class EliteHost
 $action = $argv[1] ?? 'status';
 
 switch ($action) {
+    case 'schedules':
+        EliteHost::listSchedules();
+        break;
+
     case 'status':
         EliteHost::status();
         break;
