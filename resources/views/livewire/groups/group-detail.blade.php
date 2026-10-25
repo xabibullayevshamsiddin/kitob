@@ -687,11 +687,24 @@
             <!-- Delete Message Confirmation Modal -->
             <div x-show="deleteModalOpen" 
                  x-cloak
+                 x-transition:enter="transition-opacity ease-out duration-400"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition-opacity ease-in duration-250"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
                  @keydown.escape.window="deleteModalOpen = false"
-                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md">
+                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
 
-                <div @click.away="deleteModalOpen = false"
-                     class="bg-ink-900 border border-ink-border rounded-panel shadow-2xl p-5 max-w-sm w-full relative overflow-hidden text-center">
+                <div x-show="deleteModalOpen"
+                     x-transition:enter="ks-blur-in-enter-active"
+                     x-transition:enter-start="ks-blur-in-enter"
+                     x-transition:enter-end="ks-blur-in-enter-end"
+                     x-transition:leave="ks-blur-in-leave-active"
+                     x-transition:leave-start="ks-blur-in-leave"
+                     x-transition:leave-end="ks-blur-in-leave-end"
+                     @click.away="deleteModalOpen = false"
+                     class="bg-ink-900 border border-ink-border rounded-panel shadow-[0_30px_70px_rgba(0,0,0,0.95)] p-5 max-w-sm w-full relative overflow-hidden text-center ks-modal-card">
 
                     <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center mb-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -722,11 +735,24 @@
             <!-- Ban Modal (Guruh chatida admin uchun tezkor ban oynasi) -->
             <div x-show="banModalOpen"
                  x-cloak
+                 x-transition:enter="transition-opacity ease-out duration-400"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition-opacity ease-in duration-250"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
                  @keydown.escape.window="banModalOpen = false"
-                 class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md">
+                 class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
 
-                <div @click.away="banModalOpen = false"
-                     class="bg-ink-900 border border-ink-border rounded-panel shadow-2xl p-5 max-w-md w-full relative overflow-hidden text-left">
+                <div x-show="banModalOpen"
+                     x-transition:enter="ks-blur-in-enter-active"
+                     x-transition:enter-start="ks-blur-in-enter"
+                     x-transition:enter-end="ks-blur-in-enter-end"
+                     x-transition:leave="ks-blur-in-leave-active"
+                     x-transition:leave-start="ks-blur-in-leave"
+                     x-transition:leave-end="ks-blur-in-leave-end"
+                     @click.away="banModalOpen = false"
+                     class="bg-ink-900 border border-ink-border rounded-panel shadow-[0_30px_70px_rgba(0,0,0,0.95)] p-5 max-w-md w-full relative overflow-hidden text-left ks-modal-card">
 
                     <div class="flex items-center gap-2.5 mb-4">
                         <div class="w-9 h-9 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center font-bold shrink-0">
@@ -869,9 +895,9 @@
 
     <!-- Group Settings Modal -->
     @if ($showSettingsModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showSettingsModal', false)"></div>
-            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-5 text-left max-h-[90vh] overflow-y-auto">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showSettingsModal', false)"></div>
+            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-5 text-left max-h-[90vh] overflow-y-auto my-auto ks-blur-dialog-anim">
 
                 <div class="flex items-center justify-between border-b border-ink-border/60 pb-3">
                     <div class="flex items-center gap-2.5">
@@ -1026,9 +1052,9 @@
 
     <!-- Remove Member Confirmation Modal -->
     @if ($showRemoveMemberModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showRemoveMemberModal', false)"></div>
-            <div class="relative w-full max-w-sm p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-4 text-center">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showRemoveMemberModal', false)"></div>
+            <div class="relative w-full max-w-sm p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto ks-blur-dialog-anim">
 
                 <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1062,9 +1088,9 @@
 
     <!-- Delete Group Confirmation Modal -->
     @if ($showDeleteModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showDeleteModal', false)"></div>
-            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-4 text-center">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showDeleteModal', false)"></div>
+            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto ks-blur-dialog-anim">
 
                 <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1098,9 +1124,9 @@
 
     <!-- Group Live Stream Studio Modal -->
     @if ($showLiveModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="closeLiveModal"></div>
-            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="closeLiveModal"></div>
+            <div class="relative w-full max-w-lg p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-5 my-auto ks-blur-dialog-anim">
 
                 <div class="flex items-center justify-between pb-3 border-b border-ink-border">
                     <div class="flex items-center gap-2.5">

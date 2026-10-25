@@ -1247,9 +1247,22 @@
 
     {{-- Telegram Botdan Xabar / E'lon Yuborish Modali --}}
     <div x-show="tgModalOpen" x-cloak
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
+         x-transition:enter="transition-opacity ease-out duration-400"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
          @keydown.escape.window="tgModalOpen = false">
-        <div class="ks-panel relative w-full max-w-lg bg-ink-900 border border-ink-border rounded-panel p-5 sm:p-6 shadow-2xl text-left space-y-4"
+        <div x-show="tgModalOpen"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             class="ks-panel relative w-full max-w-lg bg-ink-900 border border-ink-border rounded-panel p-5 sm:p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left space-y-4 ks-modal-card"
              @click.away="tgModalOpen = false">
             <div class="flex items-center justify-between border-b border-ink-border pb-3">
                 <div class="flex items-center gap-3">

@@ -31,10 +31,10 @@
     <!-- ── EFIRNI SOZLASH VA BOSHLASH MODALI ── -->
     @if($showStudioModal)
         <div class="fixed inset-0 z-[9999] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="fixed inset-0 bg-ink-950/85 backdrop-blur-md transition-opacity" wire:click="closeStudioModal"></div>
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="closeStudioModal"></div>
 
             <div class="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
-                <div class="relative w-full max-w-xl transform rounded-panel bg-ink-900 border border-ink-border shadow-2xl text-left my-8 overflow-hidden z-10"
+                <div class="relative w-full max-w-xl transform rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left my-8 overflow-hidden z-10 ks-blur-dialog-anim"
                      @click.stop>
 
                     <!-- Modal Header -->

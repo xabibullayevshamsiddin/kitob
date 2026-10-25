@@ -645,6 +645,40 @@
         opacity: 1;
     }
 
+    /* CSS Keyframe animations for Livewire and dynamic modals */
+    @keyframes ksBlurInModalKeyframes {
+        0% {
+            filter: blur(20px);
+            transform: scale(1.2);
+            opacity: 0;
+        }
+        100% {
+            filter: blur(0px);
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes ksBackdropFadeKeyframes {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .ks-blur-dialog-anim,
+    .ks-modal-card-anim,
+    .modal-blur-in {
+        animation: ksBlurInModalKeyframes 0.55s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+        will-change: transform, filter, opacity;
+    }
+
+    .ks-backdrop-fade-anim {
+        animation: ksBackdropFadeKeyframes 0.35s ease-out both !important;
+    }
+
     /* Alpine.js transition utility classes for Blur-In modals */
     .ks-blur-in-enter {
         filter: blur(20px) !important;

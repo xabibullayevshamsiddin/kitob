@@ -248,9 +248,9 @@
 
     <!-- Create Group Modal -->
     @if ($showCreateModal)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showCreateModal', false)"></div>
-            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-4">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showCreateModal', false)"></div>
+            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 my-auto ks-blur-dialog-anim">
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
                     <h3 class="text-sm font-bold text-paper font-serif">{{ __('site.groups.create_title') }}</h3>
                     <button wire:click="$set('showCreateModal', false)" class="text-mist hover:text-paper text-sm font-mono">✕</button>
@@ -330,9 +330,9 @@
 
     <!-- Join Private Group Modal -->
     @if ($showJoinModal && $this->targetGroup)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showJoinModal', false)"></div>
-            <div class="relative w-full max-w-sm p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-4 text-center">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showJoinModal', false)"></div>
+            <div class="relative w-full max-w-sm p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto ks-blur-dialog-anim">
 
                 <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -377,9 +377,9 @@
 
     <!-- Delete Group Confirmation Modal -->
     @if ($showDeleteModal && $this->deleteTargetGroup)
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-ink-950/80 backdrop-blur-md" wire:click="$set('showDeleteModal', false)"></div>
-            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-2xl space-y-4 text-center">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim" wire:click="$set('showDeleteModal', false)"></div>
+            <div class="relative w-full max-w-md p-6 rounded-panel bg-ink-900 border border-ink-border shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 text-center my-auto ks-blur-dialog-anim">
 
                 <div class="mx-auto w-10 h-10 rounded-btn bg-[#C1392B]/15 border border-rose-500/30 text-rose-300 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

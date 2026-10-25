@@ -790,10 +790,10 @@
             $pAmbient = $pPayload['banner_ambient'] ?? 'none';
             $pAvatarRing = $pPayload['avatar_ring'] ?? 'ring-2 ring-amber-400/80';
         @endphp
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md"
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim overflow-y-auto"
              @keydown.escape.window="$wire.closePreview()"
              role="dialog" aria-modal="true" aria-labelledby="preview-modal-title">
-            <div class="relative w-full max-w-lg rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-2xl backdrop-blur-xl space-y-6">
+            <div class="relative w-full max-w-lg rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-xl space-y-6 my-auto ks-blur-dialog-anim">
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
                     <div class="flex items-center gap-2">
@@ -873,10 +873,10 @@
             $payload = $purchaseItem->payload ?? [];
             $badgeColor = $purchaseItem->safeColor('badge_color', $purchaseItem->safeColor('color', $purchaseItem->safeColor('accent_color', '#FBBF24')));
         @endphp
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-md"
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim overflow-y-auto"
              @keydown.escape.window="$wire.closePurchaseModal()"
              role="dialog" aria-modal="true" aria-labelledby="purchase-modal-title">
-            <div class="relative w-full max-w-md rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-2xl backdrop-blur-xl space-y-5">
+            <div class="relative w-full max-w-md rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-xl space-y-5 my-auto ks-blur-dialog-anim">
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
                     <h3 id="purchase-modal-title" class="font-serif font-bold text-lg text-paper flex items-center gap-2">

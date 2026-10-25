@@ -251,12 +251,12 @@
             @if($confirmFinishOpen && !$finished)
                 <div
                      wire:click.self="cancelFinish"
-                     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+                     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md ks-backdrop-fade-anim"
                      role="presentation">
                     <section role="dialog"
                              aria-modal="true"
                              aria-labelledby="quiz-finish-title"
-                             class="w-full max-w-md space-y-5 rounded-2xl border border-amber-400/20 bg-ink-900 p-6 shadow-2xl shadow-black/50">
+                             class="w-full max-w-md space-y-5 rounded-2xl border border-amber-400/20 bg-ink-900 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] ks-blur-dialog-anim">
                         <div class="flex items-start gap-4">
                             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-xl text-amber-500" aria-hidden="true">!</span>
                             <div class="space-y-2">

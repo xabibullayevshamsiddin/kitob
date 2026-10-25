@@ -289,9 +289,22 @@
 
     {{-- Interactive Ban Modal --}}
     <div x-show="banModalOpen" x-cloak
-         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+         x-transition:enter="transition-opacity ease-out duration-400"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
          @keydown.escape.window="banModalOpen = false">
-        <div role="dialog" aria-modal="true" aria-labelledby="ban-modal-title" class="relative w-full max-w-lg space-y-5 rounded-modal border border-ink-border bg-ink-900 p-5 text-left shadow-2xl sm:p-6"
+        <div x-show="banModalOpen"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             role="dialog" aria-modal="true" aria-labelledby="ban-modal-title" class="relative w-full max-w-lg space-y-5 rounded-modal border border-ink-border bg-ink-900 p-5 text-left shadow-[0_30px_70px_rgba(0,0,0,0.95)] sm:p-6 ks-modal-card"
              @click.away="banModalOpen = false">
             <div class="flex items-center justify-between border-b border-ink-border pb-4">
                 <div class="flex items-center gap-3">
@@ -380,10 +393,23 @@
 
     {{-- Interactive Telegram Bot Reply Modal --}}
     <div x-show="tgModalOpen" x-cloak
-         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+         x-transition:enter="transition-opacity ease-out duration-400"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
          @keydown.escape.window="tgModalOpen = false">
-        <div role="dialog" aria-modal="true" class="relative w-full max-w-lg space-y-5 rounded-modal border border-ink-border bg-ink-900 p-5 text-left shadow-2xl sm:p-6"
-              @click.away="tgModalOpen = false">
+        <div x-show="tgModalOpen"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             role="dialog" aria-modal="true" class="relative w-full max-w-lg space-y-5 rounded-modal border border-ink-border bg-ink-900 p-5 text-left shadow-[0_30px_70px_rgba(0,0,0,0.95)] sm:p-6 ks-modal-card"
+             @click.away="tgModalOpen = false">
             <div class="flex items-center justify-between border-b border-ink-border pb-4">
                 <div class="flex items-center gap-3">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-sky-500/20 bg-sky-500/10 font-mono text-sm font-bold text-sky-400">

@@ -97,11 +97,14 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
         
-        <div class="relative w-full max-w-md bg-gradient-to-b from-[#131927] to-[#0a0e17] border border-amber-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl overflow-hidden"
+        <div class="relative w-full max-w-md bg-gradient-to-b from-[#131927] to-[#0a0e17] border border-amber-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl overflow-hidden ks-modal-card"
              @click.outside="confirmActive()"
-             x-transition:enter="transition cubic-bezier(0.34, 1.56, 0.64, 1) duration-400"
-             x-transition:enter-start="opacity-0 scale-90 translate-y-4"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end">
             
             <!-- Ambient Spotlight Glow -->
             <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>

@@ -206,9 +206,9 @@
 
     <!-- ── 2. Telefon Raqamini O'zgartirish Xavfsizlik Modali ── -->
     @if($showPhoneModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in"
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md ks-backdrop-fade-anim overflow-y-auto"
              x-data @keydown.escape.window="$wire.closePhoneModal()">
-            <div class="w-full max-w-md bg-ink-900 border border-ink-border rounded-panel p-6 shadow-2xl space-y-4 relative">
+            <div class="w-full max-w-md bg-ink-900 border border-ink-border rounded-panel p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] space-y-4 relative my-auto ks-blur-dialog-anim">
                 
                 <!-- Modal Sarlavhasi -->
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">

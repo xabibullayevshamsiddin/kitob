@@ -488,17 +488,24 @@
     <div x-show="deleteModalOpen" 
          x-cloak
          @keydown.escape.window="deleteModalOpen = false"
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-150"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+         x-transition:enter="transition-opacity ease-out duration-400"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
 
         <!-- Modal Dialog Card -->
-        <div @click.away="deleteModalOpen = false"
-             class="ks-panel bg-ink-900 border border-ink-border rounded-panel p-6 max-w-sm w-full text-center">
+        <div x-show="deleteModalOpen"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             @click.away="deleteModalOpen = false"
+             class="ks-panel bg-ink-900 border border-ink-border rounded-panel p-6 max-w-sm w-full text-center shadow-[0_30px_70px_rgba(0,0,0,0.95)] ks-modal-card">
 
             <!-- Danger Badge Icon -->
             <div class="mx-auto w-12 h-12 rounded-btn bg-ink-950 border border-rose-500/30 text-rose-300 flex items-center justify-center mb-4">
@@ -531,16 +538,23 @@
     <div x-show="banModalOpen"
          x-cloak
          @keydown.escape.window="banModalOpen = false"
-         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
-         x-transition:enter="transition ease-out duration-150"
+         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+         x-transition:enter="transition-opacity ease-out duration-400"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
 
-        <div @click.away="banModalOpen = false"
-             class="ks-panel bg-ink-900 border border-ink-border rounded-panel p-6 max-w-md w-full text-left">
+        <div x-show="banModalOpen"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             @click.away="banModalOpen = false"
+             class="ks-panel bg-ink-900 border border-ink-border rounded-panel p-6 max-w-md w-full text-left shadow-[0_30px_70px_rgba(0,0,0,0.95)] ks-modal-card">
 
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-btn bg-ink-950 border border-rose-500/30 text-rose-300 flex items-center justify-center text-xl font-bold flex-shrink-0">
