@@ -53,6 +53,8 @@
         <div class="lg:col-span-1 bg-ink-900 border border-ink-border rounded-panel p-5 space-y-5" x-data="{
             mode: 'file',
             selectedPreset: '',
+            playingPreset: null,
+            previewAudio: null,
             fileName: '',
             handleAudio(e) {
                 const f = e.target.files[0];
@@ -63,6 +65,36 @@
                         document.getElementById('music-title').value = clean;
                     }
                 }
+            },
+            selectPreset(key, title) {
+                this.selectedPreset = key;
+                const titleInput = document.getElementById('music-title');
+                if (titleInput && (!titleInput.value || ['Sokin Yomg\'ir & Tabiat', 'Klassik Pianino Oromi', 'O\'rmon Shabodasi & Qushlar'].includes(titleInput.value))) {
+                    titleInput.value = title;
+                }
+            },
+            togglePreview(key, url) {
+                if (this.playingPreset === key) {
+                    if (this.previewAudio) {
+                        this.previewAudio.pause();
+                        this.previewAudio.currentTime = 0;
+                    }
+                    this.playingPreset = null;
+                    return;
+                }
+                if (this.previewAudio) {
+                    this.previewAudio.pause();
+                    this.previewAudio.currentTime = 0;
+                }
+                this.previewAudio = new Audio(url);
+                this.playingPreset = key;
+                this.previewAudio.play().catch(err => {
+                    console.warn('Audio play error:', err);
+                    this.playingPreset = null;
+                });
+                this.previewAudio.onended = () => {
+                    this.playingPreset = null;
+                };
             }
         }">
             <div>
@@ -121,31 +153,73 @@
 
                 {{-- Mode 2: Presets --}}
                 <div x-show="mode === 'preset'" class="space-y-2">
-                    <label class="block font-semibold text-mist uppercase font-mono text-[10px] tracking-wider">
-                        Tayyor Ambient ohangni tanlang
-                    </label>
+                    <div class="flex items-center justify-between">
+                        <label class="block font-semibold text-mist uppercase font-mono text-[10px] tracking-wider">
+                            Tayyor Ambient ohangni tanlang
+                        </label>
+                        <span class="text-[10px] text-amber-400 font-mono">Barchasi litsenziyali</span>
+                    </div>
+
                     <div class="space-y-2">
-                        <label class="flex items-center gap-2.5 p-2.5 rounded-card bg-ink-950 border border-ink-border hover:border-amber-400/40 cursor-pointer">
-                            <input type="radio" name="preset_track" value="rain" @change="if(!document.getElementById('music-title').value) document.getElementById('music-title').value = 'Sokin Yomg\'ir & Tabiat'" class="text-amber-500 focus:ring-amber-400">
-                            <div class="min-w-0">
-                                <p class="text-paper font-semibold text-xs">🌧️ Sokin Yomg'ir & Tabiat</p>
-                                <p class="text-[10px] text-mist font-mono">Tinchlantiruvchi mayin yomg'ir shiviri</p>
+                        {{-- Preset 1: Rain --}}
+                        <div @click="selectPreset('rain', 'Sokin Yomg\'ir & Tabiat')"
+                             :class="{ 'border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/30': selectedPreset === 'rain', 'border-ink-border bg-ink-950 hover:border-amber-400/40': selectedPreset !== 'rain' }"
+                             class="flex items-center justify-between gap-2.5 p-2.5 rounded-card border cursor-pointer transition-all">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <input type="radio" name="preset_track" value="rain" :checked="selectedPreset === 'rain'" class="text-amber-500 focus:ring-amber-400 shrink-0">
+                                <div class="min-w-0">
+                                    <p class="text-paper font-semibold text-xs truncate">🌧️ Sokin Yomg'ir & Tabiat</p>
+                                    <p class="text-[10px] text-mist font-mono truncate">Tinchlantiruvchi mayin yomg'ir shiviri</p>
+                                </div>
                             </div>
-                        </label>
-                        <label class="flex items-center gap-2.5 p-2.5 rounded-card bg-ink-950 border border-ink-border hover:border-amber-400/40 cursor-pointer">
-                            <input type="radio" name="preset_track" value="piano" @change="if(!document.getElementById('music-title').value) document.getElementById('music-title').value = 'Klassik Pianino Oromi'" class="text-amber-500 focus:ring-amber-400">
-                            <div class="min-w-0">
-                                <p class="text-paper font-semibold text-xs">🎹 Klassik Pianino Oromi</p>
-                                <p class="text-[10px] text-mist font-mono">Mutolaa uchun sokin akkordlar</p>
+                            <button type="button" 
+                                    @click.stop="togglePreview('rain', '{{ asset('sounds/ambient/rain.wav') }}')"
+                                    :class="playingPreset === 'rain' ? 'bg-amber-500 text-ink-950 font-bold' : 'bg-ink-900 text-mist hover:text-paper border border-ink-border'"
+                                    class="shrink-0 px-2 py-1 rounded-btn text-[10px] font-mono inline-flex items-center gap-1 transition-colors">
+                                <span x-show="playingPreset !== 'rain'">▶ Tinglash</span>
+                                <span x-show="playingPreset === 'rain'">⏸ To'xtatish</span>
+                            </button>
+                        </div>
+
+                        {{-- Preset 2: Piano --}}
+                        <div @click="selectPreset('piano', 'Klassik Pianino Oromi')"
+                             :class="{ 'border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/30': selectedPreset === 'piano', 'border-ink-border bg-ink-950 hover:border-amber-400/40': selectedPreset !== 'piano' }"
+                             class="flex items-center justify-between gap-2.5 p-2.5 rounded-card border cursor-pointer transition-all">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <input type="radio" name="preset_track" value="piano" :checked="selectedPreset === 'piano'" class="text-amber-500 focus:ring-amber-400 shrink-0">
+                                <div class="min-w-0">
+                                    <p class="text-paper font-semibold text-xs truncate">🎹 Klassik Pianino Oromi</p>
+                                    <p class="text-[10px] text-mist font-mono truncate">Mutolaa uchun sokin akkordlar</p>
+                                </div>
                             </div>
-                        </label>
-                        <label class="flex items-center gap-2.5 p-2.5 rounded-card bg-ink-950 border border-ink-border hover:border-amber-400/40 cursor-pointer">
-                            <input type="radio" name="preset_track" value="forest" @change="if(!document.getElementById('music-title').value) document.getElementById('music-title').value = 'O\'rmon Shabodasi & Qushlar'" class="text-amber-500 focus:ring-amber-400">
-                            <div class="min-w-0">
-                                <p class="text-paper font-semibold text-xs">🌲 O'rmon Shabodasi & Qushlar</p>
-                                <p class="text-[10px] text-mist font-mono">Yengil shamol va qushlar sayrashi</p>
+                            <button type="button" 
+                                    @click.stop="togglePreview('piano', '{{ asset('sounds/ambient/piano.wav') }}')"
+                                    :class="playingPreset === 'piano' ? 'bg-amber-500 text-ink-950 font-bold' : 'bg-ink-900 text-mist hover:text-paper border border-ink-border'"
+                                    class="shrink-0 px-2 py-1 rounded-btn text-[10px] font-mono inline-flex items-center gap-1 transition-colors">
+                                <span x-show="playingPreset !== 'piano'">▶ Tinglash</span>
+                                <span x-show="playingPreset === 'piano'">⏸ To'xtatish</span>
+                            </button>
+                        </div>
+
+                        {{-- Preset 3: Forest --}}
+                        <div @click="selectPreset('forest', 'O\'rmon Shabodasi & Qushlar')"
+                             :class="{ 'border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/30': selectedPreset === 'forest', 'border-ink-border bg-ink-950 hover:border-amber-400/40': selectedPreset !== 'forest' }"
+                             class="flex items-center justify-between gap-2.5 p-2.5 rounded-card border cursor-pointer transition-all">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <input type="radio" name="preset_track" value="forest" :checked="selectedPreset === 'forest'" class="text-amber-500 focus:ring-amber-400 shrink-0">
+                                <div class="min-w-0">
+                                    <p class="text-paper font-semibold text-xs truncate">🌲 O'rmon Shabodasi & Qushlar</p>
+                                    <p class="text-[10px] text-mist font-mono truncate">Yengil shamol va qushlar sayrashi</p>
+                                </div>
                             </div>
-                        </label>
+                            <button type="button" 
+                                    @click.stop="togglePreview('forest', '{{ asset('sounds/ambient/forest.wav') }}')"
+                                    :class="playingPreset === 'forest' ? 'bg-amber-500 text-ink-950 font-bold' : 'bg-ink-900 text-mist hover:text-paper border border-ink-border'"
+                                    class="shrink-0 px-2 py-1 rounded-btn text-[10px] font-mono inline-flex items-center gap-1 transition-colors">
+                                <span x-show="playingPreset !== 'forest'">▶ Tinglash</span>
+                                <span x-show="playingPreset === 'forest'">⏸ To'xtatish</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -195,13 +269,19 @@
                                     <div class="w-8 h-8 rounded-badge bg-ink-900 border border-ink-border flex items-center justify-center text-amber-400 font-mono font-bold text-xs shrink-0">
                                         {{ $music->order ?? ($index + 1) }}
                                     </div>
-                                    <div class="min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <h4 class="text-xs font-bold text-paper truncate font-sans">{{ $music->title }}</h4>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <h4 class="text-xs font-bold text-paper truncate font-sans min-w-0 flex-1">{{ $music->title }}</h4>
                                             @if($music->is_active)
-                                                <span class="px-1.5 py-0.2 rounded-badge bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-mono font-bold uppercase">Faol</span>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold uppercase shrink-0 whitespace-nowrap">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                    <span>Faol</span>
+                                                </span>
                                             @else
-                                                <span class="px-1.5 py-0.2 rounded-badge bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[9px] font-mono font-bold uppercase">Nofaol</span>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[10px] font-mono font-bold uppercase shrink-0 whitespace-nowrap">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                                    <span>Nofaol</span>
+                                                </span>
                                             @endif
                                         </div>
                                         <p class="text-[10px] text-mist font-mono mt-0.5 truncate">

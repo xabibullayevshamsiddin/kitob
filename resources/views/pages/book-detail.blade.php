@@ -361,7 +361,10 @@
                            class="ks-btn-ghost inline-flex items-center gap-2">
                             <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             <span>Test topshirish</span>
-                            <span class="px-1.5 py-0.2 rounded-badge bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">Faol</span>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold shrink-0 whitespace-nowrap">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span>Faol</span>
+                            </span>
                         </a>
                     @elseif(auth()->check() && (auth()->user()->isAdmin() || (auth()->user()->isTeacher() && (int) $book->created_by === (int) auth()->id())))
                         <a href="{{ route('teacher.quizzes.create', ['book_id' => $book->id]) }}"

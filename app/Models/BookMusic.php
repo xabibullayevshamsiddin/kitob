@@ -66,6 +66,14 @@ class BookMusic extends Model
             return $this->file_path;
         }
 
+        if (str_starts_with($this->file_path, 'sounds/') || str_starts_with($this->file_path, '/sounds/')) {
+            return asset(ltrim($this->file_path, '/'));
+        }
+
+        if (str_starts_with($this->file_path, 'storage/')) {
+            return asset($this->file_path);
+        }
+
         return asset('storage/' . $this->file_path);
     }
 

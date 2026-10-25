@@ -47,15 +47,7 @@ class BookMusicController extends Controller
             $filePath = $request->file('music_file')->store('books/music', 'public');
         } elseif ($request->filled('preset_track')) {
             $preset = $request->preset_track;
-            $presetSource = 'books/music/presets/' . $preset . '.wav';
-
-            if (Storage::disk('public')->exists($presetSource)) {
-                $targetPath = 'books/music/' . $book->id . '_' . $preset . '_' . time() . '.wav';
-                Storage::disk('public')->copy($presetSource, $targetPath);
-                $filePath = $targetPath;
-            } else {
-                $filePath = 'sounds/ambient/' . $preset . '.wav';
-            }
+            $filePath = 'sounds/ambient/' . $preset . '.wav';
         }
 
         $nextOrder = $request->filled('order')
@@ -96,9 +88,8 @@ class BookMusicController extends Controller
     {
         abort_unless($music->book_id === $book->id, 403);
 
-        // Faylni storage dan o'chirish
-        if ($music->file_path && Storage::disk('public')->exists($music->file_path)) {
-            // Agar u umumiy presets papkasida bo'lmasa
+        // Faylni storage dan o'chirish (agar u shared ambient tovush bo'lmasa)
+        if ($music->file_path && !str_starts_with($music->file_path, 'sounds/') && Storage::disk('public')->exists($music->file_path)) {
             if (!str_contains($music->file_path, 'presets/')) {
                 Storage::disk('public')->delete($music->file_path);
             }
