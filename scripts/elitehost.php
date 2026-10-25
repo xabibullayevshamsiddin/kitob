@@ -227,6 +227,20 @@ class EliteHost
         }
     }
 
+    public static function replaceInFile(string $remotePath, string $search, string $replace): bool
+    {
+        $content = self::getFile($remotePath);
+        if ($content === '') {
+            return false;
+        }
+        $newContent = str_replace($search, $replace, $content);
+        if ($newContent === $content) {
+            echo "⚠️ Qidirilgan matn topilmadi: {$search}\n";
+            return false;
+        }
+        return self::putFile($remotePath, $newContent);
+    }
+
     public static function command(string $command): bool
     {
         $res = self::request('POST', '/servers/' . self::SERVER_ID . '/command', [
