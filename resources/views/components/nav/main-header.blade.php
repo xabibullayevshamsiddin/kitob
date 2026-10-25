@@ -396,12 +396,12 @@
                         <svg class="w-3.5 h-3.5 text-mist transition-transform duration-base" :class="userMenuOpen ? 'rotate-180 text-amber-400' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                     <div x-show="userMenuOpen" x-cloak
-                         x-transition:enter="transition ease-out duration-base"
-                         x-transition:enter-start="opacity-0 -translate-y-1"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-out duration-micro"
-                         x-transition:leave-start="opacity-100"
-                         x-transition:leave-end="opacity-0"
+                         x-transition:enter="ks-menu-blur-enter-active"
+                         x-transition:enter-start="ks-menu-blur-enter"
+                         x-transition:enter-end="ks-menu-blur-enter-end"
+                         x-transition:leave="ks-menu-blur-leave-active"
+                         x-transition:leave-start="ks-menu-blur-leave"
+                         x-transition:leave-end="ks-menu-blur-leave-end"
                          class="header-dropdown-menu absolute right-0 mt-2 w-64 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
 
                         {{-- User Profile Header --}}

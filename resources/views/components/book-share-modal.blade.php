@@ -6,23 +6,23 @@
 
     <!-- Backdrop Overlay -->
     <div x-show="isOpen"
-         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter="transition-opacity ease-out duration-500"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave="transition-opacity ease-in duration-300"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-ink-950/80 backdrop-blur-md"
+         class="fixed inset-0 bg-black/75 backdrop-blur-md"
          @click="close()"></div>
 
     <!-- Modal Container -->
     <div x-show="isOpen"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-         x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+         x-transition:enter="ks-blur-in-enter-active"
+         x-transition:enter-start="ks-blur-in-enter"
+         x-transition:enter-end="ks-blur-in-enter-end"
+         x-transition:leave="ks-blur-in-leave-active"
+         x-transition:leave-start="ks-blur-in-leave"
+         x-transition:leave-end="ks-blur-in-leave-end"
          class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none select-none">
 
         <div class="pointer-events-auto w-full max-w-md rounded-2xl bg-ink-900/95 border border-ink-border/80 shadow-[0_20px_60px_rgba(0,0,0,0.8)] backdrop-blur-2xl p-5 sm:p-6 text-paper space-y-5 ring-1 ring-white/10"

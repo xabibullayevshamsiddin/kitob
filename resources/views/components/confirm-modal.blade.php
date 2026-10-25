@@ -16,25 +16,25 @@
 
             <!-- Backdrop Overlay with blur -->
             <div x-show="isOpen"
-                 x-transition:enter="transition ease-out duration-250"
+                 x-transition:enter="transition-opacity ease-out duration-500"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave="transition-opacity ease-in duration-300"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="fixed inset-0 bg-ink-950/85 backdrop-blur-md"
+                 class="fixed inset-0 bg-black/75 backdrop-blur-md"
                  style="z-index: 999998 !important;"
                  @click="cancel()"></div>
 
-            <!-- Modal Dialog Container -->
+            <!-- Modal Dialog Container (Blur-In Zoom Animation) -->
             <div x-show="isOpen"
-                 x-transition:enter="transition ease-out duration-250"
-                 x-transition:enter-start="opacity-0 scale-95 translate-y-3"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave-end="opacity-0 scale-95 translate-y-3"
-                 class="relative w-full max-w-md rounded-2xl bg-ink-900 border border-ink-border/90 shadow-[0_25px_70px_rgba(0,0,0,0.95)] p-5 sm:p-6 text-paper space-y-4 ring-1 ring-white/10 my-auto"
+                 x-transition:enter="ks-blur-in-enter-active"
+                 x-transition:enter-start="ks-blur-in-enter"
+                 x-transition:enter-end="ks-blur-in-enter-end"
+                 x-transition:leave="ks-blur-in-leave-active"
+                 x-transition:leave-start="ks-blur-in-leave"
+                 x-transition:leave-end="ks-blur-in-leave-end"
+                 class="relative w-full max-w-md rounded-2xl bg-ink-900 border border-ink-border/90 shadow-[0_30px_70px_rgba(0,0,0,0.95)] p-5 sm:p-6 text-paper space-y-4 ring-1 ring-white/10 my-auto ks-modal-card"
                  style="z-index: 999999 !important;"
                  @click.outside="cancel()"
                  :aria-label="title">

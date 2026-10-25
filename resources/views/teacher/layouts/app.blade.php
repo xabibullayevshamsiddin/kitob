@@ -153,12 +153,12 @@
                     </button>
                     <div x-show="open" x-cloak @click.outside="open=false"
                          class="absolute right-0 mt-2.5 w-52 p-1.5 bg-ink-900 rounded-panel shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-ink-border z-50"
-                         x-transition:enter="transition cubic-bezier(0.16, 1, 0.3, 1) duration-200"
-                         x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
-                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave="transition duration-150"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95">
+                         x-transition:enter="ks-menu-blur-enter-active"
+                         x-transition:enter-start="ks-menu-blur-enter"
+                         x-transition:enter-end="ks-menu-blur-enter-end"
+                         x-transition:leave="ks-menu-blur-leave-active"
+                         x-transition:leave-start="ks-menu-blur-leave"
+                         x-transition:leave-end="ks-menu-blur-leave-end">
                         
                         <div class="px-3 py-2 border-b border-ink-border mb-1">
                             <p class="text-xs font-bold text-paper truncate">{{ auth()->user()?->name }}</p>

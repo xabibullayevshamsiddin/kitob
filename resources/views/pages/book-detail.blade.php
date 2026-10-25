@@ -897,9 +897,22 @@
     <!-- ── 4. MODALS: Tugmalar boshqaruvi & PDF yuklash ── -->
     <!-- Shortcuts Modal -->
     <div x-show="showShortcutsModal" x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
+         x-transition:enter="transition-opacity ease-out duration-400"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
          @keydown.escape.window="showShortcutsModal = false">
-        <div class="w-full max-w-md rounded-panel bg-ink-900 border border-ink-border p-6 shadow-2xl space-y-4"
+        <div x-show="showShortcutsModal"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             class="w-full max-w-md rounded-panel bg-ink-900 border border-ink-border p-6 shadow-2xl space-y-4 ks-modal-card"
              @click.away="showShortcutsModal = false">
             <div class="flex items-center justify-between border-b border-ink-border pb-3">
                 <h3 class="text-base font-bold font-serif text-paper flex items-center gap-2">
@@ -963,9 +976,22 @@
 
     <!-- Download Options Modal -->
     <div x-show="showDownloadModal" x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm"
+         x-transition:enter="transition-opacity ease-out duration-400"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
          @keydown.escape.window="showDownloadModal = false">
-        <div class="w-full max-w-md rounded-panel bg-ink-900 border border-ink-border p-6 shadow-2xl space-y-4"
+        <div x-show="showDownloadModal"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             class="w-full max-w-md rounded-panel bg-ink-900 border border-ink-border p-6 shadow-2xl space-y-4 ks-modal-card"
              @click.away="showDownloadModal = false">
             <div class="flex items-center justify-between border-b border-ink-border pb-3">
                 <h3 class="text-base font-bold font-serif text-paper flex items-center gap-2">
@@ -1027,9 +1053,22 @@
 
     <!-- ── 5. MODAL: 1 daqiqalik AI Kitob Konspekti ── -->
     <div x-show="showAiSummaryModal" x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-ink-950/85 backdrop-blur-md"
+         x-transition:enter="transition-opacity ease-out duration-400"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-250"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md"
          @keydown.escape.window="closeAiSummaryModal()">
-        <div class="w-full max-w-xl max-h-[85vh] rounded-2xl bg-ink-900 border border-violet-500/30 shadow-[0_25px_60px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden text-paper"
+        <div x-show="showAiSummaryModal"
+             x-transition:enter="ks-blur-in-enter-active"
+             x-transition:enter-start="ks-blur-in-enter"
+             x-transition:enter-end="ks-blur-in-enter-end"
+             x-transition:leave="ks-blur-in-leave-active"
+             x-transition:leave-start="ks-blur-in-leave"
+             x-transition:leave-end="ks-blur-in-leave-end"
+             class="w-full max-w-xl max-h-[85vh] rounded-2xl bg-ink-900 border border-violet-500/30 shadow-[0_30px_70px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden text-paper ks-modal-card"
              @click.away="closeAiSummaryModal()">
             
             <!-- Modal Header -->

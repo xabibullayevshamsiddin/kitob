@@ -583,6 +583,135 @@
     @keyframes blinkitSpark4 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(0, 22px) scale(0); opacity: 0; } }
     @keyframes blinkitSpark5 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-19px, 11px) scale(0); opacity: 0; } }
     @keyframes blinkitSpark6 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-19px, -11px) scale(0); opacity: 0; } }
+
+    /* ════════════════════════════════════════════════════════════════
+       Blur-In Modal & Menu Opening Animation (Kitobxon Signature)
+       ════════════════════════════════════════════════════════════════ */
+    /* Base overlay styles */
+    .overlay,
+    .overlay-blur {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        visibility: hidden;
+        opacity: 0;
+        overflow-y: auto;
+        z-index: 999999 !important;
+        transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
+    }
+
+    .overlay.open,
+    .overlay-blur.open,
+    .overlay.is-open,
+    .overlay-blur.is-open {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Modal styling */
+    .modal,
+    .ks-modal-card {
+        margin: auto;
+        width: 100%;
+        max-width: 520px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Blur In Effect */
+    .overlay-blur .modal,
+    .ks-blur-dialog,
+    .overlay-blur .ks-modal-card {
+        filter: blur(20px);
+        transform: scale(1.2);
+        opacity: 0;
+        will-change: transform, filter, opacity;
+        transition: filter .7s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform .7s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity .5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .overlay-blur.open .modal,
+    .overlay-blur.is-open .modal,
+    .overlay-blur.open .ks-modal-card,
+    .overlay-blur.is-open .ks-modal-card,
+    .ks-blur-dialog.open,
+    .ks-blur-dialog.is-open {
+        filter: blur(0);
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    /* Alpine.js transition utility classes for Blur-In modals */
+    .ks-blur-in-enter {
+        filter: blur(20px) !important;
+        transform: scale(1.2) !important;
+        opacity: 0 !important;
+    }
+    .ks-blur-in-enter-active {
+        transition: filter 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        will-change: transform, filter, opacity;
+    }
+    .ks-blur-in-enter-end {
+        filter: blur(0px) !important;
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+    .ks-blur-in-leave {
+        filter: blur(0px) !important;
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+    .ks-blur-in-leave-active {
+        transition: filter 0.35s ease,
+                    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.3s ease !important;
+        will-change: transform, filter, opacity;
+    }
+    .ks-blur-in-leave-end {
+        filter: blur(16px) !important;
+        transform: scale(1.15) !important;
+        opacity: 0 !important;
+    }
+
+    /* Blur-In for Dropdown Menus (Navigation / User menus) */
+    .ks-menu-blur-enter {
+        filter: blur(14px) !important;
+        transform: scale(1.1) translateY(-8px) !important;
+        opacity: 0 !important;
+    }
+    .ks-menu-blur-enter-active {
+        transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.35s ease !important;
+        will-change: transform, filter, opacity;
+    }
+    .ks-menu-blur-enter-end {
+        filter: blur(0px) !important;
+        transform: scale(1) translateY(0) !important;
+        opacity: 1 !important;
+    }
+    .ks-menu-blur-leave {
+        filter: blur(0px) !important;
+        transform: scale(1) translateY(0) !important;
+        opacity: 1 !important;
+    }
+    .ks-menu-blur-leave-active {
+        transition: filter 0.25s ease,
+                    transform 0.25s ease,
+                    opacity 0.2s ease !important;
+        will-change: transform, filter, opacity;
+    }
+    .ks-menu-blur-leave-end {
+        filter: blur(10px) !important;
+        transform: scale(0.96) translateY(-4px) !important;
+        opacity: 0 !important;
+    }
 </style>
 
 {{-- Motion layer: scroll-reveal, aurora, spotlight, ripple, counters, page transitions --}}

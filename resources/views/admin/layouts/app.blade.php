@@ -246,12 +246,12 @@
 
                         <!-- Dropdown menu -->
                         <div x-show="open"
-                             x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="opacity-0 -translate-y-1"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition ease-in duration-100"
-                             x-transition:leave-start="opacity-100"
-                             x-transition:leave-end="opacity-0"
+                             x-transition:enter="ks-menu-blur-enter-active"
+                             x-transition:enter-start="ks-menu-blur-enter"
+                             x-transition:enter-end="ks-menu-blur-enter-end"
+                             x-transition:leave="ks-menu-blur-leave-active"
+                             x-transition:leave-start="ks-menu-blur-leave"
+                             x-transition:leave-end="ks-menu-blur-leave-end"
                              class="absolute right-0 mt-1.5 w-52 bg-ink-800 border border-ink-border rounded-card shadow-popover z-50 overflow-hidden"
                              style="display:none;">
                             <div class="px-3.5 py-2.5 border-b border-ink-border">
