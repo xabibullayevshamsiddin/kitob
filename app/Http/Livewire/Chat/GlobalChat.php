@@ -174,7 +174,8 @@ class GlobalChat extends Component
         }
 
         $targetUser = \App\Models\User::find($userId);
-        if (!$targetUser) {
+        if (!$targetUser || $targetUser->isAdmin()) {
+            $this->toastError("Admin foydalanuvchini bloklash mumkin emas! 🛡️", 'Amal rad etildi');
             return;
         }
 

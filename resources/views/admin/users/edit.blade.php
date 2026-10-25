@@ -405,6 +405,11 @@
                     </form>
                 @elseif($user->id === auth()->id())
                     <p class="text-xs text-mist py-1">O'zingizni bloklay olmaysiz.</p>
+                @elseif($user->isAdmin() || $user->role === 'admin')
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300 font-mono flex items-center gap-2">
+                        <span class="text-base">🛡️</span>
+                        <span>Admin foydalanuvchini bloklash taqiqlangan. Adminlar daxlsizdir.</span>
+                    </div>
                 @else
                     <div x-data="{ open: false }">
                         <button type="button" @click="open = !open"

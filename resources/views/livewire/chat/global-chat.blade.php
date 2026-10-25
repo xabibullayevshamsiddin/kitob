@@ -136,8 +136,8 @@
                             </button>
                         @endif
 
-                        {{-- Admin Ban Button --}}
-                        @if($isAdmin && !$isMe && $msg->user)
+                        {{-- Admin Ban Button (Adminlar daxlsizdir) --}}
+                        @if($isAdmin && !$isMe && $msg->user && !$msg->user->isAdmin())
                             @if($msg->user->isBanned())
                                 <button type="button"
                                     wire:click="unbanUser({{ $msg->user_id }})"
@@ -156,7 +156,7 @@
                             @endif
                         @endif
 
-                        @if(!$isMe)
+                        @if(!$isMe && !$msg->user?->isAdmin())
                             <a href="{{ route('contact', [
                                 'report'            => 1,
                                 'reported_user_id'  => $msg->user_id,

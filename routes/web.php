@@ -106,9 +106,17 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
     ]);
 
     if ($req->input('is_report') == '1' || $req->filled('reported_user_id')) {
+        $reportedUserId = $req->input('reported_user_id');
+        if ($reportedUserId) {
+            $reportedUser = \App\Models\User::find($reportedUserId);
+            if ($reportedUser && $reportedUser->isAdmin()) {
+                return redirect()->route('contact')->with('error', "Admin foydalanuvchilar ustidan shikoyat yuborish mumkin emas. 🛡️");
+            }
+        }
+
         \App\Models\Report::create([
             'reporter_id'      => auth()->id(),
-            'reported_user_id' => $req->input('reported_user_id') ?: null,
+            'reported_user_id' => $reportedUserId ?: null,
             'source'           => $req->input('source', 'Umumiy chat'),
             'message_content'  => $req->input('message'),
             'link'             => $req->input('link'),

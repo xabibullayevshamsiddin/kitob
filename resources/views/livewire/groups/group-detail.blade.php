@@ -329,8 +329,8 @@
                                     </button>
                                 @endif
 
-                                {{-- Admin Ban Button --}}
-                                @if($isAdmin && !$isMe && $msg->user)
+                                {{-- Admin Ban Button (Adminlar daxlsizdir) --}}
+                                @if($isAdmin && !$isMe && $msg->user && !$msg->user->isAdmin())
                                     @if($msg->user->isBanned())
                                         <button type="button"
                                             wire:click="unbanUser({{ $msg->user_id }})"
@@ -349,7 +349,7 @@
                                     @endif
                                 @endif
 
-                                @if(!$isMe)
+                                @if(!$isMe && !$msg->user?->isAdmin())
                                     <a href="{{ route('contact', [
                                         'report'            => 1,
                                         'reported_user_id'  => $msg->user_id,
@@ -839,7 +839,7 @@
                         @php
                             $isMemberCreator = $member->user_id === $group->created_by;
                             $isThisMe = auth()->check() && auth()->id() === $member->user_id;
-                            $canKickThis = $canManage && !$isMemberCreator && !$isThisMe;
+                            $canKickThis = $canManage && !$isMemberCreator && !$isThisMe && !$member->user->isAdmin();
                         @endphp
                         <div class="flex items-center justify-between gap-2 hover:bg-ink-800/50 rounded-btn p-2 transition-colors group/item" wire:key="mem-{{ $member->id }}">
                             <a href="{{ route('profile.show', $member->user->username) }}" class="flex items-center gap-2 min-w-0 flex-1">

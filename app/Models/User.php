@@ -379,7 +379,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
-        return $this->hasRole('admin');
+        return ($this->role ?? null) === 'admin' || $this->hasRole('admin');
     }
 
     public function isTeacher(): bool
@@ -429,6 +429,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isBanned(): bool
     {
+        // Adminlar daxlsizdir — ular hech qachon bloklanmaydi
+        if ($this->isAdmin()) {
+            return false;
+        }
+
         if (!$this->is_banned) {
             return false;
         }
@@ -444,6 +449,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function ban(string $duration, ?string $reason = null): void
     {
+        // Adminlar daxlsizdir — ularni hech qanday holatda (boshqa admin ham) bloklay olmaydi
+        if ($this->isAdmin()) {
+            return;
+        }
         $until = match ($duration) {
             '1_hour'  => now()->addHour(),
             '1_day'   => now()->addDay(),

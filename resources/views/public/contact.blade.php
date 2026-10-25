@@ -103,10 +103,21 @@
                         </div>
                     @endif
 
+                    @if(session('error'))
+                        <div class="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-center gap-3">
+                            <span class="text-lg font-bold">⚠️</span>
+                            <span>{{ session('error') }}</span>
+                        </div>
+                    @endif
+
                     @php
+                        // Agar nishon foydalanuvchi admin bo'lsa, shikoyat qilib bo'lmaydi
+                        $targetReportUser = request('reported_user_id') ? \App\Models\User::find(request('reported_user_id')) : null;
+                        $isTargetAdmin = $targetReportUser && $targetReportUser->isAdmin();
+
                         // "Shikoyat rejimi" faqat chatdagi 🚩 tugmasidan kelgan haqiqiy ma'lumotlar
                         // (reported_user_id) bilan, bo'sh footer havolasi bilan emas, faollashadi.
-                        $isReport = request('report') == 1 && request('reported_user_id');
+                        $isReport = request('report') == 1 && request('reported_user_id') && !$isTargetAdmin;
 
                         // Ban bo'yicha apellyatsiya (e'tiroz) rejimi
                         $appealUser = null;
@@ -180,13 +191,23 @@
                         </div>
                     @endif
 
+                    @if($isTargetAdmin)
+                        <div class="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm flex items-center gap-3">
+                            <span class="text-xl">🛡️</span>
+                            <div>
+                                <span class="font-bold">Adminlar daxlsizdir!</span>
+                                <p class="text-xs text-amber-200/80 mt-0.5">Admin foydalanuvchilar ustidan shikoyat yuborish yoki ularni bloklash mumkin emas.</p>
+                            </div>
+                        </div>
+                    @endif
+
                     <form action="{{ route('contact.send') }}" method="POST" class="space-y-6">
                         @csrf
 
                         <input type="hidden" name="is_report" value="{{ $isReport ? '1' : '0' }}">
                         <input type="hidden" name="is_appeal" value="{{ $isAppeal ? '1' : '0' }}">
                         <input type="hidden" name="appeal_user_id" value="{{ $appealUser?->id ?? request('user_id') }}">
-                        <input type="hidden" name="reported_user_id" value="{{ request('reported_user_id') }}">
+                        <input type="hidden" name="reported_user_id" value="{{ $isTargetAdmin ? '' : request('reported_user_id') }}">
                         <input type="hidden" name="source" value="{{ request('source') }}">
                         <input type="hidden" name="link" value="{{ request('url') }}">
 

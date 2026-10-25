@@ -214,7 +214,11 @@
                             <div class="flex items-center justify-end gap-2 flex-wrap">
                                 {{-- 1-Click Ban / Unban Button --}}
                                 @if($primaryUser && $primaryUser->id !== auth()->id())
-                                    @if(!$primaryUser->isBanned())
+                                    @if($primaryUser->isAdmin())
+                                        <span class="inline-flex min-h-9 items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs font-mono font-bold text-amber-300" title="Admin foydalanuvchini bloklash taqiqlangan">
+                                            🛡️ Admin daxlsiz
+                                        </span>
+                                    @elseif(!$primaryUser->isBanned())
                                         <button type="button"
                                                 @click="openBan({{ $primaryUser->id }}, @js($primaryUser->name))"
                                                 class="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 transition-colors hover:bg-rose-500 hover:text-white">

@@ -356,6 +356,11 @@ class GroupDetail extends Component
             return;
         }
 
+        if ($targetMember->user?->isAdmin()) {
+            $this->toast('error', 'Admin foydalanuvchini guruhdan chiqarib bo\'lmaydi! 🛡️');
+            return;
+        }
+
         $this->memberToRemoveId = $userId;
         $this->memberToRemoveName = $targetMember->user->name ?? 'Foydalanuvchi';
         $this->showRemoveMemberModal = true;
@@ -370,6 +375,13 @@ class GroupDetail extends Component
 
         if ($this->memberToRemoveId === $this->group->created_by) {
             $this->toast('error', 'Guruh asoschisini chiqarib bo\'lmaydi!');
+            $this->showRemoveMemberModal = false;
+            return;
+        }
+
+        $targetUser = \App\Models\User::find($this->memberToRemoveId);
+        if ($targetUser && $targetUser->isAdmin()) {
+            $this->toast('error', 'Admin foydalanuvchini guruhdan chiqarib bo\'lmaydi! 🛡️');
             $this->showRemoveMemberModal = false;
             return;
         }
@@ -555,7 +567,8 @@ class GroupDetail extends Component
         }
 
         $targetUser = \App\Models\User::find($userId);
-        if (!$targetUser) {
+        if (!$targetUser || $targetUser->isAdmin()) {
+            $this->toast('error', 'Admin foydalanuvchini bloklash mumkin emas! 🛡️');
             return;
         }
 
