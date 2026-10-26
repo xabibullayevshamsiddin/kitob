@@ -396,25 +396,7 @@
     html.light:not(.force-dark) ::-webkit-scrollbar-thumb { background: rgba(12, 28, 54, 0.18); border-radius: 8px; }
     html.light:not(.force-dark) ::-webkit-scrollbar-thumb:hover { background: rgba(0, 168, 181, 0.55); }
 
-    /* Header & Nav Accents in Light Mode */
-    html.light:not(.force-dark) #site-header:not(.is-hero-header),
-    html.light:not(.force-dark) #site-header.bg-ink-900\/95 {
-        background-color: rgba(255, 255, 255, 0.94) !important;
-        border-bottom-color: #DEE7F0 !important;
-        box-shadow: 0 4px 20px -2px rgba(12, 28, 54, 0.05) !important;
-    }
-    html.light:not(.force-dark) #site-header nav a.text-paper {
-        color: #0A1C3C !important;
-    }
-    html.light:not(.force-dark) #site-header nav a.text-mist {
-        color: #4B617D !important;
-    }
-    html.light:not(.force-dark) #site-header nav a.text-mist:hover {
-        color: #0A1C3C !important;
-    }
-    html.light:not(.force-dark) #site-header .bg-amber-500 {
-        background-color: #00A8B5 !important;
-    }
+    /* Global Accent overrides in Light Mode */
     html.light:not(.force-dark) .border-amber-500\/30,
     html.light:not(.force-dark) .border-amber-500\/40,
     html.light:not(.force-dark) .border-amber-500\/20 {

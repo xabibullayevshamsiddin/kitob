@@ -669,14 +669,29 @@ html.light:not(.force-dark) .group:hover .header-logo-badge {
     color: #ffffff !important;
 }
 
+html #site-header.is-hero-header nav a,
+html #site-header.is-hero-header nav button,
+html.light #site-header.is-hero-header nav a,
+html.light #site-header.is-hero-header nav button,
+html.dark #site-header.is-hero-header nav a,
+html.dark #site-header.is-hero-header nav button,
 #site-header.is-hero-header nav a,
 #site-header.is-hero-header nav button {
-    color: rgba(255, 255, 255, 0.85) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
 }
+html #site-header.is-hero-header nav a:hover,
+html #site-header.is-hero-header nav button:hover,
+html.light #site-header.is-hero-header nav a:hover,
+html.light #site-header.is-hero-header nav button:hover,
+html.dark #site-header.is-hero-header nav a:hover,
+html.dark #site-header.is-hero-header nav button:hover,
 #site-header.is-hero-header nav a:hover,
 #site-header.is-hero-header nav button:hover {
     color: #ffffff !important;
 }
+html #site-header.is-hero-header nav a[aria-current="page"],
+html.light #site-header.is-hero-header nav a[aria-current="page"],
+html.dark #site-header.is-hero-header nav a[aria-current="page"],
 #site-header.is-hero-header nav a[aria-current="page"] {
     color: #ffffff !important;
     font-weight: 600 !important;
@@ -792,90 +807,93 @@ html.light:not(.force-dark) .group:hover .header-logo-badge {
     background-color: #A82E22 !important;
 }
 
-/* ── High-Contrast Literary Light Mode Header (Scrolled or Subpages) ── */
+/* ── Brand Navy & Teal Light Mode Header (Scrolled or Subpages) ── */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) {
-    background-color: rgba(249, 246, 240, 0.96) !important;
-    border-bottom: 1px solid #E0D9CD !important;
-    box-shadow: 0 4px 20px -2px rgba(28, 25, 22, 0.06) !important;
-    --paper-rgb: 28 25 22 !important;
-    --paper-50-rgb: 20 18 16 !important;
-    --paper-100-rgb: 28 25 22 !important;
-    --paper-200-rgb: 46 41 36 !important;
-    --paper-muted-rgb: 92 85 75 !important;
-    --mist-rgb: 107 99 88 !important;
-    --mist-600-rgb: 78 72 63 !important;
-    --ink-border-rgb: 224 217 205 !important;
-    --ink-900-rgb: 249 246 240 !important;
-    --ink-800-rgb: 238 233 223 !important;
-    --ink-700-rgb: 228 221 209 !important;
-    color: #1C1916 !important;
+    background-color: rgba(255, 255, 255, 0.96) !important;
+    border-bottom: 1px solid #DEE7F0 !important;
+    box-shadow: 0 4px 20px -2px rgba(12, 28, 54, 0.06) !important;
+    --paper-rgb: 12 28 54 !important;
+    --paper-50-rgb: 8 19 38 !important;
+    --paper-100-rgb: 12 28 54 !important;
+    --paper-200-rgb: 20 42 77 !important;
+    --paper-muted-rgb: 71 95 125 !important;
+    --mist-rgb: 75 97 125 !important;
+    --mist-600-rgb: 47 70 98 !important;
+    --ink-border-rgb: 222 231 240 !important;
+    --ink-900-rgb: 255 255 255 !important;
+    --ink-800-rgb: 237 243 248 !important;
+    --ink-700-rgb: 221 231 241 !important;
+    color: #0C1C36 !important;
 }
 
-/* Nav links in Light Mode */
+/* Nav links in Light Mode (Scrolled / Subpages) */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) nav button {
-    color: #5C554B !important;
+    color: #475F7D !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a:hover,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) nav button:hover {
-    color: #1C1916 !important;
+    color: #0A1C3C !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a[aria-current="page"] {
-    color: #1C1916 !important;
+    color: #0A1C3C !important;
     font-weight: 600 !important;
+}
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a span.bg-amber-500 {
+    background-color: #00A8B5 !important;
 }
 
 /* Logo in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"] span.font-display {
-    color: #1C1916 !important;
+    color: #0C1C36 !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"] span.font-mono {
-    color: #6B6358 !important;
+    color: #475F7D !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"]:hover span.font-display {
-    color: #D97706 !important;
+    color: #00A8B5 !important;
 }
 
 /* Buttons and Controls in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn {
-    background-color: #EEE9DF !important;
-    border-color: #E0D9CD !important;
-    color: #4E483F !important;
+    background-color: #EDF3F8 !important;
+    border-color: #DEE7F0 !important;
+    color: #0C1C36 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn:hover {
-    background-color: #E4DDD1 !important;
-    color: #1C1916 !important;
+    background-color: #DEE7F0 !important;
+    color: #0A1C3C !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn svg {
-    color: #D97706 !important;
+    color: #008D9A !important;
 }
 
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn {
-    background-color: #EEE9DF !important;
-    border-color: #E0D9CD !important;
-    color: #1C1916 !important;
+    background-color: #EDF3F8 !important;
+    border-color: #DEE7F0 !important;
+    color: #0C1C36 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn:hover {
-    background-color: #E4DDD1 !important;
-    color: #1C1916 !important;
+    background-color: #DEE7F0 !important;
+    color: #0A1C3C !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn svg {
-    color: #6B6358 !important;
+    color: #475F7D !important;
 }
 
 /* Streak, Points, Coins in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-streak-pill {
-    color: #D97706 !important;
+    color: #008D9A !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="streak"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Streak"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="kunlik"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Kunlik"] {
-    color: #D97706 !important;
+    color: #008D9A !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="ball"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Ball"],
@@ -883,51 +901,51 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="ochko"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Ochko"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="point"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Point"] {
-    color: #1C1916 !important;
+    color: #0C1C36 !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="tanga"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Tanga"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="coin"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Coin"] {
-    color: #1C1916 !important;
+    color: #0C1C36 !important;
 }
 
 /* Notifications in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Bildirishnoma"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Уведомления"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Notification"] {
-    color: #5C554B !important;
+    color: #475F7D !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Bildirishnoma"]:hover,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Уведомления"]:hover,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Notification"]:hover {
-    color: #1C1916 !important;
-    background-color: #EEE9DF !important;
+    color: #0A1C3C !important;
+    background-color: #EDF3F8 !important;
 }
 
 /* Avatar button in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn {
-    background-color: #EEE9DF !important;
-    border-color: #E0D9CD !important;
-    color: #1C1916 !important;
+    background-color: #EDF3F8 !important;
+    border-color: #DEE7F0 !important;
+    color: #0C1C36 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn:hover {
-    background-color: #E4DDD1 !important;
+    background-color: #DEE7F0 !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn span {
-    color: #1C1916 !important;
+    color: #0C1C36 !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn svg {
-    color: #6B6358 !important;
+    color: #475F7D !important;
 }
 
 /* Mobile Hamburger button in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) button[aria-label*="Menyu"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) button[aria-label*="menu"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) button[aria-label*="Menu"] {
-    color: #1C1916 !important;
+    color: #0C1C36 !important;
 }
 
 /* ── Isolated Popover & Dropdown Scope ── */
