@@ -263,8 +263,8 @@
 
     </div>
 
-    <!-- Quick Gestures & Keyboard Hint -->
-    <div class="flex items-center justify-center gap-3 sm:gap-4 text-xs text-mist pt-1 flex-wrap">
+    <!-- Quick Gestures & Keyboard Hint — faqat katta ekranlarda ko'rsatiladi -->
+    <div class="hidden sm:flex items-center justify-center gap-3 sm:gap-4 text-xs text-mist pt-1 flex-wrap">
         <span class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
             <span>🖱️ / 👆</span>
             <span>Mishka yoki barmoq bilan surib varaqlash</span>

@@ -738,8 +738,8 @@
                     </div>
                 </div>
 
-                <!-- Quick Hint Bar -->
-                <div class="flex items-center justify-between text-xs text-mist font-mono px-2 flex-wrap gap-2">
+                <!-- Quick Hint Bar — faqat katta ekranlarda ko'rinadi -->
+                <div class="hidden sm:flex items-center justify-between text-xs text-mist font-mono px-2 flex-wrap gap-2">
                     <span class="flex items-center gap-1.5 text-amber-400 font-semibold">
                         <span>🖱️ / 👆</span>
                         <span>{{ __('site.books.flipbook_corner_hint') }}</span>
