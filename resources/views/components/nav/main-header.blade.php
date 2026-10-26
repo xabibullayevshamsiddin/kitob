@@ -39,16 +39,13 @@
         }">
     <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-1.5 sm:gap-3">
 
-        {{-- Logo: SVG kitob belgisi + Spectral so'z belgisi --}}
+        {{-- Logo: Yangi brend logosi + so'z belgisi --}}
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 group shrink-0" aria-label="Kitobxon">
-            <span class="header-logo-badge w-9 h-9 rounded-btn flex items-center justify-center transition-all duration-base shadow-sm">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-                    <path d="M9 7h6"/>
-                </svg>
+            <span class="header-logo-badge w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-base shadow-sm border border-ink-border bg-white p-0.5">
+                <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Kitobxon" class="w-full h-full object-contain rounded-lg">
             </span>
             <span class="hidden sm:flex flex-col leading-none">
-                <span class="font-display font-semibold text-paper text-[1.15rem] tracking-[-0.01em] transition-colors duration-base group-hover:text-amber-500 dark:group-hover:text-amber-400">Kitobxon</span>
+                <span class="font-display font-semibold text-paper text-[1.15rem] tracking-[-0.01em] transition-colors duration-base group-hover:text-cyan-600 dark:group-hover:text-cyan-400">Kitobxon</span>
                 <span class="font-mono text-[9px] text-mist uppercase tracking-[0.18em] mt-1">{{ __('site.common.platform') }}</span>
             </span>
         </a>

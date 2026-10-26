@@ -6,7 +6,7 @@
     const enabled = @json((bool) config('pwa.enabled', true));
     const syncThemeColor = () => {
         const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.content = document.documentElement.classList.contains('light') ? '#F3EFE7' : '#07090E';
+        if (meta) meta.content = document.documentElement.classList.contains('light') ? '#F5F8FB' : '#07090E';
     };
     syncThemeColor();
     window.addEventListener('theme-changed', syncThemeColor);

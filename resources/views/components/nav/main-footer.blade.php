@@ -11,10 +11,10 @@
             <!-- Col 1: Brand Info & Editorial Quote (Spans 2 cols on lg) -->
             <div class="lg:col-span-2 space-y-4">
                 <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 text-paper font-serif font-bold text-xl tracking-tight group" aria-label="Kitobxon bosh sahifa">
-                    <span class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center transition-colors group-hover:border-amber-400/40">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    <span class="w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-ink-border flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
+                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Kitobxon" class="w-full h-full object-contain rounded-md">
                     </span>
-                    <span class="text-paper group-hover:text-amber-400 transition-colors font-serif">Kitobxon</span>
+                    <span class="text-paper group-hover:text-cyan-500 transition-colors font-serif">Kitobxon</span>
                 </a>
 
                 <p class="text-xs sm:text-sm text-mist leading-relaxed max-w-sm font-sans">

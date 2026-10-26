@@ -34,32 +34,32 @@
         --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    /* Editorial Literary Light Mode (soothing warm linen canvas + soft ivory cards + deep ink typography — zero eye glare) */
+    /* Brand-Aligned Light Mode (Crisp Ocean Slate Canvas + Pure White Cards + Deep Navy Typography & Vibrant Teal Accents) */
     html.light:not(.force-dark) {
-        --ink-950-rgb: 243 239 231;       /* #F3EFE7: Soothing warm linen book canvas (eye-friendly, no glare) */
-        --ink-900-rgb: 249 246 240;       /* #F9F6F0: Soft warm ivory card surface (not blinding white) */
-        --ink-800-rgb: 238 233 223;       /* #EEE9DF: Muted warm stone wells & ghost pills */
-        --ink-700-rgb: 228 221 209;       /* #E4DDD1: Border & subtle hover */
-        --ink-600-rgb: 214 206 193;       /* #D6CEC1: Active / divider */
-        --ink-border-rgb: 224 217 205;    /* #E0D9CD: Refined book-cloth hairline border */
+        --ink-950-rgb: 245 248 251;       /* #F5F8FB: Crisp ocean slate canvas matching the logo aesthetic */
+        --ink-900-rgb: 255 255 255;       /* #FFFFFF: Pure white card & surface */
+        --ink-800-rgb: 237 243 248;       /* #EDF3F8: Soft slate wells, badges & ghost pills */
+        --ink-700-rgb: 221 231 241;       /* #DDE7F1: Subtle hover & border */
+        --ink-600-rgb: 202 216 231;       /* #CAD8E7: Active / divider */
+        --ink-border-rgb: 222 231 240;    /* #DEE7F0: Clean hairline border */
 
-        --paper-rgb: 28 25 22;            /* #1C1916: Rich literary espresso charcoal ink */
-        --paper-50-rgb: 20 18 16;
-        --paper-100-rgb: 28 25 22;
-        --paper-200-rgb: 46 41 36;
-        --paper-muted-rgb: 92 85 75;
+        --paper-rgb: 12 28 54;            /* #0C1C36: Deep oceanic navy ink (from logo's "D") */
+        --paper-50-rgb: 8 19 38;          /* #081326: Deepest navy text */
+        --paper-100-rgb: 12 28 54;        /* #0C1C36 */
+        --paper-200-rgb: 20 42 77;        /* #142A4D */
+        --paper-muted-rgb: 71 95 125;     /* #475F7D: Muted navy-slate */
 
-        --mist-rgb: 107 99 88;            /* #6B6358: Warm taupe metadata (high contrast, zero fatigue) */
-        --mist-600-rgb: 78 72 63;         /* #4E483F */
+        --mist-rgb: 75 97 125;            /* #4B617D: Refined slate metadata (high contrast, crisp) */
+        --mist-600-rgb: 47 70 98;         /* #2F4662 */
 
-        --surface-default-rgb: 249 246 240;
-        --surface-muted-rgb: 238 233 223;
-        --surface-dark-rgb: 249 246 240;
-        --surface-dark-card-rgb: 243 239 231;
-        --surface-dark-border-rgb: 224 217 205;
+        --surface-default-rgb: 255 255 255;
+        --surface-muted-rgb: 242 246 250;
+        --surface-dark-rgb: 255 255 255;
+        --surface-dark-card-rgb: 245 248 251;
+        --surface-dark-border-rgb: 222 231 240;
 
-        --slate-750-rgb: 234 228 218;
-        --slate-850-rgb: 243 239 231;
+        --slate-750-rgb: 235 241 248;
+        --slate-850-rgb: 245 248 251;
     }
 
     html {

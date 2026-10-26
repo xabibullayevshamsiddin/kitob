@@ -180,32 +180,32 @@
         --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    /* Editorial Literary Light Mode (soothing warm linen canvas + soft ivory cards + deep ink typography — zero eye glare) */
+    /* Brand-Aligned Light Mode (Crisp Ocean Slate Canvas + Pure White Cards + Deep Navy Typography & Vibrant Teal Accents) */
     html.light:not(.force-dark) {
-        --ink-950-rgb: 243 239 231;       /* #F3EFE7: Soothing warm linen book canvas (eye-friendly, no glare) */
-        --ink-900-rgb: 249 246 240;       /* #F9F6F0: Soft warm ivory card surface (not blinding white) */
-        --ink-800-rgb: 238 233 223;       /* #EEE9DF: Muted warm stone wells & ghost pills */
-        --ink-700-rgb: 228 221 209;       /* #E4DDD1: Border & subtle hover */
-        --ink-600-rgb: 214 206 193;       /* #D6CEC1: Active / divider */
-        --ink-border-rgb: 224 217 205;    /* #E0D9CD: Refined book-cloth hairline border */
+        --ink-950-rgb: 245 248 251;       /* #F5F8FB: Crisp ocean slate canvas matching the logo aesthetic */
+        --ink-900-rgb: 255 255 255;       /* #FFFFFF: Pure white card & surface */
+        --ink-800-rgb: 237 243 248;       /* #EDF3F8: Soft slate wells, badges & ghost pills */
+        --ink-700-rgb: 221 231 241;       /* #DDE7F1: Subtle hover & border */
+        --ink-600-rgb: 202 216 231;       /* #CAD8E7: Active / divider */
+        --ink-border-rgb: 222 231 240;    /* #DEE7F0: Clean hairline border */
 
-        --paper-rgb: 28 25 22;            /* #1C1916: Rich literary espresso charcoal ink */
-        --paper-50-rgb: 20 18 16;
-        --paper-100-rgb: 28 25 22;
-        --paper-200-rgb: 46 41 36;
-        --paper-muted-rgb: 92 85 75;
+        --paper-rgb: 12 28 54;            /* #0C1C36: Deep oceanic navy ink (from logo's "D") */
+        --paper-50-rgb: 8 19 38;          /* #081326: Deepest navy text */
+        --paper-100-rgb: 12 28 54;        /* #0C1C36 */
+        --paper-200-rgb: 20 42 77;        /* #142A4D */
+        --paper-muted-rgb: 71 95 125;     /* #475F7D: Muted navy-slate */
 
-        --mist-rgb: 107 99 88;            /* #6B6358: Warm taupe metadata (high contrast, zero fatigue) */
-        --mist-600-rgb: 78 72 63;         /* #4E483F */
+        --mist-rgb: 75 97 125;            /* #4B617D: Refined slate metadata (high contrast, crisp) */
+        --mist-600-rgb: 47 70 98;         /* #2F4662 */
 
-        --surface-default-rgb: 249 246 240;
-        --surface-muted-rgb: 238 233 223;
-        --surface-dark-rgb: 249 246 240;
-        --surface-dark-card-rgb: 243 239 231;
-        --surface-dark-border-rgb: 224 217 205;
+        --surface-default-rgb: 255 255 255;
+        --surface-muted-rgb: 242 246 250;
+        --surface-dark-rgb: 255 255 255;
+        --surface-dark-card-rgb: 245 248 251;
+        --surface-dark-border-rgb: 222 231 240;
 
-        --slate-750-rgb: 234 228 218;
-        --slate-850-rgb: 243 239 231;
+        --slate-750-rgb: 235 241 248;
+        --slate-850-rgb: 245 248 251;
     }
 
     [x-cloak] { display: none !important; }
@@ -246,117 +246,123 @@
 
     /* Native select (light) */
     html.light:not(.force-dark) select {
-        background-color: #FAF7F1; color: #1C1916; border-color: #E0D9CD;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B6358' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-color: #FFFFFF; color: #0C1C36; border-color: #DEE7F0;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234B617D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     }
-    html.light:not(.force-dark) select option { background-color: #F9F6F0; color: #1C1916; }
+    html.light:not(.force-dark) select option { background-color: #FFFFFF; color: #0C1C36; }
 
-    /* Light mode Card, Panel & Shadow refinements (Eye-friendly warm ivory, zero glare) */
+    /* Light mode Card, Panel & Shadow refinements (Pure white cards + cool slate borders matching brand logo) */
     html.light:not(.force-dark) .ks-card,
     html.light:not(.force-dark) .ks-panel {
-        background-color: #F9F6F0;
-        border-color: #E0D9CD;
-        box-shadow: 0 2px 10px -2px rgba(44, 38, 30, 0.04), 0 1px 3px 0 rgba(44, 38, 30, 0.02);
+        background-color: #FFFFFF;
+        border-color: #DEE7F0;
+        box-shadow: 0 2px 12px -2px rgba(12, 28, 54, 0.05), 0 1px 3px 0 rgba(12, 28, 54, 0.02);
     }
     html.light:not(.force-dark) .ks-input {
-        background-color: #FAF7F1;
-        border-color: #DCD4C6;
-        color: #1C1916;
+        background-color: #FFFFFF;
+        border-color: #DEE7F0;
+        color: #0C1C36;
     }
     html.light:not(.force-dark) .ks-input:focus {
-        background-color: #FAF7F1;
-        border-color: #D97706;
-        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+        background-color: #FFFFFF;
+        border-color: #00A8B5;
+        box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.16);
     }
 
     /* Floating Dropdown Menus & Popovers in Light Mode */
     html.light:not(.force-dark) .shadow-popover,
     html.light:not(.force-dark) .header-dropdown-menu {
-        background-color: #FAF6EF !important;
-        border-color: #DDD4C4 !important;
-        box-shadow: 0 16px 40px -6px rgba(28, 25, 22, 0.2), 0 2px 8px rgba(28, 25, 22, 0.08), 0 0 0 1px rgba(28, 25, 22, 0.08) !important;
+        background-color: #FFFFFF !important;
+        border-color: #DEE7F0 !important;
+        box-shadow: 0 16px 40px -6px rgba(12, 28, 54, 0.14), 0 2px 8px rgba(12, 28, 54, 0.05) !important;
     }
 
     /* ══════════════════════════════════════════════════════════════════ */
     /* DEDICATED LIGHT MODE BUTTON DESIGNS (ALOHIDA TUGMA DIZAYNLARI)   */
     /* ══════════════════════════════════════════════════════════════════ */
 
-    /* 1. Primary Button (Asosiy / Muhim harakat): Deep obsidian ink + tactile bevel */
+    /* 1. Primary Button: Deep Navy (Logo "D" ohangi) */
     html.light:not(.force-dark) .ks-btn-primary {
-        background-color: #1C1916 !important;
-        color: #FAF7F2 !important;
-        border: 1px solid rgba(28, 25, 22, 0.9) !important;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 4px rgba(28, 25, 22, 0.12), 0 8px 18px -4px rgba(28, 25, 22, 0.16) !important;
+        background-color: #0A1C3C !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(10, 28, 60, 0.9) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 6px rgba(10, 28, 60, 0.15), 0 8px 18px -4px rgba(10, 28, 60, 0.2) !important;
     }
     html.light:not(.force-dark) .ks-btn-primary:hover {
-        background-color: #2D2722 !important;
+        background-color: #122C5A !important;
         color: #FFFFFF !important;
         transform: translateY(-1px);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 10px rgba(28, 25, 22, 0.18), 0 14px 26px -4px rgba(28, 25, 22, 0.18) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 10px rgba(10, 28, 60, 0.2), 0 14px 26px -4px rgba(10, 28, 60, 0.25) !important;
     }
     html.light:not(.force-dark) .ks-btn-primary:active {
         transform: scale(0.98);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25) !important;
     }
 
-    /* 2. Gold / Accent Button (Oltin / Rag'batlantiruvchi): Warm honey-amber gradient */
+    /* 2. Gold / Accent Button: Vibrant Logo Teal Gradient */
     html.light:not(.force-dark) .ks-btn-gold {
-        background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%) !important;
-        color: #1C1916 !important;
-        border: 1px solid #B45309 !important;
+        background: linear-gradient(180deg, #00A8B5 0%, #008D99 100%) !important;
+        color: #FFFFFF !important;
+        border: 1px solid #007C87 !important;
         font-weight: 600 !important;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 2px 6px rgba(217, 119, 6, 0.25), 0 8px 18px -4px rgba(217, 119, 6, 0.2) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 168, 181, 0.25), 0 8px 18px -4px rgba(0, 168, 181, 0.22) !important;
     }
     html.light:not(.force-dark) .ks-btn-gold:hover {
-        background: linear-gradient(180deg, #FBBF24 0%, #E58A08 100%) !important;
+        background: linear-gradient(180deg, #02BAC6 0%, #009CA8 100%) !important;
         transform: translateY(-1px);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52), 0 4px 12px rgba(217, 119, 6, 0.32), 0 14px 26px -4px rgba(217, 119, 6, 0.24) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(0, 168, 181, 0.32), 0 14px 26px -4px rgba(0, 168, 181, 0.26) !important;
     }
     html.light:not(.force-dark) .ks-btn-gold:active {
         transform: scale(0.98);
-        box-shadow: inset 0 2px 4px rgba(180, 83, 9, 0.4) !important;
+        box-shadow: inset 0 2px 4px rgba(0, 124, 135, 0.4) !important;
     }
 
-    /* 3. Ghost / Secondary Button (Yordamchi / Neytral): Warm linen paper pill */
+    /* 3. Ghost / Secondary Button: Crisp Pure White Pill */
     html.light:not(.force-dark) .ks-btn-ghost {
-        background-color: #FAF7F0 !important;
-        color: #24201C !important;
-        border: 1px solid #D6CEC0 !important;
-        box-shadow: 0 1px 3px rgba(44, 38, 30, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+        background-color: #FFFFFF !important;
+        color: #0C1C36 !important;
+        border: 1px solid #DEE7F0 !important;
+        box-shadow: 0 1px 3px rgba(12, 28, 54, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
     }
     html.light:not(.force-dark) .ks-btn-ghost:hover {
-        background-color: #EEE7DA !important;
-        border-color: #C2B7A4 !important;
-        color: #1C1916 !important;
+        background-color: #EDF3F8 !important;
+        border-color: #CAD8E7 !important;
+        color: #0C1C36 !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px -2px rgba(44, 38, 30, 0.08) !important;
+        box-shadow: 0 4px 12px -2px rgba(12, 28, 54, 0.08) !important;
     }
     html.light:not(.force-dark) .ks-btn-ghost:active {
         transform: scale(0.98);
-        background-color: #E5DEC0 !important;
+        background-color: #E2ECF5 !important;
     }
 
     html.light:not(.force-dark) .text-ink-950 {
-        color: #181613 !important;
+        color: #0C1C36 !important;
+    }
+
+    /* Selection in Light Mode */
+    html.light:not(.force-dark) ::selection {
+        background: #00A8B5 !important;
+        color: #FFFFFF !important;
     }
 
     /* Spotlight cards & sections in Light Mode */
     html.light:not(.force-dark) .spotlight-card {
-        background: #F9F6F0 !important;
-        border-color: #E0D9CD !important;
-        box-shadow: 0 4px 18px -4px rgba(44, 38, 30, 0.05) !important;
+        background: #FFFFFF !important;
+        border-color: #DEE7F0 !important;
+        box-shadow: 0 4px 18px -4px rgba(12, 28, 54, 0.06) !important;
     }
     html.light:not(.force-dark) .faq-item {
-        background: #F9F6F0 !important;
-        border-color: #E0D9CD !important;
-        box-shadow: 0 2px 8px rgba(44, 38, 30, 0.03) !important;
+        background: #FFFFFF !important;
+        border-color: #DEE7F0 !important;
+        box-shadow: 0 2px 8px rgba(12, 28, 54, 0.03) !important;
     }
     html.light:not(.force-dark) .noise-bg {
-        background-image: radial-gradient(rgba(40, 32, 24, 0.04) 1px, transparent 0) !important;
+        background-image: radial-gradient(rgba(12, 28, 54, 0.04) 1px, transparent 0) !important;
     }
     html.light:not(.force-dark) .ks-aurora {
         mix-blend-mode: multiply !important;
-        opacity: 0.15 !important;
+        opacity: 0.12 !important;
     }
 
     /* Autofill oq bo'lib qolmasin */
@@ -372,9 +378,9 @@
     html.light:not(.force-dark) input:-webkit-autofill:focus,
     html.light:not(.force-dark) textarea:-webkit-autofill,
     html.light:not(.force-dark) select:-webkit-autofill {
-        -webkit-text-fill-color: #181613 !important;
-        -webkit-box-shadow: 0 0 0 1000px #FAF8F4 inset !important;
-        caret-color: #181613 !important;
+        -webkit-text-fill-color: #0C1C36 !important;
+        -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+        caret-color: #0C1C36 !important;
     }
     input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     input[type="number"]::-webkit-outer-spin-button,
@@ -387,8 +393,41 @@
     ::-webkit-scrollbar-thumb:hover { background: rgba(42, 54, 80, 0.9); }
 
     html.light:not(.force-dark) ::-webkit-scrollbar-track { background: transparent; }
-    html.light:not(.force-dark) ::-webkit-scrollbar-thumb { background: rgba(180, 170, 155, 0.55); border-radius: 8px; }
-    html.light:not(.force-dark) ::-webkit-scrollbar-thumb:hover { background: rgba(140, 130, 115, 0.85); }
+    html.light:not(.force-dark) ::-webkit-scrollbar-thumb { background: rgba(12, 28, 54, 0.18); border-radius: 8px; }
+    html.light:not(.force-dark) ::-webkit-scrollbar-thumb:hover { background: rgba(0, 168, 181, 0.55); }
+
+    /* Header & Nav Accents in Light Mode */
+    html.light:not(.force-dark) #site-header:not(.is-hero-header),
+    html.light:not(.force-dark) #site-header.bg-ink-900\/95 {
+        background-color: rgba(255, 255, 255, 0.94) !important;
+        border-bottom-color: #DEE7F0 !important;
+        box-shadow: 0 4px 20px -2px rgba(12, 28, 54, 0.05) !important;
+    }
+    html.light:not(.force-dark) #site-header nav a.text-paper {
+        color: #0A1C3C !important;
+    }
+    html.light:not(.force-dark) #site-header nav a.text-mist {
+        color: #4B617D !important;
+    }
+    html.light:not(.force-dark) #site-header nav a.text-mist:hover {
+        color: #0A1C3C !important;
+    }
+    html.light:not(.force-dark) #site-header .bg-amber-500 {
+        background-color: #00A8B5 !important;
+    }
+    html.light:not(.force-dark) .border-amber-500\/30,
+    html.light:not(.force-dark) .border-amber-500\/40,
+    html.light:not(.force-dark) .border-amber-500\/20 {
+        border-color: rgba(0, 168, 181, 0.3) !important;
+    }
+    html.light:not(.force-dark) .bg-amber-500\/10,
+    html.light:not(.force-dark) .bg-amber-500\/15 {
+        background-color: rgba(0, 168, 181, 0.1) !important;
+    }
+    html.light:not(.force-dark) .text-amber-400,
+    html.light:not(.force-dark) .text-amber-500 {
+        color: #0093A0 !important;
+    }
 
     /* Mobile UX & Touch Optimization */
     * { -webkit-tap-highlight-color: transparent; }
@@ -526,12 +565,12 @@
         0% {
             transform: scale(0.85);
             opacity: 0.95;
-            box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.85), 0 0 16px rgba(217, 119, 6, 0.45);
+            box-shadow: 0 0 0 2px rgba(0, 168, 181, 0.85), 0 0 16px rgba(0, 168, 181, 0.45);
         }
         100% {
             transform: scale(2.6);
             opacity: 0;
-            box-shadow: 0 0 0 0.5px rgba(217, 119, 6, 0), 0 0 28px rgba(217, 119, 6, 0);
+            box-shadow: 0 0 0 0.5px rgba(0, 168, 181, 0), 0 0 28px rgba(0, 168, 181, 0);
         }
     }
 
@@ -539,12 +578,12 @@
         0% {
             transform: scale(0.75);
             opacity: 0.7;
-            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.65), 0 0 24px rgba(217, 119, 6, 0.35);
+            box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.65), 0 0 24px rgba(0, 168, 181, 0.35);
         }
         100% {
             transform: scale(3.6);
             opacity: 0;
-            box-shadow: 0 0 0 0.5px rgba(217, 119, 6, 0), 0 0 42px rgba(217, 119, 6, 0);
+            box-shadow: 0 0 0 0.5px rgba(0, 168, 181, 0), 0 0 42px rgba(0, 168, 181, 0);
         }
     }
 
@@ -566,8 +605,8 @@
     }
 
     html.light .theme-spark {
-        background: #D97706;
-        box-shadow: 0 0 6px #D97706;
+        background: #00A8B5;
+        box-shadow: 0 0 6px #00A8B5;
     }
 
     .header-theme-btn.is-pulsing .theme-spark-1 { animation: blinkitSpark1 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }

@@ -11,8 +11,8 @@
             color: #F0EDE6;
         }
         html.light:not(.force-dark), html.light:not(.force-dark) body {
-            background-color: #F3EFE7 !important;
-            color: #1C1916;
+            background-color: #F5F8FB !important;
+            color: #0C1C36;
         }
     </style>
 

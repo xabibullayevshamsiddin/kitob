@@ -151,8 +151,8 @@
             <!-- Logo -->
             <div class="flex items-center justify-between h-14 px-4 border-b border-ink-border flex-shrink-0">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 group">
-                    <span class="w-8 h-8 rounded-btn bg-vermilion flex items-center justify-center text-paper">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                    <span class="w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-ink-border flex items-center justify-center text-paper shadow-sm">
+                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Kitobxon" class="w-full h-full object-contain rounded-md">
                     </span>
                     <span class="leading-tight">
                         <span class="block font-display text-[15px] font-semibold text-paper">Kitobxon</span>
