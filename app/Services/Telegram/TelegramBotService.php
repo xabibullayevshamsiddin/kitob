@@ -757,7 +757,7 @@ class TelegramBotService
     protected function handleBooksCommand(int|string $chatId): void
     {
         $books = \App\Models\Book::where('is_active', true)
-            ->orderByDesc('views_count')
+            ->latest('id')
             ->limit(5)
             ->get();
 

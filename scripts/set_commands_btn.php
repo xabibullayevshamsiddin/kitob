@@ -13,20 +13,42 @@ function tgApi(string $token, string $method, array $data): array {
     ]);
     $resp = curl_exec($ch);
     curl_close($ch);
-    echo "Raw: $resp\n";
     return json_decode($resp, true) ?? [];
 }
 
-// Step 1: default ga qaytarish
-echo "=== Step 1: default ga qaytarish ===\n";
-tgApi($token, 'setChatMenuButton', ['menu_button' => ['type' => 'default']]);
-sleep(1);
+// Chap tomonga: "Mini App" tugmasi (web_app)
+$r1 = tgApi($token, 'setChatMenuButton', [
+    'menu_button' => [
+        'type'    => 'web_app',
+        'text'    => 'Mini App',
+        'web_app' => ['url' => 'https://kitobxon.elitehost.uz/tg-app'],
+    ]
+]);
+echo "setChatMenuButton (web_app 'Mini App'): " . ($r1['ok'] ? '✅ OK' : '❌ ' . $r1['description']) . "\n";
 
-// Step 2: commands ga o'rnatish
-echo "=== Step 2: commands (⊞) o'rnatish ===\n";
-tgApi($token, 'setChatMenuButton', ['menu_button' => ['type' => 'commands']]);
-sleep(1);
+// O'ng tomondagi ⊞ — commands set bo'lsa Telegram o'zi ko'rsatadi
+$commands = [
+    ['command' => 'start',         'description' => 'Botni ishga tushirish'],
+    ['command' => 'menu',          'description' => "Asosiy menyu tugmalarini ko'rsatish"],
+    ['command' => 'app',           'description' => "Davra_books Mini App ni ochish"],
+    ['command' => 'profil',        'description' => 'Shaxsiy hisob va statistika'],
+    ['command' => 'streak',        'description' => "Kunlik mutolaa zanjiri"],
+    ['command' => 'balance',       'description' => 'Oltin tangalar va ballar'],
+    ['command' => 'books',         'description' => 'Sara kitoblar katalogi'],
+    ['command' => 'leaderboard',   'description' => "O'quvchilar reytingi"],
+    ['command' => 'shop',          'description' => "Maxsus imtiyozlar do'koni"],
+    ['command' => 'hikmat',        'description' => 'Kun hikmati'],
+    ['command' => 'notifications', 'description' => 'Bildirishnomalarni boshqarish'],
+    ['command' => 'help',          'description' => "Yordam va buyruqlar ro'yxati"],
+    ['command' => 'stop',          'description' => "Bildirishnomalarni to'xtatish"],
+];
+$r2 = tgApi($token, 'setMyCommands', ['commands' => $commands]);
+echo "setMyCommands (⊞ uchun): " . ($r2['ok'] ? '✅ OK' : '❌ ' . $r2['description']) . "\n";
 
-// Step 3: tekshirish
-echo "=== Step 3: tekshirish ===\n";
-tgApi($token, 'getChatMenuButton', []);
+// Tekshirish
+$check = tgApi($token, 'getChatMenuButton', []);
+echo "Holat: " . json_encode($check['result'], JSON_UNESCAPED_UNICODE) . "\n";
+
+$cmds = tgApi($token, 'getMyCommands', []);
+echo "Buyruqlar soni: " . count($cmds['result']) . " ta\n";
+echo "\nChap: Mini App tugmasi ✅\nO'ng: ⊞ — Telegram o'zi ko'rsatadi (commands set bo'lganda) ✅\n";
