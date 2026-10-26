@@ -17,6 +17,7 @@
   let currentPage = 1; // 1-based page number
   let zoomScale = 1.0;
   let isMobile = window.innerWidth < 900;
+  let lastWindowWidth = window.innerWidth;
   let initializedRoot = null;
   let soundEnabled = true;
   let cachedBaseViewport = null;
@@ -62,10 +63,11 @@
 
   function storeCachedPageImage(pageNum, w, h, dataUrl) {
     if (!dataUrl) return;
+    const maxCache = isMobile ? 8 : MAX_PAGE_CACHE;
     const key = getCacheKey(pageNum, w, h);
     if (pageImageCache.has(key)) {
       pageImageCache.delete(key);
-    } else if (pageImageCache.size >= MAX_PAGE_CACHE) {
+    } else if (pageImageCache.size >= maxCache) {
       const oldestKey = pageImageCache.keys().next().value;
       pageImageCache.delete(oldestKey);
     }
@@ -98,6 +100,10 @@
    * Initialize and pre-decode page turn sound into RAM with auto-trimmed leading silence
    */
   function initAudio(soundUrl) {
+    if (isMobile) {
+      // Mobil qurilmalarda xotira va CPU ni tejash uchun ovoz oldindan majburiy yuklanmaydi
+      return;
+    }
     htmlAudioFallbackPool = [];
     for (let i = 0; i < HTML_AUDIO_POOL_SIZE; i++) {
       const a = new Audio(soundUrl);
@@ -181,6 +187,19 @@
     const now = performance.now();
     if (now - lastSoundTimestamp < 190) return;
     lastSoundTimestamp = now;
+
+    // Mobil qurilmalarda talab qilinganda birinchi marta ovoz yuklanadi
+    if (isMobile && !cachedAudioBuffer && htmlAudioFallbackPool.length === 0) {
+      try {
+        const soundUrl =
+          (rootEl && rootEl.getAttribute('data-sound-url')) ||
+          (window.location.pathname.includes('/Kitob/public')
+            ? '/Kitob/public/sounds/oxidvideos-page-flip-1-178322.mp3'
+            : '/sounds/oxidvideos-page-flip-1-178322.mp3');
+        const a = new Audio(soundUrl);
+        htmlAudioFallbackPool.push(a);
+      } catch (_) {}
+    }
 
     if (webAudioCtx && cachedAudioBuffer) {
       try {
@@ -267,21 +286,31 @@
     }
 
     initializedRoot = rootEl;
+    lastWindowWidth = window.innerWidth;
 
-    // Window resize handler
+    // Window resize handler (Mobil aylantirishda manzil satri o'zgarishidan kelib chiqadigan qotishni to'liq bartaraf etadi)
     window.addEventListener(
       'resize',
       debounce(() => {
         if (!pdfDoc || !rootEl || !rootEl.isConnected) return;
-        const nextMobile = window.innerWidth < 900;
+        const curWidth = window.innerWidth;
+        const widthDiff = Math.abs(curWidth - lastWindowWidth);
+        const nextMobile = curWidth < 900;
         const modeChanged = nextMobile !== isMobile;
+
+        // Mobil qurilmalarda faqat vertikal balandlik (address bar ko'rinishi) o'zgarganda qayta qurmaslik!
+        if (widthDiff < 30 && !modeChanged) {
+          return;
+        }
+
+        lastWindowWidth = curWidth;
         isMobile = nextMobile;
         clearPageCache();
         if (modeChanged && totalPages > 0) {
           populatePageSelect(totalPages);
         }
         rebuildStPageFlipBook();
-      }, 220)
+      }, 300)
     );
 
     // Keyboard navigation
@@ -504,16 +533,16 @@
       maxWidth: Math.round(pageW * 1.25),
       minHeight: Math.round(pageH * 0.75),
       maxHeight: Math.round(pageH * 1.25),
-      drawShadow: true,
-      maxShadowOpacity: 0.68,
+      drawShadow: !isMobile,
+      maxShadowOpacity: isMobile ? 0.25 : 0.68,
       showCover: false,
       usePortrait: true,
       mobileScrollSupport: true,
-      flippingTime: 780,
-      swipeDistance: 30,
-      showPageCorners: true,
+      flippingTime: isMobile ? 550 : 780,
+      swipeDistance: isMobile ? 20 : 30,
+      showPageCorners: !isMobile,
       clickEventForward: true,
-      useMouseEvents: true,
+      useMouseEvents: !isMobile,
       disableFlipByClick: false,
       startPage: startIdx,
     });
@@ -565,7 +594,9 @@
   async function renderSinglePdfPage(pageNum, pageW, pageH, gen = renderGeneration) {
     if (!pdfDoc || pageNum < 1 || pageNum > totalPages) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Mobil qurilmalarda DPI ni 1.25 bilan cheklash (yuqori DPI li telefonlarda GPU xotirasi to'lib qotmasligi uchun)
+    const maxDpr = isMobile ? 1.25 : 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     const targetW = Math.round(pageW * dpr);
     const targetH = Math.round(pageH * dpr);
     const cacheKey = getCacheKey(pageNum, targetW, targetH);
@@ -599,7 +630,7 @@
         await page.render({ canvasContext: ctx, viewport }).promise;
         if (gen !== renderGeneration) return;
 
-        const dataUrl = offscreen.toDataURL('image/jpeg', 0.92);
+        const dataUrl = offscreen.toDataURL('image/jpeg', isMobile ? 0.85 : 0.92);
         storeCachedPageImage(pageNum, targetW, targetH, dataUrl);
         applyImageToPageNodes(pageNum, dataUrl);
       } catch (err) {
@@ -642,7 +673,9 @@
     const pageH = Math.max(220, Math.round(singlePageH));
     const gen = renderGeneration;
 
-    const priorityOffsets = [0, 1, -1, 2, 3, -2, -3, 4, 5, -4];
+    // Mobil qurilmalarda bir vaqtning o'zida ko'p sahifa chizish protsessorni to'ldirib yubormasligi uchun
+    // faqat joriy va keyingi 1 ta sahifa avval chiziladi:
+    const priorityOffsets = isMobile ? [0, 1, -1] : [0, 1, -1, 2, 3, -2, -3, 4, 5, -4];
     const pagesToRender = [];
     priorityOffsets.forEach((offset) => {
       const p = centerPage + offset;

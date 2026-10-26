@@ -475,11 +475,16 @@ html.light #fb-page-select option {
 /* ── Mobile Layout (< 900px) ── */
 @media (max-width: 899px) {
   .fb-stage-wrapper {
-    padding: 1rem 0.5rem;
-    min-height: 480px;
+    padding: 0.75rem 0.25rem;
+    min-height: 460px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
   }
   .fb-hardcover-casing {
-    padding: 8px 10px 14px;
+    padding: 6px 8px 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+  }
+  .fb-book-spread {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
   }
   .fb-book-spine {
     display: none !important;

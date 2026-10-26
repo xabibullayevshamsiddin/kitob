@@ -731,7 +731,9 @@
                         </button>
                     </div>
                     <div>
-                        @livewire('book.book-discussion-chat', ['book' => $book, 'isDrawerMode' => true], key('drawer-chat-'.$book->id))
+                        <template x-if="showChatDrawer">
+                            @livewire('book.book-discussion-chat', ['book' => $book, 'isDrawerMode' => true], key('drawer-chat-'.$book->id))
+                        </template>
                     </div>
                 </div>
 

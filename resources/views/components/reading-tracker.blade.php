@@ -204,6 +204,12 @@ function readingTracker(config) {
             if (document.hidden || document.visibilityState !== 'visible') {
                 return false;
             }
+            // Smartfon va sensorli qurilmalarda document.hasFocus() oddiy aylantirish (scroll) paytida
+            // false bo'lib qoladi. Shuning uchun mobil qurilmalarda faqat visibilityState asosida ishlanadi.
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            if (isTouchDevice) {
+                return true;
+            }
             if (document.hasFocus()) {
                 return true;
             }
@@ -300,7 +306,10 @@ function readingTracker(config) {
                 }, 80);
             };
 
-            window.addEventListener('blur', handleFocusLoss);
+            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            if (!isTouch) {
+                window.addEventListener('blur', handleFocusLoss);
+            }
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden || document.visibilityState !== 'visible') {
                     this.triggerFocusPause();
