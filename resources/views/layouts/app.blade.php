@@ -62,7 +62,7 @@
     </style>
     @include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-paper font-sans selection:bg-amber-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain">
+<body class="bg-ink-950 text-paper font-sans selection:bg-cyan-500 selection:text-ink-950 antialiased min-h-screen relative ks-grain">
 
     <!-- ── Universal Header ── -->
     <x-nav.main-header />

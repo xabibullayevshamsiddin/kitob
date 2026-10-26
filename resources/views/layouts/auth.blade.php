@@ -37,7 +37,7 @@
     </style>
     @include('components.pwa-head')
 </head>
-<body class="bg-ink-950 text-paper min-h-screen flex flex-col justify-center relative overflow-x-hidden font-sans selection:bg-amber-500 selection:text-ink-950 ks-grain">
+<body class="bg-ink-950 text-paper min-h-screen flex flex-col justify-center relative overflow-x-hidden font-sans selection:bg-cyan-500 selection:text-ink-950 ks-grain">
 
     @include('components.page-loader')
 
@@ -118,7 +118,7 @@
             <div class="{{ $isOnboardingRoute ? 'lg:col-span-8 max-w-xl' : 'lg:col-span-7 max-w-md' }} mx-auto w-full">
                 <div class="flex items-center justify-between mb-4">
                     <a href="{{ url('/') }}" class="lg:hidden inline-flex items-center gap-2 text-paper font-serif font-bold text-lg">
-                        <span class="w-7 h-7 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <span class="w-7 h-7 rounded-btn bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </span>
                         <span>Davra_books</span>

@@ -58,7 +58,7 @@
                    class="relative inline-flex items-center px-3 whitespace-nowrap transition-colors duration-base {{ $active ? 'text-paper' : 'text-mist hover:text-paper' }}"
                    @if($active) aria-current="page" @endif>
                     {{ $link['label'] }}
-                    <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $active ? 'bg-amber-500' : 'bg-transparent' }}"></span>
+                    <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $active ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
                 </a>
             @endforeach
 
@@ -68,11 +68,11 @@
                         class="relative inline-flex items-center gap-1.5 px-3 whitespace-nowrap font-medium select-none transition-colors duration-base {{ $moreActive ? 'text-paper' : 'text-mist hover:text-paper' }}"
                         :aria-expanded="moreOpen.toString()">
                     <span>{{ __('site.nav.more') ?? 'Ko\'proq' }}</span>
-                    <svg class="w-3.5 h-3.5 transition-transform duration-base" :class="moreOpen ? 'rotate-180 text-amber-400' : ''"
+                    <svg class="w-3.5 h-3.5 transition-transform duration-base" :class="moreOpen ? 'rotate-180 text-cyan-600 dark:text-cyan-400' : ''"
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="m6 9 6 6 6-6"/>
                     </svg>
-                    <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $moreActive ? 'bg-amber-500' : 'bg-transparent' }}"></span>
+                    <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $moreActive ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
                 </button>
                 <div x-show="moreOpen" x-cloak
                      x-transition:enter="ks-menu-blur-enter-active"
@@ -86,15 +86,15 @@
                         {{ __('site.nav.sections') }}
                     </div>
                     <a href="{{ route('about') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
-                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                         <span>{{ __('site.nav.about') }}</span>
                     </a>
                     <a href="{{ route('faq') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
-                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                        <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
                         <span>{{ __('site.nav.faq') }}</span>
                     </a>
                     <a href="{{ route('contact') }}" @click="moreOpen=false" class="flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
-                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                         <span>{{ __('site.nav.contact') }}</span>
                     </a>
                 </div>
@@ -131,7 +131,7 @@
                     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
                 </svg>
                 {{-- Moon icon (Light rejimda ko'rinadi) --}}
-                <svg x-show="theme === 'light'" class="header-theme-moon w-4 h-4 text-amber-600 select-none transition-transform duration-base group-hover:-rotate-12 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg x-show="theme === 'light'" class="header-theme-moon w-4 h-4 text-cyan-600 dark:text-cyan-400 select-none transition-transform duration-base group-hover:-rotate-12 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
                 </svg>
             </button>
@@ -260,7 +260,7 @@
                     {{-- Streak Flame --}}
                     <span x-data="{ streakCount: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                           @streak-updated.window="streakCount = $event.detail.streak"
-                          class="header-streak-pill inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 text-amber-500 dark:text-amber-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
+                          class="header-streak-pill inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 text-cyan-600 dark:text-cyan-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
                           title="{{ __('site.common.streak') }}">
                         <svg class="ks-flame w-3.5 h-3.5 sm:w-4 sm:h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
@@ -271,9 +271,9 @@
                     {{-- Points with Live Counting and Floating Badge --}}
                     <div class="relative">
                         <span class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
-                              :class="pointsBump ? 'bg-amber-500/20 text-amber-300' : 'text-paper'"
+                              :class="pointsBump ? 'bg-cyan-500/20 text-cyan-300' : 'text-paper'"
                               title="{{ __('site.common.points') }}">
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 transition-transform duration-300"
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 transition-transform duration-300"
                                  :class="pointsBump ? 'scale-125 rotate-12' : ''"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -283,7 +283,7 @@
 
                         {{-- Floating +Points Pop Animation (Yuqoriga uchuvchi) --}}
                         <template x-if="floater">
-                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(245,158,11,0.7)] border border-amber-200/90 flex items-center gap-1">
+                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-teal-300 to-cyan-500 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(0,168,181,0.7)] border border-cyan-200/90 flex items-center gap-1">
                                 <span>⭐</span>
                                 <span x-text="floater"></span>
                             </span>
@@ -293,10 +293,10 @@
                     {{-- Coins with Live Counting and Floating Badge (mobilda profil menyusida, sm dan boshlab ko'rinadi) --}}
                     <div class="relative hidden sm:block">
                         <a href="{{ route('shop.index') }}"
-                           class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200 hover:text-amber-400"
-                              :class="coinsBump ? 'bg-yellow-500/20 text-yellow-300' : 'text-paper'"
+                           class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200 hover:text-cyan-600 dark:hover:text-cyan-400"
+                              :class="coinsBump ? 'bg-cyan-500/20 text-cyan-300' : 'text-paper'"
                               title="{{ __('site.common.coins') }}">
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gilt transition-transform duration-300"
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 transition-transform duration-300"
                                  :class="coinsBump ? 'scale-125 -rotate-12' : ''"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>
@@ -306,7 +306,7 @@
 
                         {{-- Floating +Coins Pop Animation (Yuqoriga uchuvchi) --}}
                         <template x-if="coinFloater">
-                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-400 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(250,204,21,0.7)] border border-yellow-200/90 flex items-center gap-1">
+                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-cyan-300 via-teal-300 to-cyan-400 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(0,168,181,0.7)] border border-cyan-200/90 flex items-center gap-1">
                                 <span>🪙</span>
                                 <span x-text="coinFloater"></span>
                             </span>
@@ -344,8 +344,8 @@
                 }
                 @keyframes ksNumberRoll {
                   0% { transform: scale(1); }
-                  25% { transform: scale(1.22); color: #FBBF24; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); }
-                  60% { transform: scale(1.1); color: #FCD34D; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.5)); }
+                  25% { transform: scale(1.22); color: #00A8B5; filter: drop-shadow(0 0 8px rgba(0, 168, 181, 0.8)); }
+                  60% { transform: scale(1.1); color: #02BAC6; filter: drop-shadow(0 0 4px rgba(0, 168, 181, 0.5)); }
                   100% { transform: scale(1); color: inherit; filter: none; }
                 }
                 .ks-number-rolling {
@@ -354,8 +354,8 @@
                 }
                 @keyframes ksCoinRoll {
                   0% { transform: scale(1); }
-                  25% { transform: scale(1.24); color: #FACC15; filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.85)); }
-                  60% { transform: scale(1.1); color: #FEF08A; filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.5)); }
+                  25% { transform: scale(1.24); color: #00A8B5; filter: drop-shadow(0 0 8px rgba(0, 168, 181, 0.85)); }
+                  60% { transform: scale(1.1); color: #02BAC6; filter: drop-shadow(0 0 4px rgba(0, 168, 181, 0.5)); }
                   100% { transform: scale(1); color: inherit; filter: none; }
                 }
                 .ks-coin-rolling {
@@ -365,10 +365,10 @@
                 </style>
 
                 {{-- Bildirishnomalar --}}
-                <a href="{{ route('notifications') }}" class="header-notification-btn hidden md:inline-flex relative p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-all duration-base focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70" title="{{ __('site.nav.notifications') }}">
+                <a href="{{ route('notifications') }}" class="header-notification-btn hidden md:inline-flex relative p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-all duration-base focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/70" title="{{ __('site.nav.notifications') }}">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                     @if(auth()->user()->unreadNotifications->count() > 0)
-                        <span class="header-notification-dot absolute top-1.5 right-1.5 w-2 h-2 bg-vermilion rounded-full ring-2 ring-ink-900"></span>
+                        <span class="header-notification-dot absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-ink-900"></span>
                     @endif
                 </a>
 
@@ -390,7 +390,7 @@
                             :class="(!isHome || scrolled || mobileMenu) ? 'hover:bg-ink-800 border border-ink-border bg-transparent' : 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md'">
                         <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover" alt="{{ auth()->user()->name }}">
                         <span class="text-xs font-medium text-paper hidden lg:inline max-w-[90px] truncate">{{ auth()->user()->name }}</span>
-                        <svg class="w-3.5 h-3.5 text-mist transition-transform duration-base" :class="userMenuOpen ? 'rotate-180 text-amber-400' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        <svg class="w-3.5 h-3.5 text-mist transition-transform duration-base" :class="userMenuOpen ? 'rotate-180 text-cyan-600 dark:text-cyan-400' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                     <div x-show="userMenuOpen" x-cloak
                          x-transition:enter="ks-menu-blur-enter-active"
@@ -410,7 +410,7 @@
                                         <p class="font-display text-[15px] font-semibold text-paper truncate leading-tight">{{ auth()->user()->name }}</p>
                                         @if($headerTitle = auth()->user()->equipped_title)
                                             <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold"
-                                                  style="background-color: {{ $headerTitle->payload['badge_color'] ?? '#FBBF24' }}25; color: {{ $headerTitle->payload['badge_color'] ?? '#FBBF24' }}; border: 1px solid {{ $headerTitle->payload['badge_color'] ?? '#FBBF24' }}50;">
+                                                  style="background-color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}25; color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}; border: 1px solid {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}50;">
                                                 {{ $headerTitle->name_text }}
                                             </span>
                                         @endif
@@ -418,9 +418,9 @@
                                     <p class="text-[11px] font-mono text-mist truncate mt-0.5">{{ '@' . auth()->user()->username }}</p>
                                 </div>
                                 @if(auth()->user()->hasRole('admin'))
-                                    <span class="ks-badge bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-bold">Admin</span>
+                                    <span class="ks-badge bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold">Admin</span>
                                 @elseif(auth()->user()->hasRole('teacher'))
-                                    <span class="ks-badge bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-bold">Ustoz</span>
+                                    <span class="ks-badge bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold">Ustoz</span>
                                 @endif
                             </div>
 
@@ -434,16 +434,16 @@
                                  @coins-awarded.window="mobileCoins = $event.detail.newTotal !== undefined ? $event.detail.newTotal : (mobileCoins + ($event.detail.coins || 1))">
                                 <span x-data="{ mobileStreak: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                                       @streak-updated.window="mobileStreak = $event.detail.streak"
-                                      class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-medium tabular-nums">
+                                      class="inline-flex items-center gap-1 text-cyan-600 dark:text-cyan-400 font-mono text-[11px] font-medium tabular-nums">
                                     <svg class="ks-flame w-3.5 h-3.5" :class="mobileStreak > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
                                     <span x-text="mobileStreak">{{ auth()->user()->current_streak }}</span>
                                 </span>
                                 <span class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
-                                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                     <span x-text="mobilePoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span>
                                 </span>
                                 <a href="{{ route('shop.index') }}" class="inline-flex items-center gap-1 text-paper font-mono text-[11px] font-medium tabular-nums">
-                                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
+                                    <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
                                     <span x-text="mobileCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
                                 </a>
                             </div>
@@ -452,27 +452,27 @@
                         {{-- Menu Items --}}
                         <div class="py-1.5">
                             @if(auth()->user()->hasRole('admin'))
-                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-amber-700 dark:text-amber-400 hover:bg-ink-700/60 transition-colors duration-base">
-                                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-cyan-700 dark:text-cyan-400 hover:bg-ink-700/60 transition-colors duration-base">
+                                    <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                                     <span>{{ __('site.nav.dashboard') }}</span>
                                 </a>
                             @elseif(auth()->user()->hasRole('teacher'))
-                                <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-amber-700 dark:text-amber-400 hover:bg-ink-700/60 transition-colors duration-base">
-                                    <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-cyan-700 dark:text-cyan-400 hover:bg-ink-700/60 transition-colors duration-base">
+                                    <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                                     <span>{{ __('site.nav.teacher_panel') }}</span>
                                 </a>
                             @endif
 
                             <a href="{{ route('profile.show', auth()->user()->username) }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
-                                <svg class="w-4 h-4 text-amber-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <svg class="w-4 h-4 text-cyan-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 <span>{{ __('site.nav.my_profile') }}</span>
                             </a>
                             <a href="{{ route('shop.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
-                                <svg class="w-4 h-4 text-amber-500 dark:text-gilt shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
+                                <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
                                 <span>{{ __('site.nav.shop') }}</span>
                             </a>
                             <a href="{{ route('settings') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
-                                <svg class="w-4 h-4 text-amber-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="w-4 h-4 text-cyan-600 dark:text-mist shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                                 <span>{{ __('site.nav.settings') }}</span>
                             </a>
 
@@ -480,11 +480,11 @@
                             <button @click="toggleTheme($event); userMenuOpen = false" type="button" data-theme-toggle class="w-full flex items-center justify-between px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
                                 <span class="flex items-center gap-2.5">
                                     <svg x-show="theme === 'dark'" class="w-4 h-4 text-amber-400 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                                    <svg x-show="theme === 'light'" class="w-4 h-4 text-amber-600 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                                    <svg x-show="theme === 'light'" class="w-4 h-4 text-cyan-600 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                                     <span x-text="theme === 'dark' ? '{{ addslashes(__('site.theme.light')) }}' : '{{ addslashes(__('site.theme.dark')) }}'"></span>
                                 </span>
                                 <span class="px-1.5 py-0.5 rounded-badge font-mono text-[10px] uppercase font-bold"
-                                      :class="theme === 'light' ? 'bg-amber-500/15 text-amber-800 border border-amber-500/30' : 'bg-ink-950 text-amber-400 border border-ink-border'"
+                                      :class="theme === 'light' ? 'bg-cyan-500/15 text-cyan-900 border border-cyan-500/30' : 'bg-ink-950 text-cyan-400 border border-ink-border'"
                                       x-text="theme"></span>
                             </button>
 
@@ -510,7 +510,7 @@
             {{-- Hamburger (mobil) — 3-line animated morph --}}
             <button @click="mobileMenu = !mobileMenu" type="button" 
                     class="lg:hidden relative w-9 h-9 rounded-btn flex flex-col items-center justify-center gap-1 text-mist hover:text-paper hover:bg-ink-800 active:scale-95 transition-all duration-200 shrink-0 select-none focus:outline-none border border-transparent hover:border-ink-border"
-                    :class="mobileMenu ? 'text-amber-500 dark:text-amber-400 !bg-ink-800 border-amber-500/30' : ''" 
+                    :class="mobileMenu ? 'text-cyan-600 dark:text-cyan-400 !bg-ink-800 border-cyan-500/30' : ''" 
                     aria-label="{{ __('site.nav.menu') }}" :aria-expanded="mobileMenu.toString()">
                 <span class="w-5 h-[2px] bg-current rounded-full transition-all duration-300 ease-out origin-center pointer-events-none"
                       :class="mobileMenu ? 'rotate-45 translate-y-[6px]' : ''"></span>
@@ -548,12 +548,12 @@
             @foreach($navLinks as $link)
                 @php $active = request()->routeIs(...$link['match']); @endphp
                 <a href="{{ route($link['route']) }}" @click="mobileMenu = false"
-                   class="group flex items-center justify-between font-display text-lg py-2 px-3 rounded-btn border border-transparent transition-all duration-200 {{ $active ? 'text-amber-500 dark:text-amber-400 font-semibold bg-amber-500/10 border-amber-500/20' : 'text-paper hover:text-amber-400 hover:bg-white/[0.04]' }}">
+                   class="group flex items-center justify-between font-display text-lg py-2 px-3 rounded-btn border border-transparent transition-all duration-200 {{ $active ? 'text-cyan-600 dark:text-cyan-400 font-semibold bg-cyan-500/10 border-cyan-500/20' : 'text-paper hover:text-cyan-400 hover:bg-white/[0.04]' }}">
                     <span class="group-hover:translate-x-1 transition-transform duration-200">{{ $link['label'] }}</span>
                     @if($active)
-                        <span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] animate-pulse"></span>
+                        <span class="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(0,168,181,0.8)] animate-pulse"></span>
                     @else
-                        <svg class="w-4 h-4 text-mist/30 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all opacity-0 group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                        <svg class="w-4 h-4 text-mist/30 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all opacity-0 group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
                     @endif
                 </a>
             @endforeach
@@ -592,7 +592,7 @@
                 <div class="flex items-center gap-1.5">
                     @foreach(['uz' => ['code' => 'UZ', 'flag' => 'uz'], 'ru' => ['code' => 'RU', 'flag' => 'ru'], 'en' => ['code' => 'EN', 'flag' => 'gb']] as $code => $l)
                         <a href="{{ url()->current() }}?lang={{ $code }}"
-                           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn font-mono text-[11px] font-medium transition-all duration-200 active:scale-95 {{ app()->getLocale() === $code ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/40 font-bold shadow-sm' : 'text-mist hover:text-paper border border-ink-border bg-ink-800 hover:bg-ink-700' }}">
+                           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn font-mono text-[11px] font-medium transition-all duration-200 active:scale-95 {{ app()->getLocale() === $code ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 font-bold shadow-sm' : 'text-mist hover:text-paper border border-ink-border bg-ink-800 hover:bg-ink-700' }}">
                             <img src="https://flagcdn.com/20x15/{{ $l['flag'] }}.png" width="16" height="12" class="rounded-[2px] object-cover ring-1 ring-white/10" alt="{{ $l['code'] }}">
                             <span>{{ $l['code'] }}</span>
                         </a>
@@ -605,11 +605,11 @@
                 <span class="ks-eyebrow">{{ __('site.theme.theme') }}</span>
                 <button @click="toggleTheme($event)" type="button" data-theme-toggle 
                         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-btn border border-ink-border bg-ink-800 text-paper text-xs font-mono transition-all duration-200 hover:bg-ink-700 active:scale-95">
-                    <span x-show="theme === 'dark'" class="flex items-center gap-1.5 text-amber-400">
+                    <span x-show="theme === 'dark'" class="flex items-center gap-1.5 text-cyan-400">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                         <span>{{ __('site.theme.light') }}</span>
                     </span>
-                    <span x-show="theme === 'light'" class="flex items-center gap-1.5 text-amber-600">
+                    <span x-show="theme === 'light'" class="flex items-center gap-1.5 text-cyan-600">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                         <span>{{ __('site.theme.dark') }}</span>
                     </span>
@@ -622,32 +622,38 @@
 <style>
 /* ── Logo Book Icon Badge ── */
 .header-logo-badge {
-    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35) !important;
+    background: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0C1C36 !important;
+    box-shadow: 0 1px 3px rgba(12, 28, 54, 0.08) !important;
 }
 .group:hover .header-logo-badge {
-    background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
+    border-color: #00A8B5 !important;
+    box-shadow: 0 2px 10px rgba(0, 168, 181, 0.25) !important;
 }
 
 html.dark .header-logo-badge,
 html:not(.light) .header-logo-badge {
-    background: #C1392B !important;
+    background: #0D111A !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     color: #F0EDE6 !important;
-    box-shadow: 0 2px 10px rgba(193, 57, 43, 0.35) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 html.dark .group:hover .header-logo-badge,
 html:not(.light) .group:hover .header-logo-badge {
-    background: #A82E22 !important;
+    border-color: #00A8B5 !important;
+    box-shadow: 0 2px 10px rgba(0, 168, 181, 0.3) !important;
 }
 
 html.light:not(.force-dark) .header-logo-badge {
-    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35) !important;
+    background: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0C1C36 !important;
+    box-shadow: 0 1px 3px rgba(12, 28, 54, 0.08) !important;
 }
 html.light:not(.force-dark) .group:hover .header-logo-badge {
-    background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
+    border-color: #00A8B5 !important;
+    box-shadow: 0 2px 10px rgba(0, 168, 181, 0.25) !important;
 }
 
 /* ── Velorah & Editorial Hero Header Overrides (Hero Header on Home - Both Dark & Light) ── */
@@ -748,7 +754,7 @@ html.dark #site-header.is-hero-header nav > a[aria-current="page"],
 #site-header.is-hero-header [title*="Streak"],
 #site-header.is-hero-header [title*="kunlik"],
 #site-header.is-hero-header [title*="Kunlik"] {
-    color: #f59e0b !important;
+    color: #00A8B5 !important;
 }
 
 #site-header.is-hero-header [title*="ball"],
@@ -842,6 +848,7 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) nav > a[aria-curre
     color: #0A1C3C !important;
     font-weight: 600 !important;
 }
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a span.bg-cyan-500,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a span.bg-amber-500 {
     background-color: #00A8B5 !important;
 }
@@ -894,14 +901,30 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn s
 }
 
 /* Streak, Points, Coins in Light Mode */
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-stats-pill {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    divide-color: #E2E8F0 !important;
+    box-shadow: 0 1px 3px rgba(12, 28, 54, 0.06) !important;
+}
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-stats-pill > * {
+    border-color: #E2E8F0 !important;
+}
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-stats-pill svg {
+    color: #00A8B5 !important;
+}
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-stats-pill span,
+html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-stats-pill a {
+    color: #0C1C36 !important;
+}
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-streak-pill {
-    color: #008D9A !important;
+    color: #00A8B5 !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="streak"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Streak"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="kunlik"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Kunlik"] {
-    color: #008D9A !important;
+    color: #00A8B5 !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="ball"],
 html.light:not(.force-dark) #site-header:not(.is-hero-header) [title*="Ball"],
