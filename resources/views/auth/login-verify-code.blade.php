@@ -53,7 +53,7 @@
             </label>
             <div class="relative">
                 <input id="code" type="text" name="code" required autofocus maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                    class="w-full text-center tracking-[0.5em] text-2xl font-mono font-bold py-3 px-4 rounded-xl text-paper transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-slate-600 {{ $errors->has('code') ? 'ks-input-invalid' : 'bg-ink-950 border border-ink-border focus:border-amber-500 focus:ring-1 focus:ring-amber-500' }}"
+                    class="w-full text-center tracking-[0.5em] text-2xl font-mono font-bold py-3 px-4 rounded-xl text-paper transition-all placeholder:tracking-normal placeholder:text-sm placeholder:text-slate-600 {{ $errors->has('code') ? 'ks-input-invalid' : 'bg-ink-950 border border-ink-border focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500' }}"
                     placeholder="••••••">
             </div>
             @error('code')
@@ -63,7 +63,7 @@
                 </p>
             @enderror
             <p class="text-[11px] text-center text-mist mt-1.5 font-mono">
-                Kod Telegram botingizda: <b>@{{ $botUsername }}</b>
+                Kod Telegram botingizda: <a href="https://t.me/{{ $botUsername ?: config('telegram.bot_username', 'Davra_books_bot') }}" target="_blank" class="text-cyan-500 hover:underline font-bold">&#64;{{ $botUsername ?: config('telegram.bot_username', 'Davra_books_bot') }} ↗</a>
             </p>
         </div>
 

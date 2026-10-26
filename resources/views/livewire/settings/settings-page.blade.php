@@ -292,7 +292,7 @@
                         <div class="p-3 rounded-lg bg-sky-500/10 border border-sky-500/25 text-sky-300 text-xs text-center space-y-1">
                             <p class="font-bold">📱 Telegram botga kod yuborildi!</p>
                             <p class="text-[11px] text-sky-200/80">
-                                Telegram botingizga (<b>@{{ $telegramUsername ?: config('telegram.bot_username') }}</b>) 6 xonali maxsus tasdiqlash kodi yuborildi. Kodni quyida kiriting:
+                                Telegram botingizga (<b><a href="https://t.me/{{ $telegramUsername ?: config('telegram.bot_username', 'Davra_books_bot') }}" target="_blank" class="underline font-bold">&#64;{{ $telegramUsername ?: config('telegram.bot_username', 'Davra_books_bot') }}</a></b>) 6 xonali maxsus tasdiqlash kodi yuborildi. Kodni quyida kiriting:
                             </p>
                         </div>
 

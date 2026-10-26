@@ -19,7 +19,7 @@ class TelegramAdminController extends Controller
     public function index(TelegramPaymentService $paymentService)
     {
         $botConfigured = !empty(config('telegram.bot_token'));
-        $botUsername = (string) config('telegram.bot_username', 'kitobxonS_bot');
+        $botUsername = (string) config('telegram.bot_username', 'Davra_books_bot');
         $paymentsEnabled = $paymentService->isPaymentsEnabled();
         $webhookConfigured = !empty(config('telegram.webhook_secret'));
 
@@ -132,7 +132,7 @@ class TelegramAdminController extends Controller
                 'security'
             );
 
-            $botUsername = config('telegram.bot_username', 'kitobxonS_bot');
+            $botUsername = config('telegram.bot_username', 'Davra_books_bot');
             return back()->with('success', "Xabar rasmiy @{$botUsername} boti orqali '{$targetUser->name}' (@{$targetUser->username}) ga muvaffaqiyatli yuborildi! ✈️");
         }
 
@@ -230,7 +230,7 @@ class TelegramAdminController extends Controller
             return back()->with('error', 'Telegram bot orqali yuborishda xatolik: ' . $e->getMessage());
         }
 
-        $botUsername = config('telegram.bot_username', 'kitobxonS_bot');
+        $botUsername = config('telegram.bot_username', 'Davra_books_bot');
         return back()->with('success', "Xabar shaxsiy lichkadan emas, rasmiy @{$botUsername} boti orqali '{$user->name}' ga muvaffaqiyatli yuborildi! ✈️");
     }
 

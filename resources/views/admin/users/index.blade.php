@@ -194,7 +194,7 @@
                                     @if($user->isTelegramLinked())
                                         <button type="button"
                                                 @click="openTgModal({{ $user->id }}, '{{ addslashes($user->name) }}', true)"
-                                                title="Telegram Bot (@{{ config('telegram.bot_username') }}) orqali xabar yuborish"
+                                                title="Telegram Bot (&#64;{{ config('telegram.bot_username', 'Davra_books_bot') }}) orqali xabar yuborish"
                                                 class="text-sky-400 hover:text-sky-300 ml-0.5 inline-flex items-center">
                                             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.196 1.006.128.832.926z"/></svg>
                                         </button>
@@ -304,7 +304,7 @@
                                 {{-- Telegram Botdan Xabar / E'lon yuborish tugmasi --}}
                                 <button type="button"
                                         @click="openTgModal({{ $user->id }}, '{{ addslashes($user->name) }}', {{ $user->isTelegramLinked() ? 'true' : 'false' }})"
-                                        title="Telegram Bot (@{{ config('telegram.bot_username') }}) nomidan xabar yuborish"
+                                        title="Telegram Bot (&#64;{{ config('telegram.bot_username', 'Davra_books_bot') }}) nomidan xabar yuborish"
                                         class="px-2 py-1 rounded-btn text-[10px] font-mono font-bold transition-all inline-flex items-center gap-1 {{ $user->isTelegramLinked() ? 'bg-sky-500/15 border border-sky-500/30 text-sky-300 hover:bg-sky-500/25' : 'bg-ink-950 border border-ink-border text-mist hover:text-paper' }}">
                                     <span>✈️</span>
                                     <span>Botdan xabar</span>

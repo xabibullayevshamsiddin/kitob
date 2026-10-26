@@ -88,7 +88,7 @@
                             </a>
                         @endif
                         @if($user->isTelegramLinked())
-                            <button type="button" @click="tgModalOpen = true" class="text-sky-400 hover:underline inline-flex items-center gap-1 font-semibold" title="Telegram Bot (@{{ config('telegram.bot_username') }}) orqali xabar yuborish">
+                            <button type="button" @click="tgModalOpen = true" class="text-sky-400 hover:underline inline-flex items-center gap-1 font-semibold" title="Telegram Bot (&#64;{{ config('telegram.bot_username', 'Davra_books_bot') }}) orqali xabar yuborish">
                                 <span>🤖</span>
                                 <span>{{ $user->telegram_username ? '@' . $user->telegram_username : 'TG #' . $user->telegram_id }} (Botdan yozish)</span>
                             </button>
