@@ -59,6 +59,7 @@ return [
         'hero_title_bold' => 'deep analysis',
         'hero_title_end' => ' and precise results.',
         'hero_sub' => 'Text, audio and video lessons from mentors. Read 15 minutes a day to build a streak, take quizzes and lead the readers leaderboard.',
+        'hero_subtitle' => 'Text, audio and video lessons from mentors. Read 15 minutes a day to build a streak, take quizzes and lead the readers leaderboard.',
         'start_now' => 'Start right now',
         'explore_books' => 'Explore the books',
         'books_catalog' => 'Books catalog',

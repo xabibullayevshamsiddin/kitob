@@ -9,11 +9,11 @@
 
 @php
     $rawName = config('app.name');
-    $siteName = (!empty($rawName) && $rawName !== 'Laravel') ? $rawName : 'Kitobxon';
-    $pageTitle = $title ? "{$title} — {$siteName}" : "{$siteName} — Kitob o'qish va rivojlanish ekotizimi";
+    $siteName = (!empty($rawName) && $rawName !== 'Laravel') ? $rawName : 'Davra_books';
+    $pageTitle = $title ? "{$title} — {$siteName}" : "{$siteName} — Kitob mutolaasi va rivojlanish ekotizimi";
     $pageDesc = $description ?? "Har hafta sara kitob, chuqur tahlillar, interaktiv testlar va jonli kitobxonlik jamiyati.";
     $pageUrl = $url ?? url()->current();
-    $rawImage = $image ?? asset('icons/kitobxon-512.png');
+    $rawImage = $image ?? asset('storage/logo/photo_2026-10-26_14-48-15.jpg');
     $pageImage = (str_starts_with($rawImage, 'http://') || str_starts_with($rawImage, 'https://')) 
         ? $rawImage 
         : url($rawImage);

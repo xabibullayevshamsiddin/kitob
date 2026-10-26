@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <x-seo-meta :title="__('site.home.hero_title') . __('site.home.hero_title_bold')" :description="__('site.home.hero_subtitle')" />
+    <x-seo-meta :title="__('site.home.hero_title') . __('site.home.hero_title_bold')" :description="__('site.home.hero_sub')" />
 
     @include('partials.design-system')
 

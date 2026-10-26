@@ -59,6 +59,7 @@ return [
         'hero_title_bold' => 'chuqur tahlil',
         'hero_title_end' => ' va aniq natija.',
         'hero_sub' => 'Matn, audio va ustozlar video darslari. Har kuni 15 daqiqa mutolaa qilib streak hosil qiling, test topshiring va kitobxonlar reytingida peshqadam bo\'ling.',
+        'hero_subtitle' => 'Matn, audio va ustozlar video darslari. Har kuni 15 daqiqa mutolaa qilib streak hosil qiling, test topshiring va kitobxonlar reytingida peshqadam bo\'ling.',
         'start_now' => 'Hoziroq boshlash',
         'explore_books' => 'Kitoblar bilan tanishish',
         'books_catalog' => 'Kitoblar katalogi',
