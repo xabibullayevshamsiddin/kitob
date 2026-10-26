@@ -27,21 +27,34 @@ class BookAiController extends Controller
 
         // Agar kitob hali indekslanmagan bo'lsa va admin "AI yoqish" ni bossa, avval indekslab ko'ramiz
         if ($wantsEnabled && !in_array($book->ai_index_status, ['ready', 'partial'], true)) {
-            /** @var BookIndexer $indexer */
-            $indexer = app(BookIndexer::class);
-            $indexResult = $indexer->indexBook($book->fresh());
+            @ini_set('memory_limit', '1024M');
+            @set_time_limit(600);
+            try {
+                /** @var BookIndexer $indexer */
+                $indexer = app(BookIndexer::class);
+                $indexResult = $indexer->indexBook($book->fresh());
 
-            if (!in_array($indexResult['status'], ['ready', 'partial'], true)) {
-                $book->update([
-                    'ai_enabled' => false,
-                ]);
+                if (!in_array($indexResult['status'], ['ready', 'partial'], true)) {
+                    $book->update([
+                        'ai_enabled' => false,
+                    ]);
+
+                    $targetRoute = $request->boolean('redirect_to_book')
+                        ? route('books.show', $book->slug)
+                        : route('admin.books.edit', $book->id);
+
+                    return redirect($targetRoute)
+                        ->with('error', $indexResult['error_message'] ?: trans('ai.low_text_quality'));
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("AI yoqishda indekslash xatosi (#{$book->id}): " . $e->getMessage());
+                $book->update(['ai_enabled' => false, 'ai_index_status' => 'failed', 'ai_index_error' => $e->getMessage()]);
 
                 $targetRoute = $request->boolean('redirect_to_book')
                     ? route('books.show', $book->slug)
                     : route('admin.books.edit', $book->id);
 
-                return redirect($targetRoute)
-                    ->with('error', $indexResult['error_message'] ?: trans('ai.low_text_quality'));
+                return redirect($targetRoute)->with('error', "Indekslashda xatolik yuz berdi: " . $e->getMessage());
             }
         }
 
@@ -63,7 +76,8 @@ class BookAiController extends Controller
      */
     public function indexBook(Request $request, Book $book, BookIndexer $indexer)
     {
-        @set_time_limit(180);
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(600);
 
         if ($request->has('ai_summary') && trim((string) $request->input('ai_summary')) !== '') {
             $book->update(['ai_summary' => trim((string) $request->input('ai_summary'))]);
@@ -93,16 +107,37 @@ class BookAiController extends Controller
                 ->with('info', "Kitobni indekslash navbatga qo'yildi. Jarayon yakunlangach holat yangilanadi.");
         }
 
-        @set_time_limit(300);
+        try {
+            $stepsLog = [];
+            $result = $indexer->indexBook($book, $force, function (string $step, int $current, int $total) use (&$stepsLog) {
+                $stepsLog[] = [
+                    'step'    => $step,
+                    'current' => $current,
+                    'total'   => $total,
+                ];
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Kitobni indekslashda xatolik (#{$book->id}): " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-        $stepsLog = [];
-        $result = $indexer->indexBook($book, $force, function (string $step, int $current, int $total) use (&$stepsLog) {
-            $stepsLog[] = [
-                'step'    => $step,
-                'current' => $current,
-                'total'   => $total,
-            ];
-        });
+            $book->update([
+                'ai_index_status' => 'failed',
+                'ai_index_error'  => "Indekslashda xatolik yuz berdi: " . $e->getMessage(),
+                'ai_enabled'      => false,
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok'      => false,
+                    'message' => "Indekslashda xatolik yuz berdi: " . $e->getMessage(),
+                ], 422);
+            }
+
+            return redirect()
+                ->route('admin.books.edit', $book->id)
+                ->with('error', "Indekslashda xatolik yuz berdi: " . $e->getMessage());
+        }
 
         if (in_array($result['status'], ['ready', 'partial'], true) && $request->boolean('enable_after_index', true)) {
             $book->update(['ai_enabled' => true]);

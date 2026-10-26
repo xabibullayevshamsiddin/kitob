@@ -26,6 +26,9 @@ class BookTextExtractor
      */
     public function extractBookPdf(Book $book, bool $force = false): array
     {
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(600);
+
         $pdfFullPath = $this->resolvePdfPath($book);
 
         if (!$pdfFullPath || !is_file($pdfFullPath)) {
@@ -370,6 +373,9 @@ class BookTextExtractor
      */
     protected function extractViaSmalotParser(string $pdfFullPath): array
     {
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(600);
+
         $cfg = new PdfParserConfig();
         $cfg->setRetainImageContent(false);
         $cfg->setDecodeMemoryLimit(2 * 1024 * 1024);

@@ -35,6 +35,9 @@ class BookIndexer
      */
     public function indexBook(Book $book, bool $force = false, ?callable $onProgress = null): array
     {
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(600);
+
         $book->update([
             'ai_index_status' => 'indexing',
             'ai_index_error'  => null,
@@ -69,6 +72,12 @@ class BookIndexer
         }
 
         $manualSummaryText = trim(strip_tags((string) $book->ai_summary));
+        if ($manualSummaryText === '' && !empty($book->description)) {
+            $descClean = trim(strip_tags((string) $book->description));
+            if (mb_strlen($descClean) >= 20) {
+                $manualSummaryText = $descClean;
+            }
+        }
         $hasManualSummary = mb_strlen($manualSummaryText) >= 5;
 
         // Agar boblarda ham yaroqli matn bo'lmasa, qo'lda ai_summary kiritilmagan bo'lsa va PDF sifati past bo'lsa -> indekslashga ruxsat berilmaydi!
@@ -168,14 +177,15 @@ class BookIndexer
 
         if (empty($plannedChunks) && $hasManualSummary) {
             $isPartialOnly = true;
+            $fullSummaryChunk = "Kitob: {$book->title}\nMuallif: {$book->author}\nJanr: {$book->genre}\nTavsifi va konspekti:\n" . $manualSummaryText;
             $plannedChunks[] = [
                 'chapter_id'   => null,
                 'page_start'   => 1,
                 'page_end'     => 1,
                 'ordinal'      => 0,
-                'text'         => $manualSummaryText,
-                'token_count'  => $this->estimateTokens($manualSummaryText),
-                'content_hash' => hash('sha256', mb_strtolower(trim($manualSummaryText))),
+                'text'         => $fullSummaryChunk,
+                'token_count'  => $this->estimateTokens($fullSummaryChunk),
+                'content_hash' => hash('sha256', mb_strtolower(trim($fullSummaryChunk))),
             ];
         }
 

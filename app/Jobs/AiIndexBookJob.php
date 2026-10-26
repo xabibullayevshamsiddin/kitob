@@ -27,6 +27,9 @@ class AiIndexBookJob implements ShouldQueue
 
     public function handle(BookIndexer $indexer): void
     {
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(600);
+
         $book = Book::find($this->bookId);
         if (!$book) {
             return;

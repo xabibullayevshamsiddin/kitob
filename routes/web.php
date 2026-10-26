@@ -1400,7 +1400,11 @@ Route::prefix('admin')
 
         if ($newPdfUploaded) {
             app(\App\Services\AI\BookAssistant\BookIndexer::class)->clearBookIndex($book);
-            \App\Jobs\AiIndexBookJob::dispatch($book->id, true);
+            $book->update([
+                'ai_index_status' => 'none',
+                'ai_text_quality' => 0.0,
+                'ai_enabled'      => false,
+            ]);
         }
 
         return redirect()->route('admin.books.index')->with('success', 'Kitob ma\'lumotlari va fayllari muvaffaqiyatli yangilandi!');
