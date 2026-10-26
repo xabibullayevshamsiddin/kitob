@@ -48,9 +48,25 @@ class PhoneRegisterController extends Controller
             ])->withInput();
         }
 
+        // Agar o'chirilgan (soft-deleted) foydalanuvchilarda ushbu telefon bo'lsa, tozalaymiz
+        User::onlyTrashed()
+            ->where('phone', $normalizedPhone)
+            ->forceDelete();
+
         // 2. Validatsiya (Username takrorlanmasligi qat'iy tekshiriladi, Ism esa takrorlanishi mumkin)
         $rawUsername = strtolower(trim((string) $request->input('username')));
         $request->merge(['username' => $rawUsername]);
+
+        // Agar o'chirilgan (soft-deleted) foydalanuvchilarda ushbu username bo'lsa, tozalaymiz
+        User::onlyTrashed()
+            ->whereRaw('LOWER(username) = ?', [$rawUsername])
+            ->forceDelete();
+
+        if ($request->filled('email')) {
+            User::onlyTrashed()
+                ->where('email', $request->input('email'))
+                ->forceDelete();
+        }
 
         if (User::whereRaw('LOWER(username) = ?', [$rawUsername])->exists()) {
             return back()->withErrors([

@@ -257,7 +257,8 @@ class TelegramBotService
                 $user = User::find($loginData['user_id']);
                 if ($user) {
                     // Agar bu telegram_id boshqa foydalanuvchida qolgan bo'lsa, avval uni bo'shatamiz
-                    User::where('telegram_id', $userId)
+                    \Illuminate\Support\Facades\DB::table('users')
+                        ->where('telegram_id', $userId)
                         ->where('id', '!=', $user->id)
                         ->update(['telegram_id' => null, 'telegram_username' => null]);
 
@@ -482,78 +483,103 @@ class TelegramBotService
 
                 $welcomeCoins = (int) setting('welcome_bonus_coins', 50);
 
-                // Agar bu telegram_id boshqa foydalanuvchida qolgan bo'lsa, avval uni bo'shatamiz
-                User::where('telegram_id', $userId)
+                // Agar bu telegram_id boshqa har qanday foydalanuvchida qolgan bo'lsa, avval uni bo'shatamiz
+                \Illuminate\Support\Facades\DB::table('users')
+                    ->where('telegram_id', $userId)
                     ->update(['telegram_id' => null, 'telegram_username' => null]);
 
-                // Agar shu telefon raqami bilan avval tasdiqlanmagan yozuv bo'lsa, uni yangilaymiz yoki yangi ochamiz
-                $existingByPhone = User::where('phone', $pending['phone'])->first();
-                if ($existingByPhone) {
-                    $existingByPhone->update([
-                        'name'              => $pending['name'],
-                        'username'          => $pending['username'],
-                        'email'             => $pending['email'] ?? $existingByPhone->email,
-                        'password'          => $pending['password'],
-                        'phone_verified_at' => now(),
-                        'telegram_id'       => $userId,
-                        'telegram_username' => $from['username'] ?? $existingByPhone->telegram_username,
-                        'telegram_linked_at'=> now(),
-                    ]);
-                    $user = $existingByPhone;
-                } else {
-                    $user = User::create([
-                        'name'              => $pending['name'],
-                        'username'          => $pending['username'],
-                        'email'             => $pending['email'] ?? null,
-                        'phone'             => $pending['phone'],
-                        'password'          => $pending['password'],
-                        'phone_verified_at' => now(),
-                        'telegram_id'       => $userId,
-                        'telegram_username' => $from['username'] ?? null,
-                        'telegram_linked_at'=> now(),
-                        'role'              => 'reader',
-                        'total_points'      => 0,
-                        'coin_balance'      => $welcomeCoins,
-                    ]);
-                }
-
-                if ($welcomeCoins > 0) {
-                    try {
-                        \App\Models\CoinTransaction::create([
-                            'user_id'     => $user->id,
-                            'coins'       => $welcomeCoins,
-                            'source'      => 'bonus',
-                            'description' => 'Ro\'yxatdan o\'tish uchun xush kelibsiz bonusi 🎁',
-                        ]);
-                    } catch (\Throwable $e) {}
-                }
+                // Agar shu telefon, username, email yoki telegram_id bilan o'chirilgan (soft-deleted) hisob bo'lsa, unikal indeks xatosi bermasligi uchun tozalaymiz
+                User::onlyTrashed()
+                    ->where(function ($q) use ($pending, $userId) {
+                        $q->where('phone', $pending['phone'])
+                          ->orWhereRaw('LOWER(username) = ?', [strtolower($pending['username'])])
+                          ->orWhere('telegram_id', $userId);
+                        if (!empty($pending['email'])) {
+                            $q->orWhere('email', $pending['email']);
+                        }
+                    })
+                    ->forceDelete();
 
                 try {
-                    if (method_exists($user, 'assignRole')) {
-                        $user->assignRole('reader');
+                    // Agar shu telefon raqami bilan avval tasdiqlanmagan yozuv bo'lsa, uni yangilaymiz yoki yangi ochamiz
+                    $existingByPhone = User::where('phone', $pending['phone'])->first();
+                    if ($existingByPhone) {
+                        $existingByPhone->update([
+                            'name'              => $pending['name'],
+                            'username'          => $pending['username'],
+                            'email'             => $pending['email'] ?? $existingByPhone->email,
+                            'password'          => $pending['password'],
+                            'phone_verified_at' => now(),
+                            'telegram_id'       => $userId,
+                            'telegram_username' => $from['username'] ?? $existingByPhone->telegram_username,
+                            'telegram_linked_at'=> now(),
+                        ]);
+                        $user = $existingByPhone;
+                    } else {
+                        $user = User::create([
+                            'name'              => $pending['name'],
+                            'username'          => $pending['username'],
+                            'email'             => $pending['email'] ?? null,
+                            'phone'             => $pending['phone'],
+                            'password'          => $pending['password'],
+                            'phone_verified_at' => now(),
+                            'telegram_id'       => $userId,
+                            'telegram_username' => $from['username'] ?? null,
+                            'telegram_linked_at'=> now(),
+                            'role'              => 'reader',
+                            'total_points'      => 0,
+                            'coin_balance'      => $welcomeCoins,
+                        ]);
                     }
-                } catch (\Throwable $e) {}
 
-                \App\Models\UserProfile::create([
-                    'user_id'          => $user->id,
-                    'privacy_settings' => ['show_stats' => true, 'show_activity' => true],
-                ]);
+                    if ($welcomeCoins > 0) {
+                        try {
+                            \App\Models\CoinTransaction::create([
+                                'user_id'     => $user->id,
+                                'coins'       => $welcomeCoins,
+                                'source'      => 'bonus',
+                                'description' => 'Ro\'yxatdan o\'tish uchun xush kelibsiz bonusi 🎁',
+                            ]);
+                        } catch (\Throwable $e) {}
+                    }
 
-                \App\Models\UserStreak::create([
-                    'user_id'          => $user->id,
-                    'current_streak'   => 0,
-                    'longest_streak'   => 0,
-                    'last_active_date' => null,
-                ]);
+                    try {
+                        if (method_exists($user, 'assignRole')) {
+                            $user->assignRole('reader');
+                        }
+                    } catch (\Throwable $e) {}
 
-                Cache::put("pending_reg_completed_{$regToken}", $user->id, now()->addMinutes(10));
-                Cache::forget("tg_reg_token_{$userId}");
-                Cache::forget("tg_reg_prompt_just_sent_{$userId}");
+                    \App\Models\UserProfile::firstOrCreate([
+                        'user_id'          => $user->id,
+                    ], [
+                        'privacy_settings' => ['show_stats' => true, 'show_activity' => true],
+                    ]);
 
-                $this->client->sendMessage($chatId, "Tabriklaymiz, <b>{$pending['name']}</b>! 🎉\n\nTelefon raqamingiz muvaffaqiyatli tasdiqlandi va hisobingiz faollashtirildi!\n\nSaytdagi sahifangiz avtomatik ochiladi. Xush kelibsiz! ✅\n\nPastdagi to'rtburchak (⊞) menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
-                    'reply_markup' => $this->getMainMenuKeyboard(),
-                ]);
-                return;
+                    \App\Models\UserStreak::firstOrCreate([
+                        'user_id'          => $user->id,
+                    ], [
+                        'current_streak'   => 0,
+                        'longest_streak'   => 0,
+                        'last_active_date' => null,
+                    ]);
+
+                    Cache::put("pending_reg_completed_{$regToken}", $user->id, now()->addMinutes(10));
+                    Cache::forget("tg_reg_token_{$userId}");
+                    Cache::forget("tg_reg_prompt_just_sent_{$userId}");
+
+                    $this->client->sendMessage($chatId, "Tabriklaymiz, <b>{$pending['name']}</b>! 🎉\n\nTelefon raqamingiz muvaffaqiyatli tasdiqlandi va hisobingiz faollashtirildi!\n\nSaytdagi sahifangiz avtomatik ochiladi. Xush kelibsiz! ✅\n\nPastdagi to'rtburchak (⊞) menyu tugmalari orqali barcha buyruqlardan foydalanishingiz mumkin 👇", [
+                        'reply_markup' => $this->getMainMenuKeyboard(),
+                    ]);
+                    return;
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Telegram contact tasdiqlashda xatolik: " . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    $this->client->sendMessage($chatId, "⚠️ Ro'yxatdan o'tishni yakunlashda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring yoki saytdan ro'yxatdan o'ting.", [
+                        'reply_markup' => $this->getMainMenuKeyboard(),
+                    ]);
+                    return;
+                }
             }
         }
 
@@ -588,6 +614,12 @@ class TelegramBotService
                 ]);
                 return;
             }
+
+            // Agar bu telegram_id boshqa hisobda bo'lsa, avval tozalaymiz
+            \Illuminate\Support\Facades\DB::table('users')
+                ->where('telegram_id', $userId)
+                ->where('id', '!=', $user->id)
+                ->update(['telegram_id' => null, 'telegram_username' => null]);
 
             $user->update([
                 'telegram_id'        => $userId,

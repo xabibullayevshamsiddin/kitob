@@ -1193,8 +1193,8 @@ Route::prefix('admin')
         if ($user->isAdmin() || $user->role === 'admin') {
             return redirect()->route('admin.users.index')->with('error', "Admin foydalanuvchini o'chirish mumkin emas. 🛡️");
         }
-        $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'Foydalanuvchi o\'chirildi!');
+        $user->forceDelete();
+        return redirect()->route('admin.users.index')->with('success', 'Foydalanuvchi butunlay o\'chirildi!');
     })->name('users.destroy');
 
     // Foydalanuvchini ban qilish

@@ -67,7 +67,9 @@ class TelegramWebhookController extends Controller
         try {
             $botService->handleUpdate($request->all());
         } catch (\Throwable $e) {
-            Log::error("Telegram bot xabarni qayta ishlashda xato: " . $e->getMessage());
+            Log::error("Telegram bot xabarni qayta ishlashda xato: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return response()->json([
