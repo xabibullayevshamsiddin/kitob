@@ -473,7 +473,7 @@ class TelegramAuthService
         $token = Str::random(32);
         Cache::put("tg_verify_token_{$token}", $user->id, now()->addMinutes(30));
 
-        $botUsername = (string) config('telegram.bot_username', 'kitobxonS_bot');
+        $botUsername = (string) config('telegram.bot_username', 'Davra_books_bot');
         return "https://t.me/{$botUsername}?start=verify_{$token}";
     }
 

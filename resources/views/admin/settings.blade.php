@@ -298,7 +298,7 @@
                     <div class="p-4 rounded-card bg-ink-800 border border-ink-border flex items-center justify-between gap-4">
                         <div>
                             <p class="text-sm font-medium text-paper">Umumiy Global Chat</p>
-                            <p class="text-xs text-mist mt-0.5">Barcha kitobxonlar uchun umumiy jonli chat xonasini yoqish yoki o'chirish</p>
+                            <p class="text-xs text-mist mt-0.5">Barcha o'quvchilar uchun umumiy jonli chat xonasini yoqish yoki o'chirish</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
                             <input type="checkbox" name="global_chat_enabled" value="1"
@@ -619,7 +619,7 @@
                         </label>
                         <div class="flex gap-2">
                             <input type="email" name="test_email"
-                                   value="{{ auth()->user()->email ?? 'admin@kitobxon.uz' }}"
+                                   value="{{ auth()->user()->email ?? 'admin@davrabooks.uz' }}"
                                    required
                                    class="flex-1 px-3.5 py-2.5 bg-ink-800 border border-ink-border rounded-input text-sm text-paper focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
                                    placeholder="sizning-emailingiz@gmail.com">

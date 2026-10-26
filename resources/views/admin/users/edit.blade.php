@@ -1148,7 +1148,7 @@
                         <div>
                             <h3 class="text-sm font-bold text-paper uppercase tracking-wider font-mono flex items-center gap-2">
                                 <span class="text-purple-400">🤖</span>
-                                AI Kitobxonga berilgan savollar
+                                AI Yordamchiga berilgan savollar
                             </h3>
                             <p class="text-xs text-mist mt-1">Foydalanuvchining kitoblar bo'yicha sun'iy intellektga yuborgan so'rovlari</p>
                         </div>
@@ -1157,7 +1157,7 @@
 
                     @if($aiQuestions->isEmpty())
                         <div class="text-center py-8 px-4 rounded-xl border border-dashed border-ink-border text-xs text-mist">
-                            Foydalanuvchi hali AI kitobxonga murojaat qilmagan.
+                            Foydalanuvchi hali AI Yordamchiga murojaat qilmagan.
                         </div>
                     @else
                         <div class="space-y-3">
@@ -1285,7 +1285,7 @@
             </div>
 
             <div class="p-2.5 rounded-btn bg-sky-500/10 border border-sky-500/25 text-[11px] font-mono text-sky-200">
-                🤖 Xabar shaxsiy lichkadan emas, rasmiy <b>&#64;{{ config('telegram.bot_username', 'kitobxonS_bot') }}</b> boti nomidan yuboriladi.
+                🤖 Xabar shaxsiy lichkadan emas, rasmiy <b>&#64;{{ config('telegram.bot_username', 'Davra_books_bot') }}</b> boti nomidan yuboriladi.
                 @if(!$user->isTelegramLinked())
                     <span class="block text-amber-400 mt-1">⚠️ Ushbu foydalanuvchi hali Telegram botni ulamagan — xabar uning sayt ichidagi bildirishnomalariga tushadi.</span>
                 @endif

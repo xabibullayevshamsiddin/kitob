@@ -589,7 +589,7 @@
             </div>
 
             <div class="p-2.5 rounded-btn bg-sky-500/10 border border-sky-500/25 text-[11px] font-mono text-sky-200">
-                🤖 Xabar shaxsiy lichkangizdan emas, balki rasmiy <b>&#64;{{ config('telegram.bot_username', 'kitobxonS_bot') }}</b> boti nomidan yuboriladi.
+                🤖 Xabar shaxsiy lichkangizdan emas, balki rasmiy <b>&#64;{{ config('telegram.bot_username', 'Davra_books_bot') }}</b> boti nomidan yuboriladi.
                 <template x-if="!tgTargetHasBot">
                     <span class="block text-amber-400 mt-1">⚠️ Ushbu foydalanuvchi hali Telegram botni ulamagan — xabar uning sayt ichidagi bildirishnomalariga tushadi.</span>
                 </template>
@@ -665,7 +665,7 @@
                     <div>
                         <h3 class="text-sm font-bold font-serif text-paper">Barchaga Telegram Botdan E'lon Yuborish</h3>
                         <p class="text-xs text-mist font-mono mt-0.5">
-                            Rasmiy <span class="text-amber-400 font-bold">&#64;{{ config('telegram.bot_username', 'kitobxonS_bot') }}</span> boti orqali barcha faol foydalanuvchilarga boradi
+                            Rasmiy <span class="text-amber-400 font-bold">&#64;{{ config('telegram.bot_username', 'Davra_books_bot') }}</span> boti orqali barcha faol foydalanuvchilarga boradi
                         </p>
                     </div>
                 </div>

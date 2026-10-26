@@ -395,11 +395,11 @@ class TelegramBotService
         }
 
         // 3. Standart salomlashuv
-        $appUrl = config('app.url', 'https://kitobxon.elitehost.uz');
+        $appUrl = config('app.url');
         $miniAppUrl = config('telegram.mini_app_url', "{$appUrl}/tg-app");
 
         $text = "Assalomu alaykum, <b>{$name}</b>! 👋📚\n\n"
-              . "<b>«Kitobxon»</b> platformasining rasmiy botiga xush kelibsiz!\n\n"
+              . "<b>«Davra_books»</b> platformasining rasmiy botiga xush kelibsiz!\n\n"
               . "Bu yerda siz:\n"
               . "• Har kuni kitob o'qib, o'z <b>Streak</b> 🔥 ko'rsatkichingizni oshirib borasiz;\n"
               . "• Testlarni topshirib, <b>oltin tangalar</b> 🪙 jamg'arasiz;\n"
@@ -418,7 +418,7 @@ class TelegramBotService
     protected function handleAppCommand(int|string $chatId): void
     {
         $miniAppUrl = config('telegram.mini_app_url', config('app.url') . '/tg-app');
-        $text = "📱 <b>«Kitobxon» Mini App</b>\n\nTelegram ichida kitoblar mutolaa qiling, testlar yeching va tangalarni boshqaring! 📖✨";
+        $text = "📱 <b>«Davra_books» Mini App</b>\n\nTelegram ichida kitoblar mutolaa qiling, testlar yeching va tangalarni boshqaring! 📖✨";
 
         $buttons = [
             'inline_keyboard' => [
@@ -881,7 +881,7 @@ class TelegramBotService
      */
     public function getMainMenuKeyboard(): array
     {
-        $appUrl = config('app.url', 'https://kitobxon.elitehost.uz');
+        $appUrl = config('app.url');
         $miniAppUrl = config('telegram.mini_app_url', rtrim($appUrl, '/') . '/tg-app');
 
         $row1 = [];
