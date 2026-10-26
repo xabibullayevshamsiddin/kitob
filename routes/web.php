@@ -263,14 +263,34 @@ Route::get('/catalog', CatalogPage::class)->name('books.catalog');
 
 // Kitob sahifasi (Public — SEO, OpenGraph va qidiruv botlari uchun ochiq)
 Route::get('/books/{slug}', function ($slug) {
-    $book = \App\Models\Book::where('slug', $slug)->firstOrFail();
+    $book = \App\Models\Book::where('slug', $slug)
+        ->when(is_numeric($slug), function ($query) use ($slug) {
+            $query->orWhere('id', (int) $slug);
+        })
+        ->first();
+
+    if (!$book) {
+        abort(404, 'Kitob topilmadi.');
+    }
+
+    $user = auth()->user();
+    $isAdmin = $user && ($user->isAdmin() || (method_exists($user, 'hasRole') && $user->hasRole('admin')));
+
+    if (!$book->is_active && !$isAdmin) {
+        abort(404, 'Kitob topilmadi yoki vaqtincha nofaol.');
+    }
+
     if ($book->published_at && $book->published_at->isFuture()) {
-        $user = auth()->user();
         $rank = $user ? app(\App\Services\LeaderboardService::class)->getUserRank($user) : null;
-        $canEarlyAccess = ($user && ($user->isAdmin() || (method_exists($user, 'hasRole') && $user->hasRole('admin')) || ($rank !== null && $rank <= 5)));
+        $canEarlyAccess = ($isAdmin || ($rank !== null && $rank <= 5));
         if (!$canEarlyAccess) {
             abort(403, 'Ushbu kitob hali rasman e\'lon qilinmagan. Top 5 kitobxonlar uchun erta kirish imtiyozi mavjud.');
         }
+    }
+
+    // Agar raqamli ID orqali kirilgan bo'lsa va kitobda slug mavjud bo'lsa, toza slug URL'ga yo'naltirish
+    if (is_numeric($slug) && !empty($book->slug) && (string) $slug !== (string) $book->slug) {
+        return redirect()->route('books.show', $book->slug);
     }
     $pdfAnnotations = request()->user() ? request()->user()->pdfAnnotations()
         ->where('book_id', $book->id)

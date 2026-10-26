@@ -103,7 +103,7 @@
 
                         {{-- Title --}}
                         <td class="py-2.5 px-3.5">
-                            <p class="text-xs font-bold font-serif text-paper group-hover:text-amber-400 transition-colors line-clamp-1">{{ $book->title }}</p>
+                            <a href="{{ route('books.show', $book->slug ?: $book->id) }}" target="_blank" class="text-xs font-bold font-serif text-paper group-hover:text-amber-400 transition-colors line-clamp-1 block hover:underline">{{ $book->title }}</a>
                             <p class="text-[10px] text-mist font-mono mt-0.5">{{ $book->created_at->format('d.m.Y') }}</p>
                         </td>
 
@@ -251,7 +251,7 @@
                                 @endif
 
                                 {{-- View --}}
-                                <a href="{{ route('books.show', $book) }}" target="_blank"
+                                <a href="{{ route('books.show', $book->slug ?: $book->id) }}" target="_blank"
                                    class="p-1 rounded-badge bg-ink-950 border border-ink-border text-mist hover:text-paper hover:border-ink-border transition-colors"
                                    title="Ko'rish">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
