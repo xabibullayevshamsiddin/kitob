@@ -274,12 +274,17 @@
 
 @keyframes ks-ring-pulse {
     0%, 100% {
-        box-shadow: 0 0 10px rgba(244, 63, 94, 0.25);
+        box-shadow: 0 0 8px var(--ring-glow, rgba(0, 168, 181, 0.25));
     }
     50% {
-        box-shadow: 0 0 22px rgba(244, 63, 94, 0.55);
+        box-shadow: 0 0 18px var(--ring-glow, rgba(0, 168, 181, 0.45));
     }
 }
 .animate-ring-pulse {
     animation: ks-ring-pulse 2.8s ease-in-out infinite;
+}
+
+html.light .animate-ring-pulse {
+    animation: none !important;
+    box-shadow: 0 4px 16px -2px rgba(12, 28, 54, 0.12) !important;
 }

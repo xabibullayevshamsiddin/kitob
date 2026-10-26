@@ -119,9 +119,9 @@
                                     <x-ui.rank-badge :rank="$userRank" size="md" />
                                 @endif
                                 @if($user->role === 'admin' || $user->hasRole('admin'))
-                                    <span class="px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-300 text-[10px] font-mono uppercase tracking-wider font-semibold">Admin</span>
+                                    <span class="px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 text-[10px] font-mono uppercase tracking-wider font-semibold">Admin</span>
                                 @elseif($user->role === 'teacher' || $user->hasRole('teacher'))
-                                    <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[10px] font-mono uppercase tracking-wider font-semibold">O‘qituvchi</span>
+                                    <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-[10px] font-mono uppercase tracking-wider font-semibold">O‘qituvchi</span>
                                 @endif
                             </div>
                             <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
@@ -176,26 +176,26 @@
 
             <!-- Quick Stats Bento Grid in Header (Interactive Lift & Glow Animation) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 mt-5 border-t border-ink-border/60">
-                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50/90 dark:bg-ink-950/40 border border-slate-200 dark:border-ink-border/60 hover:border-slate-300 dark:hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
                             <span class="ks-flame is-lit inline-block scale-75 group-hover:scale-100 transition-transform">
-                                <svg class="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-4-6-4-10z"/></svg>
+                                <svg class="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-4-6-4-10z"/></svg>
                             </span>
                             <span>{{ __('site.profile.streak') }}</span>
                         </span>
                         @if(($user->streak?->freeze_count ?? 0) > 0)
-                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/25" title="{{ __('site.profile.streak_freeze_active') }}">
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-500/25" title="{{ __('site.profile.streak_freeze_active') }}">
                                 🧊 {{ $user->streak->freeze_count }}
                             </span>
                         @endif
                     </div>
-                    <p class="text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-1.5 group-hover:text-amber-300 transition-colors">
+                    <p class="text-xl sm:text-2xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1.5 group-hover:text-amber-500 transition-colors">
                         {{ $stats['current_streak'] }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.days') }}</span>
                     </p>
                 </div>
 
-                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50/90 dark:bg-ink-950/40 border border-slate-200 dark:border-ink-border/60 hover:border-slate-300 dark:hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
                     <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
                         <span class="group-hover:scale-110 transition-transform">⭐</span>
                         <span>{{ __('site.profile.total_points') }}</span>
@@ -205,22 +205,22 @@
                     </p>
                 </div>
 
-                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50/90 dark:bg-ink-950/40 border border-slate-200 dark:border-ink-border/60 hover:border-slate-300 dark:hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
                     <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
                         <span class="group-hover:scale-110 transition-transform">🪙</span>
                         <span>{{ __('site.profile.coin_balance') }}</span>
                     </span>
-                    <p class="text-xl sm:text-2xl font-bold font-mono text-amber-300 mt-1.5">
+                    <p class="text-xl sm:text-2xl font-bold font-mono text-amber-600 dark:text-amber-300 mt-1.5">
                         {{ number_format($stats['coin_balance']) }}
                     </p>
                 </div>
 
-                <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/40 border border-ink-border/60 hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50/90 dark:bg-ink-950/40 border border-slate-200 dark:border-ink-border/60 hover:border-slate-300 dark:hover:border-ink-border hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
                     <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-mist flex items-center gap-1">
                         <span class="group-hover:scale-110 transition-transform">⏱️</span>
                         <span>{{ __('site.profile.reading_time') }}</span>
                     </span>
-                    <p class="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1.5">
+                    <p class="text-xl sm:text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1.5">
                         {{ number_format($stats['total_minutes']) }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.minutes_short') }}</span>
                     </p>
                 </div>
@@ -230,28 +230,28 @@
 
     <!-- Navigation Tabs -->
     <div class="flex items-center gap-2 border-b border-ink-border pb-2 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 sm:mx-0 sm:px-0">
-        <button wire:click="setTab('overview')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'overview' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
+        <button wire:click="setTab('overview')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'overview' ? 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/35 font-bold shadow-sm' : 'text-mist hover:text-paper hover:bg-slate-100 dark:hover:bg-ink-900 border border-transparent' }}">
             {{ __('site.profile.tab_overview') }}
         </button>
-        <button wire:click="setTab('books')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'books' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
+        <button wire:click="setTab('books')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'books' ? 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/35 font-bold shadow-sm' : 'text-mist hover:text-paper hover:bg-slate-100 dark:hover:bg-ink-900 border border-transparent' }}">
             {{ __('site.profile.tab_books') }} ({{ count($readingProgresses) }})
         </button>
-        <button wire:click="setTab('saved')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'saved' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
+        <button wire:click="setTab('saved')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'saved' ? 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/35 font-bold shadow-sm' : 'text-mist hover:text-paper hover:bg-slate-100 dark:hover:bg-ink-900 border border-transparent' }}">
             {{ __('site.profile.tab_saved') }} ({{ count($savedBooks) }})
         </button>
-        <button wire:click="setTab('badges')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'badges' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
+        <button wire:click="setTab('badges')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'badges' ? 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/35 font-bold shadow-sm' : 'text-mist hover:text-paper hover:bg-slate-100 dark:hover:bg-ink-900 border border-transparent' }}">
             {{ __('site.profile.tab_badges') }} ({{ count($badges) }})
         </button>
         @if($isOwner)
-            <button wire:click="setTab('notes')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'notes' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'text-mist hover:text-paper hover:bg-ink-900' }}">
+            <button wire:click="setTab('notes')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 {{ $activeTab === 'notes' ? 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/35 font-bold shadow-sm' : 'text-mist hover:text-paper hover:bg-slate-100 dark:hover:bg-ink-900 border border-transparent' }}">
                 {{ __('site.profile.tab_notes') }} ({{ count($notes) }})
             </button>
-            <button wire:click="setTab('shop')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 flex items-center gap-1.5 {{ $activeTab === 'shop' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'text-mist hover:text-paper hover:bg-ink-900 border border-transparent' }}" title="{{ __('site.profile.tab_shop') }}">
+            <button wire:click="setTab('shop')" class="px-3.5 py-1.5 rounded-btn text-xs font-mono font-medium transition-all shrink-0 flex items-center gap-1.5 {{ $activeTab === 'shop' ? 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/35 font-bold shadow-sm' : 'text-mist hover:text-paper hover:bg-slate-100 dark:hover:bg-ink-900 border border-transparent' }}" title="{{ __('site.profile.tab_shop') }}">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                 <span>{{ __('shop.tabs.inventory') }}</span>
                 <span class="sr-only">{{ __('site.profile.tab_shop') }}</span>
                 @if(isset($userItems) && count($userItems) > 0)
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-mono">{{ count($userItems) }}</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 font-mono">{{ count($userItems) }}</span>
                 @endif
             </button>
         @endif
@@ -279,10 +279,10 @@
                             @php
                                 $date = now()->subDays($i)->toDateString();
                                 $minutes = $activities[$date] ?? 0;
-                                $colorClass = 'bg-ink-800';
+                                $colorClass = 'bg-slate-200/90 dark:bg-ink-800';
                                 if ($minutes > 0 && $minutes <= 15) $colorClass = 'bg-emerald-600/50';
                                 elseif ($minutes > 15 && $minutes <= 30) $colorClass = 'bg-emerald-500/80';
-                                elseif ($minutes > 30) $colorClass = 'bg-emerald-400';
+                                elseif ($minutes > 30) $colorClass = 'bg-emerald-500';
                             @endphp
                             <div class="w-3.5 h-10 rounded-sm {{ $colorClass }} transition-all hover:scale-110 cursor-pointer" 
                                  title="{{ $date }}: {{ $minutes }} {{ __('site.profile.minutes_read') }}"></div>
@@ -294,10 +294,10 @@
                 <div class="flex items-center justify-between text-[11px] text-mist font-mono pt-2 border-t border-ink-border">
                     <span>{{ __('site.profile.less') }}</span>
                     <div class="flex items-center gap-1.5">
-                        <span class="w-3 h-3 rounded-sm bg-ink-800"></span>
+                        <span class="w-3 h-3 rounded-sm bg-slate-200/90 dark:bg-ink-800"></span>
                         <span class="w-3 h-3 rounded-sm bg-emerald-600/50"></span>
                         <span class="w-3 h-3 rounded-sm bg-emerald-500/80"></span>
-                        <span class="w-3 h-3 rounded-sm bg-emerald-400"></span>
+                        <span class="w-3 h-3 rounded-sm bg-emerald-500"></span>
                     </div>
                     <span>{{ __('site.profile.more') }}</span>
                 </div>
@@ -311,7 +311,7 @@
                 </div>
                 <div class="p-4 rounded-panel bg-ink-900 border border-ink-border space-y-1">
                     <span class="text-[11px] text-mist font-mono uppercase tracking-wider block">{{ __('site.profile.quizzes_passed') }}</span>
-                    <span class="text-xl font-bold font-mono text-amber-400">{{ $stats['quizzes_passed'] }} <small class="text-xs text-mist font-sans">{{ __('site.profile.count_suffix') }}</small></span>
+                    <span class="text-xl font-bold font-mono text-amber-600 dark:text-amber-400">{{ $stats['quizzes_passed'] }} <small class="text-xs text-mist font-sans">{{ __('site.profile.count_suffix') }}</small></span>
                 </div>
                 <div class="p-4 rounded-panel bg-ink-900 border border-ink-border space-y-1">
                     <span class="text-[11px] text-mist font-mono uppercase tracking-wider block">{{ __('site.profile.groups') }}</span>
@@ -319,7 +319,7 @@
                 </div>
                 <div class="p-4 rounded-panel bg-ink-900 border border-ink-border space-y-1">
                     <span class="text-[11px] text-mist font-mono uppercase tracking-wider block">{{ __('site.profile.chat_messages') }}</span>
-                    <span class="text-xl font-bold font-mono text-emerald-400">{{ $stats['messages_count'] }} <small class="text-xs text-mist font-sans">{{ __('site.profile.count_suffix') }}</small></span>
+                    <span class="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">{{ $stats['messages_count'] }} <small class="text-xs text-mist font-sans">{{ __('site.profile.count_suffix') }}</small></span>
                 </div>
             </div>
         </div>
@@ -511,7 +511,7 @@
                     <p class="text-xs text-mist font-sans mt-1">Siz xarid qilgan profil mavzulari, avatar auralari va unvonlar to‘plami.</p>
                 </div>
                 <div class="flex items-center gap-2.5 flex-wrap">
-                    <div class="flex items-center gap-2 px-3.5 py-2 rounded-btn bg-ink-800 border border-ink-border text-amber-400 font-mono font-bold text-xs shrink-0">
+                    <div class="flex items-center gap-2 px-3.5 py-2 rounded-btn bg-slate-100 dark:bg-ink-800 border border-slate-200 dark:border-ink-border text-amber-700 dark:text-amber-400 font-mono font-bold text-xs shrink-0">
                         <svg class="w-4 h-4 text-gilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/></svg>
                         <span>{{ number_format($user->coin_balance) }} tanga</span>
                     </div>
@@ -524,7 +524,7 @@
             </div>
 
             <!-- Chat & Profile Visual Style Preference Switcher -->
-            <div class="p-5 sm:p-6 rounded-panel bg-ink-900/90 border border-ink-border space-y-4">
+            <div class="p-5 sm:p-6 rounded-panel bg-white dark:bg-ink-900/90 border border-slate-200 dark:border-ink-border space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h4 class="text-sm font-bold text-paper flex items-center gap-2">
@@ -536,7 +536,7 @@
 
                     @if($activeTheme)
                         <button type="button" wire:click="unequipShopTheme"
-                                class="text-[11px] font-mono text-mist hover:text-rose-400 transition underline self-start sm:self-auto">
+                                class="text-[11px] font-mono text-mist hover:text-rose-500 transition underline self-start sm:self-auto">
                             {{ __('site.profile.unequip_theme') }}
                         </button>
                     @endif
@@ -547,20 +547,20 @@
                     <!-- Option 1: Shop Style -->
                     <button type="button"
                             wire:click="setChatStylePreference('shop')"
-                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'shop' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/40' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80 opacity-80 hover:opacity-100' }}">
+                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'shop' ? 'bg-cyan-500/10 border-cyan-500/50 shadow-sm ring-1 ring-cyan-500/40' : 'bg-slate-50 dark:bg-ink-950/60 border-slate-200 dark:border-ink-border hover:border-slate-300 dark:hover:border-ink-border/80 opacity-90 hover:opacity-100' }}">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>🛍️</span>
                                 <span>{{ __('site.profile.opt_shop_theme') }}</span>
                             </span>
                             @if($currentPref === 'shop')
-                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                <span class="w-2 h-2 rounded-full bg-cyan-500 dark:bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
                             {{ __('site.profile.opt_shop_desc') }}
                         </p>
-                        <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
+                        <div class="text-[10px] font-mono text-cyan-700 dark:text-amber-400/90 mt-2 font-semibold">
                             {{ __('site.profile.active_theme', ['theme' => $activeTheme ? ($visualCatalog[$activeTheme]['name'] ?? ucfirst($activeTheme)) : __('site.profile.not_selected')]) }}
                         </div>
                     </button>
@@ -568,20 +568,20 @@
                     <!-- Option 2: Leaderboard Rank Style -->
                     <button type="button"
                             wire:click="setChatStylePreference('rank')"
-                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'rank' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/40' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80 opacity-80 hover:opacity-100' }}">
+                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'rank' ? 'bg-cyan-500/10 border-cyan-500/50 shadow-sm ring-1 ring-cyan-500/40' : 'bg-slate-50 dark:bg-ink-950/60 border-slate-200 dark:border-ink-border hover:border-slate-300 dark:hover:border-ink-border/80 opacity-90 hover:opacity-100' }}">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>🏆</span>
                                 <span>{{ __('site.profile.opt_rank_theme') }}</span>
                             </span>
                             @if($currentPref === 'rank')
-                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                <span class="w-2 h-2 rounded-full bg-cyan-500 dark:bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
                             {{ __('site.profile.opt_rank_desc') }}
                         </p>
-                        <div class="text-[10px] font-mono text-amber-400/90 mt-2 font-semibold">
+                        <div class="text-[10px] font-mono text-cyan-700 dark:text-amber-400/90 mt-2 font-semibold">
                             {{ $userRank ? __('site.profile.your_rank', ['rank' => "#{$userRank}"]) : __('site.profile.insufficient_points') }}
                         </div>
                     </button>
@@ -589,14 +589,14 @@
                     <!-- Option 3: Default Standard Style -->
                     <button type="button"
                             wire:click="setChatStylePreference('default')"
-                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'default' ? 'bg-amber-500/10 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/40' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80 opacity-80 hover:opacity-100' }}">
+                            class="p-3.5 rounded-btn border text-left transition-all relative {{ $currentPref === 'default' ? 'bg-cyan-500/10 border-cyan-500/50 shadow-sm ring-1 ring-cyan-500/40' : 'bg-slate-50 dark:bg-ink-950/60 border-slate-200 dark:border-ink-border hover:border-slate-300 dark:hover:border-ink-border/80 opacity-90 hover:opacity-100' }}">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-paper flex items-center gap-1.5">
                                 <span>👤</span>
                                 <span>{{ __('site.profile.opt_default_theme') }}</span>
                             </span>
                             @if($currentPref === 'default')
-                                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                <span class="w-2 h-2 rounded-full bg-cyan-500 dark:bg-amber-400 animate-pulse"></span>
                             @endif
                         </div>
                         <p class="text-[11px] text-mist font-sans mt-1 leading-snug">
@@ -611,18 +611,18 @@
                 <!-- Live Previews Grid (Profile Cover + Chat Message) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                     <!-- Profile Header Live Preview -->
-                    <div class="p-3.5 rounded-card bg-ink-950/70 border border-ink-border/60 flex flex-col justify-between">
+                    <div class="p-3.5 rounded-card bg-slate-50 dark:bg-ink-950/70 border border-slate-200 dark:border-ink-border/60 flex flex-col justify-between">
                         <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">{{ __('site.profile.preview_header') }}</span>
                         <div class="rounded-btn overflow-hidden border relative p-3 flex flex-col justify-between min-h-[96px] {{ $profileVisual['card_border'] }} {{ $profileVisual['banner_gradient'] }}">
                             <div class="absolute inset-0 pointer-events-none animate-ambient-breathe" style="background: {{ $profileVisual['banner_ambient'] }};"></div>
                             <div class="relative z-10 flex items-center justify-between">
-                                <span class="text-[10px] font-mono text-paper/80 font-bold uppercase tracking-wider">{{ __('site.profile.preview_cover') }}</span>
+                                <span class="text-[10px] font-mono text-paper font-bold uppercase tracking-wider">{{ __('site.profile.preview_cover') }}</span>
                                 @if($profileVisual['badge_text'])
                                     <span class="{{ $profileVisual['badge_class'] }} text-[9px] px-2 py-0.5">{{ $profileVisual['badge_text'] }}</span>
                                 @endif
                             </div>
                             <div class="relative z-10 flex items-center gap-2.5 mt-2">
-                                <div class="w-8 h-8 rounded-full border border-paper/40 bg-ink-950 flex items-center justify-center text-xs font-bold font-serif {{ $profileVisual['avatar_ring'] }}">
+                                <div class="w-8 h-8 rounded-full border border-paper/40 bg-white dark:bg-ink-950 flex items-center justify-center text-xs font-bold font-serif {{ $profileVisual['avatar_ring'] }}">
                                     {{ mb_substr($user->name, 0, 1) }}
                                 </div>
                                 <div class="min-w-0">
@@ -634,7 +634,7 @@
                     </div>
 
                     <!-- Chat Message Live Preview -->
-                    <div class="p-3.5 rounded-card bg-ink-950/70 border border-ink-border/60 flex flex-col justify-between">
+                    <div class="p-3.5 rounded-card bg-slate-50 dark:bg-ink-950/70 border border-slate-200 dark:border-ink-border/60 flex flex-col justify-between">
                         <span class="text-[10px] font-mono text-mist uppercase tracking-wider block mb-2">{{ __('site.profile.preview_chat') }}</span>
                         <div class="flex items-start gap-2.5">
                             <x-ui.avatar :user="$user" size="sm" :rank="$userRank" />
@@ -750,7 +750,7 @@
                                         @php
                                             $bColor = $sItem->safeColor('badge_color', '#A78BFA');
                                         @endphp
-                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                        <div class="p-2.5 rounded-btn bg-slate-50 dark:bg-ink-950/80 border border-slate-200 dark:border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Nishon:</span>
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold"
                                                   style="background-color: {{ $bColor }}20; color: {{ $bColor }}; border: 1.5px solid {{ $bColor }}60;">
@@ -758,33 +758,33 @@
                                                 <span>{{ $sItem->name_text }}</span>
                                             </span>
                                         </div>
-                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                        <p class="text-[10px] font-mono text-amber-700 dark:text-amber-400/90 leading-tight">
                                             ✦ Ismingiz yonida va chatda ushbu faxriy unvon nishoni ko‘rinadi.
                                         </p>
                                     @elseif($sItem->slot === 'name_color')
                                         @php
                                             $nColor = $sItem->safeColor('color', '#F59E0B');
                                         @endphp
-                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                        <div class="p-2.5 rounded-btn bg-slate-50 dark:bg-ink-950/80 border border-slate-200 dark:border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Ism rangi:</span>
                                             <span class="text-xs font-serif font-bold" style="color: {{ $nColor }}; text-shadow: 0 0 12px {{ $nColor }}50;">
                                                 {{ $user->name }}
                                             </span>
                                         </div>
-                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                        <p class="text-[10px] font-mono text-amber-700 dark:text-amber-400/90 leading-tight">
                                             ✦ Profil, chat va sharhlarda ismingiz shu rangda porlab turadi.
                                         </p>
                                     @elseif($sItem->slot === 'accent')
                                         @php
                                             $aColor = $sItem->safeColor('color', '#10B981');
                                         @endphp
-                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                        <div class="p-2.5 rounded-btn bg-slate-50 dark:bg-ink-950/80 border border-slate-200 dark:border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Sayt urg‘usi:</span>
                                             <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold" style="background-color: {{ $aColor }}; color: #07090E;">
                                                 Tugma namunasi
                                             </span>
                                         </div>
-                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                        <p class="text-[10px] font-mono text-amber-700 dark:text-amber-400/90 leading-tight">
                                             ✦ Butun saytdagi asosiy tugmalar va aksentlar shu rangga o‘tadi.
                                         </p>
                                     @elseif($sItem->slot === 'reader_palette')
@@ -796,30 +796,30 @@
                                             <span class="text-[10px] font-mono opacity-80 uppercase">Mutolaa foni:</span>
                                             <span class="text-xs font-serif font-bold">Aa Kitob sahifasi</span>
                                         </div>
-                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                        <p class="text-[10px] font-mono text-amber-700 dark:text-amber-400/90 leading-tight">
                                             ✦ Kitobxon o‘quvchisida sahifa foni va matn rangi shunga o‘zgaradi.
                                         </p>
                                     @elseif($sItem->slot === 'highlight_color')
                                         @php
                                             $hColor = $sItem->safeColor('color', '#84CC16');
                                         @endphp
-                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                        <div class="p-2.5 rounded-btn bg-slate-50 dark:bg-ink-950/80 border border-slate-200 dark:border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">Belgilash:</span>
                                             <span class="px-2 py-0.5 rounded text-[11px] font-mono text-white font-bold" style="background-color: {{ $hColor }};">
                                                 Iqtibos belgisi
                                             </span>
                                         </div>
-                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                        <p class="text-[10px] font-mono text-amber-700 dark:text-amber-400/90 leading-tight">
                                             ✦ Kitob ichida belgilangan matnlar va qaydlar shu rangda yonadi.
                                         </p>
                                     @elseif($sItem->category === 'bundle')
-                                        <div class="p-2.5 rounded-btn bg-ink-950/80 border border-ink-border/60 flex items-center justify-between">
+                                        <div class="p-2.5 rounded-btn bg-slate-50 dark:bg-ink-950/80 border border-slate-200 dark:border-ink-border/60 flex items-center justify-between">
                                             <span class="text-[10px] font-mono text-mist uppercase">To‘plam:</span>
-                                            <span class="text-[11px] font-mono font-bold text-amber-300">
+                                            <span class="text-[11px] font-mono font-bold text-amber-700 dark:text-amber-300">
                                                 Profil + Avatar + Chat
                                             </span>
                                         </div>
-                                        <p class="text-[10px] font-mono text-amber-400/90 leading-tight">
+                                        <p class="text-[10px] font-mono text-amber-700 dark:text-amber-400/90 leading-tight">
                                             ✦ Profil foni, avatar ramkasi va chat pufakchasini o‘zgartiradi.
                                         </p>
                                     @endif
@@ -829,20 +829,21 @@
                                     <div>
                                         @if($isEquipped)
                                             <button type="button" wire:click="unequipItem('{{ $sItem->category === 'bundle' ? 'all' : ($sItem->slot ?? 'all') }}')" wire:loading.attr="disabled"
-                                                    class="w-full py-1.5 rounded-btn text-xs font-mono font-medium border border-ink-border hover:border-rose-500/40 hover:text-rose-400 text-mist transition">
+                                                    class="w-full py-1.5 rounded-btn text-xs font-mono font-medium border border-ink-border hover:border-rose-500/40 hover:text-rose-500 text-mist transition">
                                                 {{ __('shop.unequip') }}
                                             </button>
                                         @else
                                             <button type="button" wire:click="equipItem('{{ $sItem->key }}')" wire:loading.attr="disabled"
-                                                    class="w-full py-1.5 rounded-btn text-xs font-mono font-bold bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-300 transition">
+                                                    class="w-full py-1.5 rounded-btn text-xs font-mono font-bold bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 transition">
                                                 {{ __('shop.equip') }}
                                             </button>
                                         @endif
                                     </div>
                                 @else
                                     <div class="text-[10px] font-mono text-mist pt-1 border-t border-ink-border/50 flex items-center justify-between">
-                                        <span>Miqdor: <strong class="text-amber-400">{{ $uItem->quantity }} ta</strong></span>
+                                        <span>Miqdor: <strong class="text-amber-700 dark:text-amber-400">{{ $uItem->quantity }} ta</strong></span>
                                         <span class="text-mist/70">Avtomatik sarflanadi</span>
+                                    </div>
                                     </div>
                                 @endif
                             </div>

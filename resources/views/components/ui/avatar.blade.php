@@ -54,13 +54,13 @@
     $frame = $user?->profile?->profile_theme ?? $user?->profile?->avatar_frame;
 
     $shopRing = match($frame) {
-        'aurora'   => 'ring-2 ring-teal-400/80 shadow-[0_0_10px_rgba(45,212,191,0.35)]',
-        'cyber'    => 'ring-2 ring-rose-500/80 shadow-[0_0_10px_rgba(244,63,94,0.35)]',
-        'gold'     => 'ring-2 ring-amber-400/80 shadow-[0_0_10px_rgba(245,158,11,0.35)]',
-        'emerald'  => 'ring-2 ring-emerald-400/80 shadow-[0_0_10px_rgba(52,211,153,0.35)]',
-        'obsidian' => 'ring-2 ring-purple-500/80 shadow-[0_0_10px_rgba(168,85,247,0.35)]',
-        'library'  => 'ring-2 ring-amber-600/80 shadow-[0_0_10px_rgba(217,119,6,0.3)]',
-        'sunset'   => 'ring-2 ring-orange-400/80 shadow-[0_0_10px_rgba(249,115,22,0.3)]',
+        'aurora'   => 'ring-2 ring-teal-500 dark:ring-teal-400/80 shadow-sm dark:shadow-[0_0_10px_rgba(45,212,191,0.35)]',
+        'cyber'    => 'ring-2 ring-rose-500 dark:ring-rose-500/80 shadow-sm dark:shadow-[0_0_10px_rgba(244,63,94,0.35)]',
+        'gold'     => 'ring-2 ring-amber-500 dark:ring-amber-400/80 shadow-sm dark:shadow-[0_0_10px_rgba(245,158,11,0.35)]',
+        'emerald'  => 'ring-2 ring-emerald-500 dark:ring-emerald-400/80 shadow-sm dark:shadow-[0_0_10px_rgba(52,211,153,0.35)]',
+        'obsidian' => 'ring-2 ring-purple-500 dark:ring-purple-500/80 shadow-sm dark:shadow-[0_0_10px_rgba(168,85,247,0.35)]',
+        'library'  => 'ring-2 ring-amber-700 dark:ring-amber-600/80 shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.3)]',
+        'sunset'   => 'ring-2 ring-orange-500 dark:ring-orange-400/80 shadow-sm dark:shadow-[0_0_10px_rgba(249,115,22,0.3)]',
         default    => null,
     };
 

@@ -9,7 +9,9 @@
 
     $payload = $item->payload ?? [];
     $accentColor = $item->safeColor('accent_color', $item->safeColor('color', $item->safeColor('badge_color', '#F59E0B')));
-    $bannerGradient = $payload['banner_gradient'] ?? 'bg-gradient-to-r from-ink-900 to-ink-950';
+    $visualTheme = \App\Services\Gamification\ProfileVisualService::THEMES[$item->key] ?? null;
+    $bannerGradient = $visualTheme['banner_gradient'] ?? ($payload['banner_gradient'] ?? 'bg-gradient-to-r from-ink-900 to-ink-950');
+    $bannerAmbient = $visualTheme['banner_ambient'] ?? (($payload['banner_ambient'] ?? '') !== 'none' ? ($payload['banner_ambient'] ?? '') : '');
     $canAfford = ($user->coin_balance >= $item->price_coins);
     $isConsumable = (bool) $item->is_consumable;
     $ownedQty = $isOwned ? $ownedItemsMap->get($item->id)->quantity : 0;
@@ -18,7 +20,7 @@
     }
 @endphp
 
-<div class="relative flex flex-col justify-between p-5 rounded-card border bg-ink-900/90 transition-all duration-base group hover:border-amber-500/40 hover:shadow-xl hover:shadow-black/20 {{ $isEquipped ? 'border-emerald-500/50 shadow-md shadow-emerald-950/20' : 'border-ink-border' }}">
+<div class="relative flex flex-col justify-between p-5 rounded-card border bg-white dark:bg-ink-900/90 transition-all duration-base group hover:border-amber-500/40 hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/20 {{ $isEquipped ? 'border-emerald-500/50 shadow-md shadow-emerald-500/10 dark:shadow-emerald-950/20' : 'border-slate-200 dark:border-ink-border' }}">
 
     {{-- Top Section --}}
     <div class="space-y-3.5">
@@ -33,7 +35,7 @@
                     Kiyilgan
                 </span>
             @elseif($isOwned && !$isConsumable)
-                <span class="px-2 py-0.5 rounded-badge bg-ink-800 border border-ink-border text-stone-700 dark:text-mist font-mono text-[10px] font-medium">
+                <span class="px-2 py-0.5 rounded-badge bg-slate-100 dark:bg-ink-800 border border-slate-200 dark:border-ink-border text-stone-700 dark:text-mist font-mono text-[10px] font-medium">
                     Sizda bor
                 </span>
             @elseif($isConsumable && $ownedQty > 0)
@@ -44,11 +46,11 @@
         </div>
 
         {{-- Visual Preview Thumbnail --}}
-        <div class="relative h-24 rounded-btn overflow-hidden border border-ink-border/80 flex items-center justify-center p-3 select-none {{ $bannerGradient }}"
-             style="background-image: {{ ($payload['banner_ambient'] ?? '') !== 'none' ? ($payload['banner_ambient'] ?? '') : '' }}">
+        <div class="relative h-24 rounded-btn overflow-hidden border border-slate-200 dark:border-ink-border/80 flex items-center justify-center p-3 select-none {{ $bannerGradient }}"
+             style="background-image: {{ $bannerAmbient }};">
             @if($item->category === 'bundle' || $item->slot === 'profile_theme')
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink-950/70 border border-ink-border/50 backdrop-blur-sm shadow-sm">
-                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $accentColor }}"></span>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/85 dark:bg-ink-950/70 border border-slate-200 dark:border-ink-border/50 backdrop-blur-sm shadow-sm">
+                    <span class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: {{ $accentColor }}"></span>
                     <span class="font-mono text-xs text-paper font-semibold">{{ $item->name_text }}</span>
                 </div>
             @elseif($item->slot === 'name_color')
@@ -151,7 +153,7 @@
                 <button wire:click="unequipSlot('{{ $item->category === 'bundle' ? 'all' : $item->slot }}')"
                         wire:loading.attr="disabled"
                         type="button"
-                        class="w-full py-2 rounded-btn bg-ink-800 border border-ink-border text-stone-700 dark:text-mist hover:text-paper text-xs font-medium transition-colors">
+                        class="w-full py-2 rounded-btn bg-slate-100 dark:bg-ink-800 border border-slate-200 dark:border-ink-border text-stone-700 dark:text-mist hover:text-paper text-xs font-medium transition-colors">
                     Yechish
                 </button>
             @elseif($isOwned && !$isConsumable)
@@ -165,7 +167,7 @@
                 <button wire:click="openPurchaseModal({{ $item->id }})"
                         @if(!$canAfford) disabled @endif
                         type="button"
-                        class="w-full py-2 rounded-btn text-xs font-bold transition-all inline-flex items-center justify-center gap-1.5 {{ $canAfford ? 'ks-btn-primary !text-white' : 'bg-ink-800 border border-ink-border text-stone-500 dark:text-mist/70 cursor-not-allowed font-medium' }}">
+                        class="w-full py-2 rounded-btn text-xs font-bold transition-all inline-flex items-center justify-center gap-1.5 {{ $canAfford ? 'ks-btn-primary !text-white' : 'bg-slate-100 dark:bg-ink-800 border border-slate-200 dark:border-ink-border text-stone-500 dark:text-mist/70 cursor-not-allowed font-medium' }}">
                     <span>Xarid qilish</span>
                 </button>
             @endif

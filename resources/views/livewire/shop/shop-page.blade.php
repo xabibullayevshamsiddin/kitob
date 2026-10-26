@@ -784,11 +784,12 @@
     {{-- ── 5. PREVIEW MODAL (Client-side interactive inspection) ── --}}
     @if($previewItem)
         @php
+            $visualTheme = \App\Services\Gamification\ProfileVisualService::THEMES[$previewItem->key] ?? null;
             $pPayload = $previewItem->payload ?? [];
             $previewAccent = $previewItem->safeColor('accent_color', $previewItem->safeColor('color', '#F59E0B'));
-            $pGradient = $pPayload['banner_gradient'] ?? 'bg-gradient-to-r from-ink-900 via-ink-950 to-ink-950';
-            $pAmbient = $pPayload['banner_ambient'] ?? 'none';
-            $pAvatarRing = $pPayload['avatar_ring'] ?? 'ring-2 ring-amber-400/80';
+            $pGradient = $visualTheme['banner_gradient'] ?? ($pPayload['banner_gradient'] ?? 'bg-gradient-to-r from-ink-900 via-ink-950 to-ink-950');
+            $pAmbient = $visualTheme['banner_ambient'] ?? ($pPayload['banner_ambient'] ?? 'none');
+            $pAvatarRing = $visualTheme['avatar_ring'] ?? ($pPayload['avatar_ring'] ?? 'ring-2 ring-amber-400/80');
         @endphp
         <div x-data="{
                 closing: false,
@@ -802,12 +803,12 @@
              class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-y-auto"
              :class="closing ? 'ks-backdrop-fade-out-anim' : 'ks-backdrop-fade-anim'"
              role="dialog" aria-modal="true" aria-labelledby="preview-modal-title">
-            <div class="relative w-full max-w-lg rounded-panel border border-ink-border/90 bg-ink-900/95 p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-xl space-y-6 my-auto"
+            <div class="relative w-full max-w-lg rounded-panel border border-slate-200 dark:border-ink-border/90 bg-white dark:bg-ink-900/95 p-6 shadow-2xl backdrop-blur-xl space-y-6 my-auto"
                  :class="closing ? 'ks-blur-out-dialog-anim' : 'ks-blur-dialog-anim'">
                 {{-- Header --}}
                 <div class="flex items-center justify-between border-b border-ink-border pb-3">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $previewAccent }}"></span>
+                        <span class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: {{ $previewAccent }}"></span>
                         <h3 id="preview-modal-title" class="font-serif font-bold text-lg text-paper">
                             {{ $previewItem->name_text }} (Ko‘rinishini sinash)
                         </h3>
@@ -818,7 +819,7 @@
                 </div>
 
                 {{-- Interactive Mock Preview Card --}}
-                <div class="relative overflow-hidden rounded-card border border-ink-border p-5 space-y-4 {{ $pGradient }}"
+                <div class="relative overflow-hidden rounded-card border border-slate-200 dark:border-ink-border p-5 space-y-4 {{ $pGradient }}"
                      style="background-image: {{ $pAmbient !== 'none' ? $pAmbient : '' }}">
                     <div class="flex items-center gap-4">
                         <img src="{{ $user->avatar_url }}"
@@ -844,8 +845,8 @@
                     {{-- Mock Chat Bubble Preview --}}
                     <div class="pt-2">
                         <div class="text-[10px] font-mono uppercase tracking-wider text-mist mb-1.5">Chatdagi xabar ko‘rinishi:</div>
-                        <div class="inline-block p-3 rounded-card text-xs font-sans max-w-sm"
-                             style="background-color: rgba(15, 23, 42, 0.85); border: 1px solid {{ $previewAccent }}60; color: #F8FAFC;">
+                        <div class="inline-block p-3 rounded-card text-xs font-sans max-w-sm bg-white/90 dark:bg-slate-900/90 border shadow-sm text-paper"
+                             style="border-color: {{ $previewAccent }}60;">
                             Salom! Bu yangi profil uslubingiz va vizual ko‘rinishingiz namunasidir.
                         </div>
                     </div>
