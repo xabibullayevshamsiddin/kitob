@@ -537,13 +537,13 @@
       maxShadowOpacity: isMobile ? 0.25 : 0.68,
       showCover: false,
       usePortrait: true,
-      mobileScrollSupport: true,
-      flippingTime: isMobile ? 450 : 780,
-      swipeDistance: 25,
-      showPageCorners: true,
+      mobileScrollSupport: false,
+      flippingTime: isMobile ? 350 : 780,
+      swipeDistance: 20,
+      showPageCorners: !isMobile,
       clickEventForward: true,
       useMouseEvents: true,
-      disableFlipByClick: false,
+      disableFlipByClick: isMobile,
       startPage: startIdx,
     });
 
@@ -570,8 +570,9 @@
     } catch (_) {}
 
     pageFlipInstance.on('flip', (e) => {
-      const idx = typeof e.data === 'number' ? e.data : 0;
+      const idx = typeof e.data === 'number' ? e.data : (pageFlipInstance.getCurrentPageIndex() || 0);
       const newPage = Math.max(1, Math.min(totalPages, idx + 1));
+      // Always sync to StPageFlip's actual reported index (handles user swipe via library too)
       currentPage = newPage;
       syncIndicators(currentPage);
       ensurePagesRenderedAround(currentPage);
@@ -1095,7 +1096,7 @@
     let startX = 0;
     let startY = 0;
     let startTime = 0;
-    let isSwiping = false;
+    let isTracking = false;
 
     const targetEl = rootEl || document.getElementById('fb-root');
     if (!targetEl || targetEl._hasTouchSwipeNav) return;
@@ -1106,12 +1107,22 @@
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       startTime = Date.now();
-      isSwiping = true;
+      isTracking = true;
     }, { passive: true });
 
+    targetEl.addEventListener('touchmove', (e) => {
+      // Gorizontal swipe aniqlansa, scroll'ni to'sish (faqat fullscreen rejimda)
+      if (!isTracking || e.touches.length !== 1) return;
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      if (dx > 12 && dx > dy * 1.5 && document.body.classList.contains('fb-mobile-fullscreen-active')) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
     targetEl.addEventListener('touchend', (e) => {
-      if (!isSwiping || e.changedTouches.length !== 1) return;
-      isSwiping = false;
+      if (!isTracking || e.changedTouches.length !== 1) return;
+      isTracking = false;
 
       const endX = e.changedTouches[0].clientX;
       const endY = e.changedTouches[0].clientY;
@@ -1119,13 +1130,13 @@
       const diffY = endY - startY;
       const timeElapsed = Date.now() - startTime;
 
-      // Agar gorizontal surish bo'lsa (diffX > 30px va diffX > diffY)
-      if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY) * 1.1 && timeElapsed < 650) {
+      // Gorizontal surish: diffX > 25px, diffX > diffY, vaqt < 700ms
+      if (Math.abs(diffX) > 25 && Math.abs(diffX) > Math.abs(diffY) * 1.2 && timeElapsed < 700) {
         if (diffX < 0) {
-          // Barmoq chapga surildi -> Keyingi sahifa
+          // Barmoq chapga surildi → Keyingi sahifa
           fbGoNext();
         } else {
-          // Barmoq o'ngga surildi -> Oldingi sahifa
+          // Barmoq o'ngga surildi → Oldingi sahifa
           fbGoPrev();
         }
       }
