@@ -562,11 +562,12 @@
                 </div>
 
                 @if($book->pdf_path)
-                    <a href="{{ route('books.flipbook', $book->id) }}"
-                        class="ks-btn-ghost py-1.5 px-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5"
+                    <button type="button"
+                        onclick="if (window.fbToggleFullscreen) { fbToggleFullscreen(); }"
+                        class="ks-btn-ghost py-1.5 px-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 cursor-pointer"
                         title="To'liq ekranda ochish">
                         <span>⛶ To'liq ekran</span>
-                    </a>
+                    </button>
                 @endif
 
                 @if($bookAiReady)

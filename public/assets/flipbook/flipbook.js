@@ -732,14 +732,20 @@
    */
   function calculateOptimalDimensions(baseViewport) {
     const isStandalone = !!document.getElementById('fb-standalone-container');
+    const isMfsActive = document.body.classList.contains('fb-mobile-fullscreen-active');
     const containerWidth = rootEl && rootEl.clientWidth ? rootEl.clientWidth : window.innerWidth;
     const containerHeight = window.innerHeight;
 
-    const paddingH = isMobile ? 20 : isStandalone ? 48 : 68;
-    const paddingV = isMobile ? 160 : isStandalone ? 125 : 145;
+    let paddingH = isMobile ? 20 : isStandalone ? 48 : 68;
+    let paddingV = isMobile ? 160 : isStandalone ? 125 : 145;
 
-    const availW = Math.max(280, containerWidth - paddingH);
-    const availH = Math.max(420, containerHeight - paddingV);
+    if (isMfsActive) {
+      paddingH = isMobile ? 4 : 24;
+      paddingV = isMobile ? 8 : 40;
+    }
+
+    const availW = Math.max(280, (isMfsActive && isMobile ? window.innerWidth : containerWidth) - paddingH);
+    const availH = Math.max(420, (isMfsActive && isMobile ? window.innerHeight : containerHeight) - paddingV);
 
     const pageAspect = baseViewport.width / baseViewport.height;
     const spreadAspect = isMobile ? pageAspect : pageAspect * 2;
@@ -799,6 +805,21 @@
     document.querySelectorAll('#fb-page-select').forEach((selectEl) => {
       selectEl.value = leftPage;
     });
+
+    const mfsPageText = document.getElementById('fb-mfs-page-text');
+    if (mfsPageText) {
+      mfsPageText.textContent = `${leftPage} / ${totalPages} sahifa`;
+    }
+    const mfsSlider = document.getElementById('fb-mfs-page-slider');
+    if (mfsSlider) {
+      mfsSlider.min = 1;
+      mfsSlider.max = totalPages;
+      mfsSlider.value = leftPage;
+    }
+    const mfsZoomText = document.getElementById('fb-mfs-zoom-text');
+    if (mfsZoomText) {
+      mfsZoomText.textContent = Math.round(zoomScale * 100) + '%';
+    }
 
     const visiblePages =
       isMobile || leftPage === rightPage ? [leftPage] : [leftPage, rightPage].filter((p) => p <= totalPages);
@@ -950,24 +971,161 @@
     rebuildStPageFlipBook();
   }
 
-  function fbToggleFullscreen() {
-    const target =
-      document.getElementById('fb-standalone-container') ||
-      (rootEl && rootEl.closest('.fb-stage-wrapper')) ||
-      rootEl;
-    if (!target) return;
+  function ensureMobileFullscreenUI() {
+    let overlay = document.getElementById('fb-mfs-overlay');
+    if (!overlay && rootEl) {
+      overlay = document.createElement('div');
+      overlay.id = 'fb-mfs-overlay';
+      overlay.className = 'fb-mfs-overlay';
+      overlay.style.display = 'none';
+      overlay.innerHTML = `
+        <!-- Floating top-left back button (<) -->
+        <button type="button" class="fb-mfs-back-btn" onclick="fbToggleFullscreen()" title="To'liq ekrandan chiqish">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
 
-    if (!document.fullscreenElement) {
-      if (target.requestFullscreen) {
-        target.requestFullscreen().catch(() => {});
-      } else if (target.webkitRequestFullscreen) {
-        target.webkitRequestFullscreen();
+        <!-- Floating page pill (e.g. 2 / 826 sahifa) -->
+        <div class="fb-mfs-page-pill" onclick="fbToggleMfsSlider()" title="Sahifalar slayderini ochish">
+          <span id="fb-mfs-page-text">${currentPage} / ${totalPages || 1} sahifa</span>
+        </div>
+
+        <!-- Quick Slider Popup -->
+        <div id="fb-mfs-slider-wrap" class="fb-mfs-slider-wrap" style="display: none;">
+          <input type="range" id="fb-mfs-page-slider" min="1" max="${totalPages || 1}" value="${currentPage}" class="fb-page-slider w-full">
+        </div>
+
+        <!-- Bottom Sleek Control Bar (Image 2 style) -->
+        <div class="fb-mfs-bottom-bar">
+          <button type="button" class="fb-mfs-bar-btn" onclick="fbCycleTheme()" title="Qog'oz rangi">
+            <span id="fb-mfs-theme-icon" style="font-size: 16px;">📜</span>
+          </button>
+          <button type="button" class="fb-mfs-bar-btn" onclick="fbGoPrev()" title="Oldingi sahifa">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <button type="button" class="fb-mfs-bar-btn" onclick="fbGoNext()" title="Keyingi sahifa">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button type="button" class="fb-mfs-bar-btn" onclick="fbToggleMfsZoom()" title="Kattalashtirish">
+            <span id="fb-mfs-zoom-text" class="text-[11px] font-mono font-bold text-amber-400">100%</span>
+          </button>
+          <button type="button" class="fb-mfs-bar-btn" onclick="if(typeof fbtOpen==='function') fbtOpen();" title="Matn rejimi">
+            <span class="font-serif font-bold text-sm">Aa</span>
+          </button>
+          <button type="button" class="fb-mfs-bar-btn" onclick="fbToggleFullscreen()" title="To'liq ekrandan chiqish">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `;
+      rootEl.appendChild(overlay);
+
+      const mfsSlider = overlay.querySelector('#fb-mfs-page-slider');
+      if (mfsSlider) {
+        mfsSlider.addEventListener('change', (e) => {
+          const val = parseInt(e.target.value, 10);
+          if (!isNaN(val) && val >= 1 && val <= totalPages) {
+            goToPage(val);
+          }
+        });
       }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
+
+      // Tap-to-toggle overlay on middle of book page
+      if (spreadEl) {
+        spreadEl.addEventListener('click', (e) => {
+          if (!document.body.classList.contains('fb-mobile-fullscreen-active')) return;
+          if (e.target.closest('button, input, select, a, .fb-nav-arrow, .fb-mfs-overlay')) return;
+          overlay.classList.toggle('is-hidden-controls');
+        });
       }
     }
+    return overlay;
+  }
+
+  function fbToggleMfsSlider() {
+    const wrap = document.getElementById('fb-mfs-slider-wrap');
+    if (!wrap) return;
+    wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function fbCycleTheme() {
+    const themes = ['ivory', 'sepia', 'night'];
+    const idx = themes.indexOf(currentPaperTheme);
+    const nextTheme = themes[(idx + 1) % themes.length];
+    fbSetPaperTheme(nextTheme);
+    const iconEl = document.getElementById('fb-mfs-theme-icon');
+    if (iconEl) {
+      iconEl.textContent = nextTheme === 'sepia' ? '🍵' : nextTheme === 'night' ? '🌙' : '📜';
+    }
+  }
+
+  function fbToggleMfsZoom() {
+    if (zoomScale > 1.2) {
+      zoomScale = 1.0;
+    } else {
+      zoomScale = 1.25;
+    }
+    updateZoomLabel();
+    const mfsZoom = document.getElementById('fb-mfs-zoom-text');
+    if (mfsZoom) mfsZoom.textContent = Math.round(zoomScale * 100) + '%';
+    clearPageCache();
+    rebuildStPageFlipBook();
+  }
+
+  function fbToggleFullscreen() {
+    const isMfs = document.body.classList.contains('fb-mobile-fullscreen-active');
+    if (isMfs) {
+      fbExitMobileFullscreen();
+    } else {
+      fbEnterMobileFullscreen();
+    }
+  }
+
+  function fbEnterMobileFullscreen() {
+    document.body.classList.add('fb-mobile-fullscreen-active');
+    document.documentElement.classList.add('fb-mobile-fullscreen-active');
+    ensureMobileFullscreenUI();
+    const overlay = document.getElementById('fb-mfs-overlay');
+    if (overlay) {
+      overlay.style.display = 'block';
+      overlay.classList.remove('is-hidden-controls');
+    }
+
+    // Brauzerning o'zini ham fullscreenga chaqirish (Android Chrome qo'llab-quvvatlasa)
+    try {
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      }
+    } catch (_) {}
+
+    syncIndicators(currentPage);
+    clearPageCache();
+    rebuildStPageFlipBook();
+  }
+
+  function fbExitMobileFullscreen() {
+    document.body.classList.remove('fb-mobile-fullscreen-active');
+    document.documentElement.classList.remove('fb-mobile-fullscreen-active');
+    const overlay = document.getElementById('fb-mfs-overlay');
+    if (overlay) overlay.style.display = 'none';
+    const sliderWrap = document.getElementById('fb-mfs-slider-wrap');
+    if (sliderWrap) sliderWrap.style.display = 'none';
+
+    try {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    } catch (_) {}
+
+    clearPageCache();
+    rebuildStPageFlipBook();
   }
 
   // Synchronize active classes on paper theme buttons
@@ -1083,6 +1241,11 @@
   window.fbZoomOut = fbZoomOut;
   window.fbZoomReset = fbZoomReset;
   window.fbToggleFullscreen = fbToggleFullscreen;
+  window.fbToggleMfsSlider = fbToggleMfsSlider;
+  window.fbCycleTheme = fbCycleTheme;
+  window.fbToggleMfsZoom = fbToggleMfsZoom;
+  window.fbEnterMobileFullscreen = fbEnterMobileFullscreen;
+  window.fbExitMobileFullscreen = fbExitMobileFullscreen;
   window.fbToggleSound = fbToggleSound;
   window.fbToggleAutoPlay = fbToggleAutoPlay;
   window.fbStopAutoPlay = fbStopAutoPlay;

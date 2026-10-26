@@ -18,7 +18,7 @@
     class="relative z-50">
 
     <!-- ── 1. Floating Live Reading / Viewing Timer Widget ── -->
-    <div class="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 select-none animate-fade-in"
+    <div class="reading-tracker-floating-widget fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 select-none animate-fade-in"
          x-show="isWidgetVisible"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-y-4 scale-95"

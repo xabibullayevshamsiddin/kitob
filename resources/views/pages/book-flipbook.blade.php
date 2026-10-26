@@ -142,8 +142,9 @@
             <button type="button" 
                     onclick="fbToggleFullscreen()" 
                     title="To'liq ekran (F11 yoki F)" 
-                    class="p-2 rounded-xl bg-ink-900 border border-ink-border text-mist hover:text-paper hover:border-amber-400/30 transition-all">
+                    class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                <span>To'liq ekran</span>
             </button>
 
             <!-- PDF Download -->

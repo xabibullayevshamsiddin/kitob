@@ -619,7 +619,7 @@ html.light #fb-page-select option {
 .fbt-panel {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 1000010;
   display: none;
   flex-direction: column;
   --fbt-bg: #0f1420;
@@ -878,4 +878,250 @@ html.light #fb-page-select option {
   border-top: 1px solid var(--fbt-border);
   position: relative;
   z-index: 20;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE FULLSCREEN IMMERSIVE READER (Image 2 style)
+   ══════════════════════════════════════════════════════════════════════ */
+body.fb-mobile-fullscreen-active,
+html.fb-mobile-fullscreen-active {
+  overflow: hidden !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: var(--fb-desk-bg, #070a12) !important;
+}
+
+body.fb-mobile-fullscreen-active header,
+body.fb-mobile-fullscreen-active footer,
+body.fb-mobile-fullscreen-active nav#mobile-bottom-nav,
+body.fb-mobile-fullscreen-active .ks-bottom-nav,
+body.fb-mobile-fullscreen-active .reading-tracker-floating-widget,
+body.fb-mobile-fullscreen-active #fb-standalone-container > div:first-child,
+body.fb-mobile-fullscreen-active .fb-controls-shelf,
+body.fb-mobile-fullscreen-active .fb-nav-arrow,
+body.fb-mobile-fullscreen-active #fb-standalone-container > div:not(#fb-root) {
+  display: none !important;
+}
+
+body.fb-mobile-fullscreen-active main {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+}
+
+body.fb-mobile-fullscreen-active #fb-standalone-container {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  gap: 0 !important;
+}
+
+body.fb-mobile-fullscreen-active #fb-root,
+body.fb-mobile-fullscreen-active .fb-stage-wrapper {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  z-index: 999990 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: var(--fb-desk-bg, #070a12) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.fb-mobile-fullscreen-active .fb-hardcover-casing {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.fb-mobile-fullscreen-active .fb-hardcover-casing::before,
+body.fb-mobile-fullscreen-active .fb-hardcover-casing::after,
+body.fb-mobile-fullscreen-active .fb-silk-ribbon,
+body.fb-mobile-fullscreen-active .fb-book-spine {
+  display: none !important;
+}
+
+body.fb-mobile-fullscreen-active .fb-book-spread {
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.fb-mobile-fullscreen-active .fb-stf-page {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body.fb-mobile-fullscreen-active .fb-stf-page-inner {
+  border-radius: 0 !important;
+}
+
+body.fb-mobile-fullscreen-active .fb-stf-page-img {
+  object-fit: contain !important;
+}
+
+/* ── Mobile Fullscreen Overlay Controls (Image 2 style) ── */
+.fb-mfs-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999995;
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fb-mfs-overlay.is-hidden-controls {
+  opacity: 0;
+}
+.fb-mfs-overlay.is-hidden-controls * {
+  pointer-events: none !important;
+}
+
+/* Floating top-left back button (<) */
+.fb-mfs-back-btn {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+.fb-mfs-back-btn:active {
+  transform: scale(0.92);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* Floating page pill (e.g. "2 / 826 sahifa") */
+.fb-mfs-page-pill {
+  position: absolute;
+  bottom: calc(max(70px, env(safe-area-inset-bottom, 70px)));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 26, 38, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f1f5f9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 18px;
+  border-radius: 9999px;
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+.fb-mfs-page-pill:active {
+  transform: translateX(-50%) scale(0.95);
+  background: rgba(20, 26, 38, 0.98);
+}
+
+/* Floating page quick slider (pops up when pill is clicked) */
+.fb-mfs-slider-wrap {
+  position: absolute;
+  bottom: calc(max(110px, env(safe-area-inset-bottom, 110px)));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(320px, calc(100vw - 40px));
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 10px 16px;
+  pointer-events: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+  z-index: 1000000;
+}
+
+/* Floating bottom bar (Image 2 style) */
+.fb-mfs-bottom-bar {
+  position: absolute;
+  bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, calc(100vw - 28px));
+  height: 48px;
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  pointer-events: auto;
+}
+
+.fb-mfs-bar-btn {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 0;
+}
+.fb-mfs-bar-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+}
+.fb-mfs-bar-btn:active {
+  transform: scale(0.9);
+  color: #f59e0b;
 }
