@@ -859,14 +859,20 @@
     if (!pdfDoc || !pageFlipInstance) return;
     settleRunningAnimation();
 
-    const idx = pageFlipInstance.getCurrentPageIndex();
-    if (idx >= totalPages - 1) return;
+    // Use currentPage (1-based) as source of truth — getCurrentPageIndex() may lag
+    if (currentPage >= totalPages) return;
 
     playPaperTurnSound();
 
     if (isMobile || prefersReducedMotion()) {
-      pageFlipInstance.turnToNextPage();
-      currentPage = Math.min(totalPages, idx + 2);
+      const targetPage = Math.min(totalPages, currentPage + 1);
+      const targetIdx = targetPage - 1;
+      try {
+        pageFlipInstance.turnToPage(targetIdx);
+      } catch (_) {
+        try { pageFlipInstance.turnToNextPage(); } catch (__) {}
+      }
+      currentPage = targetPage;
       syncIndicators(currentPage);
       ensurePagesRenderedAround(currentPage);
     } else {
@@ -875,7 +881,7 @@
       const pageW = Math.max(160, Math.round(singlePageW));
       const pageH = Math.max(220, Math.round(singlePageH));
 
-      const nextPage1 = idx + 3;
+      const nextPage1 = currentPage + 2;
       const nextPage2 = nextPage1 + 1;
       Promise.allSettled(
         [nextPage1, nextPage2]
@@ -898,14 +904,20 @@
     if (!pdfDoc || !pageFlipInstance) return;
     settleRunningAnimation();
 
-    const idx = pageFlipInstance.getCurrentPageIndex();
-    if (idx <= 0) return;
+    // Use currentPage (1-based) as source of truth — getCurrentPageIndex() may lag
+    if (currentPage <= 1) return;
 
     playPaperTurnSound();
 
     if (isMobile || prefersReducedMotion()) {
-      pageFlipInstance.turnToPrevPage();
-      currentPage = Math.max(1, idx);
+      const targetPage = Math.max(1, currentPage - 1);
+      const targetIdx = targetPage - 1;
+      try {
+        pageFlipInstance.turnToPage(targetIdx);
+      } catch (_) {
+        try { pageFlipInstance.turnToPrevPage(); } catch (__) {}
+      }
+      currentPage = targetPage;
       syncIndicators(currentPage);
       ensurePagesRenderedAround(currentPage);
     } else {
@@ -914,8 +926,8 @@
       const pageW = Math.max(160, Math.round(singlePageW));
       const pageH = Math.max(220, Math.round(singlePageH));
 
-      const prevPage1 = Math.max(1, idx - 1);
-      const prevPage2 = Math.max(1, idx - 2);
+      const prevPage1 = Math.max(1, currentPage - 2);
+      const prevPage2 = Math.max(1, currentPage - 3);
       Promise.allSettled([prevPage1, prevPage2].map((p) => renderSinglePdfPage(p, pageW, pageH)));
 
       try {
