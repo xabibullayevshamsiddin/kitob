@@ -21,7 +21,7 @@
                 Xush kelibsiz, <span class="text-amber-400">{{ auth()->user()->name ?? 'Admin' }}</span>!
             </h1>
             <p class="text-mist text-xs sm:text-sm mt-1 font-sans">
-                Kitobxon boshqaruv konsoli — platforma ko'rsatkichlari, foydalanuvchilar va materiallar nazorati.
+                Davra_books boshqaruv konsoli — platforma ko'rsatkichlari, foydalanuvchilar va materiallar nazorati.
             </p>
         </div>
         <div class="hidden md:flex items-center justify-center w-14 h-14 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400">

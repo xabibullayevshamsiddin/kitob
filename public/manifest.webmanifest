@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Kitobxon — Offline mutolaa",
-  "short_name": "Kitobxon",
-  "description": "Kitobxon platformasi uchun oflayn yordam sahifasi.",
+  "name": "Davra_books — Mutolaa ekotizimi",
+  "short_name": "Davra_books",
+  "description": "Davra_books platformasi uchun oflayn yordam sahifasi.",
   "lang": "uz-Latn",
   "start_url": "./",
   "scope": "./",

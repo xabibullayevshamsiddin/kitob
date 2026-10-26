@@ -475,7 +475,7 @@
                                         @else
                                             <div class="w-full h-full bg-gradient-to-br from-ink-900 via-ink-800 to-ink-950 p-5 sm:p-6 flex flex-col justify-between border border-amber-500/20">
                                                 <div>
-                                                    <span class="font-mono text-[10px] text-amber-400 tracking-wider uppercase block">Kitobxon Exclusive</span>
+                                                    <span class="font-mono text-[10px] text-amber-400 tracking-wider uppercase block">Davra_books Exclusive</span>
                                                     <h3 class="font-serif text-base sm:text-lg font-bold text-paper mt-2">{{ $scrollyTitle }}</h3>
                                                     <p class="text-xs text-mist font-sans mt-1">{{ $scrollyAuthor }}</p>
                                                 </div>
@@ -570,7 +570,7 @@
 
                                         <!-- Running Footer -->
                                         <div class="shrink-0 border-t border-[#D9D2C5]/80 pt-1 sm:pt-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-[#8B9BAD]">
-                                            <span>Kitobxon</span>
+                                            <span>Davra_books</span>
                                             <span class="font-serif italic text-[#526071] font-semibold">{{ __('site.home.page_num', ['num' => 1]) }}</span>
                                             <span class="text-amber-700 font-semibold">{{ __('site.home.page_next_hint', ['num' => 2]) }}</span>
                                         </div>
@@ -637,7 +637,7 @@
 
                                         <!-- Footer -->
                                         <div class="shrink-0 border-t border-[#D9D2C5]/80 pt-1 sm:pt-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-[#8B9BAD]">
-                                            <span>Kitobxon</span>
+                                            <span>Davra_books</span>
                                             <span class="font-serif italic text-[#526071] font-semibold">{{ __('site.home.page_num', ['num' => 2]) }}</span>
                                             <span class="text-amber-700 font-semibold">{{ __('site.home.page_next_hint', ['num' => 3]) }}</span>
                                         </div>
@@ -706,7 +706,7 @@
 
                                         <!-- Running Footer -->
                                         <div class="shrink-0 border-t border-[#D9D2C5]/80 pt-1 sm:pt-1.5 flex items-center justify-between text-[7px] sm:text-[9px] font-mono text-[#8B9BAD]">
-                                            <span>Kitobxon</span>
+                                            <span>Davra_books</span>
                                             <span class="font-serif italic text-[#526071] font-semibold">{{ __('site.home.page_num', ['num' => 3]) }}</span>
                                             <span>№ {{ $scrollyBook->week_number ?? 1 }}</span>
                                         </div>

@@ -97,10 +97,10 @@
                             Platforma nomi (APP_NAME) <span class="text-rose-400">*</span>
                         </label>
                         <input type="text" name="app_name"
-                               value="{{ old('app_name', setting('app_name', config('app.name', 'Kitobxon'))) }}"
+                               value="{{ old('app_name', setting('app_name', config('app.name', 'Davra_books'))) }}"
                                required
                                class="w-full px-3.5 py-2.5 bg-ink-800 border border-ink-border rounded-input text-sm text-paper focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
-                               placeholder="Kitobxon">
+                               placeholder="Davra_books">
                         @error('app_name') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                     </div>
 
@@ -110,10 +110,10 @@
                             Aloqa email manzili <span class="text-rose-400">*</span>
                         </label>
                         <input type="email" name="contact_email"
-                               value="{{ old('contact_email', setting('contact_email', env('MAIL_FROM_ADDRESS', 'admin@kitobxon.uz'))) }}"
+                               value="{{ old('contact_email', setting('contact_email', env('MAIL_FROM_ADDRESS', 'admin@davrabooks.uz'))) }}"
                                required
                                class="w-full px-3.5 py-2.5 bg-ink-800 border border-ink-border rounded-input text-sm text-paper focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
-                               placeholder="admin@kitobxon.uz">
+                               placeholder="admin@davrabooks.uz">
                         @error('contact_email') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                     </div>
 
@@ -165,9 +165,9 @@
                             Telegram kanal / aloqa
                         </label>
                         <input type="text" name="telegram_channel"
-                               value="{{ old('telegram_channel', setting('telegram_channel', '@kitobxon_uz')) }}"
+                               value="{{ old('telegram_channel', setting('telegram_channel', '@davra_books')) }}"
                                class="w-full px-3.5 py-2.5 bg-ink-800 border border-ink-border rounded-input text-sm text-paper focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
-                               placeholder="@kitobxon_uz">
+                               placeholder="@davra_books">
                     </div>
                 </div>
 
@@ -177,9 +177,9 @@
                         Xush kelibsiz tabrigi (Bosh sahifa va bildirishnomalar uchun)
                     </label>
                     <input type="text" name="welcome_message"
-                           value="{{ old('welcome_message', setting('welcome_message', 'Kitobxon platformasiga xush kelibsiz! Har kuni yangi bilimlar tomon intiling.')) }}"
+                           value="{{ old('welcome_message', setting('welcome_message', 'Davra_books platformasiga xush kelibsiz! Har kuni yangi bilimlar tomon intiling.')) }}"
                            class="w-full px-3.5 py-2.5 bg-ink-800 border border-ink-border rounded-input text-sm text-paper focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
-                           placeholder="Kitobxon platformasiga xush kelibsiz!">
+                           placeholder="Davra_books platformasiga xush kelibsiz!">
                 </div>
             </div>
         </div>

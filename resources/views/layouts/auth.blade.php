@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Kitobxon') }} — @yield('title', 'Kirish / Ro\'yxatdan o\'tish')</title>
+    <title>{{ config('app.name', 'Davra_books') }} — @yield('title', 'Kirish / Ro\'yxatdan o\'tish')</title>
 
     @include('partials.design-system')
 
@@ -83,10 +83,10 @@
             <div class="hidden lg:flex {{ $isOnboardingRoute ? 'lg:col-span-4' : 'lg:col-span-5' }} flex-col justify-between space-y-8 pr-4">
                 <a href="{{ url('/') }}" class="inline-flex items-center gap-3 group">
                     <span class="w-10 h-10 rounded-xl overflow-hidden bg-white p-0.5 border border-ink-border flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
-                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Kitobxon" class="w-full h-full object-contain rounded-lg">
+                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Davra_books" class="w-full h-full object-contain rounded-lg">
                     </span>
                     <div>
-                        <span class="text-2xl font-bold font-serif text-paper block leading-tight">Kitobxon</span>
+                        <span class="text-2xl font-bold font-serif text-paper block leading-tight">Davra_books</span>
                         <span class="text-[10px] font-mono uppercase tracking-widest text-mist">{{ $brandSubtitle }}</span>
                     </div>
                 </a>
@@ -121,7 +121,7 @@
                         <span class="w-7 h-7 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </span>
-                        <span>Kitobxon</span>
+                        <span>Davra_books</span>
                     </a>
                     <div class="ml-auto flex items-center gap-2">
                         <x-lang-switcher />
@@ -149,7 +149,7 @@
                 </div>
 
                 <div class="mt-6 text-center text-xs font-mono text-mist">
-                    &copy; {{ date('Y') }} Kitobxon. {{ __('site.footer.rights') }}.
+                    &copy; {{ date('Y') }} Davra_books. {{ __('site.footer.rights') }}.
                 </div>
             </div>
 

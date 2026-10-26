@@ -39,9 +39,9 @@
         --ink-950-rgb: 245 248 251;       /* #F5F8FB: Crisp ocean slate canvas matching the logo aesthetic */
         --ink-900-rgb: 255 255 255;       /* #FFFFFF: Pure white card & surface */
         --ink-800-rgb: 237 243 248;       /* #EDF3F8: Soft slate wells, badges & ghost pills */
-        --ink-700-rgb: 221 231 241;       /* #DDE7F1: Subtle hover & border */
-        --ink-600-rgb: 202 216 231;       /* #CAD8E7: Active / divider */
-        --ink-border-rgb: 222 231 240;    /* #DEE7F0: Clean hairline border */
+        --ink-700-rgb: 226 232 240;       /* #E2E8F0: Slate-200 */
+        --ink-600-rgb: 203 213 225;       /* #CBD5E1: Slate-300 */
+        --ink-border-rgb: 203 213 225;    /* #CBD5E1: Crisp, clearly visible slate-300 border */
 
         --paper-rgb: 12 28 54;            /* #0C1C36: Deep oceanic navy ink (from logo's "D") */
         --paper-50-rgb: 8 19 38;          /* #081326: Deepest navy text */
@@ -56,7 +56,7 @@
         --surface-muted-rgb: 242 246 250;
         --surface-dark-rgb: 255 255 255;
         --surface-dark-card-rgb: 245 248 251;
-        --surface-dark-border-rgb: 222 231 240;
+        --surface-dark-border-rgb: 203 213 225;
 
         --slate-750-rgb: 235 241 248;
         --slate-850-rgb: 245 248 251;

@@ -6,7 +6,7 @@
 <div class="max-w-4xl mx-auto h-[calc(100vh-8rem)] flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-soft overflow-hidden"
      x-data="{
          messages: [
-             { id: 1, name: 'Kitobxon Admin', username: 'admin', role: 'admin', text: 'Assalomu alaykum aziz kitobxonlar! Ushbu haftadagi «Atom Odatlar» kitobi muhokamasiga xush kelibsiz! 🎉', time: '18:30', avatar: 'https://ui-avatars.com/api/?name=Admin&background=4f46e5&color=fff' },
+             { id: 1, name: 'Davra_books Admin', username: 'admin', role: 'admin', text: 'Assalomu alaykum aziz kitobxonlar! Ushbu haftadagi «Atom Odatlar» kitobi muhokamasiga xush kelibsiz! 🎉', time: '18:30', avatar: 'https://ui-avatars.com/api/?name=Admin&background=4f46e5&color=fff' },
              { id: 2, name: 'Ali Valiyev', username: 'ali_valiyev', role: 'reader', text: 'Va alaykum assalom! 1-bobdagi 1% lik qoida judayam kuchli fikr ekan, bugundan kunlik odatlarimni qayta ko\'rib chiqyapman.', time: '18:42', avatar: 'https://ui-avatars.com/api/?name=Ali+Valiyev&background=6366f1&color=fff' }
          ],
          newMessage: '',

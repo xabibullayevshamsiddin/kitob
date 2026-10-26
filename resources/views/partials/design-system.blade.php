@@ -185,9 +185,9 @@
         --ink-950-rgb: 245 248 251;       /* #F5F8FB: Crisp ocean slate canvas matching the logo aesthetic */
         --ink-900-rgb: 255 255 255;       /* #FFFFFF: Pure white card & surface */
         --ink-800-rgb: 237 243 248;       /* #EDF3F8: Soft slate wells, badges & ghost pills */
-        --ink-700-rgb: 221 231 241;       /* #DDE7F1: Subtle hover & border */
-        --ink-600-rgb: 202 216 231;       /* #CAD8E7: Active / divider */
-        --ink-border-rgb: 222 231 240;    /* #DEE7F0: Clean hairline border */
+        --ink-700-rgb: 226 232 240;       /* #E2E8F0: Slate-200 */
+        --ink-600-rgb: 203 213 225;       /* #CBD5E1: Slate-300 */
+        --ink-border-rgb: 203 213 225;    /* #CBD5E1: Crisp, clearly visible slate-300 border */
 
         --paper-rgb: 12 28 54;            /* #0C1C36: Deep oceanic navy ink (from logo's "D") */
         --paper-50-rgb: 8 19 38;          /* #081326: Deepest navy text */
@@ -202,7 +202,7 @@
         --surface-muted-rgb: 242 246 250;
         --surface-dark-rgb: 255 255 255;
         --surface-dark-card-rgb: 245 248 251;
-        --surface-dark-border-rgb: 222 231 240;
+        --surface-dark-border-rgb: 203 213 225;
 
         --slate-750-rgb: 235 241 248;
         --slate-850-rgb: 245 248 251;
@@ -246,7 +246,7 @@
 
     /* Native select (light) */
     html.light:not(.force-dark) select {
-        background-color: #FFFFFF; color: #0C1C36; border-color: #DEE7F0;
+        background-color: #FFFFFF; color: #0C1C36; border-color: #CBD5E1 !important;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234B617D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     }
     html.light:not(.force-dark) select option { background-color: #FFFFFF; color: #0C1C36; }
@@ -255,17 +255,17 @@
     html.light:not(.force-dark) .ks-card,
     html.light:not(.force-dark) .ks-panel {
         background-color: #FFFFFF;
-        border-color: #DEE7F0;
+        border-color: #CBD5E1 !important;
         box-shadow: 0 2px 12px -2px rgba(12, 28, 54, 0.05), 0 1px 3px 0 rgba(12, 28, 54, 0.02);
     }
     html.light:not(.force-dark) .ks-input {
         background-color: #FFFFFF;
-        border-color: #DEE7F0;
+        border-color: #CBD5E1 !important;
         color: #0C1C36;
     }
     html.light:not(.force-dark) .ks-input:focus {
         background-color: #FFFFFF;
-        border-color: #00A8B5;
+        border-color: #00A8B5 !important;
         box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.16);
     }
 
@@ -273,8 +273,29 @@
     html.light:not(.force-dark) .shadow-popover,
     html.light:not(.force-dark) .header-dropdown-menu {
         background-color: #FFFFFF !important;
-        border-color: #DEE7F0 !important;
+        border-color: #CBD5E1 !important;
         box-shadow: 0 16px 40px -6px rgba(12, 28, 54, 0.14), 0 2px 8px rgba(12, 28, 54, 0.05) !important;
+    }
+
+    /* Crisp visible borders across all elements in Light Mode */
+    html.light:not(.force-dark) .border-ink-border {
+        border-color: #CBD5E1 !important;
+    }
+    html.light:not(.force-dark) .border-ink-border\/40,
+    html.light:not(.force-dark) .border-ink-border\/50,
+    html.light:not(.force-dark) .border-ink-border\/60 {
+        border-color: #CBD5E1 !important;
+    }
+    html.light:not(.force-dark) .ks-rule {
+        background-color: #CBD5E1 !important;
+    }
+    html.light:not(.force-dark) hr {
+        border-color: #CBD5E1 !important;
+    }
+    html.light:not(.force-dark) table,
+    html.light:not(.force-dark) th,
+    html.light:not(.force-dark) td {
+        border-color: #CBD5E1 !important;
     }
 
     /* ══════════════════════════════════════════════════════════════════ */
@@ -321,12 +342,12 @@
     html.light:not(.force-dark) .ks-btn-ghost {
         background-color: #FFFFFF !important;
         color: #0C1C36 !important;
-        border: 1px solid #DEE7F0 !important;
+        border: 1px solid #CBD5E1 !important;
         box-shadow: 0 1px 3px rgba(12, 28, 54, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
     }
     html.light:not(.force-dark) .ks-btn-ghost:hover {
         background-color: #EDF3F8 !important;
-        border-color: #CAD8E7 !important;
+        border-color: #94A3B8 !important;
         color: #0C1C36 !important;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px -2px rgba(12, 28, 54, 0.08) !important;
@@ -349,12 +370,12 @@
     /* Spotlight cards & sections in Light Mode */
     html.light:not(.force-dark) .spotlight-card {
         background: #FFFFFF !important;
-        border-color: #DEE7F0 !important;
+        border-color: #CBD5E1 !important;
         box-shadow: 0 4px 18px -4px rgba(12, 28, 54, 0.06) !important;
     }
     html.light:not(.force-dark) .faq-item {
         background: #FFFFFF !important;
-        border-color: #DEE7F0 !important;
+        border-color: #CBD5E1 !important;
         box-shadow: 0 2px 8px rgba(12, 28, 54, 0.03) !important;
     }
     html.light:not(.force-dark) .noise-bg {

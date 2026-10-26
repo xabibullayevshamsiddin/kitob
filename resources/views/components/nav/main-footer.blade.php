@@ -10,11 +10,11 @@
 
             <!-- Col 1: Brand Info & Editorial Quote (Spans 2 cols on lg) -->
             <div class="lg:col-span-2 space-y-4">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 text-paper font-serif font-bold text-xl tracking-tight group" aria-label="Kitobxon bosh sahifa">
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 text-paper font-serif font-bold text-xl tracking-tight group" aria-label="Davra_books bosh sahifa">
                     <span class="w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-ink-border flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm">
-                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Kitobxon" class="w-full h-full object-contain rounded-md">
+                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Davra_books" class="w-full h-full object-contain rounded-md">
                     </span>
-                    <span class="text-paper group-hover:text-cyan-500 transition-colors font-serif">Kitobxon</span>
+                    <span class="text-paper group-hover:text-cyan-500 transition-colors font-serif">Davra_books</span>
                 </a>
 
                 <p class="text-xs sm:text-sm text-mist leading-relaxed max-w-sm font-sans">
@@ -161,7 +161,7 @@
         <!-- Bottom Copyright Bar -->
         <div class="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-mist font-mono text-center sm:text-left">
             <div class="flex items-center gap-2">
-                <span class="font-semibold text-paper font-serif">Kitobxon</span>
+                <span class="font-semibold text-paper font-serif">Davra_books</span>
                 <span>•</span>
                 <span>© {{ date('Y') }} {{ __('site.footer.all_rights_reserved') }}</span>
             </div>

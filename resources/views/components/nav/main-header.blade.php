@@ -40,12 +40,12 @@
     <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-1.5 sm:gap-3">
 
         {{-- Logo: Yangi brend logosi + so'z belgisi --}}
-        <a href="{{ route('home') }}" class="flex items-center gap-2.5 group shrink-0" aria-label="Kitobxon">
+        <a href="{{ route('home') }}" class="flex items-center gap-2.5 group shrink-0" aria-label="Davra_books">
             <span class="header-logo-badge w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-base shadow-sm border border-ink-border bg-white p-0.5">
-                <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Kitobxon" class="w-full h-full object-contain rounded-lg">
+                <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" onerror="this.onerror=null;this.src='{{ asset('images/logo.png') }}';" alt="Davra_books" class="w-full h-full object-contain rounded-lg">
             </span>
             <span class="hidden sm:flex flex-col leading-none">
-                <span class="font-display font-semibold text-paper text-[1.15rem] tracking-[-0.01em] transition-colors duration-base group-hover:text-cyan-600 dark:group-hover:text-cyan-400">Kitobxon</span>
+                <span class="font-display font-semibold text-paper text-[1.15rem] tracking-[-0.01em] transition-colors duration-base group-hover:text-cyan-600 dark:group-hover:text-cyan-400">Davra_books</span>
                 <span class="font-mono text-[9px] text-mist uppercase tracking-[0.18em] mt-1">{{ __('site.common.platform') }}</span>
             </span>
         </a>
@@ -669,42 +669,45 @@ html.light:not(.force-dark) .group:hover .header-logo-badge {
     color: #ffffff !important;
 }
 
-html #site-header.is-hero-header nav a,
-html #site-header.is-hero-header nav button,
-html.light #site-header.is-hero-header nav a,
-html.light #site-header.is-hero-header nav button,
-html.dark #site-header.is-hero-header nav a,
-html.dark #site-header.is-hero-header nav button,
-#site-header.is-hero-header nav a,
-#site-header.is-hero-header nav button {
+html #site-header.is-hero-header nav > a,
+html #site-header.is-hero-header nav > div > button,
+html.light #site-header.is-hero-header nav > a,
+html.light #site-header.is-hero-header nav > div > button,
+html.dark #site-header.is-hero-header nav > a,
+html.dark #site-header.is-hero-header nav > div > button,
+#site-header.is-hero-header nav > a,
+#site-header.is-hero-header nav > div > button {
     color: rgba(255, 255, 255, 0.95) !important;
 }
-html #site-header.is-hero-header nav a:hover,
-html #site-header.is-hero-header nav button:hover,
-html.light #site-header.is-hero-header nav a:hover,
-html.light #site-header.is-hero-header nav button:hover,
-html.dark #site-header.is-hero-header nav a:hover,
-html.dark #site-header.is-hero-header nav button:hover,
-#site-header.is-hero-header nav a:hover,
-#site-header.is-hero-header nav button:hover {
+html #site-header.is-hero-header nav > a:hover,
+html #site-header.is-hero-header nav > div > button:hover,
+html.light #site-header.is-hero-header nav > a:hover,
+html.light #site-header.is-hero-header nav > div > button:hover,
+html.dark #site-header.is-hero-header nav > a:hover,
+html.dark #site-header.is-hero-header nav > div > button:hover,
+#site-header.is-hero-header nav > a:hover,
+#site-header.is-hero-header nav > div > button:hover {
     color: #ffffff !important;
 }
-html #site-header.is-hero-header nav a[aria-current="page"],
-html.light #site-header.is-hero-header nav a[aria-current="page"],
-html.dark #site-header.is-hero-header nav a[aria-current="page"],
-#site-header.is-hero-header nav a[aria-current="page"] {
+html #site-header.is-hero-header nav > a[aria-current="page"],
+html.light #site-header.is-hero-header nav > a[aria-current="page"],
+html.dark #site-header.is-hero-header nav > a[aria-current="page"],
+#site-header.is-hero-header nav > a[aria-current="page"] {
     color: #ffffff !important;
     font-weight: 600 !important;
 }
 
+#site-header.is-hero-header a[aria-label="Davra_books"] span.font-display,
 #site-header.is-hero-header a[aria-label="Kitobxon"] span.font-display {
     color: #ffffff !important;
 }
+#site-header.is-hero-header a[aria-label="Davra_books"] span.font-mono,
 #site-header.is-hero-header a[aria-label="Kitobxon"] span.font-mono {
     color: rgba(255, 255, 255, 0.7) !important;
 }
+#site-header.is-hero-header a[aria-label="Davra_books"]:hover span.font-display,
 #site-header.is-hero-header a[aria-label="Kitobxon"]:hover span.font-display {
-    color: #f59e0b !important;
+    color: #00A8B5 !important;
 }
 
 #site-header.is-hero-header .header-theme-btn {
@@ -810,7 +813,7 @@ html.dark #site-header.is-hero-header nav a[aria-current="page"],
 /* ── Brand Navy & Teal Light Mode Header (Scrolled or Subpages) ── */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) {
     background-color: rgba(255, 255, 255, 0.96) !important;
-    border-bottom: 1px solid #DEE7F0 !important;
+    border-bottom: 1px solid #CBD5E1 !important;
     box-shadow: 0 4px 20px -2px rgba(12, 28, 54, 0.06) !important;
     --paper-rgb: 12 28 54 !important;
     --paper-50-rgb: 8 19 38 !important;
@@ -819,7 +822,7 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) {
     --paper-muted-rgb: 71 95 125 !important;
     --mist-rgb: 75 97 125 !important;
     --mist-600-rgb: 47 70 98 !important;
-    --ink-border-rgb: 222 231 240 !important;
+    --ink-border-rgb: 203 213 225 !important;
     --ink-900-rgb: 255 255 255 !important;
     --ink-800-rgb: 237 243 248 !important;
     --ink-700-rgb: 221 231 241 !important;
@@ -827,15 +830,15 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) {
 }
 
 /* Nav links in Light Mode (Scrolled / Subpages) */
-html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a,
-html.light:not(.force-dark) #site-header:not(.is-hero-header) nav button {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav > a,
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav > div > button {
     color: #475F7D !important;
 }
-html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a:hover,
-html.light:not(.force-dark) #site-header:not(.is-hero-header) nav button:hover {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav > a:hover,
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav > div > button:hover {
     color: #0A1C3C !important;
 }
-html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a[aria-current="page"] {
+html.light:not(.force-dark) #site-header:not(.is-hero-header) nav > a[aria-current="page"] {
     color: #0A1C3C !important;
     font-weight: 600 !important;
 }
@@ -844,12 +847,15 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) nav a span.bg-ambe
 }
 
 /* Logo in Light Mode */
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Davra_books"] span.font-display,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"] span.font-display {
     color: #0C1C36 !important;
 }
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Davra_books"] span.font-mono,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"] span.font-mono {
     color: #475F7D !important;
 }
+html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Davra_books"]:hover span.font-display,
 html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kitobxon"]:hover span.font-display {
     color: #00A8B5 !important;
 }
@@ -857,13 +863,14 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) a[aria-label="Kito
 /* Buttons and Controls in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn {
     background-color: #EDF3F8 !important;
-    border-color: #DEE7F0 !important;
+    border-color: #CBD5E1 !important;
     color: #0C1C36 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn:hover {
-    background-color: #DEE7F0 !important;
+    background-color: #E2E8F0 !important;
+    border-color: #94A3B8 !important;
     color: #0A1C3C !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn svg {
@@ -872,13 +879,14 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-theme-btn 
 
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn {
     background-color: #EDF3F8 !important;
-    border-color: #DEE7F0 !important;
+    border-color: #CBD5E1 !important;
     color: #0C1C36 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn:hover {
-    background-color: #DEE7F0 !important;
+    background-color: #E2E8F0 !important;
+    border-color: #94A3B8 !important;
     color: #0A1C3C !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-lang-btn svg {
@@ -926,13 +934,14 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) a[title*="Notifica
 /* Avatar button in Light Mode */
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn {
     background-color: #EDF3F8 !important;
-    border-color: #DEE7F0 !important;
+    border-color: #CBD5E1 !important;
     color: #0C1C36 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn:hover {
-    background-color: #DEE7F0 !important;
+    background-color: #E2E8F0 !important;
+    border-color: #94A3B8 !important;
 }
 html.light:not(.force-dark) #site-header:not(.is-hero-header) .header-avatar-btn span {
     color: #0C1C36 !important;
@@ -957,31 +966,64 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) button[aria-label*
 html.light:not(.force-dark) #site-header .header-dropdown-menu,
 html.light:not(.force-dark) #site-header [class*="shadow-popover"],
 html.light:not(.force-dark) #site-header [x-show="mobileMenu"] {
-    --paper-rgb: 28 25 22 !important;
-    --paper-50-rgb: 20 18 16 !important;
-    --paper-100-rgb: 28 25 22 !important;
-    --paper-200-rgb: 46 41 36 !important;
-    --paper-muted-rgb: 92 85 75 !important;
-    --mist-rgb: 107 99 88 !important;
-    --mist-600-rgb: 78 72 63 !important;
-    --ink-border-rgb: 224 217 205 !important;
-    --ink-800-rgb: 249 246 240 !important;
-    --ink-700-rgb: 236 230 219 !important;
+    --paper-rgb: 12 28 54 !important;
+    --paper-50-rgb: 7 18 36 !important;
+    --paper-100-rgb: 12 28 54 !important;
+    --paper-200-rgb: 26 43 74 !important;
+    --paper-muted-rgb: 71 95 125 !important;
+    --mist-rgb: 75 97 125 !important;
+    --mist-600-rgb: 47 70 98 !important;
+    --ink-border-rgb: 203 213 225 !important;
+    --ink-800-rgb: 255 255 255 !important;
+    --ink-700-rgb: 241 245 249 !important;
 }
 
 html.light:not(.force-dark) #site-header .header-dropdown-menu,
 html.light:not(.force-dark) #site-header [class*="shadow-popover"] {
-    background-color: #FAF6EF !important;
-    border-color: #DDD4C4 !important;
-    color: #1C1916 !important;
-    box-shadow: 0 16px 40px -6px rgba(28, 25, 22, 0.22), 0 2px 8px rgba(28, 25, 22, 0.08), 0 0 0 1px rgba(28, 25, 22, 0.08) !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0C1C36 !important;
+    box-shadow: 0 20px 45px -10px rgba(12, 28, 54, 0.18), 0 4px 12px rgba(12, 28, 54, 0.06), 0 0 0 1px rgba(12, 28, 54, 0.04) !important;
+    border-radius: 14px !important;
+}
+
+html.light:not(.force-dark) #site-header .header-dropdown-menu a,
+html.light:not(.force-dark) #site-header .header-dropdown-menu button {
+    color: #0C1C36 !important;
+    font-weight: 500 !important;
+}
+html.light:not(.force-dark) #site-header .header-dropdown-menu a:hover,
+html.light:not(.force-dark) #site-header .header-dropdown-menu button:hover {
+    background-color: #EDF7F8 !important;
+    color: #008D99 !important;
+}
+html.light:not(.force-dark) #site-header .header-dropdown-menu a svg,
+html.light:not(.force-dark) #site-header .header-dropdown-menu button svg {
+    color: #00A8B5 !important;
+}
+html.light:not(.force-dark) #site-header .header-dropdown-menu .ks-eyebrow {
+    color: #64748B !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+}
+html.light:not(.force-dark) #site-header .header-dropdown-menu .ks-rule {
+    background-color: #E2E8F0 !important;
 }
 
 html.light:not(.force-dark) #site-header [x-show="mobileMenu"] {
-    background-color: #FAF6EF !important;
-    border-color: #DDD4C4 !important;
-    color: #1C1916 !important;
-    box-shadow: 0 16px 36px -4px rgba(28, 25, 22, 0.16) !important;
+    background-color: #FFFFFF !important;
+    border-top: 1px solid #CBD5E1 !important;
+    color: #0C1C36 !important;
+    box-shadow: 0 20px 40px -4px rgba(12, 28, 54, 0.14) !important;
+}
+html.light:not(.force-dark) #site-header [x-show="mobileMenu"] a {
+    color: #0C1C36 !important;
+}
+html.light:not(.force-dark) #site-header [x-show="mobileMenu"] a:hover {
+    background-color: #EDF7F8 !important;
+    color: #008D99 !important;
+}
+html.light:not(.force-dark) #site-header [x-show="mobileMenu"] .ks-eyebrow {
+    color: #64748B !important;
 }
 
 html.dark #site-header .header-dropdown-menu,

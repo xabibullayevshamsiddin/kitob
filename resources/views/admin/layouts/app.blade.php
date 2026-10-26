@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin Panel') — Kitobxon Admin</title>
+    <title>@yield('title', 'Admin Panel') — Davra_books Admin</title>
 
     @include('partials.design-system')
 
@@ -152,10 +152,10 @@
             <div class="flex items-center justify-between h-14 px-4 border-b border-ink-border flex-shrink-0">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 group">
                     <span class="w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-ink-border flex items-center justify-center text-paper shadow-sm">
-                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Kitobxon" class="w-full h-full object-contain rounded-md">
+                        <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" alt="Davra_books" class="w-full h-full object-contain rounded-md">
                     </span>
                     <span class="leading-tight">
-                        <span class="block font-display text-[15px] font-semibold text-paper">Kitobxon</span>
+                        <span class="block font-display text-[15px] font-semibold text-paper">Davra_books</span>
                         <span class="block font-mono text-[10px] uppercase tracking-[0.14em] text-mist">Admin</span>
                     </span>
                 </a>
@@ -294,7 +294,7 @@
 
             <!-- FOOTER -->
             <footer class="flex-shrink-0 border-t border-ink-border bg-ink-950 px-4 lg:px-5 h-9 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-mist">
-                <p>Kitobxon Admin <span class="text-amber-400">v1.0</span></p>
+                <p>Davra_books Admin <span class="text-amber-400">v1.0</span></p>
                 <p class="hidden sm:block">{{ now()->format('d.m.Y') }}</p>
             </footer>
         </div>
