@@ -149,7 +149,7 @@ class TelegramBotService
 
         // 8. Reyting / Leaderboard
         if (in_array($firstWord, ['/leaderboard', '/reyting'])
-            || in_array($clean, ['reyting', 'leaderboard', 'top kitobxonlar', 'eng yaxshi kitobxonlar'])) {
+            || in_array($clean, ['reyting', 'leaderboard', 'top oquvchilar', 'eng yaxshi oquvchilar'])) {
             $this->handleLeaderboardCommand($chatId);
             return;
         }
@@ -206,7 +206,7 @@ class TelegramBotService
      */
     protected function handleStartCommand(int|string $chatId, array $from, string $payload = ''): void
     {
-        $name = htmlspecialchars($from['first_name'] ?? 'Kitobxon');
+        $name = htmlspecialchars($from['first_name'] ?? 'O\'quvchi');
         $userId = $from['id'] ?? 0;
 
         // Foydalanuvchining botdagi bloklanganlik holatini bekor qilamiz
@@ -789,7 +789,7 @@ class TelegramBotService
     }
 
     /**
-     * /leaderboard buyrug'i (Kitobxonlar reytingi).
+     * /leaderboard buyrug'i (O'quvchilar reytingi).
      */
     protected function handleLeaderboardCommand(int|string $chatId): void
     {
@@ -801,7 +801,7 @@ class TelegramBotService
 
         $leaderboardUrl = rtrim(config('app.url'), '/') . '/leaderboard';
 
-        $text = "🏆 <b>Eng faol kitobxonlar reytingi (Top 5):</b>\n\n";
+        $text = "🏆 <b>Eng faol o'quvchilar reytingi (Top 5):</b>\n\n";
 
         $medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
 
@@ -842,7 +842,7 @@ class TelegramBotService
               . "• <b>/balance</b> (yoki 🪙 Balans) — Oltin tangalar va ballar\n"
               . "• <b>/hikmat</b> (yoki ✨ Kun hikmati) — Ilhomlantiruvchi o'gitlar\n"
               . "• <b>/books</b> (yoki 📚 Kitoblar) — Sara kitoblar katalogi\n"
-              . "• <b>/leaderboard</b> (yoki 🏆 Reyting) — Faol kitobxonlar reytingi\n"
+              . "• <b>/leaderboard</b> (yoki 🏆 Reyting) — Faol o'quvchilar reytingi\n"
               . "• <b>/shop</b> (yoki 🛍 Do'kon) — Maxsus imtiyozlar do'koni\n"
               . "• <b>/help</b> — Ushbu yordam qo'llanmasi\n"
               . "• <b>/stop</b> — Bildirishnomalarni to'xtatish\n\n"
@@ -936,7 +936,7 @@ class TelegramBotService
 
         $text = "⚙️ <b>Telegram bildirishnomalarini boshqarish:</b>\n\n"
             . "Qaysi xabarlarni Telegram orqali olishni xohlaysiz? O'zingizga kerakli turlarni tanlab yoqing (✅) yoki o'chirib qo'ying (❌):\n\n"
-            . "• <b>🔴 Jonli efir (Strim)</b> — Siz obuna bo'lgan kitobxon strim boshlaganda\n"
+            . "• <b>🔴 Jonli efir (Strim)</b> — Siz obuna bo'lgan o'quvchi strim boshlaganda\n"
             . "• <b>🛡️ Ban / Hisob holati</b> — Hisobingiz bloklanganda yoki ban yechilganda\n"
             . "• <b>👥 Yangi obunachilar</b> — Kimdir sizga obuna bo'lganda\n"
             . "• <b>🔥 Streak eslatmasi</b> — Kechki mutolaa eslatmasi\n"
