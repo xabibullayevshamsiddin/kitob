@@ -263,7 +263,8 @@ Route::get('/catalog', CatalogPage::class)->name('books.catalog');
 
 // Kitob sahifasi (Public — SEO, OpenGraph va qidiruv botlari uchun ochiq)
 Route::get('/books/{slug}', function ($slug) {
-    $book = \App\Models\Book::where('slug', $slug)
+    $book = \App\Models\Book::withCount('chunks')
+        ->where('slug', $slug)
         ->when(is_numeric($slug), function ($query) use ($slug) {
             $query->orWhere('id', (int) $slug);
         })
