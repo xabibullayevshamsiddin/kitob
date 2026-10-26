@@ -538,11 +538,11 @@
       showCover: false,
       usePortrait: true,
       mobileScrollSupport: true,
-      flippingTime: isMobile ? 550 : 780,
-      swipeDistance: isMobile ? 20 : 30,
-      showPageCorners: !isMobile,
+      flippingTime: isMobile ? 450 : 780,
+      swipeDistance: 25,
+      showPageCorners: true,
       clickEventForward: true,
-      useMouseEvents: !isMobile,
+      useMouseEvents: true,
       disableFlipByClick: false,
       startPage: startIdx,
     });
@@ -586,6 +586,7 @@
 
     syncIndicators(currentPage);
     ensurePagesRenderedAround(currentPage);
+    setupTouchSwipeNavigation();
   }
 
   /**
@@ -859,26 +860,34 @@
     settleRunningAnimation();
 
     const idx = pageFlipInstance.getCurrentPageIndex();
-    const step = isMobile ? 1 : 2;
-    if (idx + step >= totalPages) return;
+    if (idx >= totalPages - 1) return;
 
-    const baseVp = cachedBaseViewport || { width: 595, height: 842 };
-    const { singlePageW, singlePageH } = calculateOptimalDimensions(baseVp);
-    const pageW = Math.max(160, Math.round(singlePageW));
-    const pageH = Math.max(220, Math.round(singlePageH));
+    playPaperTurnSound();
 
-    const nextPage1 = idx + 1 + step;
-    const nextPage2 = nextPage1 + 1;
-    await Promise.allSettled(
-      [nextPage1, nextPage2]
-        .filter((p) => p >= 1 && p <= totalPages)
-        .map((p) => renderSinglePdfPage(p, pageW, pageH))
-    );
-
-    if (prefersReducedMotion()) {
+    if (isMobile || prefersReducedMotion()) {
       pageFlipInstance.turnToNextPage();
+      currentPage = Math.min(totalPages, idx + 2);
+      syncIndicators(currentPage);
+      ensurePagesRenderedAround(currentPage);
     } else {
-      pageFlipInstance.flipNext('bottom');
+      const baseVp = cachedBaseViewport || { width: 595, height: 842 };
+      const { singlePageW, singlePageH } = calculateOptimalDimensions(baseVp);
+      const pageW = Math.max(160, Math.round(singlePageW));
+      const pageH = Math.max(220, Math.round(singlePageH));
+
+      const nextPage1 = idx + 3;
+      const nextPage2 = nextPage1 + 1;
+      Promise.allSettled(
+        [nextPage1, nextPage2]
+          .filter((p) => p >= 1 && p <= totalPages)
+          .map((p) => renderSinglePdfPage(p, pageW, pageH))
+      );
+
+      try {
+        pageFlipInstance.flipNext('bottom');
+      } catch (_) {
+        pageFlipInstance.turnToNextPage();
+      }
     }
   }
 
@@ -892,19 +901,28 @@
     const idx = pageFlipInstance.getCurrentPageIndex();
     if (idx <= 0) return;
 
-    const baseVp = cachedBaseViewport || { width: 595, height: 842 };
-    const { singlePageW, singlePageH } = calculateOptimalDimensions(baseVp);
-    const pageW = Math.max(160, Math.round(singlePageW));
-    const pageH = Math.max(220, Math.round(singlePageH));
+    playPaperTurnSound();
 
-    const prevPage1 = Math.max(1, idx);
-    const prevPage2 = Math.max(1, idx - 1);
-    await Promise.allSettled([prevPage1, prevPage2].map((p) => renderSinglePdfPage(p, pageW, pageH)));
-
-    if (prefersReducedMotion()) {
+    if (isMobile || prefersReducedMotion()) {
       pageFlipInstance.turnToPrevPage();
+      currentPage = Math.max(1, idx);
+      syncIndicators(currentPage);
+      ensurePagesRenderedAround(currentPage);
     } else {
-      pageFlipInstance.flipPrev('bottom');
+      const baseVp = cachedBaseViewport || { width: 595, height: 842 };
+      const { singlePageW, singlePageH } = calculateOptimalDimensions(baseVp);
+      const pageW = Math.max(160, Math.round(singlePageW));
+      const pageH = Math.max(220, Math.round(singlePageH));
+
+      const prevPage1 = Math.max(1, idx - 1);
+      const prevPage2 = Math.max(1, idx - 2);
+      Promise.allSettled([prevPage1, prevPage2].map((p) => renderSinglePdfPage(p, pageW, pageH)));
+
+      try {
+        pageFlipInstance.flipPrev('bottom');
+      } catch (_) {
+        pageFlipInstance.turnToPrevPage();
+      }
     }
   }
 
@@ -917,23 +935,28 @@
     const targetIdx = clamped - 1;
 
     settleRunningAnimation();
+    playPaperTurnSound();
 
-    const baseVp = cachedBaseViewport || { width: 595, height: 842 };
-    const { singlePageW, singlePageH } = calculateOptimalDimensions(baseVp);
-    const pageW = Math.max(160, Math.round(singlePageW));
-    const pageH = Math.max(220, Math.round(singlePageH));
-
-    const spreadLeft = isMobile ? clamped : clamped % 2 === 1 ? clamped : clamped - 1;
-    const spreadRight = Math.min(totalPages, spreadLeft + 1);
-    await Promise.allSettled([spreadLeft, spreadRight].map((p) => renderSinglePdfPage(p, pageW, pageH)));
-
-    if (prefersReducedMotion()) {
+    if (isMobile || prefersReducedMotion()) {
       pageFlipInstance.turnToPage(targetIdx);
       currentPage = clamped;
       syncIndicators(currentPage);
       ensurePagesRenderedAround(currentPage);
     } else {
-      pageFlipInstance.flip(targetIdx, 'bottom');
+      const baseVp = cachedBaseViewport || { width: 595, height: 842 };
+      const { singlePageW, singlePageH } = calculateOptimalDimensions(baseVp);
+      const pageW = Math.max(160, Math.round(singlePageW));
+      const pageH = Math.max(220, Math.round(singlePageH));
+
+      const spreadLeft = clamped % 2 === 1 ? clamped : clamped - 1;
+      const spreadRight = Math.min(totalPages, spreadLeft + 1);
+      Promise.allSettled([spreadLeft, spreadRight].map((p) => renderSinglePdfPage(p, pageW, pageH)));
+
+      try {
+        pageFlipInstance.flip(targetIdx, 'bottom');
+      } catch (_) {
+        pageFlipInstance.turnToPage(targetIdx);
+      }
     }
   }
 
@@ -1030,16 +1053,71 @@
         });
       }
 
-      // Tap-to-toggle overlay on middle of book page
+      // Edge taps and center tap in mobile fullscreen
       if (spreadEl) {
         spreadEl.addEventListener('click', (e) => {
           if (!document.body.classList.contains('fb-mobile-fullscreen-active')) return;
-          if (e.target.closest('button, input, select, a, .fb-nav-arrow, .fb-mfs-overlay')) return;
-          overlay.classList.toggle('is-hidden-controls');
+          if (e.target.closest('button, input, select, a, .fb-nav-arrow, .fb-mfs-overlay, .fb-mfs-bottom-bar, .fb-mfs-page-pill, .fb-mfs-back-btn')) return;
+
+          const screenW = window.innerWidth;
+          const clickX = e.clientX;
+
+          if (clickX < screenW * 0.22) {
+            // Chap 22% qismiga bosildi -> Oldingi sahifa
+            fbGoPrev();
+          } else if (clickX > screenW * 0.78) {
+            // O'ng 22% qismiga bosildi -> Keyingi sahifa
+            fbGoNext();
+          } else {
+            // O'rtasiga bosildi -> Boshqaruv tugmalarini ko'rsatish/yashirish
+            overlay.classList.toggle('is-hidden-controls');
+          }
         });
       }
     }
+    setupTouchSwipeNavigation();
     return overlay;
+  }
+
+  function setupTouchSwipeNavigation() {
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let isSwiping = false;
+
+    const targetEl = rootEl || document.getElementById('fb-root');
+    if (!targetEl || targetEl._hasTouchSwipeNav) return;
+    targetEl._hasTouchSwipeNav = true;
+
+    targetEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+      isSwiping = true;
+    }, { passive: true });
+
+    targetEl.addEventListener('touchend', (e) => {
+      if (!isSwiping || e.changedTouches.length !== 1) return;
+      isSwiping = false;
+
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const diffX = endX - startX;
+      const diffY = endY - startY;
+      const timeElapsed = Date.now() - startTime;
+
+      // Agar gorizontal surish bo'lsa (diffX > 30px va diffX > diffY)
+      if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY) * 1.1 && timeElapsed < 650) {
+        if (diffX < 0) {
+          // Barmoq chapga surildi -> Keyingi sahifa
+          fbGoNext();
+        } else {
+          // Barmoq o'ngga surildi -> Oldingi sahifa
+          fbGoPrev();
+        }
+      }
+    }, { passive: true });
   }
 
   function fbToggleMfsSlider() {
