@@ -30,11 +30,6 @@
                         </span>
                         <span>{{ __('site.footer.services_active') }}</span>
                     </div>
-
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-badge bg-ink-900 border border-ink-border text-mist text-[11px] font-mono">
-                        <svg class="w-3.5 h-3.5 text-cyan-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        <span>{{ __('site.footer.ssl_secure') }}</span>
-                    </div>
                 </div>
             </div>
 
