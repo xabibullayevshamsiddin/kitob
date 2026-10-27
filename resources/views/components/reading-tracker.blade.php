@@ -87,41 +87,41 @@
         </div>
     </div>
 
-    <!-- ── 2. AFK Inactivity Modal (5 minut harakatsizlik xavfsizligi) ── -->
+    <!-- ── 2. AFK & Fokus Pauza Modal (Anti-Cheat & Harakatsizlik xavfsizligi) ── -->
     <div x-show="showAfkModal" 
          x-cloak
-         class="reading-tracker-modal fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-         x-transition:enter="transition ease-out duration-350"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-320"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0">
+         class="reading-tracker-modal fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95">
         
-        <div class="relative w-full max-w-md bg-gradient-to-b from-[#131927] to-[#0a0e17] border border-amber-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl overflow-hidden ks-modal-card"
-             @click.outside="confirmActive()"
-             x-transition:enter="ks-blur-in-enter-active"
-             x-transition:enter-start="ks-blur-in-enter"
-             x-transition:enter-end="ks-blur-in-enter-end"
-             x-transition:leave="ks-blur-in-leave-active"
-             x-transition:leave-start="ks-blur-in-leave"
-             x-transition:leave-end="ks-blur-in-leave-end">
+        <div class="relative w-full max-w-md bg-gradient-to-b from-[#131927] to-[#0a0e17] border border-amber-500/40 rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl overflow-hidden ks-modal-card">
             
             <!-- Ambient Spotlight Glow -->
             <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-            <!-- Pulsing 3D Hourglass / Focus Pause Icon -->
+            <!-- Pulsing Icon (Pause or Hourglass) -->
             <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-glow-amber animate-pulse">
-                <span>⏳</span>
+                <span x-show="afkReason === 'focus'">⏸️</span>
+                <span x-show="afkReason !== 'focus'">⏳</span>
             </div>
 
             <!-- Heading & Context -->
             <div class="space-y-2">
                 <h3 class="text-xl sm:text-2xl font-black text-white font-manrope tracking-tight">
-                    Siz shu yerdamisiz?
+                    <span x-show="afkReason === 'focus'">Mutolaa pauza qilindi!</span>
+                    <span x-show="afkReason !== 'focus'">Siz shu yerdamisiz?</span>
                 </h3>
-                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto">
-                    5 daqiqa davomida hech qanday harakat qayd etilmadi. Vaqt va ball hisoblash to'xtatildi. Davom ettirasizmi?
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-sm mx-auto">
+                    <span x-show="afkReason === 'focus'">
+                        Boshqa sahifa yoki ilovaga o'tganingiz (fokus yo'qolgani) sababli mutolaa va bonus hisoblash darhol to'xtatildi. Davom ettirasizmi?
+                    </span>
+                    <span x-show="afkReason !== 'focus'">
+                        5 daqiqa davomida hech qanday harakat qayd etilmadi. Vaqt va ball hisoblash to'xtatildi. Davom ettirasizmi?
+                    </span>
                 </p>
             </div>
 
@@ -198,6 +198,9 @@ function readingTracker(config) {
             if (document.hidden || document.visibilityState !== 'visible') {
                 return false;
             }
+            if (typeof document.hasFocus === 'function' && !document.hasFocus()) {
+                return false;
+            }
             return true;
         },
 
@@ -208,20 +211,31 @@ function readingTracker(config) {
         },
         
         initTracker() {
+            let isTransitioningFullscreen = false;
+            ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+                document.addEventListener(evt, () => {
+                    isTransitioningFullscreen = true;
+                    setTimeout(() => { isTransitioningFullscreen = false; }, 800);
+                });
+            });
+
             // User faolligini kuzatuvchi voqealar (sahifa varaqlash, sichqoncha, klaviatura, sensor)
             const events = ['mousemove', 'mousedown', 'click', 'keydown', 'touchstart', 'scroll', 'wheel', 'reading-activity'];
             let lastEventTime = Date.now();
 
             const recordActivity = () => {
                 if (document.hidden || document.visibilityState !== 'visible') return;
+                // Anti-cheat: Modal ochiq bo'lsa yoki AFK / Fokus pauzada tursa,
+                // sichqoncha harakati modalni o'chirib yubormasligi shart!
+                if (this.showAfkModal || this.isAfk) {
+                    return;
+                }
                 const now = Date.now();
                 if (now - lastEventTime > 800) {
                     lastEventTime = now;
                     this.idleSeconds = 0;
-                    if (this.isAfk || (this.isPaused && this.pageType !== 'audio')) {
-                        this.isAfk = false;
+                    if (this.isPaused && this.pageType !== 'audio') {
                         this.isPaused = false;
-                        this.showAfkModal = false;
                     }
                 }
             };
@@ -236,10 +250,11 @@ function readingTracker(config) {
                 if (videoEl && !videoEl._hasTrackerListener) {
                     videoEl._hasTrackerListener = true;
                     videoEl.addEventListener('play', () => {
-                        this.isPaused = false;
-                        this.isAfk = false;
-                        this.showAfkModal = false;
-                        this.idleSeconds = 0;
+                        if (!this.showAfkModal) {
+                            this.isPaused = false;
+                            this.isAfk = false;
+                            this.idleSeconds = 0;
+                        }
                     });
                     videoEl.addEventListener('pause', () => {
                         if (this.pageType === 'video' && !this.isAfk) {
@@ -252,10 +267,11 @@ function readingTracker(config) {
                     if (!audioEl._hasTrackerListener) {
                         audioEl._hasTrackerListener = true;
                         audioEl.addEventListener('play', () => {
-                            this.isPaused = false;
-                            this.isAfk = false;
-                            this.showAfkModal = false;
-                            this.idleSeconds = 0;
+                            if (!this.showAfkModal) {
+                                this.isPaused = false;
+                                this.isAfk = false;
+                                this.idleSeconds = 0;
+                            }
                         });
                         audioEl.addEventListener('pause', () => {
                             if (this.pageType === 'audio' && !this.isAfk) {
@@ -272,25 +288,22 @@ function readingTracker(config) {
             syncMedia();
             setInterval(syncMedia, 2000);
 
-            // Tab o'zgarishini aniqlash (boshqa tabga o'tganda sekin pauza, qaytganda DARHOL davom ettirish)
+            // Tab o'zgarishini aniqlash (boshqa tabga o'tganda DARHOL to'xtatish va modal chiqarish)
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden || document.visibilityState !== 'visible') {
-                    this.isPaused = true;
-                } else {
-                    this.isAfk = false;
-                    this.isPaused = (this.pageType === 'audio' && !this.getBookAudios().some(a => !a.paused && !a.ended));
-                    this.showAfkModal = false;
-                    this.idleSeconds = 0;
+                    this.triggerFocusPause('focus');
                 }
             });
 
-            window.addEventListener('focus', () => {
-                if (!document.hidden && document.visibilityState === 'visible') {
-                    this.isAfk = false;
-                    this.isPaused = (this.pageType === 'audio' && !this.getBookAudios().some(a => !a.paused && !a.ended));
-                    this.showAfkModal = false;
-                    this.idleSeconds = 0;
-                }
+            // Ilova yoki oyna fokusini yo'qotganda (Telegram, boshqa oyna yoki monitordagi ilovalarga o'tganda)
+            window.addEventListener('blur', () => {
+                if (isTransitioningFullscreen) return;
+                setTimeout(() => {
+                    if (isTransitioningFullscreen) return;
+                    if (!this.isPageFocused()) {
+                        this.triggerFocusPause('focus');
+                    }
+                }, 150);
             });
 
             // Sahifani yopish yoki boshqa sahifaga o'tishda yig'ilgan vaqtni yo'qotmasdan yuborish
@@ -303,13 +316,12 @@ function readingTracker(config) {
 
             // Sekundlik yurak urishi (ticker)
             this.timerInterval = setInterval(() => {
-                if (!this.isPageFocused()) {
-                    this.isPaused = true;
+                // Anti-cheat: agar sahifa fokusda bo'lmasa, yoki afk/pauza bo'lsa — sekund mutlaqo hisoblanmaydi!
+                if (!this.isPageFocused() || this.isAfk || this.isPaused) {
+                    if (!this.isPageFocused() && !this.showAfkModal && !isTransitioningFullscreen) {
+                        this.triggerFocusPause('focus');
+                    }
                     return;
-                }
-
-                if (this.isPaused && !this.isAfk && this.pageType !== 'audio') {
-                    this.isPaused = false;
                 }
 
                 const videoEl = document.querySelector('video');
@@ -347,7 +359,7 @@ function readingTracker(config) {
 
                     // 5 daqiqa mutlaq harakatsizlik bo'lganda AFK rejimiga o'tish
                     if (this.idleSeconds >= this.afkLimitSeconds) {
-                        this.triggerAfk('idle');
+                        this.triggerFocusPause('idle');
                         return;
                     }
 
@@ -379,7 +391,8 @@ function readingTracker(config) {
             }, 1000);
         },
 
-        triggerAfk(reason = 'idle') {
+        triggerFocusPause(reason = 'focus') {
+            if (this.showAfkModal && this.isAfk) return;
             this.afkReason = reason;
             this.isAfk = true;
             this.isPaused = true;
@@ -389,15 +402,30 @@ function readingTracker(config) {
             
             document.querySelectorAll('video, audio').forEach(el => {
                 if (!el.paused && !el.ended) {
-                    el.pause();
+                    try { el.pause(); } catch(e) {}
                     this.pausedMediaElements.push(el);
                     this.wasMediaPlayingBeforeAfk = true;
                 }
             });
 
             if (typeof window.fbStopAutoPlay === 'function') {
-                window.fbStopAutoPlay();
+                try { window.fbStopAutoPlay(); } catch(e) {}
             }
+
+            // Real vaqt rejimida barcha widget va pill'larga pauza haqida signal berish
+            window.dispatchEvent(new CustomEvent('reading-tracker-tick', {
+                detail: {
+                    sessionSeconds: this.sessionSeconds,
+                    formattedTime: this.formatTime(this.sessionSeconds),
+                    totalMinutesToday: this.totalMinutesToday,
+                    totalMinutesAll: this.totalMinutesAll,
+                    isPaused: true
+                }
+            }));
+        },
+
+        triggerAfk(reason = 'idle') {
+            this.triggerFocusPause(reason);
         },
 
         confirmActive() {
@@ -420,6 +448,17 @@ function readingTracker(config) {
                     bookAudios[0].play().catch(() => {});
                 }
             }
+
+            // Real vaqt rejimida barcha widget va pill'larga faol holat haqida signal berish
+            window.dispatchEvent(new CustomEvent('reading-tracker-tick', {
+                detail: {
+                    sessionSeconds: this.sessionSeconds,
+                    formattedTime: this.formatTime(this.sessionSeconds),
+                    totalMinutesToday: this.totalMinutesToday,
+                    totalMinutesAll: this.totalMinutesAll,
+                    isPaused: false
+                }
+            }));
         },
 
         toggleManualPause() {
@@ -427,7 +466,17 @@ function readingTracker(config) {
             if (!this.isPaused) {
                 this.idleSeconds = 0;
                 this.isAfk = false;
+                this.showAfkModal = false;
             }
+            window.dispatchEvent(new CustomEvent('reading-tracker-tick', {
+                detail: {
+                    sessionSeconds: this.sessionSeconds,
+                    formattedTime: this.formatTime(this.sessionSeconds),
+                    totalMinutesToday: this.totalMinutesToday,
+                    totalMinutesAll: this.totalMinutesAll,
+                    isPaused: this.isPaused
+                }
+            }));
         },
 
         sendHeartbeat(mins, isBeacon = false) {
