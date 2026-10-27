@@ -779,13 +779,7 @@
                         .then(data => {
                             this.isUploading = false;
                             if (data.success && data.path) {
-                                if (window.@this && typeof window.@this.sendVoiceNote === 'function') {
-                                    window.@this.sendVoiceNote(data.path, data.duration || dur);
-                                } else if (typeof @this !== 'undefined' && typeof @this.sendVoiceNote === 'function') {
-                                    @this.sendVoiceNote(data.path, data.duration || dur);
-                                } else if (typeof $wire !== 'undefined' && typeof $wire.sendVoiceNote === 'function') {
-                                    $wire.sendVoiceNote(data.path, data.duration || dur);
-                                }
+                                @this.call('sendVoiceNote', data.path, data.duration || dur);
                             } else {
                                 alert(data.error || 'Ovozli xabar yuklanmadi');
                             }
