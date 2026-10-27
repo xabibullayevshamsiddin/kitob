@@ -18,7 +18,7 @@
         class="header-lang-btn flex items-center gap-2 px-2.5 py-1.5 rounded-btn bg-ink-800 border border-ink-border hover:bg-ink-700 active:scale-[0.98] transition-all text-xs font-semibold text-paper focus:outline-none select-none shadow-sm"
         aria-label="Tilni tanlang"
     >
-        <span class="text-sm leading-none">{{ match($current['flag'] ?? 'uz') { 'uz' => '🇺🇿', 'ru' => '🇷🇺', 'gb', 'en' => '🇬🇧', default => '🌐' } }}</span>
+        <x-flag :country="$current['flag'] ?? 'uz'" class="w-4.5 h-3 rounded-[2px] shadow-xs" />
         <span class="font-mono text-[11px] tracking-wide">{{ $current['code'] }}</span>
         <svg
             class="w-3 h-3 text-mist transition-transform duration-200"
@@ -55,7 +55,7 @@
                     @click="langOpen = false"
                 >
                     <div class="flex items-center gap-2.5">
-                        <span class="text-sm leading-none">{{ match($lang['flag'] ?? 'uz') { 'uz' => '🇺🇿', 'ru' => '🇷🇺', 'gb', 'en' => '🇬🇧', default => '🌐' } }}</span>
+                        <x-flag :country="$lang['flag'] ?? 'uz'" class="w-4.5 h-3 rounded-[2px] shadow-xs" />
                         <span class="font-medium">{{ $lang['name'] }}</span>
                     </div>
 

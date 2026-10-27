@@ -593,7 +593,7 @@
                     @foreach(['uz' => ['code' => 'UZ', 'flag' => 'uz'], 'ru' => ['code' => 'RU', 'flag' => 'ru'], 'en' => ['code' => 'EN', 'flag' => 'gb']] as $code => $l)
                         <a href="{{ url()->current() }}?lang={{ $code }}"
                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn font-mono text-[11px] font-medium transition-all duration-200 active:scale-95 {{ app()->getLocale() === $code ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 font-bold shadow-sm' : 'text-mist hover:text-paper border border-ink-border bg-ink-800 hover:bg-ink-700' }}">
-                            <span class="text-xs leading-none">{{ match($l['flag']) { 'uz' => '🇺🇿', 'ru' => '🇷🇺', 'gb' => '🇬🇧', default => '🌐' } }}</span>
+                            <x-flag :country="$l['flag']" class="w-4 h-2.5 rounded-[2px] shadow-xs" />
                             <span>{{ $l['code'] }}</span>
                         </a>
                     @endforeach
