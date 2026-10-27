@@ -62,29 +62,46 @@ class BuddyReadVoiceController extends Controller
         }
 
         $userId = Auth::id();
+        $afterId = (int) $request->input('after_id', 0);
 
-        // Get unconsumed signals directed to me, or broadcasted to everyone
-        $signals = BuddyReadVoiceSignal::where('buddy_read_id', $id)
+        // Keep this user's voice presence fresh
+        BuddyReadMember::where('buddy_read_id', $id)
+            ->where('user_id', $userId)
+            ->where('voice_active', true)
+            ->update(['last_voice_at' => now()]);
+
+        // Query signals directed to me or broadcasted
+        $query = BuddyReadVoiceSignal::where('buddy_read_id', $id)
             ->where('from_user_id', '!=', $userId)
             ->where(function ($q) use ($userId) {
                 $q->where('to_user_id', $userId)
                   ->orWhereNull('to_user_id');
-            })
-            ->where('is_consumed', false)
-            ->where('created_at', '>=', now()->subMinutes(1))
-            ->orderBy('id', 'asc')
-            ->take(20)
-            ->get();
+            });
 
-        if ($signals->isNotEmpty()) {
-            $ids = $signals->pluck('id')->all();
-            BuddyReadVoiceSignal::whereIn('id', $ids)->update(['is_consumed' => true]);
+        if ($afterId > 0) {
+            $query->where('id', '>', $afterId);
+        } else {
+            // First poll: get signals from the last 30 seconds
+            $query->where('created_at', '>=', now()->subSeconds(30));
         }
 
-        // Active voice members list
+        $signals = $query->orderBy('id', 'asc')
+            ->take(60)
+            ->get();
+
+        // Mark direct signals to me as consumed
+        if ($signals->isNotEmpty()) {
+            $directIds = $signals->where('to_user_id', $userId)->pluck('id')->all();
+            if (!empty($directIds)) {
+                BuddyReadVoiceSignal::whereIn('id', $directIds)->update(['is_consumed' => true]);
+            }
+        }
+
+        // Active voice members list: active in the last 20 seconds
         $activeMembers = BuddyReadMember::where('buddy_read_id', $id)
             ->where('voice_active', true)
             ->where('user_id', '!=', $userId)
+            ->where('last_voice_at', '>=', now()->subSeconds(20))
             ->pluck('user_id')
             ->all();
 

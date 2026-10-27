@@ -15,6 +15,9 @@
                 animFrame: null,
                 pollInterval: null,
                 peers: {},
+                callingPeers: {},
+                candidateQueues: {},
+                lastSignalId: 0,
                 connectedPeersCount: 0,
 
                 async toggleVoice() {
@@ -42,22 +45,26 @@
 
                         const AudioCtx = window.AudioContext || window.webkitAudioContext;
                         if (AudioCtx) {
-                            this.audioContext = new AudioCtx();
-                            this.analyser = this.audioContext.createAnalyser();
-                            const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-                            source.connect(this.analyser);
-                            this.analyser.fftSize = 64;
-                            const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+                            try {
+                                this.audioContext = new AudioCtx();
+                                this.analyser = this.audioContext.createAnalyser();
+                                const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+                                source.connect(this.analyser);
+                                this.analyser.fftSize = 64;
+                                const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
 
-                            const updateLevel = () => {
-                                if (!this.voiceActive || !this.analyser) return;
-                                this.analyser.getByteFrequencyData(dataArray);
-                                let sum = 0;
-                                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                                this.micLevel = this.isMuted ? 0 : Math.min(100, Math.round((sum / dataArray.length) * 1.6));
-                                this.animFrame = requestAnimationFrame(updateLevel);
-                            };
-                            updateLevel();
+                                const updateLevel = () => {
+                                    if (!this.voiceActive || !this.analyser) return;
+                                    this.analyser.getByteFrequencyData(dataArray);
+                                    let sum = 0;
+                                    for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                                    this.micLevel = this.isMuted ? 0 : Math.min(100, Math.round((sum / dataArray.length) * 1.6));
+                                    this.animFrame = requestAnimationFrame(updateLevel);
+                                };
+                                updateLevel();
+                            } catch(e) {
+                                console.warn('AudioContext error:', e);
+                            }
                         }
 
                         this.voiceActive = true;
@@ -92,6 +99,8 @@
                         if (el) el.remove();
                     });
                     this.peers = {};
+                    this.callingPeers = {};
+                    this.candidateQueues = {};
                     this.connectedPeersCount = 0;
 
                     if (this.pollInterval) {
@@ -128,28 +137,32 @@
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun2.l.google.com:19302' }
+                            { urls: 'stun:stun.cloudflare.com:3478' },
+                            { urls: 'stun:stun.services.mozilla.com:3478' }
                         ]
                     });
 
                     if (this.mediaStream) {
                         this.mediaStream.getTracks().forEach(track => {
-                            pc.addTrack(track, this.mediaStream);
+                            try { pc.addTrack(track, this.mediaStream); } catch(e) {}
                         });
                     }
 
                     pc.onicecandidate = (event) => {
                         if (event.candidate) {
-                            this.sendSignal('candidate', JSON.stringify(event.candidate), peerId);
+                            const candData = event.candidate.toJSON ? event.candidate.toJSON() : {
+                                candidate: event.candidate.candidate,
+                                sdpMid: event.candidate.sdpMid,
+                                sdpMLineIndex: event.candidate.sdpMLineIndex,
+                                usernameFragment: event.candidate.usernameFragment
+                            };
+                            this.sendSignal('candidate', JSON.stringify(candData), peerId);
                         }
                     };
 
                     pc.onconnectionstatechange = () => {
-                        if (pc.connectionState === 'connected') {
-                            this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
-                        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
-                            this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
-                        }
+                        const connected = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
+                        this.connectedPeersCount = connected;
                     };
 
                     pc.ontrack = (event) => {
@@ -161,8 +174,16 @@
                             audio.playsInline = true;
                             document.body.appendChild(audio);
                         }
-                        audio.srcObject = event.streams[0];
-                        audio.play().catch(e => console.warn('Autoplay error:', e));
+                        if (event.streams && event.streams[0]) {
+                            audio.srcObject = event.streams[0];
+                        } else {
+                            const s = new MediaStream();
+                            s.addTrack(event.track);
+                            audio.srcObject = s;
+                        }
+                        audio.play().catch(e => {
+                            console.warn('WebRTC audio autoplay warning:', e);
+                        });
                     };
 
                     this.peers[peerId] = pc;
@@ -170,12 +191,17 @@
                 },
 
                 async initiateCall(peerId) {
+                    if (this.callingPeers[peerId] || (this.peers[peerId] && this.peers[peerId].connectionState === 'connected')) {
+                        return;
+                    }
+                    this.callingPeers[peerId] = true;
                     try {
                         const pc = this.createPeerConnection(peerId);
-                        const offer = await pc.createOffer();
+                        const offer = await pc.createOffer({ offerToReceiveAudio: true });
                         await pc.setLocalDescription(offer);
                         this.sendSignal('offer', JSON.stringify(offer), peerId);
                     } catch (err) {
+                        this.callingPeers[peerId] = false;
                         console.error('Call initiation error:', err);
                     }
                 },
@@ -185,6 +211,15 @@
                         const pc = this.createPeerConnection(fromUserId);
                         const desc = new RTCSessionDescription(JSON.parse(sdpString));
                         await pc.setRemoteDescription(desc);
+
+                        // Drain queued candidates for this peer
+                        if (this.candidateQueues[fromUserId]) {
+                            for (const cand of this.candidateQueues[fromUserId]) {
+                                try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch(e){}
+                            }
+                            delete this.candidateQueues[fromUserId];
+                        }
+
                         const answer = await pc.createAnswer();
                         await pc.setLocalDescription(answer);
                         this.sendSignal('answer', JSON.stringify(answer), fromUserId);
@@ -199,6 +234,14 @@
                         if (pc) {
                             const desc = new RTCSessionDescription(JSON.parse(sdpString));
                             await pc.setRemoteDescription(desc);
+
+                            // Drain queued candidates for this peer
+                            if (this.candidateQueues[fromUserId]) {
+                                for (const cand of this.candidateQueues[fromUserId]) {
+                                    try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch(e){}
+                                }
+                                delete this.candidateQueues[fromUserId];
+                            }
                         }
                     } catch (err) {
                         console.error('Answer handling error:', err);
@@ -207,10 +250,13 @@
 
                 async handleCandidate(fromUserId, candidateString) {
                     try {
+                        const candidateData = JSON.parse(candidateString);
                         const pc = this.peers[fromUserId];
-                        if (pc && pc.remoteDescription) {
-                            const candidate = new RTCIceCandidate(JSON.parse(candidateString));
-                            await pc.addIceCandidate(candidate);
+                        if (!pc || !pc.remoteDescription) {
+                            if (!this.candidateQueues[fromUserId]) this.candidateQueues[fromUserId] = [];
+                            this.candidateQueues[fromUserId].push(candidateData);
+                        } else {
+                            await pc.addIceCandidate(new RTCIceCandidate(candidateData));
                         }
                     } catch (err) {
                         console.error('Candidate handling error:', err);
@@ -236,21 +282,16 @@
 
                 pollSignals() {
                     if (!this.voiceActive) return;
-                    fetch('/buddy-read/' + this.roomId + '/signals', {
+                    fetch('/buddy-read/' + this.roomId + '/signals?after_id=' + this.lastSignalId, {
                         headers: { 'Accept': 'application/json' }
                     })
                     .then(res => res.json())
                     .then(async data => {
-                        if (data.activeMembers && Array.isArray(data.activeMembers)) {
-                            data.activeMembers.forEach(peerId => {
-                                if (peerId !== this.userId && !this.peers[peerId] && this.userId < peerId) {
-                                    this.initiateCall(peerId);
-                                }
-                            });
-                        }
-
                         if (data.signals && Array.isArray(data.signals)) {
                             for (const sig of data.signals) {
+                                if (sig.id > this.lastSignalId) {
+                                    this.lastSignalId = sig.id;
+                                }
                                 const fromId = sig.from_user_id;
                                 if (sig.type === 'offer') {
                                     await this.handleOffer(fromId, sig.payload);
@@ -266,12 +307,21 @@
                                     if (this.peers[fromId]) {
                                         try { this.peers[fromId].close(); } catch(e) {}
                                         delete this.peers[fromId];
+                                        delete this.callingPeers[fromId];
                                         const el = document.getElementById('peer-audio-' + fromId);
                                         if (el) el.remove();
                                         this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
                                     }
                                 }
                             }
+                        }
+
+                        if (data.activeMembers && Array.isArray(data.activeMembers)) {
+                            data.activeMembers.forEach(peerId => {
+                                if (peerId !== this.userId && !this.peers[peerId] && !this.callingPeers[peerId] && this.userId < peerId) {
+                                    this.initiateCall(peerId);
+                                }
+                            });
                         }
                     })
                     .catch(e => console.error('Signal polling error:', e));
@@ -291,7 +341,8 @@
                 },
                 setupAudio() {
                     if (this.audio) return;
-                    this.audio = new Audio(audioUrl);
+                    this.audio = new Audio();
+                    this.audio.src = audioUrl;
                     this.audio.preload = 'metadata';
                     this.audio.addEventListener('loadedmetadata', () => {
                         if (!this.duration || isNaN(this.duration) || this.duration === 0) {
@@ -311,6 +362,10 @@
                     });
                     this.audio.addEventListener('pause', () => { this.playing = false; });
                     this.audio.addEventListener('play', () => { this.playing = true; });
+                    this.audio.addEventListener('error', (e) => {
+                        console.warn('Voice player error:', e, audioUrl);
+                        this.playing = false;
+                    });
                 },
                 toggle() {
                     this.setupAudio();
@@ -319,11 +374,16 @@
                         this.playing = false;
                     } else {
                         document.querySelectorAll('audio').forEach(a => {
-                            if (a !== this.audio) { try { a.pause(); } catch(e) {} }
+                            if (a !== this.audio && !a.id.startsWith('peer-audio-')) {
+                                try { a.pause(); } catch(e) {}
+                            }
                         });
                         const p = this.audio.play();
                         if (p !== undefined) {
-                            p.then(() => { this.playing = true; }).catch(() => { this.playing = false; });
+                            p.then(() => { this.playing = true; }).catch(e => {
+                                console.warn('Play interrupted:', e);
+                                this.playing = false;
+                            });
                         }
                     }
                 },
@@ -338,9 +398,9 @@
                     }
                 },
                 formatTime(sec) {
-                    const s = Math.max(0, sec || 0);
+                    const s = Math.max(0, parseInt(sec) || 0);
                     const m = Math.floor(s / 60);
-                    const rem = Math.floor(s % 60);
+                    const rem = s % 60;
                     return (m < 10 ? '0' : '') + m + ':' + (rem < 10 ? '0' : '') + rem;
                 }
             };
@@ -364,7 +424,7 @@
                 btn._playing = false;
                 btn.classList.remove('ring-4', 'ring-emerald-400');
             } else {
-                document.querySelectorAll('audio').forEach(a => a !== btn._audio && a.pause());
+                document.querySelectorAll('audio').forEach(a => (!a.id.startsWith('peer-audio-') && a !== btn._audio) && a.pause());
                 btn._audio.play().then(() => {
                     btn._playing = true;
                     btn.classList.add('ring-4', 'ring-emerald-400');
@@ -416,7 +476,7 @@
 
             <!-- 🎙️ Jonli Ovozli Suhbat Xonasi (Live WebRTC P2P Voice Room Bar) -->
             @auth
-                <div x-data="buddyLiveVoiceRoom({
+                <div wire:ignore x-data="buddyLiveVoiceRoom({
                     roomId: {{ $activeRoom->id }},
                     userId: {{ auth()->id() }},
                     initialActive: {{ ($myMember && $myMember->voice_active) ? 'true' : 'false' }},
@@ -557,7 +617,7 @@
                                  wire:key="buddy-audio-bubble-{{ $msg->id }}"
                                  x-data="voicePlayer('{{ $msg->audio_url }}', {{ (int) ($msg->audio_duration ?: 0) }})">
                                 <button type="button" @click="toggle()" 
-                                        onclick="window.fallbackVoiceToggle(this, '{{ $msg->audio_url }}')"
+                                        onclick="if(!this.closest('[x-data]')?._x_dataStack && window.fallbackVoiceToggle){ window.fallbackVoiceToggle(this, '{{ $msg->audio_url }}'); }"
                                         class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 bg-amber-500 hover:bg-amber-400 text-ink-950 shadow-md cursor-pointer"
                                         title="Ovozli xabarni eshitish (Tinglash)">
                                     <svg x-show="!playing" class="w-4 h-4 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
