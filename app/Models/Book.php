@@ -34,6 +34,7 @@ class Book extends Model
         'ai_text_quality',
         'ai_index_error',
         'ai_pdf_content_hash',
+        'mood',
     ];
 
     protected $casts = [

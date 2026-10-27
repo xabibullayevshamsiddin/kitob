@@ -260,6 +260,43 @@
     <!-- Tab 1: Overview & Heatmap -->
     @if ($activeTab === 'overview')
         <div class="space-y-5">
+            @if(isset($dailyReview) && $dailyReview)
+                <!-- Spaced Repetition (Daily Review / Kunlik Takrorlash) -->
+                <div class="p-5 sm:p-6 rounded-panel bg-gradient-to-br from-violet-500/10 via-ink-900 to-ink-900 border border-violet-500/30 space-y-3 relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">🧠</span>
+                            <span class="text-xs font-mono font-bold uppercase tracking-wider text-violet-400">
+                                {{ __('site.daily_review.title') }}
+                            </span>
+                            <span class="px-2 py-0.5 rounded-badge bg-violet-500/20 text-violet-300 text-[10px] font-mono">
+                                {{ $dailyReview['days_ago'] }}
+                            </span>
+                        </div>
+                        @if(!empty($dailyReview['book_slug']))
+                            <a href="{{ route('books.show', $dailyReview['book_slug']) }}" class="text-xs font-mono text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors">
+                                <span>{{ $dailyReview['book_title'] }}</span>
+                                <span>→</span>
+                            </a>
+                        @endif
+                    </div>
+
+                    <blockquote class="italic text-paper text-sm sm:text-base font-serif border-l-2 border-violet-500/50 pl-3.5 py-1">
+                        "{{ $dailyReview['text'] }}"
+                    </blockquote>
+
+                    @if(!empty($dailyReview['note']))
+                        <div class="text-xs text-mist font-mono pl-3.5">
+                            <span class="text-violet-400 font-semibold">{{ __('site.daily_review.your_note') }}:</span> {{ $dailyReview['note'] }}
+                        </div>
+                    @elseif(!empty($dailyReview['author']))
+                        <div class="text-xs text-mist font-mono pl-3.5">
+                            — {{ $dailyReview['author'] }}
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <!-- Activity Heatmap Card -->
             <div class="p-5 sm:p-6 rounded-panel bg-ink-900 border border-ink-border space-y-4">
                 <div class="flex items-center justify-between">

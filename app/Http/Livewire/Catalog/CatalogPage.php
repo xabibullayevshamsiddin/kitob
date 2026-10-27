@@ -19,6 +19,7 @@ class CatalogPage extends Component
     public string $format = 'all'; // 'all', 'pdf', 'audio', 'video', 'quiz'
     public string $readingStatus = 'all'; // 'all', 'reading', 'finished', 'saved'
     public string $sortBy = 'week_desc'; // 'week_desc', 'week_asc', 'popular', 'title_asc', 'chapters_desc'
+    public string $mood = ''; // '', 'tezkor', 'chuqur', 'ilhomlantiruvchi', 'dam_oluvchi'
 
     protected $queryString = [
         'genre'         => ['except' => ''],
@@ -26,6 +27,7 @@ class CatalogPage extends Component
         'format'        => ['except' => 'all'],
         'readingStatus' => ['except' => 'all'],
         'sortBy'        => ['except' => 'week_desc'],
+        'mood'          => ['except' => ''],
     ];
 
     public function updatedSearch(): void
@@ -50,6 +52,18 @@ class CatalogPage extends Component
 
     public function updatedSortBy(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatedMood(): void
+    {
+        $this->resetPage();
+    }
+
+    public function setMood(string $mood): void
+    {
+        $allowed = ['', 'tezkor', 'chuqur', 'ilhomlantiruvchi', 'dam_oluvchi'];
+        $this->mood = in_array($mood, $allowed) ? $mood : '';
         $this->resetPage();
     }
 
@@ -80,6 +94,7 @@ class CatalogPage extends Component
         $this->format = 'all';
         $this->readingStatus = 'all';
         $this->sortBy = 'week_desc';
+        $this->mood = '';
         $this->resetPage();
     }
 
@@ -105,6 +120,11 @@ class CatalogPage extends Component
         // Janr filtri
         if ($this->genre !== '') {
             $query->where('genre', $this->genre);
+        }
+
+        // Kayfiyat (Mood) filtri
+        if ($this->mood !== '') {
+            $query->where('mood', $this->mood);
         }
 
         // Format filtri
@@ -166,6 +186,7 @@ class CatalogPage extends Component
             $this->genre !== '' ||
             $this->format !== 'all' ||
             $this->readingStatus !== 'all' ||
+            $this->mood !== '' ||
             $this->sortBy !== 'week_desc'
         );
 
@@ -175,6 +196,7 @@ class CatalogPage extends Component
             && $this->genre === ''
             && $this->format === 'all'
             && $this->readingStatus === 'all'
+            && $this->mood === ''
             && ($totalBooksCount > 4 || $recommendationService->hasHistory($user));
 
         $recommendations = $canConsiderRecommendations
@@ -206,6 +228,7 @@ class CatalogPage extends Component
             'finishedCount'     => $finishedCount,
             'savedBooksCount'   => $savedBooksCount,
             'hasActiveFilters'  => $hasActiveFilters,
+            'mood'              => $this->mood,
         ])->layout('layouts.app', ['title' => 'Kitoblar katalogi']);
     }
 }

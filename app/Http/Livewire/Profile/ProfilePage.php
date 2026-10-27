@@ -331,6 +331,40 @@ class ProfilePage extends Component
         $userItems = $isOwner ? $this->user->userItems()->with('shopItem')->get() : collect();
         $equippedItemIds = $isOwner ? $this->user->equipment()->pluck('shop_item_id')->toArray() : [];
 
+        // Spaced Repetition (Daily Review / Kunlik takrorlash)
+        $dailyReview = null;
+        if ($isOwner) {
+            $userHighlight = \App\Models\UserNote::where('user_id', $this->user->id)
+                ->where('created_at', '<=', now()->subDays(1))
+                ->with('book')
+                ->inRandomOrder()
+                ->first();
+
+            if ($userHighlight && $userHighlight->book && !empty($userHighlight->selected_text)) {
+                $days = \Carbon\Carbon::parse($userHighlight->created_at)->diffInDays(now());
+                $dailyReview = [
+                    'type' => 'personal_note',
+                    'days_ago' => $days > 0 ? "{$days} kun oldin" : "yaqinda",
+                    'book_title' => $userHighlight->book->title,
+                    'book_slug' => $userHighlight->book->slug,
+                    'text' => $userHighlight->selected_text,
+                    'note' => $userHighlight->note_text,
+                ];
+            } else {
+                $todayQuote = \App\Models\DailyQuote::with('book')->latest('send_date')->first();
+                if ($todayQuote) {
+                    $dailyReview = [
+                        'type' => 'daily_quote',
+                        'days_ago' => "Bugungi tafakkur",
+                        'book_title' => $todayQuote->book?->title ?? 'Davra Books',
+                        'book_slug' => $todayQuote->book?->slug ?? '',
+                        'text' => $todayQuote->quote_text,
+                        'author' => $todayQuote->book?->author ?? 'Donishmand',
+                    ];
+                }
+            }
+        }
+
         return view('livewire.profile.profile-page', [
             'user'              => $this->user,
             'userRank'          => $userRank,
@@ -346,6 +380,7 @@ class ProfilePage extends Component
             'isOwner'           => $isOwner,
             'userItems'         => $userItems,
             'equippedItemIds'   => $equippedItemIds,
+            'dailyReview'       => $dailyReview,
         ])->layout('layouts.app', ['title' => $this->user->name . ' (@' . $this->user->username . ')']);
     }
 }

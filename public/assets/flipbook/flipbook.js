@@ -826,6 +826,37 @@
     const visiblePages =
       isMobile || leftPage === rightPage ? [leftPage] : [leftPage, rightPage].filter((p) => p <= totalPages);
 
+    // Reading Time Left Estimator (Amazon Kindle-style)
+    try {
+      const nowTs = Date.now();
+      if (!window.__fbPageTimestamps) window.__fbPageTimestamps = [];
+      if (window.__fbLastFlipTs) {
+        const deltaSec = (nowTs - window.__fbLastFlipTs) / 1000;
+        if (deltaSec >= 8 && deltaSec <= 300) {
+          window.__fbPageTimestamps.push(deltaSec);
+          if (window.__fbPageTimestamps.length > 5) window.__fbPageTimestamps.shift();
+        }
+      }
+      window.__fbLastFlipTs = nowTs;
+
+      const avgSec = window.__fbPageTimestamps.length > 0
+        ? window.__fbPageTimestamps.reduce((a, b) => a + b, 0) / window.__fbPageTimestamps.length
+        : 50;
+
+      const remaining = Math.max(0, totalPages - leftPage);
+      const sectionRemaining = remaining > 20 ? 15 : remaining;
+      const minutesLeft = Math.max(1, Math.round((sectionRemaining * avgSec) / 60));
+
+      const timeEstEl = document.getElementById('fb-time-estimate-text');
+      if (timeEstEl) {
+        if (remaining === 0) {
+          timeEstEl.textContent = 'Kitob yakunlandi! 🎉';
+        } else {
+          timeEstEl.textContent = `Bob yakuniga ~${minutesLeft} daqiqa`;
+        }
+      }
+    } catch (_) {}
+
     // Notify reading tracker that user is actively reading
     window.dispatchEvent(new CustomEvent('reading-activity'));
 

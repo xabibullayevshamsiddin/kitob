@@ -78,6 +78,51 @@
         </div>
     @endauth
 
+    <!-- Duolingo-style League Divisions (Haftalik Ligalar) -->
+    <div class="space-y-2">
+        <div class="flex items-center justify-between">
+            <span class="ks-eyebrow">{{ __('site.league.section_title') }}</span>
+            <span class="text-[11px] font-mono text-mist">{{ __('site.league.promotion_info') }}</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <button type="button" wire:click="setLeague('all')"
+                class="p-3 rounded-card text-left border transition-all duration-base cursor-pointer {{ $activeLeague === 'all' ? 'bg-ink-800 border-amber-500 shadow-md ring-1 ring-amber-500/30' : 'bg-ink-900/60 border-ink-border hover:bg-ink-800/50' }}">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono font-bold text-paper">{{ __('site.league.all') }}</span>
+                    <span class="text-base">🌐</span>
+                </div>
+                <div class="text-[11px] text-mist mt-1">{{ __('site.league.all_desc') }}</div>
+            </button>
+
+            <button type="button" wire:click="setLeague('bronze')"
+                class="p-3 rounded-card text-left border transition-all duration-base cursor-pointer {{ $activeLeague === 'bronze' ? 'bg-amber-950/40 border-amber-600 shadow-md ring-1 ring-amber-600/30' : 'bg-ink-900/60 border-ink-border hover:bg-ink-800/50' }}">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono font-bold text-amber-500">{{ __('site.league.bronze') }}</span>
+                    <span class="text-base">🥉</span>
+                </div>
+                <div class="text-[11px] text-mist mt-1">{{ __('site.league.bronze_desc') }}</div>
+            </button>
+
+            <button type="button" wire:click="setLeague('silver')"
+                class="p-3 rounded-card text-left border transition-all duration-base cursor-pointer {{ $activeLeague === 'silver' ? 'bg-slate-800/60 border-slate-400 shadow-md ring-1 ring-slate-400/30' : 'bg-ink-900/60 border-ink-border hover:bg-ink-800/50' }}">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono font-bold text-slate-300">{{ __('site.league.silver') }}</span>
+                    <span class="text-base">🥈</span>
+                </div>
+                <div class="text-[11px] text-mist mt-1">{{ __('site.league.silver_desc') }}</div>
+            </button>
+
+            <button type="button" wire:click="setLeague('gold')"
+                class="p-3 rounded-card text-left border transition-all duration-base cursor-pointer {{ $activeLeague === 'gold' ? 'bg-amber-500/10 border-amber-400 shadow-md ring-1 ring-amber-400/30' : 'bg-ink-900/60 border-ink-border hover:bg-ink-800/50' }}">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono font-bold text-amber-300">{{ __('site.league.gold') }}</span>
+                    <span class="text-base">🥇</span>
+                </div>
+                <div class="text-[11px] text-mist mt-1">{{ __('site.league.gold_desc') }}</div>
+            </button>
+        </div>
+    </div>
+
     <!-- Filter & Sort Bar -->
     <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-panel bg-ink-900 border border-ink-border">
         <!-- Period Tabs -->
@@ -282,6 +327,9 @@
                                     @if($isCurrent)
                                         <span class="px-1.5 py-0.2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-mono font-bold text-[9px] rounded uppercase shrink-0">{{ __('site.leaderboard.you') }}</span>
                                     @endif
+                                    <span class="px-1.5 py-0.2 bg-ink-800 border border-ink-border text-paper font-mono text-[10px] rounded shrink-0" title="{{ $u->league_title }}">
+                                        {{ $u->league_icon }}
+                                    </span>
                                 </div>
                                 <span class="text-[10px] sm:text-[11px] text-mist font-mono truncate block max-w-[110px] sm:max-w-none">{{ '@' . $u->username }}</span>
                             </div>

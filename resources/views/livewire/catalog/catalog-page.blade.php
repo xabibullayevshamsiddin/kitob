@@ -144,6 +144,38 @@
                 </button>
             @endif
         </div>
+
+        <!-- Mood Filter Row (Kayfiyat bo'yicha) -->
+        <div class="pt-3 border-t border-ink-border">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 sm:mx-0 sm:px-0 flex-nowrap sm:flex-wrap">
+                <span class="ks-eyebrow mr-2 hidden sm:inline-block shrink-0">{{ __('site.catalog.mood') }}</span>
+
+                <button type="button" wire:click="setMood('')"
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $mood === '' ? 'bg-violet-500 text-white font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    {{ __('site.catalog.mood_all') }}
+                </button>
+
+                <button type="button" wire:click="setMood('tezkor')"
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $mood === 'tezkor' ? 'bg-violet-500 text-white font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    ⚡ {{ __('site.catalog.mood_fast') }}
+                </button>
+
+                <button type="button" wire:click="setMood('chuqur')"
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $mood === 'chuqur' ? 'bg-violet-500 text-white font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    🧠 {{ __('site.catalog.mood_deep') }}
+                </button>
+
+                <button type="button" wire:click="setMood('ilhomlantiruvchi')"
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $mood === 'ilhomlantiruvchi' ? 'bg-violet-500 text-white font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    🔥 {{ __('site.catalog.mood_inspiring') }}
+                </button>
+
+                <button type="button" wire:click="setMood('dam_oluvchi')"
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $mood === 'dam_oluvchi' ? 'bg-violet-500 text-white font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    🌿 {{ __('site.catalog.mood_relaxing') }}
+                </button>
+            </div>
+        </div>
     </div>
 
     @if($showRecommendations && $recommendations->isNotEmpty())

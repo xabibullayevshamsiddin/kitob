@@ -61,7 +61,73 @@ class SendDailyQuoteCommand extends Command
                 continue;
             }
 
-            SendTelegramNotificationJob::dispatch($user->id, $message, $options, 'daily_quote');
+            // Spaced Repetition: Foydalanuvchining o'zi belgilagan (highlight/note) eski iqtibosini tekshirish
+            $userHighlight = \App\Models\UserNote::where('user_id', $user->id)
+                ->where('created_at', '<=', Carbon::now()->subDays(2))
+                ->with('book')
+                ->inRandomOrder()
+                ->first();
+
+            if (!$userHighlight) {
+                $userAnnotation = \App\Models\PdfAnnotation::where('user_id', $user->id)
+                    ->whereNotNull('note_text')
+                    ->where('note_text', '!=', '')
+                    ->where('created_at', '<=', Carbon::now()->subDays(2))
+                    ->with('book')
+                    ->inRandomOrder()
+                    ->first();
+            } else {
+                $userAnnotation = null;
+            }
+
+            if ($userHighlight && $userHighlight->book && !empty($userHighlight->selected_text)) {
+                $daysAgo = Carbon::parse($userHighlight->created_at)->diffInDays(Carbon::now());
+                $daysAgoText = $daysAgo > 0 ? "{$daysAgo} kun oldin" : "bir necha kun oldin";
+                $bookTitle = htmlspecialchars($userHighlight->book->title);
+                $quoteSnippet = htmlspecialchars($userHighlight->selected_text);
+
+                $userMsg = "🧠 <b>Eslaysizmi? Daily Review</b> 📚\n\n"
+                         . "{$daysAgoText} <b>«{$bookTitle}»</b> kitobida ushbu fikrni belgilagan edingiz:\n\n"
+                         . "«{$quoteSnippet}»\n\n"
+                         . "— <i>Unutmaslik uchun qayta tafakkur qiling! ✨</i>";
+
+                $userBtns = [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => '📖 Kitobga o\'tish', 'url' => "{$appUrl}/books/{$userHighlight->book->slug}"]
+                            ]
+                        ]
+                    ]
+                ];
+
+                SendTelegramNotificationJob::dispatch($user->id, $userMsg, $userBtns, 'daily_quote');
+            } elseif ($userAnnotation && $userAnnotation->book) {
+                $daysAgo = Carbon::parse($userAnnotation->created_at)->diffInDays(Carbon::now());
+                $daysAgoText = $daysAgo > 0 ? "{$daysAgo} kun oldin" : "bir necha kun oldin";
+                $bookTitle = htmlspecialchars($userAnnotation->book->title);
+                $quoteSnippet = htmlspecialchars($userAnnotation->note_text);
+
+                $userMsg = "🧠 <b>Eslaysizmi? Daily Review</b> 📚\n\n"
+                         . "{$daysAgoText} <b>«{$bookTitle}»</b> kitobida quyidagi qaydni yozgan edingiz:\n\n"
+                         . "«{$quoteSnippet}»\n\n"
+                         . "— <i>Qayta xotirlash xotirani mustahkamlaydi! ✨</i>";
+
+                $userBtns = [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => '📖 Kitobga o\'tish', 'url' => "{$appUrl}/books/{$userAnnotation->book->slug}"]
+                            ]
+                        ]
+                    ]
+                ];
+
+                SendTelegramNotificationJob::dispatch($user->id, $userMsg, $userBtns, 'daily_quote');
+            } else {
+                SendTelegramNotificationJob::dispatch($user->id, $message, $options, 'daily_quote');
+            }
+
             $count++;
         }
 

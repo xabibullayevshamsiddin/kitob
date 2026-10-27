@@ -47,6 +47,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'banned_until',
         'ban_reason',
         'banned_at',
+        'league',
+        'weekly_points',
+        'league_updated_at',
     ];
 
     protected $hidden = [
@@ -88,6 +91,37 @@ class User extends Authenticatable implements MustVerifyEmail
     public function streak(): HasOne
     {
         return $this->hasOne(UserStreak::class);
+    }
+
+    public function getLeagueAttribute(): string
+    {
+        $val = $this->attributes['league'] ?? null;
+        if (!empty($val) && in_array($val, ['bronze', 'silver', 'gold'])) {
+            return $val;
+        }
+
+        $points = (int) ($this->attributes['total_points'] ?? 0);
+        if ($points >= 2000) return 'gold';
+        if ($points >= 500)  return 'silver';
+        return 'bronze';
+    }
+
+    public function getLeagueTitleAttribute(): string
+    {
+        return match ($this->league) {
+            'gold'   => __('site.league.gold'),
+            'silver' => __('site.league.silver'),
+            default  => __('site.league.bronze'),
+        };
+    }
+
+    public function getLeagueIconAttribute(): string
+    {
+        return match ($this->league) {
+            'gold'   => '🥇',
+            'silver' => '🥈',
+            default  => '🥉',
+        };
     }
 
     public function readingSessions(): HasMany

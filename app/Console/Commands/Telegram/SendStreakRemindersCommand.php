@@ -44,19 +44,45 @@ class SendStreakRemindersCommand extends Command
             $streak = $user->streak?->current_streak ?? 1;
             $name = htmlspecialchars($user->name);
 
-            $message = "🔥 <b>Olovni saqlab qoling, {$name}!</b>\n\n"
-                     . "Sizning <b>{$streak} kunlik</b> Streak silsilangiz bor! Lekin bugun hali kitob o'qimadingiz.\n\n"
-                     . "Kun yakunlanishiga oz fursat qoldi. Hoziroq bir necha sahifa mutolaa qiling va ketma-ketlikni boy bermang! 📖✨";
+            // Foydalanuvchining oxirgi mutolaa qilgan kitobini aniqlash
+            $lastProgress = \App\Models\BookReadingProgress::where('user_id', $user->id)
+                ->with('book')
+                ->orderByDesc('updated_at')
+                ->first();
 
-            $options = [
-                'reply_markup' => [
-                    'inline_keyboard' => [
-                        [
-                            ['text' => '📖 Hoziroq mutolaa qilish', 'url' => $appUrl]
+            if ($lastProgress && $lastProgress->book) {
+                $bookTitle = htmlspecialchars($lastProgress->book->title);
+                $page = (int) ($lastProgress->current_page ?? 1);
+                $bookUrl = "{$appUrl}/books/{$lastProgress->book->slug}";
+
+                $message = "🔥 <b>Sizni sog'indik, {$name}!</b>\n\n"
+                         . "<b>«{$bookTitle}»</b> kitobida <b>{$page}-sahifada</b> to'xtagan edingiz.\n\n"
+                         . "Yana 5 daqiqa mutolaa qilib, bugungi <b>{$streak} kunlik streak'ingizni</b> tiklang! 🚀📖";
+
+                $options = [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => "📖 Mutolaani davom ettirish ({$page}-bet)", 'url' => $bookUrl]
+                            ]
                         ]
                     ]
-                ]
-            ];
+                ];
+            } else {
+                $message = "🔥 <b>Olovni saqlab qoling, {$name}!</b>\n\n"
+                         . "Sizning <b>{$streak} kunlik</b> Streak silsilangiz bor! Lekin bugun hali kitob o'qimadingiz.\n\n"
+                         . "Kun yakunlanishiga oz fursat qoldi. Hoziroq bir necha sahifa mutolaa qiling va ketma-ketlikni boy bermang! 📖✨";
+
+                $options = [
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [
+                                ['text' => '📖 Hoziroq mutolaa qilish', 'url' => $appUrl]
+                            ]
+                        ]
+                    ]
+                ];
+            }
 
             SendTelegramNotificationJob::dispatch($user->id, $message, $options, 'streak_reminder');
             $count++;

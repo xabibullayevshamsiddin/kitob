@@ -22,14 +22,23 @@ class LeaderboardPage extends Component
 
     public string $search = '';
 
+    public string $activeLeague = 'all'; // 'all', 'bronze', 'silver', 'gold'
+
     protected $queryString = [
         'period' => ['except' => 'all_time'],
         'sortBy' => ['except' => 'points'],
         'search' => ['except' => ''],
+        'activeLeague' => ['except' => 'all'],
     ];
 
     public function updatedSearch(): void
     {
+        $this->resetPage();
+    }
+
+    public function setLeague(string $league): void
+    {
+        $this->activeLeague = in_array($league, ['all', 'bronze', 'silver', 'gold']) ? $league : 'all';
         $this->resetPage();
     }
 
@@ -120,6 +129,10 @@ class LeaderboardPage extends Component
             return $user;
         });
 
+        if ($this->activeLeague !== 'all') {
+            $allUsers = $allUsers->filter(fn(User $u) => $u->league === $this->activeLeague)->values();
+        }
+
         // Sort collection based on $sortBy
         $sortedUsers = match ($this->sortBy) {
             'reading_time' => $allUsers->sortByDesc('display_minutes')->values(),
@@ -178,6 +191,7 @@ class LeaderboardPage extends Component
         return view('livewire.leaderboard.leaderboard-page', [
             'period'       => $this->period,
             'sortBy'       => $this->sortBy,
+            'activeLeague' => $this->activeLeague,
             'top3'         => $top3,
             'allUsers'     => $paginatedUsers,
             'myRank'       => $myRank,
