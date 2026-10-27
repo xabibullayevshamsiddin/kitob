@@ -8,7 +8,7 @@
 @endpush
 
 @section('content')
-<div id="fb-standalone-container" x-data="{ showChatDrawer: false, showBuddyDrawer: false }" class="w-full max-w-[1700px] mx-auto space-y-3 px-1 sm:px-4 pb-8">
+<div id="fb-standalone-container" x-data="{ showChatDrawer: false, showBuddyDrawer: false }" @open-buddy-drawer.window="showBuddyDrawer = true" @close-buddy-drawer.window="showBuddyDrawer = false" class="w-full max-w-[1700px] mx-auto space-y-3 px-1 sm:px-4 pb-8">
 
     <!-- Top Navigation & Tools Bar -->
     <div class="flex items-center justify-between flex-wrap gap-3 border-b border-ink-border pb-3">
@@ -343,7 +343,7 @@
                     <p class="text-[11px] text-mist font-mono">Do'stlar bilan birga o'qish, sahifalar bo'yicha progress va spoylerdan himoyalangan chat</p>
                 </div>
             </div>
-            <button type="button" @click="showBuddyDrawer = false" class="text-mist hover:text-paper font-mono px-2.5 py-1 text-xs bg-ink-900 border border-ink-border rounded-xl transition-colors">
+            <button type="button" @click="showBuddyDrawer = false; window.dispatchEvent(new CustomEvent('close-buddy-drawer'))" class="text-mist hover:text-paper font-mono px-2.5 py-1 text-xs bg-ink-900 border border-ink-border rounded-xl transition-colors">
                 Yopish ✕
             </button>
         </div>

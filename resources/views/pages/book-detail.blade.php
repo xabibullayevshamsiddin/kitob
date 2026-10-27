@@ -260,6 +260,8 @@
                         pdfFrame.src = base + '#page=' + p + '&view=FitH&pagemode=none';
                     }
                 });
+                window.addEventListener('open-buddy-modal', () => { this.showBuddyModal = true; });
+                window.addEventListener('close-buddy-modal', () => { this.showBuddyModal = false; });
             }
         }));
     }
@@ -353,7 +355,7 @@
 
                     <!-- Birgalikda Mutolaa (Buddy Read) Tugmasi -->
                     <button type="button"
-                            @click="showBuddyModal = true"
+                            @click="showBuddyModal = true; window.dispatchEvent(new CustomEvent('open-buddy-modal'))"
                             class="px-3.5 py-2 rounded-btn bg-amber-500/15 hover:bg-amber-500 text-amber-700 dark:text-amber-300 hover:text-ink-950 border border-amber-500/40 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-md group"
                             title="Do'stlar bilan birgalikda o'qish va spoylersiz muhokama">
                         <span class="text-sm group-hover:scale-110 transition-transform">👥</span>
@@ -1121,7 +1123,7 @@
          class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md"
          role="dialog" aria-modal="true">
         <div class="relative w-full max-w-2xl bg-ink-950 border border-amber-500/30 rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto"
-             @click.away="showBuddyModal = false">
+             @click.away="showBuddyModal = false; window.dispatchEvent(new CustomEvent('close-buddy-modal'))">
             <div class="flex items-center justify-between border-b border-ink-border pb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">👥</span>
@@ -1130,7 +1132,7 @@
                         <p class="text-xs text-mist font-mono">Do'stlar bilan birga o'qish va spoylerdan himoyalangan chat</p>
                     </div>
                 </div>
-                <button type="button" @click="showBuddyModal = false" class="text-mist hover:text-paper font-mono px-3 py-1 bg-ink-900 border border-ink-border rounded-xl text-xs transition-colors">
+                <button type="button" @click="showBuddyModal = false; window.dispatchEvent(new CustomEvent('close-buddy-modal'))" class="text-mist hover:text-paper font-mono px-3 py-1 bg-ink-900 border border-ink-border rounded-xl text-xs transition-colors">
                     ✕ Yopish
                 </button>
             </div>

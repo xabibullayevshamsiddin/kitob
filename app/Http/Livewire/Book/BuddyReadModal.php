@@ -160,6 +160,17 @@ class BuddyReadModal extends Component
             ]);
     }
 
+    public function updateCurrentPage(int $page): void
+    {
+        if (!Auth::check() || !$this->activeBuddyReadId) return;
+
+        BuddyReadMember::where('buddy_read_id', $this->activeBuddyReadId)
+            ->where('user_id', Auth::id())
+            ->update([
+                'current_page' => max(1, $page),
+            ]);
+    }
+
     public function revealSpoiler(int $messageId): void
     {
         $this->revealedSpoilers[$messageId] = true;

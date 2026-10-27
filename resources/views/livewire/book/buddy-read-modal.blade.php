@@ -1,6 +1,24 @@
 <div class="space-y-4" wire:poll.2500ms>
     <!-- 🎙️ WebRTC Live Voice Room & Voice Player Scripts (MUST BE AT TOP) -->
     <script>
+        window.goToBuddyReading = function(targetPage) {
+            window.dispatchEvent(new CustomEvent('close-buddy-modal'));
+            window.dispatchEvent(new CustomEvent('close-buddy-drawer'));
+
+            const readerEl = document.getElementById('online-reader') || document.getElementById('fb-root');
+            if (readerEl) {
+                readerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (targetPage && typeof window.fbGoToPage === 'function') {
+                    setTimeout(() => {
+                        try { window.fbGoToPage(targetPage); } catch (e) {}
+                    }, 350);
+                }
+            } else {
+                const url = "{{ route('books.flipbook', $book->slug ?? $book->id) }}?page=" + (targetPage || 1);
+                window.location.href = url;
+            }
+        };
+
         window.buddyLiveVoiceRoom = function(config) {
             return {
                 roomId: config.roomId,
@@ -8,6 +26,7 @@
                 voiceActive: config.initialActive || false,
                 isConnecting: false,
                 isMuted: false,
+                isFullModalOpen: true,
                 mediaStream: null,
                 audioContext: null,
                 analyser: null,
@@ -19,6 +38,30 @@
                 candidateQueues: {},
                 lastSignalId: 0,
                 connectedPeersCount: 0,
+
+                init() {
+                    window.addEventListener('open-buddy-modal', () => { this.isFullModalOpen = true; });
+                    window.addEventListener('close-buddy-modal', () => { this.isFullModalOpen = false; });
+                    window.addEventListener('open-buddy-drawer', () => { this.isFullModalOpen = true; });
+                    window.addEventListener('close-buddy-drawer', () => { this.isFullModalOpen = false; });
+                    window.addEventListener('flipbook:pagechange', (e) => {
+                        if (e.detail && e.detail.page && config.wire && typeof config.wire.updateCurrentPage === 'function') {
+                            config.wire.updateCurrentPage(e.detail.page);
+                        }
+                    });
+                },
+
+                openFullModal() {
+                    this.isFullModalOpen = true;
+                    window.dispatchEvent(new CustomEvent('open-buddy-modal'));
+                    window.dispatchEvent(new CustomEvent('open-buddy-drawer'));
+                },
+
+                goToReading(targetPage = null) {
+                    if (window.goToBuddyReading) {
+                        window.goToBuddyReading(targetPage);
+                    }
+                },
 
                 async toggleVoice() {
                     if (!this.voiceActive) {
@@ -523,13 +566,14 @@
 
                 <div class="flex items-center gap-2">
                     @if($book->pdf_path)
-                        <a href="{{ route('books.flipbook', $book->slug ?? $book->id) }}?page={{ $myMember?->current_page ?? 1 }}" 
-                           class="px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-                           title="Kitobni ochish va 3D mutolaa qilish">
+                        <button type="button" 
+                                onclick="window.goToBuddyReading({{ $myMember?->current_page ?? 1 }})" 
+                                class="px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                                title="Kitobni ochish va 3D mutolaa qilish (Ovozli suhbat uzilmaydi)">
                             <span>📖</span>
                             <span>Mutolaaga o'tish</span>
                             <span>→</span>
-                        </a>
+                        </button>
                         <a href="{{ route('books.pdf', $book) }}" 
                            class="px-2.5 py-1.5 rounded-btn bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500/25 text-xs font-mono font-bold flex items-center gap-1 transition-all"
                            title="PDF yuklab olish">
@@ -605,6 +649,64 @@
                             <span x-text="isConnecting ? '⏳ Ulanmoqda...' : (voiceActive ? '🔇 Efirdan chiqish' : '🎙️ Ovozli efirga kirish')">🎙️ Ovozli efirga kirish</span>
                         </button>
                     </div>
+
+                    <!-- ── Teleported Floating Mini Voice Dock (Visible while reading book) ── -->
+                    <template x-teleport="body">
+                        <div x-show="voiceActive && !isFullModalOpen" x-cloak
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+                             class="fixed bottom-5 right-5 z-[999999] flex items-center gap-2 p-2 rounded-2xl bg-[#0b0f17]/95 border border-emerald-500/50 shadow-2xl backdrop-blur-xl text-paper select-none">
+                            
+                            <!-- Live Beacon & Partner Status -->
+                            <button type="button" @click="openFullModal()" 
+                                    class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-left cursor-pointer"
+                                    title="Suhbat va xonani to'liq ochish">
+                                <span class="relative flex h-2.5 w-2.5 shrink-0">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                                    <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                                </span>
+                                <div class="min-w-0 pr-1">
+                                    <p class="text-[9px] font-mono font-bold uppercase tracking-wider text-emerald-400 leading-tight">Jonli Ovoz</p>
+                                    <p class="text-xs font-semibold text-paper truncate max-w-[130px]" x-text="connectedPeersCount > 0 ? (connectedPeersCount + ' sherik ulangan') : 'Efirda siz (kutilmoqda)'"></p>
+                                </div>
+                            </button>
+
+                            <!-- Live VU Meter -->
+                            <div class="flex items-center gap-0.5 h-4 px-1" title="Sizning ovozingiz darajasi">
+                                <template x-for="i in 5" :key="i">
+                                    <span class="w-1 rounded-full transition-all duration-75"
+                                          :class="(i * 20) <= micLevel ? 'bg-emerald-400' : 'bg-white/10'"
+                                          :style="'height: ' + Math.max(4, Math.min(16, ((i * 20) <= micLevel ? (i * 3 + 4) : 4))) + 'px'"></span>
+                                </template>
+                            </div>
+
+                            <!-- Mute Toggle -->
+                            <button type="button" @click="toggleMute()"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer"
+                                    :class="isMuted ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 hover:bg-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'"
+                                    :title="isMuted ? 'Mikrofonni yoqish' : 'Mikrofonni o\'chirish'">
+                                <span x-text="isMuted ? '🔇 Muted' : '🎤 Ovoz ochiq'"></span>
+                            </button>
+
+                            <!-- Re-open Modal / Chat -->
+                            <button type="button" @click="openFullModal()"
+                                    class="p-2 rounded-xl text-mist hover:text-amber-400 hover:bg-white/10 border border-white/5 transition-colors cursor-pointer"
+                                    title="Do'stlar xonasi va chatni ochish">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            </button>
+
+                            <!-- Leave Voice -->
+                            <button type="button" @click="stopVoice()"
+                                    class="p-2 rounded-xl text-mist hover:text-rose-400 hover:bg-rose-500/10 border border-white/5 transition-colors cursor-pointer"
+                                    title="Ovozli efirdan chiqish">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </template>
                 </div>
             @endauth
 
@@ -965,10 +1067,13 @@
                 </div>
                 @if($book->pdf_path)
                     <div class="flex items-center gap-2">
-                        <a href="{{ route('books.flipbook', $book->slug ?? $book->id) }}" class="px-3 py-1.5 rounded-btn bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm">
+                        <button type="button" 
+                                onclick="window.goToBuddyReading(1)" 
+                                class="px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                                title="Kitobni ochish va 3D mutolaa qilish (Ovozli suhbat uzilmaydi)">
                             <span>📖</span>
                             <span>Mutolaaga o'tish</span>
-                        </a>
+                        </button>
                         <a href="{{ route('books.pdf', $book) }}" class="px-2.5 py-1.5 rounded-btn bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-mono font-bold flex items-center gap-1">
                             <span>📥 PDF</span>
                         </a>
