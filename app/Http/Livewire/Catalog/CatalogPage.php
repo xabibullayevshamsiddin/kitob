@@ -124,7 +124,9 @@ class CatalogPage extends Component
 
         // Kayfiyat (Mood) filtri
         if ($this->mood !== '') {
-            $query->where('mood', $this->mood);
+            if (\Illuminate\Support\Facades\Schema::hasColumn('books', 'mood')) {
+                $query->where('mood', $this->mood);
+            }
         }
 
         // Format filtri
