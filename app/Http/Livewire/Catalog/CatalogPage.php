@@ -231,6 +231,9 @@ class CatalogPage extends Component
             'savedBooksCount'   => $savedBooksCount,
             'hasActiveFilters'  => $hasActiveFilters,
             'mood'              => $this->mood,
-        ])->layout('layouts.app', ['title' => 'Kitoblar katalogi']);
+        ])->layout('layouts.app', [
+            'title' => 'Elektron va audio kitoblar katalogi',
+            'description' => 'Kitobxon platformasidagi barcha sara elektron va audio kitoblar, tahliliy darslar va interaktiv testlar.',
+        ]);
     }
 }

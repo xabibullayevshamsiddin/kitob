@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ __('site.faq.sub') }}">
-    <title>{{ __('site.faq.badge') }} — Kitobxon</title>
+    <x-seo-meta :title="__('site.faq.badge') . ' — Savol-javoblar'" :description="__('site.faq.sub')" />
 
     @include('partials.design-system')
 

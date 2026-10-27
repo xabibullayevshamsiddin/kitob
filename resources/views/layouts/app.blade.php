@@ -19,7 +19,10 @@
     @if(View::hasSection('seo'))
         @yield('seo')
     @else
-        <x-seo-meta :title="trim($__env->yieldContent('title'))" />
+        <x-seo-meta 
+            :title="trim($__env->yieldContent('title')) ?: ($title ?? null)" 
+            :description="trim($__env->yieldContent('description')) ?: ($description ?? null)" 
+        />
     @endif
 
     @include('partials.design-system')

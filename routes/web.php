@@ -229,10 +229,15 @@ Route::get('/terms', function () {
 Route::redirect('/rules-and-penalties', '/terms');
 Route::redirect('/rules', '/terms');
 
-// Public kitoblar katalogi -> Interaktiv katalog sahifasiga yo'naltirish
+// Public kitoblar katalogi -> Interaktiv katalog sahifasiga yo'naltirish (SEO 301 Permanent Redirect)
 Route::get('/books', function (\Illuminate\Http\Request $request) {
-    return redirect()->route('books.catalog', $request->all());
+    return redirect()->route('books.catalog', $request->all(), 301);
 })->name('books.public');
+
+// Route alias for legacy or sitemap compatibility
+Route::get('/books/{book}/audio-view', function ($book) {
+    return redirect()->route('audio.show', $book);
+})->name('books.audio');
 
 // Kitob audio ro'yxati (Global Audio Player uchun ochiq JSON API)
 Route::get('/books/{book}/audios-json', function ($bookId) {
@@ -1491,83 +1496,13 @@ Route::middleware(['auth'])->get('/profile-edit', function () {
 
 // ── SEO: sitemap.xml va robots.txt ──
 Route::get('/robots.txt', function () {
-    $content = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /teacher\nDisallow: /settings\nSitemap: " . url('/sitemap.xml');
-    return response($content, 200)->header('Content-Type', 'text/plain');
+    $content = file_exists(public_path('robots.txt'))
+        ? file_get_contents(public_path('robots.txt'))
+        : "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /teacher\nDisallow: /settings\nDisallow: /livewire\nDisallow: /livewire/*\n\nSitemap: " . url('/sitemap.xml');
+    return response($content, 200)->header('Content-Type', 'text/plain; charset=UTF-8');
 });
 
-Route::get('/sitemap.xml', function () {
-    $xml = \Illuminate\Support\Facades\Cache::remember('kitobxon_sitemap_xml', 21600, function () {
-        $books = \App\Models\Book::where('is_active', true)->latest()->get();
-        $quizzes = \App\Models\Quiz::latest()->get();
-
-        $content = '<?xml version="1.0" encoding="UTF-8"?>';
-        $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">';
-
-        // 1. Asosiy asosiy sahifalar
-        $staticRoutes = [
-            url('/')             => ['priority' => '1.0', 'freq' => 'daily'],
-            url('/books')        => ['priority' => '0.9', 'freq' => 'daily'],
-            url('/leaderboard')  => ['priority' => '0.8', 'freq' => 'daily'],
-            url('/shop')         => ['priority' => '0.8', 'freq' => 'weekly'],
-            url('/faq')          => ['priority' => '0.7', 'freq' => 'monthly'],
-            url('/about')        => ['priority' => '0.6', 'freq' => 'monthly'],
-            url('/contact')      => ['priority' => '0.5', 'freq' => 'monthly'],
-        ];
-
-        foreach ($staticRoutes as $route => $meta) {
-            $content .= '<url>';
-            $content .= '<loc>' . htmlspecialchars($route) . '</loc>';
-            $content .= '<changefreq>' . $meta['freq'] . '</changefreq>';
-            $content .= '<priority>' . $meta['priority'] . '</priority>';
-            $content .= '</url>';
-        }
-
-        // 2. Kitob sahifalari va ularning rasmlari
-        foreach ($books as $b) {
-            $content .= '<url>';
-            $content .= '<loc>' . htmlspecialchars(route('books.show', $b->slug)) . '</loc>';
-            $content .= '<lastmod>' . ($b->updated_at ? $b->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
-            $content .= '<changefreq>weekly</changefreq>';
-            $content .= '<priority>0.9</priority>';
-
-            $coverUrl = $b->cover_url;
-            if ($coverUrl) {
-                $content .= '<image:image>';
-                $content .= '<image:loc>' . htmlspecialchars($coverUrl) . '</image:loc>';
-                $content .= '<image:title>' . htmlspecialchars($b->title) . '</image:title>';
-                $content .= '<image:caption>' . htmlspecialchars($b->author ?? 'Kitobxon') . '</image:caption>';
-                $content .= '</image:image>';
-            }
-
-            $content .= '</url>';
-
-            // Agar kitobning audiosi bo'lsa
-            if ($b->audios()->exists()) {
-                $content .= '<url>';
-                $content .= '<loc>' . htmlspecialchars(route('books.audio', $b->slug)) . '</loc>';
-                $content .= '<lastmod>' . ($b->updated_at ? $b->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
-                $content .= '<changefreq>weekly</changefreq>';
-                $content .= '<priority>0.8</priority>';
-                $content .= '</url>';
-            }
-        }
-
-        // 3. Testlar (Quizzes)
-        foreach ($quizzes as $q) {
-            $content .= '<url>';
-            $content .= '<loc>' . htmlspecialchars(route('quiz.show', $q->book_id ?? $q->id)) . '</loc>';
-            $content .= '<lastmod>' . ($q->updated_at ? $q->updated_at->toAtomString() : now()->toAtomString()) . '</lastmod>';
-            $content .= '<changefreq>weekly</changefreq>';
-            $content .= '<priority>0.8</priority>';
-            $content .= '</url>';
-        }
-
-        $content .= '</urlset>';
-        return $content;
-    });
-
-    return response($xml, 200)->header('Content-Type', 'application/xml');
-})->name('sitemap');
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 
 // Telegram Bot Webhook
 Route::post('/telegram/webhook', [\App\Http\Controllers\Telegram\TelegramWebhookController::class, 'handle'])

@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{{ __('site.about.meta') }}">
-    <title>{{ __('site.about.title') }} — Kitobxon</title>
+    <x-seo-meta :title="__('site.about.title')" :description="__('site.about.meta')" />
 
     @include('partials.design-system')
 

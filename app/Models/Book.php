@@ -46,6 +46,16 @@ class Book extends Model
         'ai_text_quality' => 'float',
     ];
 
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            \Illuminate\Support\Facades\Cache::forget('kitobxon_sitemap_xml');
+        });
+        static::deleted(function () {
+            \Illuminate\Support\Facades\Cache::forget('kitobxon_sitemap_xml');
+        });
+    }
+
     /**
      * Retrieve the model for a bound value (supports both ID and slug).
      */

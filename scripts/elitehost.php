@@ -44,15 +44,27 @@ class EliteHost
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $allHeaders);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
         if ($payload !== null) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
-        $response = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err = curl_error($ch);
+        $attempts = 0;
+        $maxAttempts = 3;
+        do {
+            $attempts++;
+            $response = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $err = curl_error($ch);
+            if ($code > 0) {
+                break;
+            }
+            if ($attempts < $maxAttempts) {
+                usleep(500000); // 0.5s pause before retry
+            }
+        } while ($attempts < $maxAttempts);
+
         curl_close($ch);
 
         return [
