@@ -45,9 +45,65 @@
             @auth
                 <div x-data="{
                     voiceActive: {{ ($myMember && $myMember->voice_active) ? 'true' : 'false' }},
-                    toggleVoice() {
-                        this.voiceActive = !this.voiceActive;
-                        $wire.toggleVoiceActive(this.voiceActive);
+                    mediaStream: null,
+                    audioContext: null,
+                    analyser: null,
+                    micLevel: 0,
+                    animFrame: null,
+                    isConnecting: false,
+
+                    async toggleVoice() {
+                        if (!this.voiceActive) {
+                            this.isConnecting = true;
+                            try {
+                                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                                    throw new Error('Brauzeringiz audio yozishni qo\'llab-quvvatlamaydi yoki xavfsiz (HTTPS) ulanish kerak.');
+                                }
+                                this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                                if (AudioCtx) {
+                                    this.audioContext = new AudioCtx();
+                                    this.analyser = this.audioContext.createAnalyser();
+                                    const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+                                    source.connect(this.analyser);
+                                    this.analyser.fftSize = 64;
+                                    const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+
+                                    const updateLevel = () => {
+                                        if (!this.voiceActive || !this.analyser) return;
+                                        this.analyser.getByteFrequencyData(dataArray);
+                                        let sum = 0;
+                                        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                                        this.micLevel = Math.min(100, Math.round((sum / dataArray.length) * 1.6));
+                                        this.animFrame = requestAnimationFrame(updateLevel);
+                                    };
+                                    updateLevel();
+                                }
+                                this.voiceActive = true;
+                                this.isConnecting = false;
+                                $wire.toggleVoiceActive(true);
+                            } catch(err) {
+                                this.isConnecting = false;
+                                console.error('Efirga ulanish xatosi:', err);
+                                const msg = (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+                                    ? 'Mikrofonga ruxsat berilmadi! Brauzeringiz URL qatoridagi qulf belgisini bosib, mikrofonga ruxsat bering.'
+                                    : ('Mikrofon ulanmadi: ' + (err.message || err.name));
+                                alert(msg);
+                            }
+                        } else {
+                            this.voiceActive = false;
+                            $wire.toggleVoiceActive(false);
+                            if (this.mediaStream) {
+                                try { this.mediaStream.getTracks().forEach(t => t.stop()); } catch(e) {}
+                                this.mediaStream = null;
+                            }
+                            if (this.audioContext) {
+                                try { this.audioContext.close(); } catch(e) {}
+                                this.audioContext = null;
+                            }
+                            if (this.animFrame) cancelAnimationFrame(this.animFrame);
+                            this.micLevel = 0;
+                        }
                     }
                 }" class="p-3 rounded-card bg-gradient-to-r from-amber-500/10 via-ink-900 to-ink-900 border border-amber-500/30 flex items-center justify-between flex-wrap gap-2.5">
                     <div class="flex items-center gap-2.5">
@@ -59,20 +115,35 @@
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold font-serif text-paper">Ovozli suhbat xonasi</span>
                                 <template x-if="voiceActive">
-                                    <span class="px-1.5 py-0.2 rounded-badge bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold animate-pulse">
-                                        ● Jonli efirdasiz
+                                    <span class="px-1.5 py-0.5 rounded-badge bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                        <span>Jonli efirdasiz (Mikrofon faol)</span>
                                     </span>
                                 </template>
                             </div>
-                            <p class="text-[11px] text-mist font-mono">Birga o'qiyotgan do'stlar bilan ovozli gaplashing yoki audio xabar yuboring</p>
+                            
+                            <!-- Dynamic sound visualizer if active -->
+                            <div x-show="voiceActive" x-cloak class="flex items-center gap-1.5 mt-1">
+                                <span class="text-[10px] font-mono text-emerald-400">Ovoz darajasi:</span>
+                                <div class="flex items-center gap-0.5 h-3">
+                                    <template x-for="i in 8" :key="i">
+                                        <span class="w-1 rounded-full transition-all duration-75"
+                                              :class="(i * 12) <= micLevel ? 'bg-emerald-400' : 'bg-ink-700'"
+                                              :style="'height: ' + Math.max(3, Math.min(12, ((i * 12) <= micLevel ? (i * 2 + 4) : 3))) + 'px'"></span>
+                                    </template>
+                                </div>
+                                <span class="text-[10px] text-mist font-mono ml-1">Do'stlaringiz sizni eshitmoqda</span>
+                            </div>
+                            <p x-show="!voiceActive" class="text-[11px] text-mist font-mono">Birga o'qiyotgan do'stlar bilan ovozli gaplashing yoki audio xabar qoldiring</p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
                         <button type="button" @click="toggleVoice()" 
+                            :disabled="isConnecting"
                             class="px-3 py-1.5 rounded-btn text-xs font-bold font-mono transition-all flex items-center gap-1.5 shadow-sm"
                             :class="voiceActive ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40' : 'bg-amber-500 hover:bg-amber-400 text-ink-950'">
-                            <span x-text="voiceActive ? '🔇 Ovozli efirdan chiqish' : '🎙️ Ovozli efirga kirish'"></span>
+                            <span x-text="isConnecting ? 'Ulanmoqda...' : (voiceActive ? '🔇 Ovozli efirdan chiqish' : '🎙️ Ovozli efirga kirish')"></span>
                         </button>
                     </div>
                 </div>
@@ -153,8 +224,11 @@
                         @elseif($msg->audio_path)
                             <!-- 🎙️ Ovozli xabar pleyeri -->
                             <div class="p-2.5 rounded-xl bg-ink-950 border border-ink-border/80 flex items-center gap-3"
-                                 x-data="buddyVoicePlayer('{{ $msg->audio_url }}', {{ (int) ($msg->audio_duration ?: 0) }})">
-                                <button type="button" @click="toggle()" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors bg-amber-500 text-ink-950 hover:bg-amber-400">
+                                 wire:key="buddy-audio-bubble-{{ $msg->id }}"
+                                 x-data="voicePlayer('{{ $msg->audio_url }}', {{ (int) ($msg->audio_duration ?: 0) }})">
+                                <button type="button" @click="toggle()" 
+                                        onclick="if(!this.closest('[x-data]')?._x_dataStack && window.fallbackVoiceToggle){ window.fallbackVoiceToggle(this); }"
+                                        class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors bg-amber-500 text-ink-950 hover:bg-amber-400">
                                     <svg x-show="!playing" class="w-3.5 h-3.5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                     <svg x-show="playing" x-cloak class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                 </button>
@@ -165,7 +239,7 @@
                                         @endforeach
                                     </div>
                                     <div class="flex items-center justify-between text-[10px] font-mono text-mist mt-0.5">
-                                        <span x-text="formatTime(currentTime)">00:00</span>
+                                        <span x-text="playing ? formatTime(currentTime) : 'Ovozli xabar'">Ovozli xabar</span>
                                         <span x-text="formatTime(duration)">{{ sprintf('%02d:%02d', floor(($msg->audio_duration ?? 0)/60), ($msg->audio_duration ?? 0)%60) }}</span>
                                     </div>
                                 </div>
@@ -186,9 +260,155 @@
 
             <!-- ✍️ Send Message & 🎙️ Voice Note Recording Box -->
             @if($myMember)
-                <div x-data="buddyVoiceRecorder(@this)" class="p-3 rounded-card bg-ink-900 border border-ink-border space-y-2">
+                <div x-data="{
+                    isRecording: false,
+                    isUploading: false,
+                    isPreparing: false,
+                    recordDuration: 0,
+                    mediaRecorder: null,
+                    mediaStream: null,
+                    audioChunks: [],
+                    timerInterval: null,
+                    discard: false,
+
+                    startRecord() {
+                        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                            alert('Brauzeringiz audio yozishni qo\'llab-quvvatlamaydi yoki xavfsiz (HTTPS) ulanish kerak.');
+                            return;
+                        }
+                        this.isPreparing = true;
+                        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                            this.isPreparing = false;
+                            this.mediaStream = stream;
+                            this.audioChunks = [];
+                            this.discard = false;
+
+                            let options = {};
+                            if (typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function') {
+                                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                                    options.mimeType = 'audio/webm;codecs=opus';
+                                } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                                    options.mimeType = 'audio/webm';
+                                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                                    options.mimeType = 'audio/mp4';
+                                }
+                            }
+
+                            try {
+                                this.mediaRecorder = options.mimeType ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
+                            } catch(e) {
+                                this.mediaRecorder = new MediaRecorder(stream);
+                            }
+
+                            this.mediaRecorder.ondataavailable = e => {
+                                if (e.data && e.data.size > 0) {
+                                    this.audioChunks.push(e.data);
+                                }
+                            };
+
+                            this.mediaRecorder.onstop = () => {
+                                if (this.discard) {
+                                    this.cleanupStream();
+                                    return;
+                                }
+                                const mime = this.mediaRecorder.mimeType || 'audio/webm';
+                                const audioBlob = new Blob(this.audioChunks, { type: mime });
+                                this.uploadAndSend(audioBlob, this.recordDuration);
+                                this.cleanupStream();
+                            };
+
+                            this.mediaRecorder.start(200);
+                            this.isRecording = true;
+                            this.recordDuration = 0;
+                            if (this.timerInterval) clearInterval(this.timerInterval);
+                            this.timerInterval = setInterval(() => {
+                                this.recordDuration++;
+                                if (this.recordDuration >= 300) {
+                                    this.sendRecord();
+                                }
+                            }, 1000);
+                        }).catch(err => {
+                            this.isPreparing = false;
+                            this.isRecording = false;
+                            console.error('Mikrofon xatosi:', err);
+                            const msg = (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+                                ? 'Mikrofon taqiqlangan! Brauzeringiz sozlamalaridan ushbu sayt uchun mikrofonga ruxsat bering.'
+                                : ('Mikrofon ulanmadi: ' + (err.message || err.name));
+                            alert(msg);
+                        });
+                    },
+
+                    cancelRecord() {
+                        this.discard = true;
+                        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                            try { this.mediaRecorder.stop(); } catch(e) {}
+                        }
+                        this.isRecording = false;
+                        this.isPreparing = false;
+                        if (this.timerInterval) clearInterval(this.timerInterval);
+                        this.cleanupStream();
+                    },
+
+                    sendRecord() {
+                        this.discard = false;
+                        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                            try { this.mediaRecorder.stop(); } catch(e) {}
+                        }
+                        this.isRecording = false;
+                        this.isPreparing = false;
+                        if (this.timerInterval) clearInterval(this.timerInterval);
+                    },
+
+                    cleanupStream() {
+                        if (this.mediaStream) {
+                            try {
+                                this.mediaStream.getTracks().forEach(t => t.stop());
+                            } catch(e) {}
+                            this.mediaStream = null;
+                        }
+                        if (this.timerInterval) clearInterval(this.timerInterval);
+                    },
+
+                    uploadAndSend(blob, dur) {
+                        this.isUploading = true;
+                        const formData = new FormData();
+                        const ext = blob.type && blob.type.includes('mp4') ? 'm4a' : 'webm';
+                        formData.append('audio', blob, 'voice_' + Date.now() + '.' + ext);
+                        formData.append('duration', dur);
+                        formData.append('_token', '{{ csrf_token() }}');
+
+                        fetch('{{ route('chat.voice.upload') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isUploading = false;
+                            if (data.success && data.path) {
+                                $wire.sendVoiceNote(data.path, data.duration || dur);
+                            } else {
+                                alert(data.error || 'Ovozli xabar yuklanmadi');
+                            }
+                        })
+                        .catch(err => {
+                            this.isUploading = false;
+                            console.error('Upload error:', err);
+                            alert('Ovozni yuborishda xatolik: ' + err.message);
+                        });
+                    },
+
+                    formatDuration(sec) {
+                        const s = Math.max(0, parseInt(sec) || 0);
+                        const m = Math.floor(s / 60);
+                        const rem = s % 60;
+                        return (m < 10 ? '0' : '') + m + ':' + (rem < 10 ? '0' : '') + rem;
+                    }
+                }" class="p-3 rounded-card bg-ink-900 border border-ink-border space-y-2">
                     <!-- Standard Input Row -->
-                    <div x-show="!isRecording" class="flex items-center gap-2">
+                    <div x-show="!isRecording && !isUploading" class="flex items-center gap-2">
                         <input type="text" wire:model.defer="newMessage" 
                                @keydown.enter.prevent="$wire.sendMessage()"
                                placeholder="Fikr yoki izoh yozing..." class="ks-input text-xs flex-1">
@@ -200,13 +420,23 @@
 
                         <!-- 🎙️ Mikrofon tugmasi -->
                         <button type="button" @click="startRecord()" 
-                                title="Ovozli xabar yozish (Mikrofon)"
-                                class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border hover:border-amber-400 text-amber-400 hover:text-amber-300 flex items-center justify-center shrink-0 transition-colors">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                <line x1="12" y1="19" x2="12" y2="22"/>
-                            </svg>
+                                :disabled="isPreparing"
+                                :title="isPreparing ? 'Mikrofon yoqilmoqda...' : 'Ovozli xabar yozish (Mikrofon)'"
+                                class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border hover:border-amber-400 text-amber-400 hover:text-amber-300 flex items-center justify-center shrink-0 transition-all"
+                                :class="{ 'opacity-60 cursor-wait border-rose-500 text-rose-400': isPreparing }">
+                            <template x-if="isPreparing">
+                                <svg class="animate-spin w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </template>
+                            <template x-if="!isPreparing">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="22"/>
+                                </svg>
+                            </template>
                         </button>
 
                         <button type="button" wire:click="sendMessage" class="ks-btn-primary text-xs py-1.5 px-3 shrink-0">
@@ -216,19 +446,38 @@
 
                     <!-- 🔴 Ovoz yozish paneli (Recording in progress) -->
                     <div x-show="isRecording" x-cloak class="flex items-center justify-between gap-3 bg-ink-950 border border-rose-500/40 p-2.5 rounded-btn">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                        <div class="flex items-center gap-2.5">
+                            <span class="relative flex h-3 w-3">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                            </span>
                             <span class="text-xs font-mono text-rose-400 font-bold" x-text="'Ovoz yozilmoqda: ' + formatDuration(recordDuration)"></span>
+                            <div class="flex items-center gap-0.5 h-3">
+                                <span class="w-1 bg-rose-500 rounded-full animate-pulse h-2"></span>
+                                <span class="w-1 bg-rose-400 rounded-full animate-pulse h-3.5" style="animation-delay: 0.15s"></span>
+                                <span class="w-1 bg-rose-500 rounded-full animate-pulse h-2.5" style="animation-delay: 0.3s"></span>
+                                <span class="w-1 bg-rose-400 rounded-full animate-pulse h-3.5" style="animation-delay: 0.45s"></span>
+                                <span class="w-1 bg-rose-500 rounded-full animate-pulse h-2" style="animation-delay: 0.6s"></span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="button" @click="cancelRecord()" class="px-2.5 py-1 rounded bg-ink-900 border border-ink-border text-mist text-xs hover:text-rose-400 transition-colors">
                                 Bekor qilish
                             </button>
-                            <button type="button" @click="stopRecord()" class="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-ink-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-colors">
+                            <button type="button" @click="sendRecord()" class="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-ink-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-colors">
                                 <span>Yuborish</span>
                                 <span>✓</span>
                             </button>
                         </div>
+                    </div>
+
+                    <!-- ⏳ Ovoz yuklanmoqda paneli (Uploading) -->
+                    <div x-show="isUploading" x-cloak class="flex items-center justify-center gap-2 bg-ink-950 border border-amber-500/40 p-2.5 rounded-btn text-xs font-mono text-amber-400">
+                        <svg class="animate-spin w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Ovozli xabar saqlanmoqda...</span>
                     </div>
 
                     <label class="flex items-center gap-2 text-[11px] text-mist font-mono cursor-pointer">
@@ -304,161 +553,74 @@
     @endif
 </div>
 
-<!-- 🎙️ Ovozli xabar va audio recorder skriptlari -->
+<!-- 🎙️ Voice Player Global Fallback Script -->
 <script>
-    function buddyVoicePlayer(url, initialDuration) {
-        return {
-            url: url,
-            duration: initialDuration || 0,
-            currentTime: 0,
-            playing: false,
-            progress: 0,
-            audio: null,
-            init() {
-                this.audio = new Audio(this.url);
-                this.audio.addEventListener('loadedmetadata', () => {
-                    if (!this.duration && this.audio.duration) {
-                        this.duration = Math.round(this.audio.duration);
-                    }
-                });
-                this.audio.addEventListener('timeupdate', () => {
-                    this.currentTime = Math.round(this.audio.currentTime);
-                    const dur = this.audio.duration || this.duration || 1;
-                    this.progress = (this.audio.currentTime / dur) * 100;
-                });
-                this.audio.addEventListener('ended', () => {
-                    this.playing = false;
-                    this.currentTime = 0;
-                    this.progress = 0;
-                });
-            },
-            toggle() {
-                if (!this.audio) return;
-                if (this.playing) {
-                    this.audio.pause();
-                    this.playing = false;
-                } else {
-                    document.querySelectorAll('audio').forEach(a => a !== this.audio && a.pause());
-                    this.audio.play().then(() => {
-                        this.playing = true;
-                    }).catch(() => {});
-                }
-            },
-            seek(e) {
-                if (!this.audio) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                const dur = this.audio.duration || this.duration;
-                if (dur) {
-                    this.audio.currentTime = ratio * dur;
-                    this.progress = ratio * 100;
-                }
-            },
-            formatTime(sec) {
-                const s = Math.floor(sec || 0);
-                const m = Math.floor(s / 60);
-                const r = s % 60;
-                return (m < 10 ? '0' + m : m) + ':' + (r < 10 ? '0' + r : r);
-            }
-        };
-    }
-
-    function buddyVoiceRecorder(livewire) {
-        return {
-            isRecording: false,
-            recordDuration: 0,
-            mediaRecorder: null,
-            mediaStream: null,
-            audioChunks: [],
-            timerInterval: null,
-            discard: false,
-            startRecord() {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    alert('Brauzeringiz audio yozishni qo\'llab-quvvatlamaydi.');
-                    return;
-                }
-                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                    this.mediaStream = stream;
-                    this.audioChunks = [];
-                    this.discard = false;
-                    let options = {};
-                    if (typeof MediaRecorder !== 'undefined') {
-                        if (MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/webm' };
-                        else if (MediaRecorder.isTypeSupported('audio/mp4')) options = { mimeType: 'audio/mp4' };
-                    }
-                    this.mediaRecorder = new MediaRecorder(stream, options);
-                    this.mediaRecorder.ondataavailable = e => {
-                        if (e.data.size > 0) this.audioChunks.push(e.data);
-                    };
-                    this.mediaRecorder.onstop = () => {
-                        if (this.discard) {
-                            this.cleanupStream();
-                            return;
+    if (typeof window.voicePlayer === 'undefined') {
+        window.voicePlayer = function(audioUrl, initialDuration) {
+            return {
+                playing: false,
+                progress: 0,
+                duration: initialDuration || 0,
+                currentTime: 0,
+                audio: null,
+                init() {
+                    this.setupAudio();
+                },
+                setupAudio() {
+                    if (this.audio) return;
+                    this.audio = new Audio(audioUrl);
+                    this.audio.preload = 'metadata';
+                    this.audio.addEventListener('loadedmetadata', () => {
+                        if (!this.duration || isNaN(this.duration) || this.duration === 0) {
+                            this.duration = Math.round(this.audio.duration) || 0;
                         }
-                        const mime = this.mediaRecorder.mimeType || 'audio/webm';
-                        const audioBlob = new Blob(this.audioChunks, { type: mime });
-                        this.uploadAndSend(audioBlob, this.recordDuration);
-                        this.cleanupStream();
-                    };
-                    this.mediaRecorder.start(200);
-                    this.isRecording = true;
-                    this.recordDuration = 0;
-                    this.timerInterval = setInterval(() => {
-                        this.recordDuration++;
-                        if (this.recordDuration >= 300) this.stopRecord();
-                    }, 1000);
-                }).catch(err => {
-                    alert('Mikrofondan foydalanishga ruxsat berilmadi: ' + (err.message || ''));
-                });
-            },
-            stopRecord() {
-                if (!this.isRecording) return;
-                clearInterval(this.timerInterval);
-                this.isRecording = false;
-                if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-                    this.mediaRecorder.stop();
-                }
-            },
-            cancelRecord() {
-                this.discard = true;
-                this.stopRecord();
-            },
-            cleanupStream() {
-                if (this.mediaStream) {
-                    this.mediaStream.getTracks().forEach(t => t.stop());
-                    this.mediaStream = null;
-                }
-            },
-            uploadAndSend(blob, duration) {
-                const formData = new FormData();
-                const ext = blob.type.includes('mp4') ? 'm4a' : 'webm';
-                formData.append('audio', blob, 'voice.' + ext);
-                formData.append('duration', duration);
-
-                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                fetch('/chat/voice', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token || '',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success && data.path) {
-                        livewire.sendVoiceNote(data.path, data.duration || duration);
+                    });
+                    this.audio.addEventListener('timeupdate', () => {
+                        this.currentTime = Math.round(this.audio.currentTime);
+                        if (this.duration > 0) {
+                            this.progress = Math.min(100, (this.audio.currentTime / this.duration) * 100);
+                        }
+                    });
+                    this.audio.addEventListener('ended', () => {
+                        this.playing = false;
+                        this.progress = 0;
+                        this.currentTime = 0;
+                    });
+                    this.audio.addEventListener('pause', () => { this.playing = false; });
+                    this.audio.addEventListener('play', () => { this.playing = true; });
+                },
+                toggle() {
+                    this.setupAudio();
+                    if (this.playing) {
+                        this.audio.pause();
+                        this.playing = false;
+                    } else {
+                        document.querySelectorAll('audio').forEach(a => {
+                            if (a !== this.audio) { try { a.pause(); } catch(e) {} }
+                        });
+                        const p = this.audio.play();
+                        if (p !== undefined) {
+                            p.then(() => { this.playing = true; }).catch(() => { this.playing = false; });
+                        }
                     }
-                })
-                .catch(err => {
-                    console.error('Audio yuklashda xatolik:', err);
-                });
-            },
-            formatDuration(sec) {
-                const m = Math.floor(sec / 60);
-                const s = sec % 60;
-                return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : r = s < 10 ? '0' + s : s);
-            }
+                },
+                seek(event) {
+                    this.setupAudio();
+                    const el = event.currentTarget;
+                    const r = el.getBoundingClientRect();
+                    const p = Math.max(0, Math.min(1, (event.clientX - r.left) / r.width));
+                    if (this.duration > 0) {
+                        this.audio.currentTime = p * this.duration;
+                        this.progress = p * 100;
+                    }
+                },
+                formatTime(sec) {
+                    const s = Math.max(0, sec || 0);
+                    const m = Math.floor(s / 60);
+                    const rem = Math.floor(s % 60);
+                    return (m < 10 ? '0' : '') + m + ':' + (rem < 10 ? '0' : '') + rem;
+                }
+            };
         };
     }
 </script>
