@@ -15,6 +15,32 @@
 
     <style>
         [x-cloak] { display: none !important; }
+        :root, html.dark { color-scheme: dark; }
+        html.light:not(.force-dark) { color-scheme: light; }
+
+        input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]),
+        textarea {
+            background-color: #07090E;
+            color: #F0EDE6;
+            border-color: #1F293D;
+        }
+        input::placeholder, textarea::placeholder {
+            color: #8B9BAD;
+            opacity: 0.7;
+        }
+
+        html.light:not(.force-dark) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]),
+        html.light:not(.force-dark) textarea {
+            background-color: #FFFFFF !important;
+            color: #0C1C36 !important;
+            border-color: #CBD5E1 !important;
+        }
+        html.light:not(.force-dark) input::placeholder,
+        html.light:not(.force-dark) textarea::placeholder {
+            color: #4B617D !important;
+            opacity: 0.7 !important;
+        }
+
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,

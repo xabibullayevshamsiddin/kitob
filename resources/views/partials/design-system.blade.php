@@ -119,6 +119,27 @@
             }
         } catch(e) {}
     };
+
+    window.__togglePassword = function(btn) {
+        if (!btn) return;
+        var container = btn.closest('.relative') || btn.parentElement;
+        if (!container) return;
+        var input = container.querySelector('input');
+        if (!input) return;
+        var isPass = input.type === 'password';
+        input.type = isPass ? 'text' : 'password';
+        var eyeOpen = btn.querySelector('.ks-eye-open');
+        var eyeClosed = btn.querySelector('.ks-eye-closed');
+        if (eyeOpen && eyeClosed) {
+            if (isPass) {
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        }
+    };
 </script>
 
 {{-- Vite Bundled Styles & Scripts (Tailwind v3 + Alpine.js + Collapse, Pusher, Echo, Axios) --}}
@@ -227,6 +248,42 @@
     }
     html.light:not(.force-dark) .ks-grain::before { opacity: .03; }
 
+    /* Color scheme & Universal Form Controls */
+    :root, html.dark {
+        color-scheme: dark;
+    }
+    html.light:not(.force-dark) {
+        color-scheme: light;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]),
+    textarea {
+        background-color: #07090E;
+        color: #F0EDE6;
+        border-color: #1F293D;
+    }
+    input::placeholder, textarea::placeholder {
+        color: #8B9BAD;
+        opacity: 0.7;
+    }
+
+    .ks-input {
+        background-color: #07090E;
+        color: #F0EDE6;
+        border: 1px solid #1F293D;
+        border-radius: 0.75rem;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    }
+    .ks-input:focus {
+        border-color: #00A8B5 !important;
+        box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.22);
+        outline: none;
+    }
+    .ks-input-invalid {
+        border-color: #F43F5E !important;
+        background-color: rgba(244, 63, 94, 0.05) !important;
+    }
+
     /* Native select (dark) */
     select {
         background-color: #07090E; color: #F0EDE6; border-color: #1F293D;
@@ -258,6 +315,19 @@
         border-color: #CBD5E1 !important;
         box-shadow: 0 2px 12px -2px rgba(12, 28, 54, 0.05), 0 1px 3px 0 rgba(12, 28, 54, 0.02);
     }
+    /* Universal form inputs in light mode */
+    html.light:not(.force-dark) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]),
+    html.light:not(.force-dark) textarea {
+        background-color: #FFFFFF !important;
+        color: #0C1C36 !important;
+        border-color: #CBD5E1 !important;
+    }
+    html.light:not(.force-dark) input::placeholder,
+    html.light:not(.force-dark) textarea::placeholder {
+        color: #4B617D !important;
+        opacity: 0.7 !important;
+    }
+
     html.light:not(.force-dark) .ks-input {
         background-color: #FFFFFF;
         border-color: #CBD5E1 !important;
