@@ -341,8 +341,7 @@
                 },
                 setupAudio() {
                     if (this.audio) return;
-                    this.audio = new Audio();
-                    this.audio.src = audioUrl;
+                    this.audio = new Audio(audioUrl);
                     this.audio.preload = 'metadata';
                     this.audio.addEventListener('loadedmetadata', () => {
                         if (!this.duration || isNaN(this.duration) || this.duration === 0) {
@@ -373,6 +372,9 @@
                         this.audio.pause();
                         this.playing = false;
                     } else {
+                        if (this.audio.ended) {
+                            this.audio.currentTime = 0;
+                        }
                         document.querySelectorAll('audio').forEach(a => {
                             if (a !== this.audio && !a.id.startsWith('peer-audio-')) {
                                 try { a.pause(); } catch(e) {}
@@ -380,8 +382,10 @@
                         });
                         const p = this.audio.play();
                         if (p !== undefined) {
-                            p.then(() => { this.playing = true; }).catch(e => {
-                                console.warn('Play interrupted:', e);
+                            p.then(() => {
+                                this.playing = true;
+                            }).catch(e => {
+                                console.warn('Play interrupted/error:', e);
                                 this.playing = false;
                             });
                         }
