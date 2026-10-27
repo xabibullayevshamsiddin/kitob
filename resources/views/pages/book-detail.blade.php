@@ -602,6 +602,7 @@
                 
                 <!-- The 3D Flipbook Stage -->
                 <div id="fb-root" 
+                     data-book-id="{{ $book->id }}"
                      data-pdf-url="{{ route('books.pdf.stream', $book) }}" 
                      data-sound-url="{{ asset('sounds/oxidvideos-page-flip-1-178322.mp3') }}"
                      class="fb-stage-wrapper">
@@ -1097,6 +1098,13 @@
 
     <!-- Ambient Background Music Player -->
     <x-ambient-music-player :book="$book" />
+
+    <!-- Reading Tracker -->
+    @include('components.reading-tracker', [
+        'bookId' => $book->id,
+        'chapterId' => null,
+        'pageType' => 'book'
+    ])
 
 </div>
 @endsection

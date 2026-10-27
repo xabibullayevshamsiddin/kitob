@@ -826,6 +826,36 @@
     const visiblePages =
       isMobile || leftPage === rightPage ? [leftPage] : [leftPage, rightPage].filter((p) => p <= totalPages);
 
+    // Notify reading tracker that user is actively reading
+    window.dispatchEvent(new CustomEvent('reading-activity'));
+
+    // Save reading progress to database
+    if (totalPages > 0) {
+      const bookContainer = document.getElementById('fb-root');
+      const bookId = bookContainer?.dataset?.bookId || (window.__kitobBookId || null);
+      const percent = Math.min(100, Math.max(1, Math.round((leftPage / totalPages) * 100)));
+      
+      if (window.__saveProgressTimeout) clearTimeout(window.__saveProgressTimeout);
+      window.__saveProgressTimeout = setTimeout(() => {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (token && bookId) {
+          fetch('/api/reading/progress', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': token,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              book_id: parseInt(bookId, 10),
+              last_position: leftPage,
+              percent_complete: percent
+            })
+          }).catch(() => {});
+        }
+      }, 1500);
+    }
+
     window.dispatchEvent(
       new CustomEvent('flipbook:pagechange', {
         detail: { page: leftPage, totalPages, visiblePages },
@@ -1021,6 +1051,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
           </svg>
         </button>
+
+        <!-- Live Mutolaa Timer Pill in Fullscreen (Top Right) -->
+        <div class="fb-mfs-mutolaa-pill" id="fb-mfs-mutolaa-badge" title="Faol mutolaa vaqti">
+          <span class="fb-mfs-mutolaa-dot"></span>
+          <span id="fb-mfs-mutolaa-time" class="font-mono text-xs font-bold text-amber-400">⏱️ 00:00</span>
+        </div>
 
         <!-- Floating page pill (e.g. 2 / 826 sahifa) -->
         <div class="fb-mfs-page-pill" onclick="fbToggleMfsSlider()" title="Sahifalar slayderini ochish">
@@ -1355,6 +1391,14 @@
   window.fbGetCurrentPage = function () { return currentPage; };
   window.fbGetTotalPages = function () { return totalPages; };
   window.initFlipbook = init;
+
+  // Listen for reading tracker tick to update fullscreen mutolaa badge
+  window.addEventListener('reading-tracker-tick', (e) => {
+    const el = document.getElementById('fb-mfs-mutolaa-time');
+    if (el && e.detail && e.detail.formattedTime) {
+      el.textContent = '⏱️ ' + e.detail.formattedTime;
+    }
+  });
 
   // Auto-init
   if (document.readyState === 'loading') {

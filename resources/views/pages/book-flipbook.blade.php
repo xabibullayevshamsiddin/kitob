@@ -168,6 +168,7 @@
 
     <!-- ── Ultra-Realistic 3D Flipbook Stage ── -->
     <div id="fb-root" 
+         data-book-id="{{ $book->id }}"
          data-pdf-url="{{ route('books.pdf.stream', $book) }}" 
          data-sound-url="{{ asset('sounds/oxidvideos-page-flip-1-178322.mp3') }}"
          class="fb-stage-wrapper">

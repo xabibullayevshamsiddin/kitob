@@ -5,7 +5,9 @@
 ])
 
 @auth
-<div x-data="readingTracker({
+<div id="reading-tracker-root" 
+    class="reading-tracker-root relative z-50"
+    x-data="readingTracker({
         bookId: {{ $bookId ? (int) $bookId : 'null' }},
         chapterId: {{ $chapterId ? (int) $chapterId : 'null' }},
         pageType: '{{ $pageType }}',
@@ -14,11 +16,10 @@
         initialMinutesToday: {{ (int) (auth()->user()->dailyActivities()->where('activity_date', now('Asia/Tashkent')->toDateString())->value('minutes_read') ?? 0) }},
         initialMinutesAll: {{ (int) (auth()->user()->total_reading_minutes ?? 0) }}
     })"
-    x-init="initTracker()"
-    class="relative z-50">
+    x-init="initTracker()">
 
     <!-- ── 1. Floating Live Reading / Viewing Timer Widget ── -->
-    <div class="reading-tracker-floating-widget fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 select-none animate-fade-in"
+    <div class="reading-tracker-floating-widget fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[999998] select-none animate-fade-in"
          x-show="isWidgetVisible"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-y-4 scale-95"
@@ -89,7 +90,7 @@
     <!-- ── 2. AFK Inactivity Modal (5 minut harakatsizlik xavfsizligi) ── -->
     <div x-show="showAfkModal" 
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+         class="reading-tracker-modal fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
          x-transition:enter="transition ease-out duration-350"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -111,22 +112,15 @@
 
             <!-- Pulsing 3D Hourglass / Focus Pause Icon -->
             <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-glow-amber animate-pulse">
-                <span x-show="afkReason === 'focus'">⏸️</span>
-                <span x-show="afkReason !== 'focus'">⏳</span>
+                <span>⏳</span>
             </div>
 
             <!-- Heading & Context -->
             <div class="space-y-2">
-                <h3 class="text-xl sm:text-2xl font-black text-white font-manrope tracking-tight"
-                    x-text="afkReason === 'focus' ? 'Mutolaa pauza qilindi!' : 'Siz shu yerdamisiz?'">
+                <h3 class="text-xl sm:text-2xl font-black text-white font-manrope tracking-tight">
                     Siz shu yerdamisiz?
                 </h3>
-                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto"
-                   x-show="afkReason === 'focus'">
-                    Boshqa sahifa yoki ilovaga o'tganingiz (fokus yo'qolgani) sababli mutolaa va bonus hisoblash darhol to'xtatildi. Davom ettirasizmi?
-                </p>
-                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto"
-                   x-show="afkReason !== 'focus'">
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto">
                     5 daqiqa davomida hech qanday harakat qayd etilmadi. Vaqt va ball hisoblash to'xtatildi. Davom ettirasizmi?
                 </p>
             </div>
@@ -189,7 +183,7 @@ function readingTracker(config) {
         
         isPaused: config.pageType === 'audio',
         isAfk: false,
-        afkReason: 'idle', // 'idle' | 'focus'
+        afkReason: 'idle',
         isSending: false,
         showAfkModal: false,
         isWidgetVisible: true,
@@ -204,20 +198,7 @@ function readingTracker(config) {
             if (document.hidden || document.visibilityState !== 'visible') {
                 return false;
             }
-            // Smartfon va sensorli qurilmalarda document.hasFocus() oddiy aylantirish (scroll) paytida
-            // false bo'lib qoladi. Shuning uchun mobil qurilmalarda faqat visibilityState asosida ishlanadi.
-            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-            if (isTouchDevice) {
-                return true;
-            }
-            if (document.hasFocus()) {
-                return true;
-            }
-            // Agar foydalanuvchi sahifa ichidagi video iframe (YouTube) ustiga bosgan bo'lsa
-            if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
-                return true;
-            }
-            return false;
+            return true;
         },
 
         getBookAudios() {
@@ -227,18 +208,20 @@ function readingTracker(config) {
         },
         
         initTracker() {
-            // Activity events to detect user interaction
-            const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
+            // User faolligini kuzatuvchi voqealar (sahifa varaqlash, sichqoncha, klaviatura, sensor)
+            const events = ['mousemove', 'mousedown', 'click', 'keydown', 'touchstart', 'scroll', 'wheel', 'reading-activity'];
             let lastEventTime = Date.now();
 
             const recordActivity = () => {
-                if (!this.isPageFocused()) return;
+                if (document.hidden || document.visibilityState !== 'visible') return;
                 const now = Date.now();
-                if (now - lastEventTime > 1500) { // Throttle activity resets to every 1.5s
+                if (now - lastEventTime > 800) {
                     lastEventTime = now;
                     this.idleSeconds = 0;
-                    if (this.isAfk && !this.showAfkModal) {
+                    if (this.isAfk || (this.isPaused && this.pageType !== 'audio')) {
                         this.isAfk = false;
+                        this.isPaused = false;
+                        this.showAfkModal = false;
                     }
                 }
             };
@@ -247,16 +230,12 @@ function readingTracker(config) {
                 window.addEventListener(evt, recordActivity, { passive: true });
             });
 
-            // Media listeners for video/audio elements
+            // Media tinglash holatlari
             const syncMedia = () => {
                 const videoEl = document.querySelector('video');
                 if (videoEl && !videoEl._hasTrackerListener) {
                     videoEl._hasTrackerListener = true;
                     videoEl.addEventListener('play', () => {
-                        if (!this.isPageFocused()) {
-                            videoEl.pause();
-                            return;
-                        }
                         this.isPaused = false;
                         this.isAfk = false;
                         this.showAfkModal = false;
@@ -273,10 +252,6 @@ function readingTracker(config) {
                     if (!audioEl._hasTrackerListener) {
                         audioEl._hasTrackerListener = true;
                         audioEl.addEventListener('play', () => {
-                            if (!this.isPageFocused()) {
-                                audioEl.pause();
-                                return;
-                            }
                             this.isPaused = false;
                             this.isAfk = false;
                             this.showAfkModal = false;
@@ -297,31 +272,44 @@ function readingTracker(config) {
             syncMedia();
             setInterval(syncMedia, 2000);
 
-            // Boshqa sahifa (tab) yoki boshqa ilovaga o'tilganda (fokus yo'qolganda) DARHOL pauza qilish
-            const handleFocusLoss = () => {
-                setTimeout(() => {
-                    if (!this.isPageFocused()) {
-                        this.triggerFocusPause();
-                    }
-                }, 80);
-            };
-
-            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-            if (!isTouch) {
-                window.addEventListener('blur', handleFocusLoss);
-            }
+            // Tab o'zgarishini aniqlash (boshqa tabga o'tganda sekin pauza, qaytganda DARHOL davom ettirish)
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden || document.visibilityState !== 'visible') {
-                    this.triggerFocusPause();
+                    this.isPaused = true;
+                } else {
+                    this.isAfk = false;
+                    this.isPaused = (this.pageType === 'audio' && !this.getBookAudios().some(a => !a.paused && !a.ended));
+                    this.showAfkModal = false;
+                    this.idleSeconds = 0;
                 }
             });
 
-            // Second ticker interval
+            window.addEventListener('focus', () => {
+                if (!document.hidden && document.visibilityState === 'visible') {
+                    this.isAfk = false;
+                    this.isPaused = (this.pageType === 'audio' && !this.getBookAudios().some(a => !a.paused && !a.ended));
+                    this.showAfkModal = false;
+                    this.idleSeconds = 0;
+                }
+            });
+
+            // Sahifani yopish yoki boshqa sahifaga o'tishda yig'ilgan vaqtni yo'qotmasdan yuborish
+            window.addEventListener('pagehide', () => {
+                if (this.unsentSeconds >= 35) {
+                    this.sendHeartbeat(1, true);
+                    this.unsentSeconds = 0;
+                }
+            });
+
+            // Sekundlik yurak urishi (ticker)
             this.timerInterval = setInterval(() => {
-                // 1) Agar sahifa fokusda bo'lmasa (boshqa tab, oyna yoki o'yinga o'tilgan bo'lsa) — DARHOL PAUZA!
                 if (!this.isPageFocused()) {
-                    this.triggerFocusPause();
+                    this.isPaused = true;
                     return;
+                }
+
+                if (this.isPaused && !this.isAfk && this.pageType !== 'audio') {
+                    this.isPaused = false;
                 }
 
                 const videoEl = document.querySelector('video');
@@ -330,13 +318,13 @@ function readingTracker(config) {
                 const bookAudios = this.getBookAudios();
                 const isBookAudioPlaying = bookAudios.some(a => !a.paused && !a.ended);
 
-                // Audio sahifasida audio qo'yilmagan bo'lsa, taymer ishlamaydi
+                // Audio sahifasida audio qo'yilmagan bo'lsa, taymer hisoblamaydi
                 if (this.pageType === 'audio' && !isBookAudioPlaying) {
                     this.isPaused = true;
                     return;
                 }
 
-                // Video yoki kitob audiosi (fokus yo'qolmagan holda) o'ynayotgan bo'lsa
+                // Video yoki kitob audiosi o'ynayotgan bo'lsa, harakatsizlik bo'lmaydi
                 if (isVideoPlaying || isBookAudioPlaying) {
                     this.idleSeconds = 0;
                 }
@@ -346,7 +334,18 @@ function readingTracker(config) {
                     this.unsentSeconds++;
                     this.idleSeconds++;
 
-                    // 5 minutes of total inactivity (neither media playing nor user touching mouse/keys)
+                    // Barcha o'quvchi pleyerlariga (jumladan flipbook fullscreen) real vaqt xabari yuborish
+                    window.dispatchEvent(new CustomEvent('reading-tracker-tick', {
+                        detail: {
+                            sessionSeconds: this.sessionSeconds,
+                            formattedTime: this.formatTime(this.sessionSeconds),
+                            totalMinutesToday: this.totalMinutesToday,
+                            totalMinutesAll: this.totalMinutesAll,
+                            isPaused: this.isPaused
+                        }
+                    }));
+
+                    // 5 daqiqa mutlaq harakatsizlik bo'lganda AFK rejimiga o'tish
                     if (this.idleSeconds >= this.afkLimitSeconds) {
                         this.triggerAfk('idle');
                         return;
@@ -360,10 +359,10 @@ function readingTracker(config) {
                         this.lastPointsAwarded = 10;
                         this.lastCoinsAwarded = 1;
 
-                        // 1. Shu soniyaning o'zidayoq vidjetda tabrik toasti chiqadi
+                        // 1. Toast bildirishnoma
                         this.triggerToast();
 
-                        // 2. Shu soniyaning o'zidayoq navbarda jonli +10 ⭐ va +1 🪙 animatsiyasi ishga tushadi
+                        // 2. Sayt sarlavhasi (header) va statistikalar uchun xabar
                         window.dispatchEvent(new CustomEvent('points-awarded', {
                             detail: { points: 10 }
                         }));
@@ -371,43 +370,13 @@ function readingTracker(config) {
                             detail: { coins: 1 }
                         }));
 
-                        // 3. Shu zahoti bazada saqlash uchun serverga yuboriladi
+                        // 3. Serverga saqlash
                         this.sendHeartbeat(1);
                     }
                 } else if (this.isAfk) {
                     this.idleSeconds++;
                 }
             }, 1000);
-        },
-
-        triggerFocusPause() {
-            // Barcha o'ynab turgan video va audiolarni darhol to'xtatish
-            const playingEls = [];
-            document.querySelectorAll('video, audio').forEach(el => {
-                if (!el.paused && !el.ended) {
-                    el.pause();
-                    playingEls.push(el);
-                }
-            });
-            if (playingEls.length > 0) {
-                this.pausedMediaElements = playingEls;
-                this.wasMediaPlayingBeforeAfk = true;
-            }
-
-            // Flipbook avtomatik varaqlash yoqilgan bo'lsa to'xtatish
-            if (typeof window.fbStopAutoPlay === 'function') {
-                window.fbStopAutoPlay();
-            }
-
-            // Agar mutolaa faol ketayotgan bo'lsa yoki media o'ynayotgan bo'lsa, pauza modalini yoqish
-            if (!this.isAfk && (!this.isPaused || playingEls.length > 0 || this.sessionSeconds > 0)) {
-                this.afkReason = 'focus';
-                this.isAfk = true;
-                this.isPaused = true;
-                this.showAfkModal = true;
-            } else {
-                this.isPaused = true;
-            }
         },
 
         triggerAfk(reason = 'idle') {
@@ -446,7 +415,6 @@ function readingTracker(config) {
                 this.pausedMediaElements = [];
                 this.wasMediaPlayingBeforeAfk = false;
             } else if (this.pageType === 'audio') {
-                // Audio sahifasida audio pleyerni ham ishga tushiramiz
                 const bookAudios = this.getBookAudios();
                 if (bookAudios.length > 0 && bookAudios[0].paused) {
                     bookAudios[0].play().catch(() => {});
@@ -514,14 +482,12 @@ function readingTracker(config) {
                         this.lastCoinsAwarded = data.coins_added;
                     }
 
-                    // Header va barcha komponentlar uchun yakuniy ball sinxronizatsiyasi
                     if (data.total_points !== undefined) {
                         window.dispatchEvent(new CustomEvent('points-awarded', {
                             detail: { points: this.lastPointsAwarded, newTotal: data.total_points }
                         }));
                     }
 
-                    // Header va barcha komponentlar uchun yakuniy tanga sinxronizatsiyasi
                     if (data.coin_balance !== undefined) {
                         window.dispatchEvent(new CustomEvent('coins-awarded', {
                             detail: { coins: this.lastCoinsAwarded, newTotal: data.coin_balance }
