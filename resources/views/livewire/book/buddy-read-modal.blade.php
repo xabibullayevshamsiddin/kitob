@@ -1,4 +1,377 @@
 <div class="space-y-4" wire:poll.2500ms>
+    <!-- 🎙️ WebRTC Live Voice Room & Voice Player Scripts (MUST BE AT TOP) -->
+    <script>
+        window.buddyLiveVoiceRoom = function(config) {
+            return {
+                roomId: config.roomId,
+                userId: config.userId,
+                voiceActive: config.initialActive || false,
+                isConnecting: false,
+                isMuted: false,
+                mediaStream: null,
+                audioContext: null,
+                analyser: null,
+                micLevel: 0,
+                animFrame: null,
+                pollInterval: null,
+                peers: {},
+                connectedPeersCount: 0,
+
+                async toggleVoice() {
+                    if (!this.voiceActive) {
+                        await this.startVoice();
+                    } else {
+                        await this.stopVoice();
+                    }
+                },
+
+                async startVoice() {
+                    this.isConnecting = true;
+                    try {
+                        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                            throw new Error('Brauzeringiz mikrofondan foydalanishni qo\'llab-quvvatlamaydi yoki xavfsiz (HTTPS) ulanish kerak.');
+                        }
+
+                        this.mediaStream = await navigator.mediaDevices.getUserMedia({
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: true
+                            }
+                        });
+
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) {
+                            this.audioContext = new AudioCtx();
+                            this.analyser = this.audioContext.createAnalyser();
+                            const source = this.audioContext.createMediaStreamSource(this.mediaStream);
+                            source.connect(this.analyser);
+                            this.analyser.fftSize = 64;
+                            const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+
+                            const updateLevel = () => {
+                                if (!this.voiceActive || !this.analyser) return;
+                                this.analyser.getByteFrequencyData(dataArray);
+                                let sum = 0;
+                                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                                this.micLevel = this.isMuted ? 0 : Math.min(100, Math.round((sum / dataArray.length) * 1.6));
+                                this.animFrame = requestAnimationFrame(updateLevel);
+                            };
+                            updateLevel();
+                        }
+
+                        this.voiceActive = true;
+                        this.isConnecting = false;
+                        config.wire.toggleVoiceActive(true);
+
+                        this.sendSignal('join', JSON.stringify({ userId: this.userId }));
+
+                        if (this.pollInterval) clearInterval(this.pollInterval);
+                        this.pollInterval = setInterval(() => this.pollSignals(), 1500);
+                        this.pollSignals();
+
+                    } catch (err) {
+                        this.isConnecting = false;
+                        console.error('Mikrofon xatosi:', err);
+                        const msg = (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
+                            ? 'Mikrofonga ruxsat berilmadi! Brauzeringiz URL qatoridagi qulf belgisini bosib, mikrofonga ruxsat bering.'
+                            : ('Mikrofon ulanmadi: ' + (err.message || err.name));
+                        alert(msg);
+                    }
+                },
+
+                async stopVoice() {
+                    this.voiceActive = false;
+                    config.wire.toggleVoiceActive(false);
+
+                    this.sendSignal('leave', JSON.stringify({ userId: this.userId }));
+
+                    Object.keys(this.peers).forEach(peerId => {
+                        try { this.peers[peerId].close(); } catch(e) {}
+                        const el = document.getElementById('peer-audio-' + peerId);
+                        if (el) el.remove();
+                    });
+                    this.peers = {};
+                    this.connectedPeersCount = 0;
+
+                    if (this.pollInterval) {
+                        clearInterval(this.pollInterval);
+                        this.pollInterval = null;
+                    }
+
+                    if (this.mediaStream) {
+                        try { this.mediaStream.getTracks().forEach(t => t.stop()); } catch(e) {}
+                        this.mediaStream = null;
+                    }
+
+                    if (this.audioContext) {
+                        try { this.audioContext.close(); } catch(e) {}
+                        this.audioContext = null;
+                    }
+
+                    if (this.animFrame) cancelAnimationFrame(this.animFrame);
+                    this.micLevel = 0;
+                },
+
+                toggleMute() {
+                    if (!this.mediaStream) return;
+                    this.isMuted = !this.isMuted;
+                    this.mediaStream.getAudioTracks().forEach(t => {
+                        t.enabled = !this.isMuted;
+                    });
+                },
+
+                createPeerConnection(peerId) {
+                    if (this.peers[peerId]) return this.peers[peerId];
+
+                    const pc = new RTCPeerConnection({
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' }
+                        ]
+                    });
+
+                    if (this.mediaStream) {
+                        this.mediaStream.getTracks().forEach(track => {
+                            pc.addTrack(track, this.mediaStream);
+                        });
+                    }
+
+                    pc.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            this.sendSignal('candidate', JSON.stringify(event.candidate), peerId);
+                        }
+                    };
+
+                    pc.onconnectionstatechange = () => {
+                        if (pc.connectionState === 'connected') {
+                            this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
+                        } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+                            this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
+                        }
+                    };
+
+                    pc.ontrack = (event) => {
+                        let audio = document.getElementById('peer-audio-' + peerId);
+                        if (!audio) {
+                            audio = document.createElement('audio');
+                            audio.id = 'peer-audio-' + peerId;
+                            audio.autoplay = true;
+                            audio.playsInline = true;
+                            document.body.appendChild(audio);
+                        }
+                        audio.srcObject = event.streams[0];
+                        audio.play().catch(e => console.warn('Autoplay error:', e));
+                    };
+
+                    this.peers[peerId] = pc;
+                    return pc;
+                },
+
+                async initiateCall(peerId) {
+                    try {
+                        const pc = this.createPeerConnection(peerId);
+                        const offer = await pc.createOffer();
+                        await pc.setLocalDescription(offer);
+                        this.sendSignal('offer', JSON.stringify(offer), peerId);
+                    } catch (err) {
+                        console.error('Call initiation error:', err);
+                    }
+                },
+
+                async handleOffer(fromUserId, sdpString) {
+                    try {
+                        const pc = this.createPeerConnection(fromUserId);
+                        const desc = new RTCSessionDescription(JSON.parse(sdpString));
+                        await pc.setRemoteDescription(desc);
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        this.sendSignal('answer', JSON.stringify(answer), fromUserId);
+                    } catch (err) {
+                        console.error('Offer handling error:', err);
+                    }
+                },
+
+                async handleAnswer(fromUserId, sdpString) {
+                    try {
+                        const pc = this.peers[fromUserId];
+                        if (pc) {
+                            const desc = new RTCSessionDescription(JSON.parse(sdpString));
+                            await pc.setRemoteDescription(desc);
+                        }
+                    } catch (err) {
+                        console.error('Answer handling error:', err);
+                    }
+                },
+
+                async handleCandidate(fromUserId, candidateString) {
+                    try {
+                        const pc = this.peers[fromUserId];
+                        if (pc && pc.remoteDescription) {
+                            const candidate = new RTCIceCandidate(JSON.parse(candidateString));
+                            await pc.addIceCandidate(candidate);
+                        }
+                    } catch (err) {
+                        console.error('Candidate handling error:', err);
+                    }
+                },
+
+                sendSignal(type, payload, toUserId = null) {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    fetch('/buddy-read/' + this.roomId + '/signal', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token || '',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            type: type,
+                            payload: payload,
+                            to_user_id: toUserId
+                        })
+                    }).catch(e => console.error('Signal sending error:', e));
+                },
+
+                pollSignals() {
+                    if (!this.voiceActive) return;
+                    fetch('/buddy-read/' + this.roomId + '/signals', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                    .then(res => res.json())
+                    .then(async data => {
+                        if (data.activeMembers && Array.isArray(data.activeMembers)) {
+                            data.activeMembers.forEach(peerId => {
+                                if (peerId !== this.userId && !this.peers[peerId] && this.userId < peerId) {
+                                    this.initiateCall(peerId);
+                                }
+                            });
+                        }
+
+                        if (data.signals && Array.isArray(data.signals)) {
+                            for (const sig of data.signals) {
+                                const fromId = sig.from_user_id;
+                                if (sig.type === 'offer') {
+                                    await this.handleOffer(fromId, sig.payload);
+                                } else if (sig.type === 'answer') {
+                                    await this.handleAnswer(fromId, sig.payload);
+                                } else if (sig.type === 'candidate') {
+                                    await this.handleCandidate(fromId, sig.payload);
+                                } else if (sig.type === 'join') {
+                                    if (fromId !== this.userId && this.userId < fromId) {
+                                        this.initiateCall(fromId);
+                                    }
+                                } else if (sig.type === 'leave') {
+                                    if (this.peers[fromId]) {
+                                        try { this.peers[fromId].close(); } catch(e) {}
+                                        delete this.peers[fromId];
+                                        const el = document.getElementById('peer-audio-' + fromId);
+                                        if (el) el.remove();
+                                        this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
+                                    }
+                                }
+                            }
+                        }
+                    })
+                    .catch(e => console.error('Signal polling error:', e));
+                }
+            };
+        };
+
+        window.voicePlayer = function(audioUrl, initialDuration) {
+            return {
+                playing: false,
+                progress: 0,
+                duration: initialDuration || 0,
+                currentTime: 0,
+                audio: null,
+                init() {
+                    this.setupAudio();
+                },
+                setupAudio() {
+                    if (this.audio) return;
+                    this.audio = new Audio(audioUrl);
+                    this.audio.preload = 'metadata';
+                    this.audio.addEventListener('loadedmetadata', () => {
+                        if (!this.duration || isNaN(this.duration) || this.duration === 0) {
+                            this.duration = Math.round(this.audio.duration) || 0;
+                        }
+                    });
+                    this.audio.addEventListener('timeupdate', () => {
+                        this.currentTime = Math.round(this.audio.currentTime);
+                        if (this.duration > 0) {
+                            this.progress = Math.min(100, (this.audio.currentTime / this.duration) * 100);
+                        }
+                    });
+                    this.audio.addEventListener('ended', () => {
+                        this.playing = false;
+                        this.progress = 0;
+                        this.currentTime = 0;
+                    });
+                    this.audio.addEventListener('pause', () => { this.playing = false; });
+                    this.audio.addEventListener('play', () => { this.playing = true; });
+                },
+                toggle() {
+                    this.setupAudio();
+                    if (this.playing) {
+                        this.audio.pause();
+                        this.playing = false;
+                    } else {
+                        document.querySelectorAll('audio').forEach(a => {
+                            if (a !== this.audio) { try { a.pause(); } catch(e) {} }
+                        });
+                        const p = this.audio.play();
+                        if (p !== undefined) {
+                            p.then(() => { this.playing = true; }).catch(() => { this.playing = false; });
+                        }
+                    }
+                },
+                seek(event) {
+                    this.setupAudio();
+                    const el = event.currentTarget;
+                    const r = el.getBoundingClientRect();
+                    const p = Math.max(0, Math.min(1, (event.clientX - r.left) / r.width));
+                    if (this.duration > 0) {
+                        this.audio.currentTime = p * this.duration;
+                        this.progress = p * 100;
+                    }
+                },
+                formatTime(sec) {
+                    const s = Math.max(0, sec || 0);
+                    const m = Math.floor(s / 60);
+                    const rem = Math.floor(s % 60);
+                    return (m < 10 ? '0' : '') + m + ':' + (rem < 10 ? '0' : '') + rem;
+                }
+            };
+        };
+
+        window.fallbackVoiceToggle = function(btn, fallbackUrl) {
+            const root = btn ? btn.closest('[x-data]') : null;
+            if (root && root._x_dataStack && root._x_dataStack[0] && typeof root._x_dataStack[0].toggle === 'function') {
+                root._x_dataStack[0].toggle();
+                return;
+            }
+            if (!btn._audio) {
+                btn._audio = new Audio(fallbackUrl);
+                btn._audio.onended = () => {
+                    btn._playing = false;
+                    btn.classList.remove('ring-4', 'ring-emerald-400');
+                };
+            }
+            if (btn._playing) {
+                btn._audio.pause();
+                btn._playing = false;
+                btn.classList.remove('ring-4', 'ring-emerald-400');
+            } else {
+                document.querySelectorAll('audio').forEach(a => a !== btn._audio && a.pause());
+                btn._audio.play().then(() => {
+                    btn._playing = true;
+                    btn.classList.add('ring-4', 'ring-emerald-400');
+                }).catch(e => alert('Audio ijro etilmadi: ' + e.message));
+            }
+        };
+    </script>
     @if($activeRoom)
         <!-- Active Buddy Read Room -->
         <div class="space-y-4">
@@ -96,9 +469,9 @@
                         <!-- Main Voice Enter/Leave Button -->
                         <button type="button" @click="toggleVoice()" 
                             :disabled="isConnecting"
-                            class="px-3 py-1.5 rounded-btn text-xs font-bold font-mono transition-all flex items-center gap-1.5 shadow-sm"
+                            class="px-3.5 py-1.5 rounded-btn text-xs font-bold font-mono transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap"
                             :class="voiceActive ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40' : 'bg-amber-500 hover:bg-amber-400 text-ink-950'">
-                            <span x-text="isConnecting ? 'Ulanmoqda...' : (voiceActive ? '🔇 Efirdan chiqish' : '🎙️ Ovozli efirga kirish')"></span>
+                            <span x-text="isConnecting ? '⏳ Ulanmoqda...' : (voiceActive ? '🔇 Efirdan chiqish' : '🎙️ Ovozli efirga kirish')">🎙️ Ovozli efirga kirish</span>
                         </button>
                     </div>
                 </div>
@@ -184,10 +557,11 @@
                                  wire:key="buddy-audio-bubble-{{ $msg->id }}"
                                  x-data="voicePlayer('{{ $msg->audio_url }}', {{ (int) ($msg->audio_duration ?: 0) }})">
                                 <button type="button" @click="toggle()" 
-                                        onclick="if(!this.closest('[x-data]')?._x_dataStack && window.fallbackVoiceToggle){ window.fallbackVoiceToggle(this); }"
-                                        class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors bg-amber-500 text-ink-950 hover:bg-amber-400">
-                                    <svg x-show="!playing" class="w-3.5 h-3.5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                                    <svg x-show="playing" x-cloak class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                        onclick="window.fallbackVoiceToggle(this, '{{ $msg->audio_url }}')"
+                                        class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 bg-amber-500 hover:bg-amber-400 text-ink-950 shadow-md cursor-pointer"
+                                        title="Ovozli xabarni eshitish (Tinglash)">
+                                    <svg x-show="!playing" class="w-4 h-4 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg x-show="playing" x-cloak class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                                 </button>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-0.5 h-5 cursor-pointer" @click="seek($event)">
@@ -378,22 +752,18 @@
                         <!-- 🎙️ Mikrofon tugmasi -->
                         <button type="button" @click="startRecord()" 
                                 :disabled="isPreparing"
-                                :title="isPreparing ? 'Mikrofon yoqilmoqda...' : 'Ovozli xabar yozish (Mikrofon)'"
-                                class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border hover:border-amber-400 text-amber-400 hover:text-amber-300 flex items-center justify-center shrink-0 transition-all"
+                                title="Ovozli xabar yozish (Mikrofon)"
+                                class="w-9 h-9 rounded-btn bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-400 hover:text-amber-300 flex items-center justify-center shrink-0 transition-all shadow-sm"
                                 :class="{ 'opacity-60 cursor-wait border-rose-500 text-rose-400': isPreparing }">
-                            <template x-if="isPreparing">
-                                <svg class="animate-spin w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </template>
-                            <template x-if="!isPreparing">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                    <line x1="12" y1="19" x2="12" y2="22"/>
-                                </svg>
-                            </template>
+                            <svg x-show="isPreparing" x-cloak class="animate-spin w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <svg x-show="!isPreparing" class="w-4 h-4 fill-current text-amber-400" viewBox="0 0 24 24">
+                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="22"/>
+                            </svg>
                         </button>
 
                         <button type="button" wire:click="sendMessage" class="ks-btn-primary text-xs py-1.5 px-3 shrink-0">
@@ -509,359 +879,3 @@
         </div>
     @endif
 </div>
-
-<!-- 🎙️ WebRTC Live Voice Room & Voice Player Scripts -->
-<script>
-    function buddyLiveVoiceRoom(config) {
-        return {
-            roomId: config.roomId,
-            userId: config.userId,
-            voiceActive: config.initialActive || false,
-            isConnecting: false,
-            isMuted: false,
-            mediaStream: null,
-            audioContext: null,
-            analyser: null,
-            micLevel: 0,
-            animFrame: null,
-            pollInterval: null,
-            peers: {},
-            connectedPeersCount: 0,
-
-            async toggleVoice() {
-                if (!this.voiceActive) {
-                    await this.startVoice();
-                } else {
-                    await this.stopVoice();
-                }
-            },
-
-            async startVoice() {
-                this.isConnecting = true;
-                try {
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        throw new Error('Brauzeringiz mikrofondan foydalanishni qo\'llab-quvvatlamaydi yoki xavfsiz (HTTPS) ulanish kerak.');
-                    }
-
-                    this.mediaStream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true
-                        }
-                    });
-
-                    // Setup local analyzer for visualizer
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) {
-                        this.audioContext = new AudioCtx();
-                        this.analyser = this.audioContext.createAnalyser();
-                        const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-                        source.connect(this.analyser);
-                        this.analyser.fftSize = 64;
-                        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-
-                        const updateLevel = () => {
-                            if (!this.voiceActive || !this.analyser) return;
-                            this.analyser.getByteFrequencyData(dataArray);
-                            let sum = 0;
-                            for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                            this.micLevel = this.isMuted ? 0 : Math.min(100, Math.round((sum / dataArray.length) * 1.6));
-                            this.animFrame = requestAnimationFrame(updateLevel);
-                        };
-                        updateLevel();
-                    }
-
-                    this.voiceActive = true;
-                    this.isConnecting = false;
-                    config.wire.toggleVoiceActive(true);
-
-                    // Broadcast join signal
-                    this.sendSignal('join', JSON.stringify({ userId: this.userId }));
-
-                    // Start polling signals every 1.5 seconds
-                    if (this.pollInterval) clearInterval(this.pollInterval);
-                    this.pollInterval = setInterval(() => this.pollSignals(), 1500);
-                    this.pollSignals();
-
-                } catch (err) {
-                    this.isConnecting = false;
-                    console.error('Mikrofon xatosi:', err);
-                    const msg = (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
-                        ? 'Mikrofonga ruxsat berilmadi! Brauzeringiz URL qatoridagi qulf belgisini bosib, mikrofonga ruxsat bering.'
-                        : ('Mikrofon ulanmadi: ' + (err.message || err.name));
-                    alert(msg);
-                }
-            },
-
-            async stopVoice() {
-                this.voiceActive = false;
-                config.wire.toggleVoiceActive(false);
-
-                // Broadcast leave signal
-                this.sendSignal('leave', JSON.stringify({ userId: this.userId }));
-
-                // Close all WebRTC peers
-                Object.keys(this.peers).forEach(peerId => {
-                    try { this.peers[peerId].close(); } catch(e) {}
-                    const el = document.getElementById('peer-audio-' + peerId);
-                    if (el) el.remove();
-                });
-                this.peers = {};
-                this.connectedPeersCount = 0;
-
-                if (this.pollInterval) {
-                    clearInterval(this.pollInterval);
-                    this.pollInterval = null;
-                }
-
-                if (this.mediaStream) {
-                    try { this.mediaStream.getTracks().forEach(t => t.stop()); } catch(e) {}
-                    this.mediaStream = null;
-                }
-
-                if (this.audioContext) {
-                    try { this.audioContext.close(); } catch(e) {}
-                    this.audioContext = null;
-                }
-
-                if (this.animFrame) cancelAnimationFrame(this.animFrame);
-                this.micLevel = 0;
-            },
-
-            toggleMute() {
-                if (!this.mediaStream) return;
-                this.isMuted = !this.isMuted;
-                this.mediaStream.getAudioTracks().forEach(t => {
-                    t.enabled = !this.isMuted;
-                });
-            },
-
-            createPeerConnection(peerId) {
-                if (this.peers[peerId]) return this.peers[peerId];
-
-                const pc = new RTCPeerConnection({
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' }
-                    ]
-                });
-
-                if (this.mediaStream) {
-                    this.mediaStream.getTracks().forEach(track => {
-                        pc.addTrack(track, this.mediaStream);
-                    });
-                }
-
-                pc.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        this.sendSignal('candidate', JSON.stringify(event.candidate), peerId);
-                    }
-                };
-
-                pc.onconnectionstatechange = () => {
-                    if (pc.connectionState === 'connected') {
-                        this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
-                    } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
-                        this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
-                    }
-                };
-
-                // Incoming remote audio stream
-                pc.ontrack = (event) => {
-                    let audio = document.getElementById('peer-audio-' + peerId);
-                    if (!audio) {
-                        audio = document.createElement('audio');
-                        audio.id = 'peer-audio-' + peerId;
-                        audio.autoplay = true;
-                        audio.playsInline = true;
-                        document.body.appendChild(audio);
-                    }
-                    audio.srcObject = event.streams[0];
-                    audio.play().catch(e => console.warn('Autoplay error:', e));
-                };
-
-                this.peers[peerId] = pc;
-                return pc;
-            },
-
-            async initiateCall(peerId) {
-                try {
-                    const pc = this.createPeerConnection(peerId);
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    this.sendSignal('offer', JSON.stringify(offer), peerId);
-                } catch (err) {
-                    console.error('Call initiation error:', err);
-                }
-            },
-
-            async handleOffer(fromUserId, sdpString) {
-                try {
-                    const pc = this.createPeerConnection(fromUserId);
-                    const desc = new RTCSessionDescription(JSON.parse(sdpString));
-                    await pc.setRemoteDescription(desc);
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    this.sendSignal('answer', JSON.stringify(answer), fromUserId);
-                } catch (err) {
-                    console.error('Offer handling error:', err);
-                }
-            },
-
-            async handleAnswer(fromUserId, sdpString) {
-                try {
-                    const pc = this.peers[fromUserId];
-                    if (pc) {
-                        const desc = new RTCSessionDescription(JSON.parse(sdpString));
-                        await pc.setRemoteDescription(desc);
-                    }
-                } catch (err) {
-                    console.error('Answer handling error:', err);
-                }
-            },
-
-            async handleCandidate(fromUserId, candidateString) {
-                try {
-                    const pc = this.peers[fromUserId];
-                    if (pc && pc.remoteDescription) {
-                        const candidate = new RTCIceCandidate(JSON.parse(candidateString));
-                        await pc.addIceCandidate(candidate);
-                    }
-                } catch (err) {
-                    console.error('Candidate handling error:', err);
-                }
-            },
-
-            sendSignal(type, payload, toUserId = null) {
-                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                fetch('/buddy-read/' + this.roomId + '/signal', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token || '',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: type,
-                        payload: payload,
-                        to_user_id: toUserId
-                    })
-                }).catch(e => console.error('Signal sending error:', e));
-            },
-
-            pollSignals() {
-                if (!this.voiceActive) return;
-                fetch('/buddy-read/' + this.roomId + '/signals', {
-                    headers: { 'Accept': 'application/json' }
-                })
-                .then(res => res.json())
-                .then(async data => {
-                    if (data.activeMembers && Array.isArray(data.activeMembers)) {
-                        data.activeMembers.forEach(peerId => {
-                            if (peerId !== this.userId && !this.peers[peerId] && this.userId < peerId) {
-                                this.initiateCall(peerId);
-                            }
-                        });
-                    }
-
-                    if (data.signals && Array.isArray(data.signals)) {
-                        for (const sig of data.signals) {
-                            const fromId = sig.from_user_id;
-                            if (sig.type === 'offer') {
-                                await this.handleOffer(fromId, sig.payload);
-                            } else if (sig.type === 'answer') {
-                                await this.handleAnswer(fromId, sig.payload);
-                            } else if (sig.type === 'candidate') {
-                                await this.handleCandidate(fromId, sig.payload);
-                            } else if (sig.type === 'join') {
-                                if (fromId !== this.userId && this.userId < fromId) {
-                                    this.initiateCall(fromId);
-                                }
-                            } else if (sig.type === 'leave') {
-                                if (this.peers[fromId]) {
-                                    try { this.peers[fromId].close(); } catch(e) {}
-                                    delete this.peers[fromId];
-                                    const el = document.getElementById('peer-audio-' + fromId);
-                                    if (el) el.remove();
-                                    this.connectedPeersCount = Object.values(this.peers).filter(p => p.connectionState === 'connected').length;
-                                }
-                            }
-                        }
-                    }
-                })
-                .catch(e => console.error('Signal polling error:', e));
-            }
-        };
-    }
-
-    if (typeof window.voicePlayer === 'undefined') {
-        window.voicePlayer = function(audioUrl, initialDuration) {
-            return {
-                playing: false,
-                progress: 0,
-                duration: initialDuration || 0,
-                currentTime: 0,
-                audio: null,
-                init() {
-                    this.setupAudio();
-                },
-                setupAudio() {
-                    if (this.audio) return;
-                    this.audio = new Audio(audioUrl);
-                    this.audio.preload = 'metadata';
-                    this.audio.addEventListener('loadedmetadata', () => {
-                        if (!this.duration || isNaN(this.duration) || this.duration === 0) {
-                            this.duration = Math.round(this.audio.duration) || 0;
-                        }
-                    });
-                    this.audio.addEventListener('timeupdate', () => {
-                        this.currentTime = Math.round(this.audio.currentTime);
-                        if (this.duration > 0) {
-                            this.progress = Math.min(100, (this.audio.currentTime / this.duration) * 100);
-                        }
-                    });
-                    this.audio.addEventListener('ended', () => {
-                        this.playing = false;
-                        this.progress = 0;
-                        this.currentTime = 0;
-                    });
-                    this.audio.addEventListener('pause', () => { this.playing = false; });
-                    this.audio.addEventListener('play', () => { this.playing = true; });
-                },
-                toggle() {
-                    this.setupAudio();
-                    if (this.playing) {
-                        this.audio.pause();
-                        this.playing = false;
-                    } else {
-                        document.querySelectorAll('audio').forEach(a => {
-                            if (a !== this.audio) { try { a.pause(); } catch(e) {} }
-                        });
-                        const p = this.audio.play();
-                        if (p !== undefined) {
-                            p.then(() => { this.playing = true; }).catch(() => { this.playing = false; });
-                        }
-                    }
-                },
-                seek(event) {
-                    this.setupAudio();
-                    const el = event.currentTarget;
-                    const r = el.getBoundingClientRect();
-                    const p = Math.max(0, Math.min(1, (event.clientX - r.left) / r.width));
-                    if (this.duration > 0) {
-                        this.audio.currentTime = p * this.duration;
-                        this.progress = p * 100;
-                    }
-                },
-                formatTime(sec) {
-                    const s = Math.max(0, sec || 0);
-                    const m = Math.floor(s / 60);
-                    const rem = Math.floor(s % 60);
-                    return (m < 10 ? '0' : '') + m + ':' + (rem < 10 ? '0' : '') + rem;
-                }
-            };
-        };
-    }
-</script>
