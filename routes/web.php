@@ -226,6 +226,9 @@ Route::get('/terms', function () {
     return view('public.terms');
 })->name('terms');
 
+Route::redirect('/rules-and-penalties', '/terms');
+Route::redirect('/rules', '/terms');
+
 // Public kitoblar katalogi -> Interaktiv katalog sahifasiga yo'naltirish
 Route::get('/books', function (\Illuminate\Http\Request $request) {
     return redirect()->route('books.catalog', $request->all());
