@@ -480,7 +480,7 @@
                     roomId: {{ $activeRoom->id }},
                     userId: {{ auth()->id() }},
                     initialActive: {{ ($myMember && $myMember->voice_active) ? 'true' : 'false' }},
-                    wire: $wire
+                    wire: @this
                 })" class="p-3 rounded-card bg-gradient-to-r from-amber-500/10 via-ink-900 to-ink-900 border border-amber-500/30 flex items-center justify-between flex-wrap gap-2.5">
                     <div class="flex items-center gap-2.5">
                         <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm" 
@@ -779,7 +779,13 @@
                         .then(data => {
                             this.isUploading = false;
                             if (data.success && data.path) {
-                                $wire.sendVoiceNote(data.path, data.duration || dur);
+                                if (window.@this && typeof window.@this.sendVoiceNote === 'function') {
+                                    window.@this.sendVoiceNote(data.path, data.duration || dur);
+                                } else if (typeof @this !== 'undefined' && typeof @this.sendVoiceNote === 'function') {
+                                    @this.sendVoiceNote(data.path, data.duration || dur);
+                                } else if (typeof $wire !== 'undefined' && typeof $wire.sendVoiceNote === 'function') {
+                                    $wire.sendVoiceNote(data.path, data.duration || dur);
+                                }
                             } else {
                                 alert(data.error || 'Ovozli xabar yuklanmadi');
                             }
