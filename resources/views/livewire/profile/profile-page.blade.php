@@ -339,7 +339,7 @@
                             </div>
                             <div class="space-y-1 pt-2">
                                 <div class="flex justify-between text-[10px] font-mono text-mist">
-                                    <span>{{ __('site.books.reading') }}</span>
+                                    <span>{{ $progress->percent_complete >= 100 ? __('site.books.completed') : __('site.books.reading') }}</span>
                                     <span class="text-amber-400 font-bold">{{ number_format($progress->percent_complete) }}%</span>
                                 </div>
                                 <div class="w-full bg-ink-800 rounded-pill h-1.5 overflow-hidden">

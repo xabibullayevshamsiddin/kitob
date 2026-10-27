@@ -28,6 +28,7 @@ return [
         'menu' => 'Menyu',
     ],
     'auth' => [
+        'login' => 'Kirish',
         'login_title' => 'Tizimga kirish',
         'welcome' => 'Xush kelibsiz!',
         'welcome_sub' => 'Haftalik kitoblar dunyosiga kiring',
@@ -693,6 +694,8 @@ return [
         'audio' => 'Audio',
         'video' => 'Video',
         'read_cta' => 'O\'qish',
+        'reading' => 'O\'qilmoqda',
+        'completed' => 'Tugatildi',
         'empty' => 'Hozirda kitoblar ro\'yxati yangilanmoqda.',
         'chapters_count_suffix' => 'bob',
         'leave_comment' => 'Izoh qoldirish',

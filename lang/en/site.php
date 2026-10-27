@@ -28,6 +28,7 @@ return [
         'menu' => 'Menu',
     ],
     'auth' => [
+        'login' => 'Log in',
         'login_title' => 'Log in',
         'welcome' => 'Welcome!',
         'welcome_sub' => 'Enter the world of weekly books',
@@ -692,6 +693,8 @@ return [
         'audio' => 'Audio',
         'video' => 'Video',
         'read_cta' => 'Read',
+        'reading' => 'Reading',
+        'completed' => 'Completed',
         'empty' => 'The books list is currently being updated.',
         'chapters_count_suffix' => 'chapters',
         'leave_comment' => 'Leave a comment',

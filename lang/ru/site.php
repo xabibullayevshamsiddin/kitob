@@ -28,6 +28,7 @@ return [
         'menu' => 'Меню',
     ],
     'auth' => [
+        'login' => 'Войти',
         'login_title' => 'Вход в систему',
         'welcome' => 'Добро пожаловать!',
         'welcome_sub' => 'Войдите в мир еженедельных книг',
@@ -692,6 +693,8 @@ return [
         'audio' => 'Аудио',
         'video' => 'Видео',
         'read_cta' => 'Читать',
+        'reading' => 'Читается',
+        'completed' => 'Завершено',
         'empty' => 'Список книг сейчас обновляется.',
         'chapters_count_suffix' => 'глав',
         'leave_comment' => 'Оставить отзыв',
