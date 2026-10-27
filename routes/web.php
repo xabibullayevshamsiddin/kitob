@@ -346,6 +346,8 @@ Route::get('/leaderboard', LeaderboardPage::class)->name('leaderboard');
 // Umumiy Chat (hamma ko'ra oladi, yozish uchun login kerak bo'ladi Livewire tomonida)
 Route::get('/chat', GlobalChat::class)->name('chat');
 Route::post('/chat/voice', [\App\Http\Controllers\ChatVoiceController::class, 'upload'])->middleware('auth')->name('chat.voice.upload');
+Route::post('/buddy-read/{id}/signal', [\App\Http\Controllers\BuddyReadVoiceController::class, 'sendSignal'])->middleware('auth')->name('buddy.voice.signal');
+Route::get('/buddy-read/{id}/signals', [\App\Http\Controllers\BuddyReadVoiceController::class, 'pollSignals'])->middleware('auth')->name('buddy.voice.signals');
 
 // Guruhlar (hamma ko'ra oladi)
 Route::get('/groups', GroupList::class)->name('groups.index');
