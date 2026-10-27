@@ -177,14 +177,21 @@
   pointer-events: none;
 }
 
-/* Prevent unmounted page DOM nodes from expanding layout or flashing before StPageFlip */
-#fb-stf-book > .fb-stf-page {
+/* Prevent unmounted page DOM nodes from expanding layout or flashing before StPageFlip initializes */
+#fb-stf-book > .fb-stf-page:not(.stf__item) {
   display: none !important;
 }
-.stf__item .fb-stf-page,
-.stf__block .fb-stf-page,
-.fb-stf-page.stf__item {
-  display: block !important;
+
+/* Ensure inactive StPageFlip pages set to display: none are strictly hidden */
+.stf__item[style*="display: none"],
+.fb-stf-page.stf__item[style*="display: none"],
+.fb-stf-page[style*="display: none"] {
+  display: none !important;
+}
+
+/* Guard: loader skeleton inside inactive pages must never be visible outside active spread */
+.fb-stf-page:not(.--left):not(.--right):not(.--simple) .fb-stf-page-loader {
+  display: none !important;
 }
 
 .fb-stf-page {
@@ -273,6 +280,7 @@
 .fb-stf-page-loader.is-hidden {
   opacity: 0;
   pointer-events: none;
+  display: none !important;
 }
 
 .fb-stf-page-loader-spinner {

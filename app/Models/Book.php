@@ -45,6 +45,20 @@ class Book extends Model
         'ai_text_quality' => 'float',
     ];
 
+    /**
+     * Retrieve the model for a bound value (supports both ID and slug).
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field) {
+            return parent::resolveRouteBinding($value, $field);
+        }
+
+        return $this->where('id', $value)
+            ->orWhere('slug', $value)
+            ->firstOrFail();
+    }
+
     // -------------------------------------------------------------------------
     // Relationships
     // -------------------------------------------------------------------------
