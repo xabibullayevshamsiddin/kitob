@@ -38,6 +38,48 @@
                 candidateQueues: {},
                 lastSignalId: 0,
                 connectedPeersCount: 0,
+                dragX: 0,
+                dragY: 0,
+                isDragging: false,
+                dragStartX: 0,
+                dragStartY: 0,
+                initialDragX: 0,
+                initialDragY: 0,
+                _onPointerMove: null,
+                _onPointerUp: null,
+
+                startDockDrag(e) {
+                    if (e.target.closest('button, a, input, select, textarea')) return;
+                    if (e.button !== undefined && e.button !== 0) return;
+
+                    this.isDragging = true;
+                    this.dragStartX = e.clientX;
+                    this.dragStartY = e.clientY;
+                    this.initialDragX = this.dragX;
+                    this.initialDragY = this.dragY;
+
+                    this._onPointerMove = (evt) => {
+                        if (!this.isDragging) return;
+                        const dx = evt.clientX - this.dragStartX;
+                        const dy = evt.clientY - this.dragStartY;
+                        this.dragX = this.initialDragX + dx;
+                        this.dragY = this.initialDragY + dy;
+                    };
+                    this._onPointerUp = () => {
+                        this.isDragging = false;
+                        if (this._onPointerMove) window.removeEventListener('pointermove', this._onPointerMove);
+                        if (this._onPointerUp) {
+                            window.removeEventListener('pointerup', this._onPointerUp);
+                            window.removeEventListener('pointercancel', this._onPointerUp);
+                        }
+                        this._onPointerMove = null;
+                        this._onPointerUp = null;
+                    };
+
+                    window.addEventListener('pointermove', this._onPointerMove, { passive: false });
+                    window.addEventListener('pointerup', this._onPointerUp);
+                    window.addEventListener('pointercancel', this._onPointerUp);
+                },
 
                 init() {
                     window.addEventListener('open-buddy-modal', () => { this.isFullModalOpen = true; });
@@ -659,8 +701,19 @@
                              x-transition:leave="transition ease-in duration-200"
                              x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                              x-transition:leave-end="opacity-0 translate-y-4 scale-95"
-                             class="fixed bottom-5 right-5 z-[999999] flex items-center gap-2 p-2 rounded-2xl bg-[#0b0f17]/95 border border-emerald-500/50 shadow-2xl backdrop-blur-xl text-paper select-none">
+                             :style="'bottom: 84px; right: 1.25rem; z-index: 9999999; transform: translate3d(' + dragX + 'px, ' + dragY + 'px, 0);'"
+                             @pointerdown="startDockDrag($event)"
+                             class="fixed flex items-center gap-2 p-2 rounded-2xl bg-[#0b0f17]/95 border border-emerald-500/50 shadow-2xl backdrop-blur-xl text-paper select-none cursor-grab active:cursor-grabbing max-w-[calc(100vw-2rem)]">
                             
+                            <!-- Drag Handle -->
+                            <div class="pl-1 text-white/30 hover:text-white/60 cursor-grab active:cursor-grabbing shrink-0" title="Paneni surish">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
+                                    <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                                    <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+                                </svg>
+                            </div>
+
                             <!-- Live Beacon & Partner Status -->
                             <button type="button" @click="openFullModal()" 
                                     class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-left cursor-pointer"
