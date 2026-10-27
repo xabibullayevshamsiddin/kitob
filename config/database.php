@@ -63,6 +63,21 @@ return [
             ]) : [],
         ],
 
+        'production_remote' => [
+            'driver' => 'mysql',
+            'host' => '37.27.48.253',
+            'port' => 3306,
+            'database' => 's391_kitob_db',
+            'username' => 'u391_mEmmGbpm2f',
+            'password' => 'GsnU@d45.@s!koTWfrSJoB.w',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
