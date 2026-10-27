@@ -147,6 +147,23 @@ class Retriever
         $maxMysqlFt = !empty($mysqlFulltextScores) ? max($mysqlFulltextScores) : 0.0;
         $anyTopicalMatched = false;
 
+        // 4. Umumiy savollar (overview / asosiy g'oyalar / mazmun) uchun butun kitob bo'ylab teng taqsimlangan bo'laklarni belgilash
+        $totalChunksCount = $chunks->count();
+        $overviewOrdinalBoosts = [];
+        if ($isOverview && !$hasSubstantiveTopicalTokens && $totalChunksCount > 0) {
+            if ($totalChunksCount <= $limit) {
+                for ($i = 0; $i < $totalChunksCount; $i++) {
+                    $overviewOrdinalBoosts[$i] = round(0.78 - ($i * 0.015), 4);
+                }
+            } else {
+                // $limit ta bo'lakni butun kitob bo'ylab (boshi, 20%, 40%, 60%, 80%, oxiri) teng taqsimlash
+                for ($step = 0; $step < $limit; $step++) {
+                    $targetOrdinal = (int) round(($step / max(1, $limit - 1)) * ($totalChunksCount - 1));
+                    $overviewOrdinalBoosts[$targetOrdinal] = round(0.78 - ($step * 0.015), 4);
+                }
+            }
+        }
+
         foreach ($chunks as $chunk) {
             // Qat'iy himoya: hech qachon boshqa kitobning bo'lagi o'tib ketmasin
             if ((int) $chunk->book_id !== $bookId) {
@@ -235,10 +252,11 @@ class Retriever
                 }
             }
 
-            // 5. Agar foydalanuvchi "Bu kitob nima haqida?" deb umumiy savol bersa va alohida begona mavzu aytmasa
-            if ($isOverview && !$hasSubstantiveTopicalTokens && $chunk->ordinal <= 2) {
-                $overviewBoost = 0.65 - ($chunk->ordinal * 0.05);
-                $combinedScore = max($combinedScore, $overviewBoost);
+            // 5. Agar foydalanuvchi "Bu kitob nima haqida?" deb umumiy savol bersa va alohida begona mavzu aytmasa:
+            // Butun kitob bo'ylab teng taqsimlangan bo'laklarga boost beramiz
+            if ($isOverview && !$hasSubstantiveTopicalTokens && isset($overviewOrdinalBoosts[(int) $chunk->ordinal])) {
+                $combinedScore = max($combinedScore, $overviewOrdinalBoosts[(int) $chunk->ordinal]);
+                $anyTopicalMatched = true;
             }
 
             $scoredChunks[] = [
@@ -283,6 +301,14 @@ class Retriever
         }
 
         $topChunks = array_slice($scoredChunks, 0, $limit);
+
+        // Agar umumiy kitob konspekti/g'oyalari so'rovi bo'lsa, tanlangan bo'laklarni
+        // xronologik (ordinal bo'yicha o'sish) tartibida qaytaramiz, shunda LLM
+        // kitob boshidan oxirigacha bo'lgan tuzilmani to'g'ri ko'radi.
+        if ($isOverview && !empty($topChunks)) {
+            usort($topChunks, static fn(array $a, array $b) => ($a['ordinal'] ?? 0) <=> ($b['ordinal'] ?? 0));
+        }
+
         $topScore = !empty($topChunks) ? (float) $topChunks[0]['score'] : 0.0;
 
         return [
@@ -358,11 +384,24 @@ class Retriever
             'asosiy g\'oya',
             'asosiy g‘oya',
             'asosiy goya',
+            'asosiy g\'oyalar',
+            'asosiy g‘oyalar',
+            'asosiy goyalar',
             'asosiy fikr',
+            'asosiy fikrlar',
             'asosiy tushuncha',
+            'asosiy tushunchalar',
             'asosiy mavzu',
+            'asosiy mavzular',
+            'muhim g\'oyalar',
+            'muhim fikrlar',
+            'kitob maqsadi',
+            'kitobning maqsadi',
+            'kitob konspekti',
+            'butun kitob',
             'nimalar yoritilgan',
             'nimalar haqida',
+            'kitob nimalar haqida',
             'nimalar bor',
             'bu yerda nima',
             'nimani o\'rgan',
@@ -373,6 +412,8 @@ class Retriever
             'what is this book about',
             'main idea',
             'main ideas',
+            'core ideas',
+            'central idea',
             'key concepts',
             'summary of the book',
             'о чем эта книга',
