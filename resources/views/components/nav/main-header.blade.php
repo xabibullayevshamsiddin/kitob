@@ -593,7 +593,7 @@
                     @foreach(['uz' => ['code' => 'UZ', 'flag' => 'uz'], 'ru' => ['code' => 'RU', 'flag' => 'ru'], 'en' => ['code' => 'EN', 'flag' => 'gb']] as $code => $l)
                         <a href="{{ url()->current() }}?lang={{ $code }}"
                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn font-mono text-[11px] font-medium transition-all duration-200 active:scale-95 {{ app()->getLocale() === $code ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/40 font-bold shadow-sm' : 'text-mist hover:text-paper border border-ink-border bg-ink-800 hover:bg-ink-700' }}">
-                            <img src="https://flagcdn.com/20x15/{{ $l['flag'] }}.png" width="16" height="12" class="rounded-[2px] object-cover ring-1 ring-white/10" alt="{{ $l['code'] }}">
+                            <span class="text-xs leading-none">{{ match($l['flag']) { 'uz' => '🇺🇿', 'ru' => '🇷🇺', 'gb' => '🇬🇧', default => '🌐' } }}</span>
                             <span>{{ $l['code'] }}</span>
                         </a>
                     @endforeach

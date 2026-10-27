@@ -18,14 +18,7 @@
         class="header-lang-btn flex items-center gap-2 px-2.5 py-1.5 rounded-btn bg-ink-800 border border-ink-border hover:bg-ink-700 active:scale-[0.98] transition-all text-xs font-semibold text-paper focus:outline-none select-none shadow-sm"
         aria-label="Tilni tanlang"
     >
-        <img
-            src="https://flagcdn.com/20x15/{{ $current['flag'] }}.png"
-            srcset="https://flagcdn.com/40x30/{{ $current['flag'] }}.png 2x"
-            width="18" height="13"
-            alt="{{ $current['code'] }}"
-            class="rounded-[2px] object-cover ring-1 ring-white/10"
-            onerror="this.style.display='none'"
-        >
+        <span class="text-sm leading-none">{{ match($current['flag'] ?? 'uz') { 'uz' => '🇺🇿', 'ru' => '🇷🇺', 'gb', 'en' => '🇬🇧', default => '🌐' } }}</span>
         <span class="font-mono text-[11px] tracking-wide">{{ $current['code'] }}</span>
         <svg
             class="w-3 h-3 text-mist transition-transform duration-200"
@@ -62,14 +55,7 @@
                     @click="langOpen = false"
                 >
                     <div class="flex items-center gap-2.5">
-                        <img
-                            src="https://flagcdn.com/20x15/{{ $lang['flag'] }}.png"
-                            srcset="https://flagcdn.com/40x30/{{ $lang['flag'] }}.png 2x"
-                            width="18" height="13"
-                            alt="{{ $code }}"
-                            class="rounded-[2px] object-cover ring-1 ring-ink-border/50"
-                            onerror="this.style.display='none'"
-                        >
+                        <span class="text-sm leading-none">{{ match($lang['flag'] ?? 'uz') { 'uz' => '🇺🇿', 'ru' => '🇷🇺', 'gb', 'en' => '🇬🇧', default => '🌐' } }}</span>
                         <span class="font-medium">{{ $lang['name'] }}</span>
                     </div>
 
