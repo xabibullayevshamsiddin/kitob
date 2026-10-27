@@ -118,6 +118,7 @@ class BuddyReadModal extends Component
         $this->newMessage = '';
         $this->isSpoiler = false;
         $this->emit('buddy-message-sent');
+        $this->dispatchBrowserEvent('buddy-chat-scroll');
     }
 
     public function revealSpoiler(int $messageId): void

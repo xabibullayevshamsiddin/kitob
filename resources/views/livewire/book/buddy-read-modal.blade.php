@@ -1,36 +1,70 @@
-<div class="space-y-4">
+<div class="space-y-4" wire:poll.2500ms>
     @if($activeRoom)
         <!-- Active Buddy Read Room -->
         <div class="space-y-4">
             <!-- Room Top Bar -->
-            <div class="flex items-center justify-between pb-3 border-b border-ink-border">
+            <div class="flex items-center justify-between pb-3 border-b border-ink-border flex-wrap gap-2">
                 <div class="flex items-center gap-2">
-                    <button type="button" wire:click="selectBuddyRead(null)" class="text-xs font-mono text-mist hover:text-paper px-2 py-1 rounded bg-ink-900 border border-ink-border">
+                    <button type="button" wire:click="selectBuddyRead(null)" class="text-xs font-mono text-mist hover:text-paper px-2.5 py-1 rounded-btn bg-ink-900 border border-ink-border transition-colors">
                         ← Barcha xonalar
                     </button>
                     <div>
                         <h4 class="text-sm font-bold text-paper font-serif">{{ $activeRoom->title }}</h4>
-                        <p class="text-[11px] text-amber-500 font-mono">👥 {{ $activeRoom->members->count() }}/{{ $activeRoom->max_members }} ishtirokchi</p>
+                        <p class="text-[11px] text-amber-500 font-mono flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>Jonli efir • {{ $activeRoom->members->count() }}/{{ $activeRoom->max_members }} kitobxon</span>
+                        </p>
                     </div>
                 </div>
 
-                @if(!$myMember && auth()->check())
-                    <button type="button" wire:click="joinBuddyRead({{ $activeRoom->id }})" class="ks-btn-primary text-xs py-1.5 px-3">
-                        + Qo'shilish
-                    </button>
-                @endif
+                <div class="flex items-center gap-2">
+                    @if($book->pdf_path)
+                        <a href="{{ route('books.flipbook', $book->slug ?? $book->id) }}?page={{ $myMember?->current_page ?? 1 }}" 
+                           class="px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                           title="PDF kitobni ochish va 3D mutolaa qilish">
+                            <span>📖</span>
+                            <span>PDF Mutolaa</span>
+                            <span>→</span>
+                        </a>
+                        <a href="{{ route('books.pdf', $book) }}" 
+                           class="px-2.5 py-1.5 rounded-btn bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500/25 text-xs font-mono font-bold flex items-center gap-1 transition-all"
+                           title="PDF faylni yuklab olish">
+                            <span>📥 PDF</span>
+                        </a>
+                    @endif
+
+                    @if(!$myMember && auth()->check())
+                        <button type="button" wire:click="joinBuddyRead({{ $activeRoom->id }})" class="ks-btn-primary text-xs py-1.5 px-3">
+                            + Qo'shilish
+                        </button>
+                    @endif
+                </div>
             </div>
 
             <!-- Members Progress Tracker (StoryGraph style) -->
             <div class="p-3 rounded-card bg-ink-900 border border-ink-border space-y-2">
-                <span class="text-[11px] font-mono text-mist uppercase tracking-wider block">Kitobxonlar mutolaa tezligi:</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-mono text-mist uppercase tracking-wider block">Kitobxonlar mutolaa tezligi:</span>
+                    <span class="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        Jonli yangilanmoqda
+                    </span>
+                </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     @foreach($activeRoom->members as $member)
                         <div class="flex items-center gap-2 p-2 rounded bg-ink-950 border border-ink-border text-xs">
-                            <img src="{{ $member->user?->avatar_url ?? asset('images/default-avatar.png') }}" class="w-6 h-6 rounded-full object-cover border border-amber-500/40" alt="{{ $member->user?->name }}">
-                            <div class="min-w-0">
-                                <span class="font-semibold text-paper truncate block text-[11px]">{{ $member->user?->name }}</span>
-                                <span class="text-amber-500 font-mono text-[10px]">{{ $member->current_page }}-betda</span>
+                            <img src="{{ $member->user?->avatar_url ?? asset('images/default-avatar.png') }}" class="w-7 h-7 rounded-full object-cover border border-amber-500/40 shrink-0" alt="{{ $member->user?->name }}">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="font-semibold text-paper truncate block text-[11px]">{{ $member->user?->name }}</span>
+                                    @if(auth()->check() && $member->user_id === auth()->id())
+                                        <span class="text-[9px] px-1 rounded bg-amber-500/20 text-amber-400 font-bold font-mono shrink-0">Siz</span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center justify-between text-[10px] font-mono text-mist">
+                                    <span class="truncate">{{ '@' . ($member->user?->username ?? 'user') }}</span>
+                                    <span class="text-amber-400 font-bold shrink-0 ml-1">{{ $member->current_page }}-bet</span>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -38,7 +72,11 @@
             </div>
 
             <!-- Spoilers-Protected Messages Thread -->
-            <div class="space-y-2.5 max-h-[350px] overflow-y-auto p-2 rounded-card bg-ink-950 border border-ink-border">
+            <div id="buddy-chat-messages" 
+                 x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight; } }"
+                 x-init="scrollToBottom()"
+                 @buddy-chat-scroll.window="scrollToBottom()"
+                 class="space-y-2.5 max-h-[350px] overflow-y-auto p-2 rounded-card bg-ink-950 border border-ink-border scroll-smooth">
                 @forelse($activeRoom->messages as $msg)
                     @php
                         $myPage = $myMember?->current_page ?? 1;
@@ -51,6 +89,9 @@
                         <div class="flex items-center justify-between text-[11px] font-mono">
                             <div class="flex items-center gap-1.5">
                                 <span class="font-bold text-paper">{{ $msg->user?->name }}</span>
+                                @if(auth()->check() && $msg->user_id === auth()->id())
+                                    <span class="text-[9px] px-1 rounded bg-amber-500/20 text-amber-400 font-bold font-mono">Siz</span>
+                                @endif
                                 <span class="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 text-[10px]">{{ $msg->page_number }}-bet</span>
                             </div>
                             <span class="text-mist text-[10px]">{{ $msg->created_at->diffForHumans() }}</span>
@@ -105,11 +146,22 @@
     @else
         <!-- Rooms List & Create New Room -->
         <div class="space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-ink-border">
+            <div class="flex items-center justify-between pb-3 border-b border-ink-border flex-wrap gap-2">
                 <div>
                     <h4 class="text-sm font-bold text-paper font-serif">«{{ $book->title }}» bo'yicha Birgalikda Mutolaa</h4>
                     <p class="text-xs text-mist font-mono">Do'stlaringiz bilan birga o'qing va boblar bo'yicha muhokama qiling</p>
                 </div>
+                @if($book->pdf_path)
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('books.flipbook', $book->slug ?? $book->id) }}" class="px-3 py-1.5 rounded-btn bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm">
+                            <span>📖</span>
+                            <span>PDF Mutolaa</span>
+                        </a>
+                        <a href="{{ route('books.pdf', $book) }}" class="px-2.5 py-1.5 rounded-btn bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-mono font-bold flex items-center gap-1">
+                            <span>📥 PDF</span>
+                        </a>
+                    </div>
+                @endif
             </div>
 
             <!-- Create New Buddy Read Form -->
