@@ -210,11 +210,34 @@
                 },
 
                 toggleMute() {
-                    if (!this.mediaStream) return;
                     this.isMuted = !this.isMuted;
-                    this.mediaStream.getAudioTracks().forEach(t => {
-                        t.enabled = !this.isMuted;
+                    if (this.mediaStream) {
+                        try {
+                            this.mediaStream.getAudioTracks().forEach(t => {
+                                t.enabled = !this.isMuted;
+                            });
+                        } catch(e) {
+                            console.warn('Track mute error:', e);
+                        }
+                    }
+
+                    // WebRTC PeerConnection RTP senderlarini ham o'chirish/yoqish
+                    Object.values(this.peers || {}).forEach(pc => {
+                        try {
+                            if (pc && typeof pc.getSenders === 'function') {
+                                pc.getSenders().forEach(sender => {
+                                    if (sender.track && sender.track.kind === 'audio') {
+                                        sender.track.enabled = !this.isMuted;
+                                    }
+                                });
+                            }
+                        } catch(e) {}
                     });
+
+                    // Agar ovoz o'chirilgan bo'lsa, mikrofon indikatorini 0 ga tushirish
+                    if (this.isMuted) {
+                        this.micLevel = 0;
+                    }
                 },
 
                 enhanceOpusAudioSdp(sdp) {
@@ -677,9 +700,10 @@
                         <!-- Mute / Unmute Button -->
                         <template x-if="voiceActive">
                             <button type="button" @click="toggleMute()" 
-                                class="px-2.5 py-1.5 rounded-btn text-xs font-mono font-bold border transition-colors flex items-center gap-1"
-                                :class="isMuted ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-ink-800 text-mist hover:text-paper border-ink-border'">
-                                <span x-text="isMuted ? '🔇 Yoqish' : '🎤 O\'chirish'"></span>
+                                class="px-2.5 py-1.5 rounded-btn text-xs font-mono font-bold border transition-colors flex items-center gap-1 active:scale-95 cursor-pointer"
+                                :class="isMuted ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-ink-800 text-mist hover:text-paper border-ink-border'"
+                                :title="isMuted ? 'Ovozni yoqish' : 'Ovozni o\'chirish'">
+                                <span x-text="isMuted ? '🔇 Ovoz o\'chiq' : '🎤 Ovoz ochiq'"></span>
                             </button>
                         </template>
 
@@ -715,7 +739,9 @@
                             </div>
 
                             <!-- Live Beacon & Partner Status -->
-                            <button type="button" @click="openFullModal()" 
+                            <button type="button" 
+                                    @click.stop="openFullModal()" 
+                                    @pointerdown.stop
                                     class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-left cursor-pointer"
                                     title="Suhbat va xonani to'liq ochish">
                                 <span class="relative flex h-2.5 w-2.5 shrink-0">
@@ -732,28 +758,34 @@
                             <div class="flex items-center gap-0.5 h-4 px-1" title="Sizning ovozingiz darajasi">
                                 <template x-for="i in 5" :key="i">
                                     <span class="w-1 rounded-full transition-all duration-75"
-                                          :class="(i * 20) <= micLevel ? 'bg-emerald-400' : 'bg-white/10'"
-                                          :style="'height: ' + Math.max(4, Math.min(16, ((i * 20) <= micLevel ? (i * 3 + 4) : 4))) + 'px'"></span>
+                                          :class="(!isMuted && (i * 20) <= micLevel) ? 'bg-emerald-400' : 'bg-white/10'"
+                                          :style="'height: ' + Math.max(4, Math.min(16, ((!isMuted && (i * 20) <= micLevel) ? (i * 3 + 4) : 4))) + 'px'"></span>
                                 </template>
                             </div>
 
                             <!-- Mute Toggle -->
-                            <button type="button" @click="toggleMute()"
-                                    class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer"
-                                    :class="isMuted ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 hover:bg-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'"
-                                    :title="isMuted ? 'Mikrofonni yoqish' : 'Mikrofonni o\'chirish'">
-                                <span x-text="isMuted ? '🔇 Muted' : '🎤 Ovoz ochiq'"></span>
+                            <button type="button" 
+                                    @click.stop="toggleMute()"
+                                    @pointerdown.stop
+                                    class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                                    :class="isMuted ? 'bg-rose-500/25 text-rose-300 border-rose-500/50 hover:bg-rose-500/35' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'"
+                                    :title="isMuted ? 'Ovozni yoqish' : 'Ovozni o\'chirish'">
+                                <span x-text="isMuted ? '🔇 Ovoz o\'chiq' : '🎤 Ovoz ochiq'"></span>
                             </button>
 
                             <!-- Re-open Modal / Chat -->
-                            <button type="button" @click="openFullModal()"
+                            <button type="button" 
+                                    @click.stop="openFullModal()"
+                                    @pointerdown.stop
                                     class="p-2 rounded-xl text-mist hover:text-amber-400 hover:bg-white/10 border border-white/5 transition-colors cursor-pointer"
                                     title="Do'stlar xonasi va chatni ochish">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                             </button>
 
                             <!-- Leave Voice -->
-                            <button type="button" @click="stopVoice()"
+                            <button type="button" 
+                                    @click.stop="stopVoice()"
+                                    @pointerdown.stop
                                     class="p-2 rounded-xl text-mist hover:text-rose-400 hover:bg-rose-500/10 border border-white/5 transition-colors cursor-pointer"
                                     title="Ovozli efirdan chiqish">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
