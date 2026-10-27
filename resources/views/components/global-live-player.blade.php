@@ -546,7 +546,12 @@
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
                         { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun.cloudflare.com:3478' }
+                        { urls: 'stun:stun.cloudflare.com:3478' },
+                        { urls: 'stun:stun.services.mozilla.com:3478' },
+                        { urls: 'stun:stun.relay.metered.ca:80' },
+                        @if (!empty(config('webrtc.turn.urls')))
+                        @json(config('webrtc.turn')),
+                        @endif
                     ],
                     iceCandidatePoolSize: 10
                 });
@@ -585,10 +590,15 @@
                     }
 
                     const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    await this.sendSignal('answer', 'host:*', {
+                    const enhancedSdp = this.enhanceOpusAudioSdp(answer.sdp);
+                    const tunedAnswer = new RTCSessionDescription({
                         type: answer.type,
-                        sdp: this.normalizeSdp(answer.sdp)
+                        sdp: enhancedSdp
+                    });
+                    await pc.setLocalDescription(tunedAnswer);
+                    await this.sendSignal('answer', 'host:*', {
+                        type: tunedAnswer.type,
+                        sdp: this.normalizeSdp(tunedAnswer.sdp)
                     });
                 } catch (e) {
                     this.isConnecting = true;
@@ -646,6 +656,33 @@
 
             normalizeSdp(sdp) {
                 return String(sdp || '').split(/\r\n|\r|\n/).map(line => line.trimEnd()).filter(Boolean).join('\r\n') + '\r\n';
+            },
+
+            enhanceOpusAudioSdp(sdp) {
+                if (!sdp || typeof sdp !== 'string') return sdp || '';
+                const opusMatch = sdp.match(/a=rtpmap:(\d+)\s+opus\/48000[^\r\n]*/i);
+                if (!opusMatch) return sdp;
+                const pt = opusMatch[1];
+                const fmtpRegex = new RegExp('a=fmtp:' + pt + ' [^\\r\\n]*');
+                const opusParams = 'maxaveragebitrate=64000;useinbandfec=1;usedtx=0;stereo=0;sprop-stereo=0;cbr=0;minptime=10;maxptime=60';
+                if (fmtpRegex.test(sdp)) {
+                    return sdp.replace(fmtpRegex, (m) => {
+                        const params = m.replace(new RegExp('^a=fmtp:' + pt + '\\s*'), '');
+                        let clean = params.replace(/useinbandfec=\d+/g, '')
+                                          .replace(/usedtx=\d+/g, '')
+                                          .replace(/maxaveragebitrate=\d+/g, '')
+                                          .replace(/minptime=\d+/g, '')
+                                          .replace(/maxptime=\d+/g, '')
+                                          .replace(/cbr=\d+/g, '')
+                                          .replace(/stereo=\d+/g, '')
+                                          .replace(/sprop-stereo=\d+/g, '')
+                                          .replace(/;+/g, ';')
+                                          .replace(/^;|;$/g, '').trim();
+                        return 'a=fmtp:' + pt + ' ' + (clean ? clean + ';' : '') + opusParams;
+                    });
+                } else {
+                    return sdp.replace(opusMatch[0], opusMatch[0] + '\r\na=fmtp:' + pt + ' ' + opusParams);
+                }
             },
 
             stopConnection() {

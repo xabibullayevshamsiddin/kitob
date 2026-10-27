@@ -1199,6 +1199,59 @@ function normalizeSdp(sdp) {
     return cleaned.join('\r\n') + '\r\n';
 }
 
+/**
+ * enhanceOpusAudioSdp — WebRTC Opus audio parametrlarini studiya sifatiga moslashtirish:
+ * - maxaveragebitrate=64000 (64 kbps tiniq inson nutqi)
+ * - useinbandfec=1 (paketlar yo'qolganda avtomatik tiklash, ovoz uzilib qolmaydi)
+ * - usedtx=0 (so'z boshidagi yoki jimlikdan keyingi bo'g'inlar yutib ketilmaydi)
+ * - minptime=10 (kechikishni 10ms ga kamaytiradi)
+ */
+function enhanceOpusAudioSdp(sdp) {
+    if (!sdp || typeof sdp !== 'string') return sdp || '';
+    const opusMatch = sdp.match(/a=rtpmap:(\d+)\s+opus\/48000[^\r\n]*/i);
+    if (!opusMatch) return sdp;
+    const pt = opusMatch[1];
+    const fmtpRegex = new RegExp('a=fmtp:' + pt + ' [^\\r\\n]*');
+    const opusParams = 'maxaveragebitrate=64000;useinbandfec=1;usedtx=0;stereo=0;sprop-stereo=0;cbr=0;minptime=10;maxptime=60';
+    if (fmtpRegex.test(sdp)) {
+        return sdp.replace(fmtpRegex, (m) => {
+            const params = m.replace(new RegExp('^a=fmtp:' + pt + '\\s*'), '');
+            let clean = params.replace(/useinbandfec=\d+/g, '')
+                              .replace(/usedtx=\d+/g, '')
+                              .replace(/maxaveragebitrate=\d+/g, '')
+                              .replace(/minptime=\d+/g, '')
+                              .replace(/maxptime=\d+/g, '')
+                              .replace(/cbr=\d+/g, '')
+                              .replace(/stereo=\d+/g, '')
+                              .replace(/sprop-stereo=\d+/g, '')
+                              .replace(/;+/g, ';')
+                              .replace(/^;|;$/g, '').trim();
+            return 'a=fmtp:' + pt + ' ' + (clean ? clean + ';' : '') + opusParams;
+        });
+    } else {
+        return sdp.replace(opusMatch[0], opusMatch[0] + '\r\na=fmtp:' + pt + ' ' + opusParams);
+    }
+}
+
+/**
+ * applyAudioSenderQuality — RTCRtpSender orqali audio paketlariga tarmoqda eng yuqori ustuvorlik
+ * va 64kbps bitreyt berish (video tiqilib qolsa ham ovoz tiniq va kechikishsiz o'tadi).
+ */
+function applyAudioSenderQuality(pc) {
+    if (!pc || !pc.getSenders) return;
+    const sender = pc.getSenders().find(s => s.track && s.track.kind === 'audio');
+    if (!sender || !sender.getParameters) return;
+    try {
+        const params = sender.getParameters();
+        if (params.encodings && params.encodings.length > 0) {
+            params.encodings[0].maxBitrate = 64000;
+            params.encodings[0].priority = 'high';
+            params.encodings[0].networkPriority = 'high';
+            sender.setParameters(params).catch(() => {});
+        }
+    } catch (e) {}
+}
+
 function liveStudioController(config) {
     const isHost = Boolean(config.isHost);
     const eventId = Number(config.eventId);
@@ -1356,6 +1409,8 @@ function liveStudioController(config) {
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun.cloudflare.com:3478' },
+                { urls: 'stun:stun.services.mozilla.com:3478' },
+                { urls: 'stun:stun.relay.metered.ca:80' },
                 @if (!empty(config('webrtc.turn.urls')))
                 @json(config('webrtc.turn')),
                 @endif
@@ -2011,6 +2066,7 @@ function liveStudioController(config) {
                         };
                         await pc.setRemoteDescription(new RTCSessionDescription(cleanAnswer));
                         this.applyVideoSenderQuality(pc);
+                        applyAudioSenderQuality(pc);
 
                         // Drain queued ICE candidates if any arrived early
                         if (this.hostIceQueues && this.hostIceQueues[viewerId] && this.hostIceQueues[viewerId].length > 0) {
@@ -2122,10 +2178,17 @@ function liveStudioController(config) {
 
             try {
                 const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                await this.sendSignal('offer', viewerId, {
+                const enhancedSdp = enhanceOpusAudioSdp(offer.sdp);
+                const tunedOffer = new RTCSessionDescription({
                     type: offer.type,
-                    sdp: normalizeSdp(offer.sdp)
+                    sdp: enhancedSdp
+                });
+                await pc.setLocalDescription(tunedOffer);
+                this.applyVideoSenderQuality(pc);
+                applyAudioSenderQuality(pc);
+                await this.sendSignal('offer', viewerId, {
+                    type: tunedOffer.type,
+                    sdp: normalizeSdp(tunedOffer.sdp)
                 });
 
                 // Broadcast current stream status to viewer
@@ -2282,13 +2345,19 @@ function liveStudioController(config) {
                 }
 
                 const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
+                const enhancedSdp = enhanceOpusAudioSdp(answer.sdp);
+                const tunedAnswer = new RTCSessionDescription({
+                    type: answer.type,
+                    sdp: enhancedSdp
+                });
+                await pc.setLocalDescription(tunedAnswer);
+                applyAudioSenderQuality(pc);
 
-                console.log('[VIEWER] Answer SDP has audio?', answer.sdp.includes('m=audio'));
+                console.log('[VIEWER] Answer SDP has audio?', tunedAnswer.sdp.includes('m=audio'));
 
                 await this.sendSignal('answer', 'host:*', {
-                    type: answer.type,
-                    sdp: normalizeSdp(answer.sdp)
+                    type: tunedAnswer.type,
+                    sdp: normalizeSdp(tunedAnswer.sdp)
                 });
             } catch (err) {
                 console.error('Viewer error processing host offer:', err);
@@ -2307,33 +2376,23 @@ function liveStudioController(config) {
                 this.isMicOn = true;
             }
 
-            // 1. Primary Video Player (Video display + Speaker audio)
+            // 1. Primary Video Player (Video display ONLY - always muted to prevent double-audio robotic echo)
             if (videoEl) {
                 if (videoEl.srcObject !== this.remoteStream) {
                     videoEl.srcObject = this.remoteStream;
                 }
-                videoEl.volume = 1.0;
-                videoEl.muted = this.isViewerMuted;
-
+                videoEl.muted = true; // Video element is strictly silent visual display
                 const vPlay = videoEl.play();
                 if (vPlay !== undefined) {
-                    vPlay.then(() => {
-                        console.log('[VIEWER] videoEl playback ACTIVE (unmuted)');
-                        this.needsUnmute = false;
-                    }).catch(err => {
+                    vPlay.catch(err => {
                         if (err.name === 'AbortError') {
                             setTimeout(() => { if (videoEl) videoEl.play().catch(() => {}); }, 120);
-                            return;
                         }
-                        console.warn('[VIEWER] Autoplay policy blocked unmuted video, starting muted playback:', err);
-                        videoEl.muted = true;
-                        videoEl.play().catch(() => {});
-                        this.needsUnmute = true;
                     });
                 }
             }
 
-            // 2. Fallback Audio Player
+            // 2. Dedicated Single Audio Output (Exclusively handles all stream sound with zero phase interference)
             const audioTracks = this.remoteStream.getAudioTracks();
             if (audioEl && audioTracks.length > 0) {
                 const aStream = new MediaStream([audioTracks[0]]);
@@ -2346,9 +2405,13 @@ function liveStudioController(config) {
                 const aPlay = audioEl.play();
                 if (aPlay !== undefined) {
                     aPlay.then(() => {
-                        console.log('[VIEWER] audioEl playback ACTIVE');
+                        console.log('[VIEWER] audioEl playback ACTIVE (crystal clear dedicated output)');
+                        this.needsUnmute = false;
                     }).catch(err => {
                         if (err.name !== 'AbortError') {
+                            console.warn('[VIEWER] Autoplay policy blocked unmuted audio, user interaction required:', err);
+                            audioEl.muted = true;
+                            audioEl.play().catch(() => {});
                             this.needsUnmute = true;
                         }
                     });
@@ -2363,11 +2426,12 @@ function liveStudioController(config) {
             const videoEl = document.getElementById('liveVideoPlayer');
             const audioEl = document.getElementById('liveAudioPlayer');
 
+            // Video player stays muted to prevent double audio playback and flanging
             if (videoEl) {
-                videoEl.muted = false;
-                videoEl.volume = 1.0;
+                videoEl.muted = true;
                 videoEl.play().catch(() => {});
             }
+            // Audio player exclusively outputs sound
             if (audioEl) {
                 audioEl.muted = false;
                 audioEl.volume = 1.0;
@@ -2376,7 +2440,7 @@ function liveStudioController(config) {
             if (this.audioContext && this.audioContext.state === 'suspended') {
                 this.audioContext.resume().catch(() => {});
             }
-            console.log('[VIEWER] unmuteAudio: all players unmuted, volume=1.0');
+            console.log('[VIEWER] unmuteAudio: dedicated audio player unmuted, volume=1.0');
         },
 
         toggleViewerMute() {
@@ -2384,7 +2448,7 @@ function liveStudioController(config) {
             const audioEl = document.getElementById('liveAudioPlayer');
             const videoEl = document.getElementById('liveVideoPlayer');
             if (audioEl) audioEl.muted = this.isViewerMuted;
-            if (videoEl) videoEl.muted = this.isViewerMuted;
+            if (videoEl) videoEl.muted = true; // Always muted
         },
 
         // ── MEDIA STREAM & DEVICE MANAGEMENT (HOST) ──
@@ -2741,7 +2805,16 @@ function liveStudioController(config) {
                     this.localStream.getTracks().forEach(t => t.stop());
                 }
 
-                const audioConstraints = this.selectedAudioDevice ? { deviceId: { ideal: this.selectedAudioDevice } } : true;
+                const baseAudioConstraints = {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 48000,
+                    channelCount: 1
+                };
+                const audioConstraints = this.selectedAudioDevice
+                    ? { ...baseAudioConstraints, deviceId: { ideal: this.selectedAudioDevice } }
+                    : baseAudioConstraints;
                 let stream = null;
 
                 try {
@@ -2911,7 +2984,14 @@ function liveStudioController(config) {
             if (this.localStream) {
                 try {
                     const newAudioStream = await navigator.mediaDevices.getUserMedia({
-                        audio: { deviceId: { exact: deviceId } }
+                        audio: {
+                            deviceId: { exact: deviceId },
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                            sampleRate: 48000,
+                            channelCount: 1
+                        }
                     });
                     const newAudioTrack = newAudioStream.getAudioTracks()[0];
                     newAudioTrack.enabled = this.isMicOn;

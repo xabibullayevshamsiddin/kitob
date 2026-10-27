@@ -39,7 +39,9 @@
                             audio: {
                                 echoCancellation: true,
                                 noiseSuppression: true,
-                                autoGainControl: true
+                                autoGainControl: true,
+                                channelCount: 1,
+                                sampleRate: 48000
                             }
                         });
 
@@ -130,6 +132,48 @@
                     });
                 },
 
+                enhanceOpusAudioSdp(sdp) {
+                    if (!sdp || typeof sdp !== 'string') return sdp || '';
+                    const opusMatch = sdp.match(/a=rtpmap:(\d+)\s+opus\/48000[^\r\n]*/i);
+                    if (!opusMatch) return sdp;
+                    const pt = opusMatch[1];
+                    const fmtpRegex = new RegExp('a=fmtp:' + pt + ' [^\\r\\n]*');
+                    const opusParams = 'maxaveragebitrate=64000;useinbandfec=1;usedtx=0;stereo=0;sprop-stereo=0;cbr=0;minptime=10;maxptime=60';
+                    if (fmtpRegex.test(sdp)) {
+                        return sdp.replace(fmtpRegex, (m) => {
+                            const params = m.replace(new RegExp('^a=fmtp:' + pt + '\\s*'), '');
+                            let clean = params.replace(/useinbandfec=\d+/g, '')
+                                              .replace(/usedtx=\d+/g, '')
+                                              .replace(/maxaveragebitrate=\d+/g, '')
+                                              .replace(/minptime=\d+/g, '')
+                                              .replace(/maxptime=\d+/g, '')
+                                              .replace(/cbr=\d+/g, '')
+                                              .replace(/stereo=\d+/g, '')
+                                              .replace(/sprop-stereo=\d+/g, '')
+                                              .replace(/;+/g, ';')
+                                              .replace(/^;|;$/g, '').trim();
+                            return 'a=fmtp:' + pt + ' ' + (clean ? clean + ';' : '') + opusParams;
+                        });
+                    } else {
+                        return sdp.replace(opusMatch[0], opusMatch[0] + '\r\na=fmtp:' + pt + ' ' + opusParams);
+                    }
+                },
+
+                applyAudioSenderQuality(pc) {
+                    if (!pc || !pc.getSenders) return;
+                    const sender = pc.getSenders().find(s => s.track && s.track.kind === 'audio');
+                    if (!sender || !sender.getParameters) return;
+                    try {
+                        const params = sender.getParameters();
+                        if (params.encodings && params.encodings.length > 0) {
+                            params.encodings[0].maxBitrate = 64000;
+                            params.encodings[0].priority = 'high';
+                            params.encodings[0].networkPriority = 'high';
+                            sender.setParameters(params).catch(() => {});
+                        }
+                    } catch (e) {}
+                },
+
                 createPeerConnection(peerId) {
                     if (this.peers[peerId]) return this.peers[peerId];
 
@@ -138,8 +182,13 @@
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' },
                             { urls: 'stun:stun.cloudflare.com:3478' },
-                            { urls: 'stun:stun.services.mozilla.com:3478' }
-                        ]
+                            { urls: 'stun:stun.services.mozilla.com:3478' },
+                            { urls: 'stun:stun.relay.metered.ca:80' },
+                            @if (!empty(config('webrtc.turn.urls')))
+                            @json(config('webrtc.turn')),
+                            @endif
+                        ],
+                        iceCandidatePoolSize: 10
                     });
 
                     if (this.mediaStream) {
@@ -174,6 +223,8 @@
                             audio.playsInline = true;
                             document.body.appendChild(audio);
                         }
+                        audio.volume = 1.0;
+                        audio.muted = false;
                         if (event.streams && event.streams[0]) {
                             audio.srcObject = event.streams[0];
                         } else {
@@ -181,9 +232,12 @@
                             s.addTrack(event.track);
                             audio.srcObject = s;
                         }
-                        audio.play().catch(e => {
-                            console.warn('WebRTC audio autoplay warning:', e);
-                        });
+                        const p = audio.play();
+                        if (p !== undefined) {
+                            p.catch(e => {
+                                console.warn('WebRTC audio autoplay warning:', e);
+                            });
+                        }
                     };
 
                     this.peers[peerId] = pc;
@@ -198,8 +252,14 @@
                     try {
                         const pc = this.createPeerConnection(peerId);
                         const offer = await pc.createOffer({ offerToReceiveAudio: true });
-                        await pc.setLocalDescription(offer);
-                        this.sendSignal('offer', JSON.stringify(offer), peerId);
+                        const enhancedSdp = this.enhanceOpusAudioSdp(offer.sdp);
+                        const tunedOffer = new RTCSessionDescription({
+                            type: offer.type,
+                            sdp: enhancedSdp
+                        });
+                        await pc.setLocalDescription(tunedOffer);
+                        this.applyAudioSenderQuality(pc);
+                        this.sendSignal('offer', JSON.stringify(tunedOffer), peerId);
                     } catch (err) {
                         this.callingPeers[peerId] = false;
                         console.error('Call initiation error:', err);
@@ -221,8 +281,14 @@
                         }
 
                         const answer = await pc.createAnswer();
-                        await pc.setLocalDescription(answer);
-                        this.sendSignal('answer', JSON.stringify(answer), fromUserId);
+                        const enhancedSdp = this.enhanceOpusAudioSdp(answer.sdp);
+                        const tunedAnswer = new RTCSessionDescription({
+                            type: answer.type,
+                            sdp: enhancedSdp
+                        });
+                        await pc.setLocalDescription(tunedAnswer);
+                        this.applyAudioSenderQuality(pc);
+                        this.sendSignal('answer', JSON.stringify(tunedAnswer), fromUserId);
                     } catch (err) {
                         console.error('Offer handling error:', err);
                     }
@@ -234,6 +300,7 @@
                         if (pc) {
                             const desc = new RTCSessionDescription(JSON.parse(sdpString));
                             await pc.setRemoteDescription(desc);
+                            this.applyAudioSenderQuality(pc);
 
                             // Drain queued candidates for this peer
                             if (this.candidateQueues[fromUserId]) {
@@ -672,13 +739,21 @@
                             return;
                         }
                         this.isPreparing = true;
-                        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                        navigator.mediaDevices.getUserMedia({
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: true,
+                                channelCount: 1,
+                                sampleRate: 48000
+                            }
+                        }).then(stream => {
                             this.isPreparing = false;
                             this.mediaStream = stream;
                             this.audioChunks = [];
                             this.discard = false;
 
-                            let options = {};
+                            let options = { audioBitsPerSecond: 64000 };
                             if (typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function') {
                                 if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
                                     options.mimeType = 'audio/webm;codecs=opus';

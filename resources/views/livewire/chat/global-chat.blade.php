@@ -246,15 +246,27 @@
                      alert('Brauzeringiz audio yozishni qo\'llab-quvvatlamaydi.');
                      return;
                  }
-                 navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                 navigator.mediaDevices.getUserMedia({
+                     audio: {
+                         echoCancellation: true,
+                         noiseSuppression: true,
+                         autoGainControl: true,
+                         channelCount: 1,
+                         sampleRate: 48000
+                     }
+                 }).then(stream => {
                      this.mediaStream = stream;
                      this.audioChunks = [];
                      this.discard = false;
-                     let options = {};
-                     if (MediaRecorder.isTypeSupported('audio/webm')) {
-                         options = { mimeType: 'audio/webm' };
-                     } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                         options = { mimeType: 'audio/mp4' };
+                     let options = { audioBitsPerSecond: 64000 };
+                     if (typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function') {
+                         if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                             options.mimeType = 'audio/webm;codecs=opus';
+                         } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                             options.mimeType = 'audio/webm';
+                         } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                             options.mimeType = 'audio/mp4';
+                         }
                      }
                      this.mediaRecorder = new MediaRecorder(stream, options);
                      this.mediaRecorder.ondataavailable = e => {
