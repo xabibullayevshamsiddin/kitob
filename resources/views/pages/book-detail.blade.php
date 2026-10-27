@@ -31,6 +31,24 @@
         50% { opacity: 0.8; transform: scale(1.05); }
     }
     .animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
+
+    /* Saved Bookmark Ribbon Animations */
+    @keyframes ribbonShine {
+        0% { transform: translateY(-120%) rotate(25deg); opacity: 0; }
+        30% { opacity: 0.9; }
+        100% { transform: translateY(220%) rotate(25deg); opacity: 0; }
+    }
+    .animate-ribbon-shine {
+        animation: ribbonShine 2.5s ease-in-out infinite;
+    }
+    @keyframes bookmarkPulseOnce {
+        0% { filter: drop-shadow(0 0 0 rgba(245, 158, 11, 0)); }
+        40% { filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.95)); }
+        100% { filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35)); }
+    }
+    .animate-ribbon-pulse {
+        animation: bookmarkPulseOnce 0.8s ease-out forwards;
+    }
 </style>
 @endpush
 
@@ -287,12 +305,25 @@
                 <img src="{{ $book->cover_url }}" alt="{{ $book->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                 <div class="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-transparent to-transparent pointer-events-none"></div>
 
-                <!-- Ribbon badge when saved to 'Keyinroq o'qiyman' -->
+                <!-- Ribbon badge when saved to 'Keyinroq o'qiyman' with entrance and exit spring animations -->
                 <div x-show="isSaved" x-cloak
-                     class="absolute top-0 right-3 w-7 h-10 bg-gradient-to-b from-amber-400 to-amber-600 shadow-lg flex items-center justify-center text-ink-950 font-bold transition-all"
-                     style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%, 0% 100%);"
+                     x-transition:enter="transition-all transform duration-500 ease-out origin-top animate-ribbon-pulse"
+                     x-transition:enter-start="-translate-y-full scale-y-50 opacity-0"
+                     x-transition:enter-end="translate-y-0 scale-y-100 opacity-100"
+                     x-transition:leave="transition-all transform duration-300 ease-in origin-top"
+                     x-transition:leave-start="translate-y-0 scale-y-100 opacity-100"
+                     x-transition:leave-end="-translate-y-full scale-y-50 opacity-0"
+                     class="absolute top-0 right-3 w-7 h-10 shadow-xl flex items-center justify-center font-bold z-20 pointer-events-none select-none overflow-hidden"
+                     style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%, 0% 100%); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.45)); background: linear-gradient(180deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%); color: #07090E;"
                      title="{{ __('site.saved_books.ribbon_title') }}">
-                    <span class="text-xs">★</span>
+                    
+                    <!-- Shimmer reflection stripe -->
+                    <span class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent -translate-x-full animate-ribbon-shine pointer-events-none"></span>
+
+                    <!-- Star icon with spring pop -->
+                    <span class="text-xs transition-transform duration-500 delay-100 relative z-10 select-none font-bold"
+                          style="color: #07090E; margin-top: -4px;"
+                          :class="isSaved ? 'scale-100 rotate-0' : 'scale-0 -rotate-90'">★</span>
                 </div>
             </div>
 
