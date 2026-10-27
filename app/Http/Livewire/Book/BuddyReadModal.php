@@ -121,6 +121,45 @@ class BuddyReadModal extends Component
         $this->dispatchBrowserEvent('buddy-chat-scroll');
     }
 
+    public function sendVoiceNote(string $audioPath, int $duration = 0): void
+    {
+        if (!Auth::check() || !$this->activeBuddyReadId) return;
+        if (empty($audioPath)) return;
+
+        BuddyReadMessage::create([
+            'buddy_read_id'   => $this->activeBuddyReadId,
+            'user_id'         => Auth::id(),
+            'message'         => null,
+            'audio_path'      => $audioPath,
+            'audio_duration'  => max(1, $duration),
+            'page_number'     => max(1, (int) $this->messagePage),
+            'is_spoiler'      => $this->isSpoiler,
+        ]);
+
+        BuddyReadMember::where('buddy_read_id', $this->activeBuddyReadId)
+            ->where('user_id', Auth::id())
+            ->update([
+                'current_page'  => max(1, (int) $this->messagePage),
+                'last_voice_at' => now(),
+            ]);
+
+        $this->isSpoiler = false;
+        $this->emit('buddy-message-sent');
+        $this->dispatchBrowserEvent('buddy-chat-scroll');
+    }
+
+    public function toggleVoiceActive(bool $active): void
+    {
+        if (!Auth::check() || !$this->activeBuddyReadId) return;
+
+        BuddyReadMember::where('buddy_read_id', $this->activeBuddyReadId)
+            ->where('user_id', Auth::id())
+            ->update([
+                'voice_active'  => $active,
+                'last_voice_at' => now(),
+            ]);
+    }
+
     public function revealSpoiler(int $messageId): void
     {
         $this->revealedSpoilers[$messageId] = true;

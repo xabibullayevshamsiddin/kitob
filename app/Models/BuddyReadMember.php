@@ -14,6 +14,13 @@ class BuddyReadMember extends Model
         'buddy_read_id',
         'user_id',
         'current_page',
+        'voice_active',
+        'last_voice_at',
+    ];
+
+    protected $casts = [
+        'voice_active' => 'boolean',
+        'last_voice_at' => 'datetime',
     ];
 
     public function buddyRead(): BelongsTo

@@ -14,6 +14,8 @@ class BuddyReadMessage extends Model
         'buddy_read_id',
         'user_id',
         'message',
+        'audio_path',
+        'audio_duration',
         'page_number',
         'is_spoiler',
     ];
@@ -21,7 +23,15 @@ class BuddyReadMessage extends Model
     protected $casts = [
         'page_number' => 'integer',
         'is_spoiler' => 'boolean',
+        'audio_duration' => 'integer',
     ];
+
+    public function getAudioUrlAttribute(): ?string
+    {
+        if (empty($this->audio_path)) return null;
+        if (str_starts_with($this->audio_path, 'http')) return $this->audio_path;
+        return asset('storage/' . $this->audio_path);
+    }
 
     public function buddyRead(): BelongsTo
     {

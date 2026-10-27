@@ -21,14 +21,14 @@
                     @if($book->pdf_path)
                         <a href="{{ route('books.flipbook', $book->slug ?? $book->id) }}?page={{ $myMember?->current_page ?? 1 }}" 
                            class="px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-                           title="PDF kitobni ochish va 3D mutolaa qilish">
+                           title="Kitobni ochish va 3D mutolaa qilish">
                             <span>📖</span>
-                            <span>PDF Mutolaa</span>
+                            <span>Mutolaaga o'tish</span>
                             <span>→</span>
                         </a>
                         <a href="{{ route('books.pdf', $book) }}" 
                            class="px-2.5 py-1.5 rounded-btn bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500/25 text-xs font-mono font-bold flex items-center gap-1 transition-all"
-                           title="PDF faylni yuklab olish">
+                           title="PDF yuklab olish">
                             <span>📥 PDF</span>
                         </a>
                     @endif
@@ -41,6 +41,43 @@
                 </div>
             </div>
 
+            <!-- 🎙️ Jonli Ovozli Suhbat Xonasi (Live Voice Room Bar) -->
+            @auth
+                <div x-data="{
+                    voiceActive: {{ ($myMember && $myMember->voice_active) ? 'true' : 'false' }},
+                    toggleVoice() {
+                        this.voiceActive = !this.voiceActive;
+                        $wire.toggleVoiceActive(this.voiceActive);
+                    }
+                }" class="p-3 rounded-card bg-gradient-to-r from-amber-500/10 via-ink-900 to-ink-900 border border-amber-500/30 flex items-center justify-between flex-wrap gap-2.5">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm" 
+                              :class="voiceActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse' : 'bg-ink-800 text-mist border border-ink-border'">
+                            🎙️
+                        </span>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold font-serif text-paper">Ovozli suhbat xonasi</span>
+                                <template x-if="voiceActive">
+                                    <span class="px-1.5 py-0.2 rounded-badge bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold animate-pulse">
+                                        ● Jonli efirdasiz
+                                    </span>
+                                </template>
+                            </div>
+                            <p class="text-[11px] text-mist font-mono">Birga o'qiyotgan do'stlar bilan ovozli gaplashing yoki audio xabar yuboring</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="toggleVoice()" 
+                            class="px-3 py-1.5 rounded-btn text-xs font-bold font-mono transition-all flex items-center gap-1.5 shadow-sm"
+                            :class="voiceActive ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40' : 'bg-amber-500 hover:bg-amber-400 text-ink-950'">
+                            <span x-text="voiceActive ? '🔇 Ovozli efirdan chiqish' : '🎙️ Ovozli efirga kirish'"></span>
+                        </button>
+                    </div>
+                </div>
+            @endauth
+
             <!-- Members Progress Tracker (StoryGraph style) -->
             <div class="p-3 rounded-card bg-ink-900 border border-ink-border space-y-2">
                 <div class="flex items-center justify-between">
@@ -52,8 +89,13 @@
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     @foreach($activeRoom->members as $member)
-                        <div class="flex items-center gap-2 p-2 rounded bg-ink-950 border border-ink-border text-xs">
-                            <img src="{{ $member->user?->avatar_url ?? asset('images/default-avatar.png') }}" class="w-7 h-7 rounded-full object-cover border border-amber-500/40 shrink-0" alt="{{ $member->user?->name }}">
+                        <div class="flex items-center gap-2 p-2 rounded bg-ink-950 border border-ink-border text-xs {{ $member->voice_active ? 'border-emerald-500/40 bg-emerald-950/10' : '' }}">
+                            <div class="relative shrink-0">
+                                <img src="{{ $member->user?->avatar_url ?? asset('images/default-avatar.png') }}" class="w-7 h-7 rounded-full object-cover border border-amber-500/40" alt="{{ $member->user?->name }}">
+                                @if($member->voice_active)
+                                    <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-ink-950 flex items-center justify-center text-[8px]" title="Ovozli efirda">🎙️</span>
+                                @endif
+                            </div>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center justify-between gap-1">
                                     <span class="font-semibold text-paper truncate block text-[11px]">{{ $member->user?->name }}</span>
@@ -71,7 +113,7 @@
                 </div>
             </div>
 
-            <!-- Spoilers-Protected Messages Thread -->
+            <!-- Spoilers-Protected Messages Thread with Audio Player -->
             <div id="buddy-chat-messages" 
                  x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight; } }"
                  x-init="scrollToBottom()"
@@ -85,7 +127,7 @@
                         $hideSpoiler = ($isAhead || $msg->is_spoiler) && !$isRevealed;
                     @endphp
 
-                    <div class="p-2.5 rounded-card bg-ink-900/70 border border-ink-border space-y-1.5">
+                    <div class="p-2.5 rounded-card bg-ink-900/70 border border-ink-border space-y-1.5" wire:key="buddy-msg-{{ $msg->id }}">
                         <div class="flex items-center justify-between text-[11px] font-mono">
                             <div class="flex items-center gap-1.5">
                                 <span class="font-bold text-paper">{{ $msg->user?->name }}</span>
@@ -108,38 +150,95 @@
                                     Baribir o'qish (Ochish)
                                 </button>
                             </div>
+                        @elseif($msg->audio_path)
+                            <!-- 🎙️ Ovozli xabar pleyeri -->
+                            <div class="p-2.5 rounded-xl bg-ink-950 border border-ink-border/80 flex items-center gap-3"
+                                 x-data="buddyVoicePlayer('{{ $msg->audio_url }}', {{ (int) ($msg->audio_duration ?: 0) }})">
+                                <button type="button" @click="toggle()" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors bg-amber-500 text-ink-950 hover:bg-amber-400">
+                                    <svg x-show="!playing" class="w-3.5 h-3.5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg x-show="playing" x-cloak class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                </button>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-0.5 h-5 cursor-pointer" @click="seek($event)">
+                                        @foreach([35, 65, 45, 90, 75, 40, 85, 100, 70, 50, 85, 95, 60, 45, 75, 55, 80, 40] as $wIdx => $wH)
+                                            <span class="flex-1 rounded-full transition-all" style="height: {{ $wH }}%;" :class="({{ $wIdx }} / 18 * 100) <= progress ? 'bg-amber-400' : 'bg-ink-700'"></span>
+                                        @endforeach
+                                    </div>
+                                    <div class="flex items-center justify-between text-[10px] font-mono text-mist mt-0.5">
+                                        <span x-text="formatTime(currentTime)">00:00</span>
+                                        <span x-text="formatTime(duration)">{{ sprintf('%02d:%02d', floor(($msg->audio_duration ?? 0)/60), ($msg->audio_duration ?? 0)%60) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            @if(!empty($msg->message))
+                                <p class="text-xs text-paper font-sans leading-relaxed mt-1">{{ $msg->message }}</p>
+                            @endif
                         @else
                             <p class="text-xs text-paper font-sans leading-relaxed">{{ $msg->message }}</p>
                         @endif
                     </div>
                 @empty
                     <div class="text-center py-8 text-xs text-mist font-mono">
-                        Hozircha muhokamalar yo'q. Birinchi bo'lib fikr qoldiring! 📖
+                        Hozircha muhokamalar yo'q. Birinchi bo'lib fikr yoki ovozli xabar qoldiring! 📖🎙️
                     </div>
                 @endforelse
             </div>
 
-            <!-- Send Message Box (faqat a'zolar uchun) -->
+            <!-- ✍️ Send Message & 🎙️ Voice Note Recording Box -->
             @if($myMember)
-                <form wire:submit.prevent="sendMessage" class="p-3 rounded-card bg-ink-900 border border-ink-border space-y-2">
-                    <div class="flex items-center gap-2">
-                        <input type="text" wire:model.defer="newMessage" placeholder="Ushbu sahifa haqida fikringiz..." class="ks-input text-xs flex-1">
-                        <div class="flex items-center gap-1 bg-ink-950 border border-ink-border rounded-btn px-2 py-1 shrink-0">
+                <div x-data="buddyVoiceRecorder(@this)" class="p-3 rounded-card bg-ink-900 border border-ink-border space-y-2">
+                    <!-- Standard Input Row -->
+                    <div x-show="!isRecording" class="flex items-center gap-2">
+                        <input type="text" wire:model.defer="newMessage" 
+                               @keydown.enter.prevent="$wire.sendMessage()"
+                               placeholder="Fikr yoki izoh yozing..." class="ks-input text-xs flex-1">
+                        
+                        <div class="flex items-center gap-1 bg-ink-950 border border-ink-border rounded-btn px-2 py-1 shrink-0" title="Ushbu fikr tegishli bo'lgan sahifa raqami">
                             <span class="text-[11px] text-mist font-mono">Bet:</span>
                             <input type="number" wire:model.defer="messagePage" min="1" class="w-12 text-center text-xs font-mono font-bold bg-transparent text-amber-400 outline-none">
                         </div>
-                        <button type="submit" class="ks-btn-primary text-xs py-1.5 px-3 shrink-0">
+
+                        <!-- 🎙️ Mikrofon tugmasi -->
+                        <button type="button" @click="startRecord()" 
+                                title="Ovozli xabar yozish (Mikrofon)"
+                                class="w-8 h-8 rounded-btn bg-ink-950 border border-ink-border hover:border-amber-400 text-amber-400 hover:text-amber-300 flex items-center justify-center shrink-0 transition-colors">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="22"/>
+                            </svg>
+                        </button>
+
+                        <button type="button" wire:click="sendMessage" class="ks-btn-primary text-xs py-1.5 px-3 shrink-0">
                             Yuborish
                         </button>
                     </div>
+
+                    <!-- 🔴 Ovoz yozish paneli (Recording in progress) -->
+                    <div x-show="isRecording" x-cloak class="flex items-center justify-between gap-3 bg-ink-950 border border-rose-500/40 p-2.5 rounded-btn">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                            <span class="text-xs font-mono text-rose-400 font-bold" x-text="'Ovoz yozilmoqda: ' + formatDuration(recordDuration)"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="cancelRecord()" class="px-2.5 py-1 rounded bg-ink-900 border border-ink-border text-mist text-xs hover:text-rose-400 transition-colors">
+                                Bekor qilish
+                            </button>
+                            <button type="button" @click="stopRecord()" class="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-ink-950 font-bold text-xs flex items-center gap-1 shadow-sm transition-colors">
+                                <span>Yuborish</span>
+                                <span>✓</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <label class="flex items-center gap-2 text-[11px] text-mist font-mono cursor-pointer">
                         <input type="checkbox" wire:model.defer="isSpoiler" class="rounded bg-ink-950 border-ink-border text-amber-500">
                         <span>Spoyler deb belgilash (Syujet siri saqlanadi)</span>
                     </label>
-                </form>
+                </div>
             @elseif(auth()->check())
                 <div class="text-center p-3 rounded bg-ink-900 border border-ink-border text-xs text-mist font-mono">
-                    Muhokamada qatnashish uchun xonaga qo'shiling.
+                    Muhokamada qatnashish va ovozli gaplashish uchun xonaga qo'shiling.
                 </div>
             @endif
         </div>
@@ -149,13 +248,13 @@
             <div class="flex items-center justify-between pb-3 border-b border-ink-border flex-wrap gap-2">
                 <div>
                     <h4 class="text-sm font-bold text-paper font-serif">«{{ $book->title }}» bo'yicha Birgalikda Mutolaa</h4>
-                    <p class="text-xs text-mist font-mono">Do'stlaringiz bilan birga o'qing va boblar bo'yicha muhokama qiling</p>
+                    <p class="text-xs text-mist font-mono">Do'stlaringiz bilan birga o'qing, ovozli suhbatlashing va fikr almashing</p>
                 </div>
                 @if($book->pdf_path)
                     <div class="flex items-center gap-2">
                         <a href="{{ route('books.flipbook', $book->slug ?? $book->id) }}" class="px-3 py-1.5 rounded-btn bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-sm">
                             <span>📖</span>
-                            <span>PDF Mutolaa</span>
+                            <span>Mutolaaga o'tish</span>
                         </a>
                         <a href="{{ route('books.pdf', $book) }}" class="px-2.5 py-1.5 rounded-btn bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-mono font-bold flex items-center gap-1">
                             <span>📥 PDF</span>
@@ -204,3 +303,162 @@
         </div>
     @endif
 </div>
+
+<!-- 🎙️ Ovozli xabar va audio recorder skriptlari -->
+<script>
+    function buddyVoicePlayer(url, initialDuration) {
+        return {
+            url: url,
+            duration: initialDuration || 0,
+            currentTime: 0,
+            playing: false,
+            progress: 0,
+            audio: null,
+            init() {
+                this.audio = new Audio(this.url);
+                this.audio.addEventListener('loadedmetadata', () => {
+                    if (!this.duration && this.audio.duration) {
+                        this.duration = Math.round(this.audio.duration);
+                    }
+                });
+                this.audio.addEventListener('timeupdate', () => {
+                    this.currentTime = Math.round(this.audio.currentTime);
+                    const dur = this.audio.duration || this.duration || 1;
+                    this.progress = (this.audio.currentTime / dur) * 100;
+                });
+                this.audio.addEventListener('ended', () => {
+                    this.playing = false;
+                    this.currentTime = 0;
+                    this.progress = 0;
+                });
+            },
+            toggle() {
+                if (!this.audio) return;
+                if (this.playing) {
+                    this.audio.pause();
+                    this.playing = false;
+                } else {
+                    document.querySelectorAll('audio').forEach(a => a !== this.audio && a.pause());
+                    this.audio.play().then(() => {
+                        this.playing = true;
+                    }).catch(() => {});
+                }
+            },
+            seek(e) {
+                if (!this.audio) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                const dur = this.audio.duration || this.duration;
+                if (dur) {
+                    this.audio.currentTime = ratio * dur;
+                    this.progress = ratio * 100;
+                }
+            },
+            formatTime(sec) {
+                const s = Math.floor(sec || 0);
+                const m = Math.floor(s / 60);
+                const r = s % 60;
+                return (m < 10 ? '0' + m : m) + ':' + (r < 10 ? '0' + r : r);
+            }
+        };
+    }
+
+    function buddyVoiceRecorder(livewire) {
+        return {
+            isRecording: false,
+            recordDuration: 0,
+            mediaRecorder: null,
+            mediaStream: null,
+            audioChunks: [],
+            timerInterval: null,
+            discard: false,
+            startRecord() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('Brauzeringiz audio yozishni qo\'llab-quvvatlamaydi.');
+                    return;
+                }
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    this.mediaStream = stream;
+                    this.audioChunks = [];
+                    this.discard = false;
+                    let options = {};
+                    if (typeof MediaRecorder !== 'undefined') {
+                        if (MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/webm' };
+                        else if (MediaRecorder.isTypeSupported('audio/mp4')) options = { mimeType: 'audio/mp4' };
+                    }
+                    this.mediaRecorder = new MediaRecorder(stream, options);
+                    this.mediaRecorder.ondataavailable = e => {
+                        if (e.data.size > 0) this.audioChunks.push(e.data);
+                    };
+                    this.mediaRecorder.onstop = () => {
+                        if (this.discard) {
+                            this.cleanupStream();
+                            return;
+                        }
+                        const mime = this.mediaRecorder.mimeType || 'audio/webm';
+                        const audioBlob = new Blob(this.audioChunks, { type: mime });
+                        this.uploadAndSend(audioBlob, this.recordDuration);
+                        this.cleanupStream();
+                    };
+                    this.mediaRecorder.start(200);
+                    this.isRecording = true;
+                    this.recordDuration = 0;
+                    this.timerInterval = setInterval(() => {
+                        this.recordDuration++;
+                        if (this.recordDuration >= 300) this.stopRecord();
+                    }, 1000);
+                }).catch(err => {
+                    alert('Mikrofondan foydalanishga ruxsat berilmadi: ' + (err.message || ''));
+                });
+            },
+            stopRecord() {
+                if (!this.isRecording) return;
+                clearInterval(this.timerInterval);
+                this.isRecording = false;
+                if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                    this.mediaRecorder.stop();
+                }
+            },
+            cancelRecord() {
+                this.discard = true;
+                this.stopRecord();
+            },
+            cleanupStream() {
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(t => t.stop());
+                    this.mediaStream = null;
+                }
+            },
+            uploadAndSend(blob, duration) {
+                const formData = new FormData();
+                const ext = blob.type.includes('mp4') ? 'm4a' : 'webm';
+                formData.append('audio', blob, 'voice.' + ext);
+                formData.append('duration', duration);
+
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                fetch('/chat/voice', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token || '',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.path) {
+                        livewire.sendVoiceNote(data.path, data.duration || duration);
+                    }
+                })
+                .catch(err => {
+                    console.error('Audio yuklashda xatolik:', err);
+                });
+            },
+            formatDuration(sec) {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : r = s < 10 ? '0' + s : s);
+            }
+        };
+    }
+</script>
