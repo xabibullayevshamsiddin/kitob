@@ -96,7 +96,7 @@
             /* ---------- Scroll-reveal ---------- */
             if (!calm && 'IntersectionObserver' in window) {
                 var EXCL = '[x-show],[x-cloak],[data-no-reveal],.fixed,.sticky,dialog,[role="dialog"],[wire\\:loading],[wire\\:poll]';
-                var TSEL = 'main > *, section, article, aside, .grid > *, .ks-card, .ks-panel, [class*="rounded-panel"], [data-reveal]';
+                var TSEL = 'section, article, aside, .grid > *, .ks-card, .ks-panel, [class*="rounded-panel"], [data-reveal]';
                 var SKIPTAG = { SCRIPT: 1, STYLE: 1, TEMPLATE: 1, TR: 1, TD: 1, TH: 1, LI: 1, OPTION: 1, SVG: 1 };
 
                 function allowed(el) {

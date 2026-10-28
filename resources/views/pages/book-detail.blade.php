@@ -866,15 +866,16 @@
 
     <!-- ── 4. MODALS: Tugmalar boshqaruvi & PDF yuklash ── -->
     <!-- Shortcuts Modal -->
-    <div x-show="showShortcutsModal" x-cloak
-         x-transition:enter="transition-opacity ease-out duration-400"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-320"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
-         @keydown.escape.window="showShortcutsModal = false">
+    <template x-teleport="body">
+        <div x-show="showShortcutsModal" x-cloak
+             x-transition:enter="transition-opacity ease-out duration-400"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-in duration-320"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-[100] !m-0 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+             @keydown.escape.window="showShortcutsModal = false">
         <div x-show="showShortcutsModal"
              x-transition:enter="ks-blur-in-enter-active"
              x-transition:enter-start="ks-blur-in-enter"
@@ -943,17 +944,19 @@
             </div>
         </div>
     </div>
+    </template>
 
     <!-- Download Options Modal -->
-    <div x-show="showDownloadModal" x-cloak
-         x-transition:enter="transition-opacity ease-out duration-400"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-320"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
-         @keydown.escape.window="showDownloadModal = false">
+    <template x-teleport="body">
+        <div x-show="showDownloadModal" x-cloak
+             x-transition:enter="transition-opacity ease-out duration-400"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-in duration-320"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-[100] !m-0 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+             @keydown.escape.window="showDownloadModal = false">
         <div x-show="showDownloadModal"
              x-transition:enter="ks-blur-in-enter-active"
              x-transition:enter-start="ks-blur-in-enter"
@@ -1020,17 +1023,19 @@
             </div>
         </div>
     </div>
+    </template>
 
     <!-- ── 5. MODAL: 1 daqiqalik AI Kitob Konspekti ── -->
-    <div x-show="showAiSummaryModal" x-cloak
-         x-transition:enter="transition-opacity ease-out duration-400"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-320"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md"
-         @keydown.escape.window="closeAiSummaryModal()">
+    <template x-teleport="body">
+        <div x-show="showAiSummaryModal" x-cloak
+             x-transition:enter="transition-opacity ease-out duration-400"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-in duration-320"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-[100] !m-0 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md"
+             @keydown.escape.window="closeAiSummaryModal()">
         <div x-show="showAiSummaryModal"
              x-transition:enter="ks-blur-in-enter-active"
              x-transition:enter-start="ks-blur-in-enter"
@@ -1137,7 +1142,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </template>
 
     <!-- Ambient Background Music Player -->
     <x-ambient-music-player :book="$book" />
@@ -1150,28 +1155,30 @@
     ])
 
     <!-- Birgalikda Mutolaa (Buddy Read) Modali -->
-    <div x-show="showBuddyModal" x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md"
-         role="dialog" aria-modal="true">
-        <div class="relative w-full max-w-2xl bg-ink-950 border border-amber-500/30 rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto"
-             @click.away="showBuddyModal = false; window.dispatchEvent(new CustomEvent('close-buddy-modal'))">
-            <div class="flex items-center justify-between border-b border-ink-border pb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">👥</span>
-                    <div>
-                        <h3 class="text-base font-bold font-serif text-paper">Birgalikda Mutolaa (Buddy Read)</h3>
-                        <p class="text-xs text-mist font-mono">Do'stlar bilan birga o'qish va spoylerdan himoyalangan chat</p>
+    <template x-teleport="body">
+        <div x-show="showBuddyModal" x-cloak
+             class="fixed inset-0 z-[100] !m-0 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md"
+             role="dialog" aria-modal="true">
+            <div class="relative w-full max-w-2xl bg-ink-950 border border-amber-500/30 rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+                 @click.away="showBuddyModal = false; window.dispatchEvent(new CustomEvent('close-buddy-modal'))">
+                <div class="flex items-center justify-between border-b border-ink-border pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">👥</span>
+                        <div>
+                            <h3 class="text-base font-bold font-serif text-paper">Birgalikda Mutolaa (Buddy Read)</h3>
+                            <p class="text-xs text-mist font-mono">Do'stlar bilan birga o'qish va spoylerdan himoyalangan chat</p>
+                        </div>
                     </div>
+                    <button type="button" @click="showBuddyModal = false; window.dispatchEvent(new CustomEvent('close-buddy-modal'))" class="text-mist hover:text-paper font-mono px-3 py-1 bg-ink-900 border border-ink-border rounded-xl text-xs transition-colors">
+                        ✕ Yopish
+                    </button>
                 </div>
-                <button type="button" @click="showBuddyModal = false; window.dispatchEvent(new CustomEvent('close-buddy-modal'))" class="text-mist hover:text-paper font-mono px-3 py-1 bg-ink-900 border border-ink-border rounded-xl text-xs transition-colors">
-                    ✕ Yopish
-                </button>
-            </div>
-            <div>
-                @livewire('book.buddy-read-modal', ['book' => $book], key('detail-buddy-'.$book->id))
+                <div>
+                    @livewire('book.buddy-read-modal', ['book' => $book], key('detail-buddy-'.$book->id))
+                </div>
             </div>
         </div>
-    </div>
+    </template>
 
 </div>
 @endsection
