@@ -30,16 +30,28 @@
             var body = document.body;
             var aur = null;
 
-            /* ---------- Brendlangan loader (kitob varaqlayapti) — barcha sahifa uchun yagona ---------- */
-            var word = 'Kitobxon'.split('').map(function (ch, n) { return '<span style="--n:' + n + '">' + ch + '</span>'; }).join('');
+            /* ---------- Brendlangan loader (yangi Davra_books logosi bilan) — barcha sahifa uchun yagona ---------- */
+            var logoUrl = @js(asset('storage/logo/photo_2026-10-26_14-48-15.jpg'));
+            var logoFallback = @js(asset('images/logo.png'));
+            var brandText = 'Davra_books';
+            var word = brandText.split('').map(function (ch, n) {
+                var isAccent = n >= 5; // '_books'
+                return '<span class="' + (isAccent ? 'ks-cur-accent' : '') + '" style="--n:' + n + '">' + ch + '</span>';
+            }).join('');
+
             var cur = document.createElement('div');
             cur.className = 'ks-curtain';
             cur.setAttribute('aria-hidden', 'true');
             cur.innerHTML =
-                '<div class="ks-cur-glow"><i></i><i></i></div>' +
+                '<div class="ks-cur-glow"><i></i><i></i><i></i></div>' +
                 '<div class="ks-cur-inner">' +
-                  '<div class="ks-cur-book"><b class="ks-bk-back"></b><b class="ks-bk-l"></b><b class="ks-bk-r"></b>' +
-                    '<b class="ks-pg" style="--i:0"></b><b class="ks-pg" style="--i:1"></b><b class="ks-pg" style="--i:2"></b><b class="ks-pg" style="--i:3"></b>' +
+                  '<div class="ks-cur-logo-wrap">' +
+                    '<span class="ks-cur-ring ks-cur-ring-1"></span>' +
+                    '<span class="ks-cur-ring ks-cur-ring-2"></span>' +
+                    '<span class="ks-cur-ring ks-cur-ring-3"></span>' +
+                    '<div class="ks-cur-logo-card">' +
+                      '<img src="' + logoUrl + '" onerror="this.onerror=null;this.src=\'' + logoFallback + '\';" alt="Davra_books" class="ks-cur-logo-img">' +
+                    '</div>' +
                   '</div>' +
                   '<div class="ks-cur-word">' + word + '</div>' +
                   '<div class="ks-cur-sub"><span>Yuklanmoqda</span><em></em></div>' +
@@ -314,49 +326,79 @@
     @keyframes ksDriftC { to { transform: translate3d(-12vw, -14vh, 0) scale(1.22); } }
     @media (max-width: 768px) { .ks-aurora i { filter: blur(60px); } .ks-aurora { opacity: .45; } }
 
-    /* ── Loader (curtain): kitob varaqlayapti ── */
+    /* ── Loader (curtain): Davra_books yangi logosi va to'lqinlari ── */
     .ks-curtain {
         position: fixed; inset: 0; z-index: 9990; display: grid; place-items: center; overflow: hidden;
-        background: radial-gradient(ellipse at 50% 42%, #131926 0%, #0A0D14 55%, #07090E 100%);
+        background: radial-gradient(ellipse at 50% 45%, #0B1626 0%, #060D17 55%, #03060B 100%);
         opacity: 0; visibility: hidden; pointer-events: none;
         transition: opacity .3s ease, visibility 0s linear .3s;
     }
     .ks-curtain.is-on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .22s ease; }
     .ks-curtain.ks-instant { transition: none !important; }
-    .ks-cur-glow i { position: absolute; border-radius: 50%; filter: blur(80px); }
-    .ks-cur-glow i:nth-child(1) { width: 38vmax; height: 38vmax; left: 8%; top: 4%; background: radial-gradient(circle, rgba(245,158,11,.26), transparent 65%); animation: ksDriftA 9s ease-in-out infinite alternate; }
-    .ks-cur-glow i:nth-child(2) { width: 32vmax; height: 32vmax; right: 6%; bottom: 0; background: radial-gradient(circle, rgba(45,212,191,.16), transparent 65%); animation: ksDriftB 11s ease-in-out infinite alternate; }
+    .ks-cur-glow i { position: absolute; border-radius: 50%; filter: blur(85px); }
+    .ks-cur-glow i:nth-child(1) { width: 44vmax; height: 44vmax; left: 4%; top: 2%; background: radial-gradient(circle, rgba(0, 168, 181, 0.22), transparent 65%); animation: ksDriftA 10s ease-in-out infinite alternate; }
+    .ks-cur-glow i:nth-child(2) { width: 38vmax; height: 38vmax; right: 4%; bottom: 0; background: radial-gradient(circle, rgba(12, 35, 64, 0.55), rgba(0, 168, 181, 0.14) 45%, transparent 68%); animation: ksDriftB 12s ease-in-out infinite alternate; }
+    .ks-cur-glow i:nth-child(3) { width: 22vmax; height: 22vmax; left: 50%; top: 45%; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(0, 229, 255, 0.14), transparent 70%); animation: ksCenterPulse 3.5s ease-in-out infinite alternate; }
+    @keyframes ksCenterPulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } }
     .ks-cur-inner { position: relative; text-align: center; transform: translateY(-2vh); }
 
-    .ks-cur-book { position: relative; width: 84px; height: 58px; margin: 0 auto 30px; perspective: 800px; transform: rotateX(16deg); transform-style: preserve-3d; }
-    .ks-cur-book b { position: absolute; display: block; }
-    .ks-bk-back { inset: -4px -5px -6px; border-radius: 4px 8px 8px 4px; background: linear-gradient(135deg, #92400E, #F59E0B 55%, #B45309); box-shadow: 0 18px 34px -12px rgba(245,158,11,.55), inset 0 0 0 1px rgba(255,255,255,.12); }
-    .ks-bk-l, .ks-bk-r, .ks-pg {
-        top: 0; width: 40px; height: 58px;
-        background: repeating-linear-gradient(180deg, transparent 0 8px, rgba(15,23,42,.10) 8px 9px), linear-gradient(90deg, #E5DFD5, #FAF7F2 40%, #FAF7F2);
+    /* Logo badge & animated soundwave rings (logo o'ngidagi to'lqinlar ramzi) */
+    .ks-cur-logo-wrap { position: relative; width: 104px; height: 104px; margin: 0 auto 24px; display: grid; place-items: center; }
+    .ks-cur-ring {
+        position: absolute; inset: -5px; border-radius: 30px; border: 1.5px solid rgba(0, 229, 255, 0.55);
+        pointer-events: none; z-index: 1; opacity: 0;
+        animation: ksRingPulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     }
-    .ks-bk-l { left: 2px; border-radius: 3px 0 0 3px; background: repeating-linear-gradient(180deg, transparent 0 8px, rgba(15,23,42,.10) 8px 9px), linear-gradient(270deg, #D9D2C5, #FAF7F2 55%); }
-    .ks-bk-r { right: 2px; border-radius: 0 3px 3px 0; }
-    .ks-pg { left: 50%; border-radius: 0 3px 3px 0; transform-origin: left center; animation: ksFlip 2.4s cubic-bezier(.6,0,.35,1) infinite; animation-delay: calc(var(--i) * .24s); backface-visibility: visible; }
-    @keyframes ksFlip {
-        0%   { transform: rotateY(0deg); opacity: 1; }
-        48%  { transform: rotateY(-178deg); opacity: 1; }
-        84%  { transform: rotateY(-178deg); opacity: 1; }
-        91%  { transform: rotateY(-178deg); opacity: 0; }
-        92%  { transform: rotateY(0deg); opacity: 0; }
-        100% { transform: rotateY(0deg); opacity: 1; }
+    .ks-cur-ring-1 { animation-delay: 0s; }
+    .ks-cur-ring-2 { animation-delay: 0.9s; }
+    .ks-cur-ring-3 { animation-delay: 1.8s; }
+    @keyframes ksRingPulse {
+        0% { transform: scale(0.88); opacity: 0.85; border-color: rgba(0, 229, 255, 0.7); }
+        50% { opacity: 0.35; }
+        100% { transform: scale(1.6); opacity: 0; border-color: rgba(0, 168, 181, 0); }
     }
+    .ks-cur-logo-card {
+        position: relative; width: 90px; height: 90px; padding: 6px; border-radius: 24px; background: #FFFFFF;
+        border: 1.5px solid rgba(0, 168, 181, 0.5);
+        box-shadow: 0 16px 42px -8px rgba(0, 168, 181, 0.55), 0 0 28px -2px rgba(0, 229, 255, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.95);
+        display: flex; align-items: center; justify-content: center; z-index: 2;
+        animation: ksLogoLevitate 3.2s ease-in-out infinite alternate;
+    }
+    @keyframes ksLogoLevitate {
+        0% { transform: translateY(0) scale(1); box-shadow: 0 16px 42px -8px rgba(0, 168, 181, 0.5), 0 0 24px rgba(0, 229, 255, 0.35); }
+        100% { transform: translateY(-8px) scale(1.03); box-shadow: 0 24px 52px -10px rgba(0, 168, 181, 0.7), 0 0 36px rgba(0, 229, 255, 0.6); }
+    }
+    .ks-cur-logo-img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; pointer-events: none; user-select: none; }
 
-    .ks-cur-word { font-family: Spectral, Georgia, serif; font-style: italic; font-weight: 600; font-size: clamp(2rem, 6vw, 2.75rem); letter-spacing: -.01em; color: #F0EDE6; line-height: 1.2; }
-    .ks-cur-word span { display: inline-block; animation: ksLetter 1.9s ease-in-out infinite; animation-delay: calc(var(--n) * .08s); }
-    @keyframes ksLetter { 0%, 55%, 100% { transform: translateY(0); color: #F0EDE6; } 25% { transform: translateY(-7px); color: #F59E0B; text-shadow: 0 0 22px rgba(245,158,11,.55); } }
-    .ks-cur-sub { margin-top: 10px; font-family: "DM Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: #8B9BAD; }
-    .ks-cur-sub em { display: inline-block; width: 1.6em; text-align: left; font-style: normal; }
-    .ks-cur-sub em::after { content: ""; animation: ksDots 1.2s steps(1) infinite; }
+    .ks-cur-word {
+        font-family: var(--font-display, "Plus Jakarta Sans", system-ui, sans-serif);
+        font-weight: 700; font-size: clamp(1.85rem, 5.5vw, 2.5rem); letter-spacing: -0.02em; color: #F8FAFC; line-height: 1.2;
+    }
+    .ks-cur-word span { display: inline-block; animation: ksLetter 2.2s ease-in-out infinite; animation-delay: calc(var(--n) * .07s); }
+    .ks-cur-word span.ks-cur-accent { color: #00E5FF; }
+    @keyframes ksLetter {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-6px); color: #2DD4BF; text-shadow: 0 0 24px rgba(45, 212, 191, 0.8), 0 0 12px rgba(0, 229, 255, 0.6); }
+    }
+    .ks-cur-sub {
+        margin-top: 10px; font-family: "DM Mono", ui-monospace, monospace; font-size: 11px; font-weight: 600;
+        letter-spacing: .28em; text-transform: uppercase; color: #7E9AB8;
+    }
+    .ks-cur-sub em { display: inline-block; width: 1.6em; text-align: left; font-style: normal; color: #00E5FF; }
+    .ks-cur-sub em::after { content: ""; animation: ksDots 1.3s steps(1) infinite; }
     @keyframes ksDots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
-    .ks-cur-bar { position: relative; width: 190px; height: 2px; margin: 22px auto 0; border-radius: 2px; background: #1F293D; overflow: hidden; }
-    .ks-cur-bar::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 38%; border-radius: 2px; background: linear-gradient(90deg, #F59E0B, #FB7185, #2DD4BF); box-shadow: 0 0 14px rgba(245,158,11,.7); animation: ksBar 1.15s cubic-bezier(.65,0,.35,1) infinite; }
-    @keyframes ksBar { 0% { transform: translateX(-110%); } 100% { transform: translateX(290%); } }
+    .ks-cur-bar {
+        position: relative; width: 210px; height: 3px; margin: 22px auto 0; border-radius: 9999px;
+        background: rgba(12, 35, 64, 0.85); border: 1px solid rgba(0, 168, 181, 0.25); overflow: hidden;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    .ks-cur-bar::after {
+        content: ""; position: absolute; inset: 0 auto 0 0; width: 42%; border-radius: 9999px;
+        background: linear-gradient(90deg, #00A8B5 0%, #00E5FF 60%, #FFFFFF 100%);
+        box-shadow: 0 0 16px rgba(0, 229, 255, 0.9), 0 0 30px rgba(0, 168, 181, 0.5);
+        animation: ksBar 1.25s cubic-bezier(.65, 0, .35, 1) infinite;
+    }
+    @keyframes ksBar { 0% { transform: translateX(-120%); } 100% { transform: translateX(290%); } }
     @media (prefers-reduced-motion: reduce) { .ks-curtain { display: none !important; } }
 
     /* ── Scroll progress ── */

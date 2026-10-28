@@ -651,12 +651,15 @@
                      class="fb-stage-wrapper">
                     
                     <!-- Loading Overlay -->
-                    <div id="fb-loading-overlay" class="fb-loading-overlay rounded-panel bg-ink-950/90">
-                        <div class="w-12 h-12 rounded-btn bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl mb-3">
-                            <svg class="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                    <div id="fb-loading-overlay" class="fb-loading-overlay rounded-panel bg-ink-950/95 backdrop-blur-md">
+                        <div class="relative w-14 h-14 rounded-2xl bg-white p-1 border-2 border-cyan-400/50 shadow-lg shadow-cyan-500/25 mb-3 flex items-center justify-center animate-pulse">
+                            <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" onerror="this.onerror=null;this.src='{{ asset('images/logo.png') }}';" alt="Davra_books" class="w-full h-full object-contain rounded-xl">
                         </div>
                         <p class="text-sm font-bold font-serif text-paper">Kitob varaqlari ochilmoqda...</p>
-                        <p class="text-xs text-mist mt-1 font-mono">3D dvigateli ishga tushirilmoqda</p>
+                        <p class="text-xs text-mist mt-1 font-mono flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                            <span>3D dvigateli ishga tushirilmoqda</span>
+                        </p>
                     </div>
 
                     <!-- Floating Left Navigation Arrow -->

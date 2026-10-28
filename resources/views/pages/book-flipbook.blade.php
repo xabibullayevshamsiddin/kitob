@@ -200,12 +200,15 @@
          class="fb-stage-wrapper">
         
         <!-- Loading Overlay -->
-        <div id="fb-loading-overlay" class="fb-loading-overlay rounded-3xl">
-            <div class="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-3xl animate-bounce mb-3 shadow-lg shadow-amber-500/20">
-                📖
+        <div id="fb-loading-overlay" class="fb-loading-overlay rounded-3xl bg-ink-950/95 backdrop-blur-md">
+            <div class="relative w-16 h-16 rounded-2xl bg-white p-1.5 border-2 border-cyan-400/50 shadow-xl shadow-cyan-500/30 mb-3 flex items-center justify-center animate-pulse">
+                <img src="{{ asset('storage/logo/photo_2026-10-26_14-48-15.jpg') }}" onerror="this.onerror=null;this.src='{{ asset('images/logo.png') }}';" alt="Davra_books" class="w-full h-full object-contain rounded-xl">
             </div>
             <p class="text-base font-bold text-white tracking-wide">Kitob varaqlari ochilmoqda...</p>
-            <p class="text-xs text-slate-400 mt-1">3D varaqlash dvigateli ishga tushirilmoqda</p>
+            <p class="text-xs text-slate-400 mt-1 font-mono flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                <span>3D varaqlash dvigateli ishga tushirilmoqda</span>
+            </p>
         </div>
 
         <!-- Floating Left Navigation Arrow -->
