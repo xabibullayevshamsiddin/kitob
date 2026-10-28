@@ -418,9 +418,9 @@
                                     <p class="text-[11px] font-mono text-mist truncate mt-0.5">{{ '@' . auth()->user()->username }}</p>
                                 </div>
                                 @if(auth()->user()->hasRole('admin'))
-                                    <span class="ks-badge bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold">Admin</span>
+                                    <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold">Admin</span>
                                 @elseif(auth()->user()->hasRole('teacher'))
-                                    <span class="ks-badge bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold">Ustoz</span>
+                                    <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold">Ustoz</span>
                                 @endif
                             </div>
 

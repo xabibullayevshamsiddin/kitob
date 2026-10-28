@@ -38,26 +38,26 @@
             cur.className = 'ks-curtain';
             cur.setAttribute('aria-hidden', 'true');
             cur.innerHTML =
-                '<div class="ks-glow ks-glow-teal"></div>' +
-                '<div class="ks-glow ks-glow-gold"></div>' +
-                '<div class="ks-stage">' +
-                    '<div class="ks-logo-box">' +
-                        '<div class="ks-halo"></div>' +
-                        '<div class="ks-halo-2"></div>' +
-                        '<div class="ks-badge">' +
-                            '<img src="' + logoUrl + '" onerror="this.onerror=null;this.src=\'' + logoFallback + '\';" alt="Davra_books" class="ks-logo-img">' +
+                '<div class="ks-cur-glow ks-cur-glow-teal"></div>' +
+                '<div class="ks-cur-glow ks-cur-glow-gold"></div>' +
+                '<div class="ks-cur-stage">' +
+                    '<div class="ks-cur-logo-box">' +
+                        '<div class="ks-cur-halo"></div>' +
+                        '<div class="ks-cur-halo-2"></div>' +
+                        '<div class="ks-cur-logo-badge">' +
+                            '<img src="' + logoUrl + '" onerror="this.onerror=null;this.src=\'' + logoFallback + '\';" alt="Davra_books" class="ks-cur-logo-img">' +
                         '</div>' +
                     '</div>' +
-                    '<div class="ks-title">' +
+                    '<div class="ks-cur-title">' +
                         '<span>Davra</span><em>_books</em>' +
                     '</div>' +
-                    '<div class="ks-waves">' +
+                    '<div class="ks-cur-waves">' +
                         '<i></i><i></i><i></i><i></i><i></i>' +
                     '</div>' +
-                    '<div class="ks-line-track">' +
-                        '<div class="ks-line-shimmer"></div>' +
+                    '<div class="ks-cur-line-track">' +
+                        '<div class="ks-cur-line-shimmer"></div>' +
                     '</div>' +
-                    '<div class="ks-sub">Yuklanmoqda</div>' +
+                    '<div class="ks-cur-sub">Yuklanmoqda</div>' +
                 '</div>';
             root.appendChild(cur);
 
@@ -348,13 +348,13 @@
     .ks-curtain.ks-instant { transition: none !important; }
 
     /* Mayin fon nuri (ortiqcha yuklamasiz) */
-    .ks-glow { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; opacity: 0.35; }
-    .ks-glow-teal {
+    .ks-curtain .ks-cur-glow { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; opacity: 0.35; }
+    .ks-curtain .ks-cur-glow-teal {
         width: 380px; height: 380px; left: 50%; top: 48%; transform: translate(-50%, -50%);
         background: radial-gradient(circle, rgba(0, 168, 181, 0.45) 0%, rgba(0, 229, 255, 0.15) 40%, transparent 70%);
         animation: ksBreathe 4s ease-in-out infinite alternate;
     }
-    .ks-glow-gold {
+    .ks-curtain .ks-cur-glow-gold {
         width: 260px; height: 260px; left: 50%; top: 48%; transform: translate(-50%, -50%);
         background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 65%);
         animation: ksBreathe 5s ease-in-out infinite alternate-reverse;
@@ -365,25 +365,25 @@
     }
 
     /* Markaziy sahna */
-    .ks-stage {
+    .ks-curtain .ks-cur-stage {
         position: relative; z-index: 10;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         text-align: center;
     }
 
     /* Logotip va uning atrofidagi nafis aylanuvchi chiziqlar */
-    .ks-logo-box {
+    .ks-curtain .ks-cur-logo-box {
         position: relative; width: 88px; height: 88px; margin-bottom: 22px;
         display: flex; align-items: center; justify-content: center;
     }
-    .ks-halo {
+    .ks-curtain .ks-cur-halo {
         position: absolute; inset: -6px; border-radius: 28px;
         border: 1.5px solid transparent;
         border-top-color: rgba(0, 229, 255, 0.7);
         border-right-color: rgba(245, 158, 11, 0.45);
         animation: ksSpin 3.5s linear infinite;
     }
-    .ks-halo-2 {
+    .ks-curtain .ks-cur-halo-2 {
         position: absolute; inset: -12px; border-radius: 34px;
         border: 1px dashed rgba(0, 168, 181, 0.25);
         animation: ksSpinRev 8s linear infinite;
@@ -391,7 +391,7 @@
     @keyframes ksSpin { to { transform: rotate(360deg); } }
     @keyframes ksSpinRev { to { transform: rotate(-360deg); } }
 
-    .ks-badge {
+    .ks-curtain .ks-cur-logo-badge {
         position: relative; width: 82px; height: 82px; padding: 6px;
         background: #FFFFFF; border-radius: 24px;
         box-shadow: 0 16px 36px -8px rgba(0, 168, 181, 0.35), 0 0 20px -2px rgba(0, 229, 255, 0.25);
@@ -402,10 +402,10 @@
         0% { transform: translateY(0); }
         100% { transform: translateY(-4px); }
     }
-    .ks-logo-img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; pointer-events: none; user-select: none; }
+    .ks-curtain .ks-cur-logo-img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; pointer-events: none; user-select: none; }
 
     /* Brend sarlavhasi */
-    .ks-title {
+    .ks-curtain .ks-cur-title {
         font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         font-size: 24px; font-weight: 700;
         letter-spacing: -0.015em;
@@ -413,36 +413,36 @@
         display: flex; align-items: center; gap: 2px;
         margin-bottom: 8px;
     }
-    .ks-title span { color: #FFFFFF; }
-    .ks-title em { font-style: normal; color: #00E5FF; }
+    .ks-curtain .ks-cur-title span { color: #FFFFFF; }
+    .ks-curtain .ks-cur-title em { font-style: normal; color: #00E5FF; }
 
     /* Tovush to'lqinlari (logotip o'ngidagi to'lqinlar ramzi) */
-    .ks-waves {
+    .ks-curtain .ks-cur-waves {
         display: inline-flex; align-items: center; gap: 3.5px;
         margin-bottom: 16px; height: 16px;
     }
-    .ks-waves i {
+    .ks-curtain .ks-cur-waves i {
         display: block; width: 2.5px; height: 4px; border-radius: 2px;
         background: linear-gradient(180deg, #00E5FF 0%, #00A8B5 100%);
         animation: ksWave 1.2s ease-in-out infinite alternate;
     }
-    .ks-waves i:nth-child(1) { animation-delay: 0.0s; height: 6px; }
-    .ks-waves i:nth-child(2) { animation-delay: 0.2s; height: 14px; }
-    .ks-waves i:nth-child(3) { animation-delay: 0.4s; height: 10px; }
-    .ks-waves i:nth-child(4) { animation-delay: 0.1s; height: 16px; }
-    .ks-waves i:nth-child(5) { animation-delay: 0.3s; height: 8px; }
+    .ks-curtain .ks-cur-waves i:nth-child(1) { animation-delay: 0.0s; height: 6px; }
+    .ks-curtain .ks-cur-waves i:nth-child(2) { animation-delay: 0.2s; height: 14px; }
+    .ks-curtain .ks-cur-waves i:nth-child(3) { animation-delay: 0.4s; height: 10px; }
+    .ks-curtain .ks-cur-waves i:nth-child(4) { animation-delay: 0.1s; height: 16px; }
+    .ks-curtain .ks-cur-waves i:nth-child(5) { animation-delay: 0.3s; height: 8px; }
     @keyframes ksWave {
         0% { transform: scaleY(0.4); opacity: 0.4; }
         100% { transform: scaleY(1.2); opacity: 1; }
     }
 
     /* Minimalist yorug'lik chizig'i */
-    .ks-line-track {
+    .ks-curtain .ks-cur-line-track {
         position: relative; width: 160px; height: 2px;
         background: rgba(255, 255, 255, 0.08);
         border-radius: 9999px; overflow: hidden;
     }
-    .ks-line-shimmer {
+    .ks-curtain .ks-cur-line-shimmer {
         position: absolute; left: 0; top: 0; bottom: 0; width: 45%;
         background: linear-gradient(90deg, transparent 0%, #00A8B5 30%, #00E5FF 70%, #F59E0B 100%);
         border-radius: 9999px;
@@ -454,7 +454,7 @@
         100% { transform: translateX(240%); }
     }
 
-    .ks-sub {
+    .ks-curtain .ks-cur-sub {
         margin-top: 10px; font-family: "DM Mono", ui-monospace, monospace; font-size: 11px; font-weight: 500;
         letter-spacing: 0.22em; text-transform: uppercase; color: #64748B;
     }
