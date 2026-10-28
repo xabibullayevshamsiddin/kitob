@@ -7,6 +7,7 @@ use App\Models\CoinTransaction;
 use App\Models\ShopItem;
 use App\Models\UserEquipment;
 use App\Models\UserItem;
+use App\Services\Gamification\MysteryChestService;
 use App\Services\Shop\Exceptions\ShopException;
 use App\Services\Shop\ShopService;
 use Carbon\Carbon;
@@ -19,7 +20,12 @@ class ShopPage extends Component
 {
     use WithToast;
 
-    public string $activeTab = 'showcase'; // showcase, profile, colors, consumable, perks, exchange, inventory, wallet
+    public string $activeTab = 'showcase'; // showcase, profile, colors, consumable, perks, exchange, chest, inventory, wallet
+
+    // Mystery Chest holati
+    public bool $chestOpening = false;
+    public ?array $chestReward = null;
+    public bool $showChestResult = false;
     public string $search = '';
     public string $rarityFilter = 'all'; // all, common, rare, epic, legendary
     public string $walletFilter = 'all'; // all, earned, spent
@@ -52,7 +58,7 @@ class ShopPage extends Component
             return;
         }
 
-        $validTabs = ['showcase', 'profile', 'colors', 'consumable', 'perks', 'exchange', 'inventory', 'wallet'];
+        $validTabs = ['showcase', 'profile', 'colors', 'consumable', 'perks', 'exchange', 'chest', 'inventory', 'wallet'];
         if (!in_array($this->activeTab, $validTabs, true)) {
             $this->activeTab = 'showcase';
         }
@@ -64,7 +70,7 @@ class ShopPage extends Component
 
     public function setTab(string $tab): void
     {
-        $validTabs = ['showcase', 'profile', 'colors', 'consumable', 'perks', 'exchange', 'inventory', 'wallet'];
+        $validTabs = ['showcase', 'profile', 'colors', 'consumable', 'perks', 'exchange', 'chest', 'inventory', 'wallet'];
         if (in_array($tab, $validTabs, true)) {
             $this->activeTab = $tab;
             $this->search = '';
@@ -215,6 +221,45 @@ class ShopPage extends Component
         } catch (\Throwable $e) {
             $this->toastError('Almashtirishda xatolik yuz berdi.');
         }
+    }
+
+    /**
+     * Mystery Chest ochish (300 ball sarflab tasodifiy mukofot olish).
+     */
+    public function openMysteryChest(): void
+    {
+        if (!Auth::check()) {
+            $this->toastError('Iltimos, avval tizimga kiring.');
+            return;
+        }
+
+        $user = Auth::user();
+
+        try {
+            $chestService = app(MysteryChestService::class);
+            $reward = $chestService->open($user);
+
+            $user->refresh();
+            $this->chestReward = $reward;
+            $this->showChestResult = true;
+
+            $this->dispatchBrowserEvent('chest-opened', [
+                'reward' => $reward,
+            ]);
+            $this->dispatchBrowserEvent('shop-balance-updated', [
+                'newBalance' => $user->coin_balance,
+            ]);
+        } catch (\RuntimeException $e) {
+            $this->toastWarning($e->getMessage());
+        } catch (\Throwable $e) {
+            $this->toastError("Sandiq ochishda xatolik yuz berdi.");
+        }
+    }
+
+    public function closeChestResult(): void
+    {
+        $this->showChestResult = false;
+        $this->chestReward = null;
     }
 
     /**
@@ -425,6 +470,9 @@ class ShopPage extends Component
             'coinsToReceive'       => $coinsToReceive,
             'starsPaymentsEnabled' => $starsPaymentsEnabled,
             'starPacks'            => $starPacks,
+            'chestCost'            => MysteryChestService::getCost(),
+            'chestReward'          => $this->chestReward,
+            'showChestResult'      => $this->showChestResult,
         ])->layout('layouts.app', ['title' => trans('shop.title') . ' — Kitobxon']);
     }
 

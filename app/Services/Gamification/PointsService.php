@@ -10,21 +10,65 @@ use Illuminate\Support\Facades\DB;
 class PointsService
 {
     /**
-     * Foydalanuvchiga ball berish (Points)
+     * Foydalanuvchiga ball berish (Points) + level-up tekshiruvi
      */
     public function awardPoints(User $user, int $points, string $source, string $description, ?int $refId = null, ?string $refType = null): PointTransaction
     {
-        return DB::transaction(function () use ($user, $points, $source, $description, $refId, $refType) {
+        $oldPoints = (int) $user->total_points;
+
+        $transaction = DB::transaction(function () use ($user, $points, $source, $description, $refId, $refType) {
             $user->increment('total_points', $points);
 
             return PointTransaction::create([
-                'user_id' => $user->id,
-                'points' => $points,
-                'source' => $source,
-                'description' => $description,
-                'reference_id' => $refId,
+                'user_id'        => $user->id,
+                'points'         => $points,
+                'source'         => $source,
+                'description'    => $description,
+                'reference_id'   => $refId,
                 'reference_type' => $refType,
             ]);
+        });
+
+        // Level-up tekshiruvi (transaction tashqarisida, chunki awardCoins o'z transaksiyasida)
+        $newPoints = (int) ($user->total_points ?? $oldPoints + $points);
+        app(LevelService::class)->checkAndAwardLevelUp($user, $oldPoints, $newPoints);
+
+        return $transaction;
+    }
+
+    /**
+     * Ball sarflash (Points spending) — Mystery Chest va boshqa points-based xaridlar uchun
+     */
+    public function spendPoints(User $user, int $points, string $description): bool
+    {
+        if ($points <= 0) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($user, $points, $description) {
+            /** @var User $lockedUser */
+            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
+            if (!$lockedUser || $lockedUser->total_points < $points) {
+                return false;
+            }
+
+            $lockedUser->decrement('total_points', $points);
+
+            // points_spent ni ham oshiramiz
+            $lockedUser->increment('points_spent', $points);
+
+            PointTransaction::create([
+                'user_id'     => $lockedUser->id,
+                'points'      => -$points,
+                'source'      => 'spend',
+                'description' => $description,
+            ]);
+
+            // user modelini yangilash
+            $user->total_points  = $lockedUser->total_points;
+            $user->points_spent  = $lockedUser->points_spent;
+
+            return true;
         });
     }
 

@@ -422,6 +422,25 @@
                                 @elseif(auth()->user()->hasRole('teacher'))
                                     <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold">Ustoz</span>
                                 @endif
+                                <span class="ks-badge shrink-0 bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 font-bold font-mono text-[10px]" title="{{ auth()->user()->level_title }}">
+                                    {{ auth()->user()->level_icon }} Lv.{{ auth()->user()->level }}
+                                </span>
+                            </div>
+
+                            @php
+                                $headerLvlProg = auth()->user()->level_progress;
+                            @endphp
+                            <div class="mt-2.5 pt-2 border-t border-ink-border/50 space-y-1">
+                                <div class="flex items-center justify-between text-[10px] font-mono">
+                                    <span class="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                                        <span>{{ auth()->user()->level_icon }}</span>
+                                        <span>Lv.{{ auth()->user()->level }} {{ auth()->user()->level_title }}</span>
+                                    </span>
+                                    <span class="text-mist">{{ $headerLvlProg['progress_percent'] }}%</span>
+                                </div>
+                                <div class="w-full h-1.5 rounded-full bg-ink-950 overflow-hidden border border-ink-border/50">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300" style="width: {{ $headerLvlProg['progress_percent'] }}%"></div>
+                                </div>
                             </div>
 
                             {{-- Stats for small screens --}}

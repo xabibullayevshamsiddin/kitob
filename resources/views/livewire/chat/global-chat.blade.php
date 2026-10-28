@@ -126,6 +126,12 @@
                         @if(($msg->user?->role ?? '') === 'admin' || ($msg->user && method_exists($msg->user, 'hasRole') && $msg->user->hasRole('admin')))
                             <span class="px-1.5 py-0.2 bg-rose-500/10 dark:bg-amber-500/15 border border-rose-500/25 dark:border-amber-500/30 text-rose-700 dark:text-amber-400 font-mono font-bold text-[9px] rounded uppercase">{{ __('site.leaderboard.role_admin') }}</span>
                         @endif
+
+                        @if($msg->user)
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300" title="{{ $msg->user->level_title }}">
+                                {{ $msg->user->level_icon }} Lv.{{ $msg->user->level }}
+                            </span>
+                        @endif
                         <span class="text-[10px] font-mono text-mist">{{ $msg->created_at->timezone('Asia/Tashkent')->format('H:i') }}</span>
 
                         @if($canDelete)

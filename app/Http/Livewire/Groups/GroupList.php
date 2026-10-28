@@ -179,6 +179,11 @@ class GroupList extends Component
         return $this->groupToDeleteId ? Group::find($this->groupToDeleteId) : null;
     }
 
+    /**
+     * Guruh yaratish uchun minimal ball talabi
+     */
+    private const GROUP_CREATE_MIN_POINTS = 1000;
+
     public function openCreateModal(): void
     {
         if (!Auth::check()) {
@@ -187,6 +192,15 @@ class GroupList extends Component
         }
 
         $user = Auth::user();
+        $isAdmin = $user->hasRole('admin') || $user->role === 'admin';
+
+        // ✅ Ball talabi tekshiruvi (admin uchun kerak emas)
+        if (!$isAdmin && (int) $user->total_points < self::GROUP_CREATE_MIN_POINTS) {
+            $needed = self::GROUP_CREATE_MIN_POINTS - (int) $user->total_points;
+            $this->toast('error', "🔒 Guruh yaratish uchun kamida " . number_format(self::GROUP_CREATE_MIN_POINTS, 0, '.', ' ') . " ball kerak. Sizda hozir " . number_format((int)$user->total_points, 0, '.', ' ') . " ball bor. Yana {$needed} ball to'plashingiz kerak!");
+            return;
+        }
+
         $limit = $this->getGroupLimit($user);
         $currentCount = Group::where('created_by', $user->id)->count();
         $membershipLimit = $this->getMembershipLimit($user);
@@ -216,6 +230,15 @@ class GroupList extends Component
         }
 
         $user = Auth::user();
+        $isAdmin = $user->hasRole('admin') || $user->role === 'admin';
+
+        // ✅ Ball talabi tekshiruvi (admin uchun kerak emas)
+        if (!$isAdmin && (int) $user->total_points < self::GROUP_CREATE_MIN_POINTS) {
+            $needed = self::GROUP_CREATE_MIN_POINTS - (int) $user->total_points;
+            $this->addError('name', "Guruh yaratish uchun kamida " . number_format(self::GROUP_CREATE_MIN_POINTS, 0, '.', ' ') . " ball kerak. Sizda hozir " . number_format((int)$user->total_points, 0, '.', ' ') . " ball bor. Yana {$needed} ball to'plashingiz kerak!");
+            return;
+        }
+
         $limit = $this->getGroupLimit($user);
         $currentCount = Group::where('created_by', $user->id)->count();
         $membershipLimit = $this->getMembershipLimit($user);

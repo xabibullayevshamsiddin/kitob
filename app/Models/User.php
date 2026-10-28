@@ -93,6 +93,58 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(UserStreak::class);
     }
 
+    // -------------------------------------------------------------------------
+    // Level System
+    // -------------------------------------------------------------------------
+
+    /**
+     * Hozirgi daraja raqamini qaytaradi (1–7)
+     */
+    public function getLevelAttribute(): int
+    {
+        return \App\Services\Gamification\LevelService::getLevelForPoints(
+            (int) ($this->attributes['total_points'] ?? 0)
+        );
+    }
+
+    /**
+     * Hozirgi daraja ma'lumotlarini qaytaradi (title, icon, coin_bonus, threshold)
+     */
+    public function getLevelInfoAttribute(): array
+    {
+        return \App\Services\Gamification\LevelService::getLevelInfo($this->level);
+    }
+
+    /**
+     * Daraja nomi (masalan "Faol O'quvchi")
+     */
+    public function getLevelTitleAttribute(): string
+    {
+        return $this->level_info['title'] ?? "Boshlang'ich Kitobxon";
+    }
+
+    /**
+     * Daraja emojisi (masalan "📖")
+     */
+    public function getLevelIconAttribute(): string
+    {
+        return $this->level_info['icon'] ?? '🌱';
+    }
+
+    /**
+     * Daraja progressi (percent, next_level, points_needed, va h.k.)
+     */
+    public function getLevelProgressAttribute(): array
+    {
+        return \App\Services\Gamification\LevelService::getLevelProgress(
+            (int) ($this->attributes['total_points'] ?? 0)
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // League (existing)
+    // -------------------------------------------------------------------------
+
     public function getLeagueAttribute(): string
     {
         $val = $this->attributes['league'] ?? null;

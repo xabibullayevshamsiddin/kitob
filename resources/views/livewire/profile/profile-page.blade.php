@@ -123,6 +123,13 @@
                                 @elseif($user->role === 'teacher' || $user->hasRole('teacher'))
                                     <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-[10px] font-mono uppercase tracking-wider font-semibold">O‘qituvchi</span>
                                 @endif
+
+                                {{-- Level Badge --}}
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-mono font-bold flex items-center gap-1 select-none" title="{{ $user->level_title }}">
+                                    <span>{{ $user->level_icon }}</span>
+                                    <span>Lv.{{ $user->level }}</span>
+                                    <span class="hidden sm:inline font-sans font-medium text-[10px] opacity-80">({{ $user->level_title }})</span>
+                                </span>
                             </div>
                             <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
                                 <p class="text-xs text-mist font-mono">{{ '@' . $user->username }}</p>
@@ -223,6 +230,47 @@
                     <p class="text-xl sm:text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1.5">
                         {{ number_format($stats['total_minutes']) }} <span class="text-xs text-mist font-normal font-sans">{{ __('site.profile.minutes_short') }}</span>
                     </p>
+                </div>
+            </div>
+
+            {{-- Level Progress Banner --}}
+            @php
+                $lvlProg = $user->level_progress;
+            @endphp
+            <div class="mt-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-ink-950/40 to-amber-500/5 border border-amber-500/25 space-y-2.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">{{ $user->level_icon }}</span>
+                        <div>
+                            <div class="font-serif font-bold text-paper text-sm">
+                                Lv.{{ $user->level }} — {{ $user->level_title }}
+                            </div>
+                            <div class="text-[11px] text-stone-500 dark:text-mist font-mono">
+                                @if($lvlProg['next_level'])
+                                    Keyingi daraja: <strong class="text-amber-400">Lv.{{ $lvlProg['next_level'] }} {{ $lvlProg['next_info']['title'] }}</strong> (yana {{ number_format($lvlProg['points_needed']) }} ball)
+                                @else
+                                    <span class="text-amber-400 font-bold">Maksimal darajaga erishildi! 👑</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @if($lvlProg['next_level'] && $lvlProg['next_info']['coin_bonus'] > 0)
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[11px] font-bold self-start sm:self-auto border border-amber-500/30">
+                            <span>Bonus:</span>
+                            <span>+{{ $lvlProg['next_info']['coin_bonus'] }} tanga 🪙</span>
+                        </span>
+                    @endif
+                </div>
+
+                <div class="space-y-1">
+                    <div class="w-full h-2 rounded-full bg-ink-900 border border-ink-border overflow-hidden">
+                        <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-500"
+                             style="width: {{ $lvlProg['progress_percent'] }}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] font-mono text-mist">
+                        <span>{{ number_format($user->total_points) }} ball</span>
+                        <span>{{ $lvlProg['progress_percent'] }}%</span>
+                    </div>
                 </div>
             </div>
         </div>

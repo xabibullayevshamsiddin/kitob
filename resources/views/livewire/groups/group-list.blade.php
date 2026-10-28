@@ -268,6 +268,20 @@
                     <button type="button" @click="closeModal()" class="text-mist hover:text-paper text-sm font-mono">✕</button>
                 </div>
 
+                @auth
+                    @php
+                        $userPoints = (int) auth()->user()->total_points;
+                        $hasMinPoints = auth()->user()->hasRole('admin') || auth()->user()->role === 'admin' || $userPoints >= 1000;
+                    @endphp
+                    <div class="p-3 rounded-btn border text-xs font-mono flex items-center justify-between {{ $hasMinPoints ? 'bg-ink-950/60 border-ink-border text-mist' : 'bg-rose-500/10 border-rose-500/30 text-rose-300' }}">
+                        <span class="flex items-center gap-1.5">
+                            <span>{{ $hasMinPoints ? '⭐' : '🔒' }}</span>
+                            <span>Talab: <strong>1 000 ball</strong></span>
+                        </span>
+                        <span>Sizda: <strong class="{{ $hasMinPoints ? 'text-amber-400' : 'text-rose-300' }}">{{ number_format($userPoints, 0, '.', ' ') }} ball</strong></span>
+                    </div>
+                @endauth
+
                 <div class="space-y-3.5">
                     <div>
                         <label class="block text-xs font-mono uppercase tracking-wider text-mist mb-1">{{ __('site.groups.name_label') }}</label>

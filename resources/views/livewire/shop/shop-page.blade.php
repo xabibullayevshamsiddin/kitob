@@ -107,6 +107,7 @@
                 ['id' => 'consumable', 'label' => trans('shop.tabs.consumable'), 'icon' => 'zap'],
                 ['id' => 'perks',      'label' => trans('shop.tabs.perks'),      'icon' => 'award'],
                 ['id' => 'exchange',   'label' => trans('shop.tabs.exchange'),   'icon' => 'refresh'],
+                ['id' => 'chest',      'label' => "🎁 Omad Sandig'i",           'icon' => 'chest'],
                 ['id' => 'inventory',  'label' => trans('shop.tabs.inventory') . ' (' . $ownedItemsMap->count() . ')', 'icon' => 'box'],
                 ['id' => 'wallet',     'label' => trans('shop.tabs.wallet'),     'icon' => 'history'],
             ];
@@ -133,6 +134,8 @@
                     <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                 @elseif($tab['icon'] === 'history')
                     <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                @elseif($tab['icon'] === 'chest')
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14M5 8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M12 8v12"/></svg>
                 @endif
                 <span>{{ $tab['label'] }}</span>
             </button>
@@ -623,6 +626,110 @@
             </div>
         </div>
 
+    {{-- 4.4. OMAD SANDIG'I (MYSTERY CHEST) --}}
+    @elseif($activeTab === 'chest')
+        <div class="space-y-8 max-w-4xl mx-auto">
+            {{-- Chest Hero Banner --}}
+            <div class="relative overflow-hidden rounded-panel border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-ink-900 to-purple-900/20 p-6 sm:p-10 text-center space-y-6">
+                {{-- Decorative background elements --}}
+                <div class="absolute -top-16 -right-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative space-y-3">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold uppercase tracking-wider">
+                        ✨ Ballar Gamifikatsiyasi
+                    </span>
+                    <h2 class="text-2xl sm:text-4xl font-serif font-black text-paper tracking-tight">
+                        🎁 Omad Sandig'i
+                    </h2>
+                    <p class="text-xs sm:text-sm text-stone-600 dark:text-mist max-w-xl mx-auto font-sans leading-relaxed">
+                        To'plagan ballaringizni omadga aylantiring! Har bir sandiqda qimmatli tangalar, streak muzlatgichlari yoki noyob kuchaytirgichlar yashiringan.
+                    </p>
+                </div>
+
+                {{-- Interactive Chest Graphic --}}
+                <div class="relative py-4">
+                    <div class="inline-block relative">
+                        <div class="w-32 h-32 sm:w-40 sm:h-40 mx-auto rounded-3xl bg-gradient-to-br from-amber-400/20 via-amber-600/10 to-amber-900/30 border-2 border-amber-500/40 flex items-center justify-center text-6xl sm:text-7xl shadow-2xl shadow-amber-500/20 hover:scale-105 transition-transform duration-300 cursor-pointer select-none">
+                            🎁
+                        </div>
+                        <div class="absolute -bottom-2 inset-x-0 mx-auto w-24 h-4 bg-amber-500/20 blur-md rounded-full"></div>
+                    </div>
+                </div>
+
+                {{-- User balance & Action button --}}
+                <div class="max-w-md mx-auto space-y-4">
+                    <div class="flex items-center justify-between p-3.5 rounded-btn bg-ink-950/70 border border-ink-border text-xs font-mono">
+                        <span class="text-stone-600 dark:text-mist">Sizning ballaringiz:</span>
+                        <span class="font-bold text-purple-700 dark:text-purple-300 text-sm">
+                            ⭐ {{ number_format((int)$user->total_points, 0, '.', ' ') }} ball
+                        </span>
+                    </div>
+
+                    @php
+                        $hasEnoughForChest = ((int)$user->total_points >= $chestCost);
+                    @endphp
+
+                    @if($hasEnoughForChest)
+                        <button wire:click="openMysteryChest"
+                                wire:loading.attr="disabled"
+                                class="w-full py-3.5 px-6 rounded-btn bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-mono font-bold text-sm tracking-wide shadow-xl shadow-amber-500/30 hover:shadow-amber-500/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                            <span wire:loading.remove wire:target="openMysteryChest">
+                                🔓 Sandiqni ochish ({{ $chestCost }} ball)
+                            </span>
+                            <span wire:loading wire:target="openMysteryChest" class="inline-flex items-center gap-2">
+                                <svg class="w-4 h-4 animate-spin text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12"/></svg>
+                                <span>Sandiq ochilmoqda...</span>
+                            </span>
+                        </button>
+                    @else
+                        <div class="space-y-2">
+                            <button disabled
+                                    class="w-full py-3.5 px-6 rounded-btn bg-ink-800 border border-ink-border text-stone-500 dark:text-mist/50 font-mono text-sm cursor-not-allowed flex items-center justify-center gap-2">
+                                <span>🔒 Sandiq ochish uchun {{ $chestCost }} ball kerak</span>
+                            </button>
+                            <p class="text-[11px] text-stone-500 dark:text-mist font-sans">
+                                Yana {{ $chestCost - (int)$user->total_points }} ball to'plashingiz kerak. Kitob mutolaa qiling va ball yig'ing!
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Rewards Pool Breakdown --}}
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-mono uppercase tracking-wider text-paper font-semibold flex items-center gap-2">
+                        <span>🎯 Sandiq ichidagi ehtimoliy mukofotlar</span>
+                    </h3>
+                    <span class="text-xs text-stone-500 dark:text-mist font-mono">100% kafolatlangan yutuq</span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="p-4 rounded-panel bg-ink-900 border border-ink-border flex flex-col items-center text-center space-y-2 hover:border-amber-500/30 transition-colors">
+                        <span class="text-3xl">🪙</span>
+                        <div class="font-bold text-xs text-paper font-serif">10 – 30 Tanga</div>
+                        <span class="text-[10px] text-emerald-500 font-mono font-medium">Juda ko'p (66%)</span>
+                    </div>
+                    <div class="p-4 rounded-panel bg-ink-900 border border-ink-border flex flex-col items-center text-center space-y-2 hover:border-amber-500/30 transition-colors">
+                        <span class="text-3xl">💰</span>
+                        <div class="font-bold text-xs text-paper font-serif">50 – 80 Tanga</div>
+                        <span class="text-[10px] text-amber-500 font-mono font-medium">O'rtacha (19%)</span>
+                    </div>
+                    <div class="p-4 rounded-panel bg-ink-900 border border-ink-border flex flex-col items-center text-center space-y-2 hover:border-amber-500/30 transition-colors">
+                        <span class="text-3xl">❄️</span>
+                        <div class="font-bold text-xs text-paper font-serif">Streak Muzlatgich</div>
+                        <span class="text-[10px] text-cyan-400 font-mono font-medium">Noyob (7%)</span>
+                    </div>
+                    <div class="p-4 rounded-panel bg-ink-900 border border-ink-border flex flex-col items-center text-center space-y-2 hover:border-amber-500/30 transition-colors">
+                        <span class="text-3xl">⚡</span>
+                        <div class="font-bold text-xs text-paper font-serif">Tanga Kuchaytirgich</div>
+                        <span class="text-[10px] text-purple-400 font-mono font-medium">Afsonaviy (4%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     {{-- 4.5. HAMYON VA TRANZAKSIYALAR TARIXI (Wallet) --}}
     @elseif($activeTab === 'wallet')
         <div class="space-y-6">
@@ -1052,6 +1159,45 @@
                         </button>
                     @endif
                 </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ── 6. Omad Sandig'i Natijasi Modali ── --}}
+    @if($showChestResult && $chestReward)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-fade-in">
+            <div class="relative w-full max-w-sm rounded-panel bg-ink-900 border-2 border-amber-500/50 shadow-2xl shadow-amber-500/30 p-6 text-center space-y-5 animate-scale-up">
+                {{-- Glow background --}}
+                <div class="absolute inset-0 bg-gradient-to-b from-amber-500/10 to-transparent rounded-panel pointer-events-none"></div>
+
+                <div class="relative space-y-3">
+                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-pill bg-amber-500/20 text-amber-300 font-mono text-xs font-bold uppercase tracking-wider">
+                        🎉 Yutuq Chiqdi!
+                    </span>
+                    <h3 class="text-xl font-serif font-bold text-paper">
+                        Tabriklaymiz!
+                    </h3>
+                </div>
+
+                {{-- Reward Icon & Label --}}
+                <div class="py-4">
+                    <div class="w-24 h-24 mx-auto rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-5xl shadow-lg shadow-amber-500/20 animate-bounce">
+                        {{ $chestReward['icon'] ?? '🎁' }}
+                    </div>
+                    <div class="mt-4 font-serif font-black text-xl text-paper">
+                        {{ $chestReward['label'] ?? '' }}
+                    </div>
+                    <p class="text-xs text-stone-500 dark:text-mist mt-1 font-sans">
+                        Mukofot hisobingizga avtomatik qo'shildi!
+                    </p>
+                </div>
+
+                {{-- Close button --}}
+                <button wire:click="closeChestResult"
+                        type="button"
+                        class="w-full py-3 px-5 rounded-btn bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all">
+                    Ajoyib! Qabul qilish
+                </button>
             </div>
         </div>
     @endif
