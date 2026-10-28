@@ -621,7 +621,14 @@
                         ← Barcha xonalar
                     </button>
                     <div>
-                        <h4 class="text-sm font-bold text-paper font-serif">{{ $activeRoom->title }}</h4>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h4 class="text-sm font-bold text-paper font-serif">{{ $activeRoom->title }}</h4>
+                            @if($activeRoom->is_private)
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300 inline-flex items-center gap-1">
+                                    🔒 Parolli
+                                </span>
+                            @endif
+                        </div>
                         <p class="text-[11px] text-amber-500 font-mono flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span>Jonli efir • {{ $activeRoom->members->count() }}/{{ $activeRoom->max_members }} kitobxon</span>
@@ -1166,17 +1173,77 @@
                 @endif
             </div>
 
+            <!-- Password Prompt Card (if attempting to enter a private room) -->
+            @if($passwordPromptRoomId && $promptRoom)
+                <div class="p-4 rounded-card bg-amber-500/10 border-2 border-amber-500/40 space-y-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 text-sm shrink-0">
+                                🔒
+                            </div>
+                            <div>
+                                <h5 class="text-xs font-bold text-amber-300 font-mono">Ushbu guruh parollangan</h5>
+                                <p class="text-xs text-paper font-medium">«{{ $promptRoom->title }}» xonasiga kirish uchun parolni kiriting</p>
+                                <span class="text-[10px] text-mist font-mono">Muallif: {{ $promptRoom->creator?->name }}</span>
+                            </div>
+                        </div>
+                        <button type="button" wire:click="cancelPasswordPrompt" class="text-mist hover:text-paper text-sm p-1">✕</button>
+                    </div>
+
+                    <form wire:submit.prevent="submitRoomPassword" class="space-y-2.5 pt-1">
+                        <div>
+                            <input type="password" wire:model.defer="joinPassword" placeholder="Xona parolini kiriting..." class="ks-input text-xs w-full border-amber-500/50 focus:border-amber-400" autofocus>
+                            @error('joinPassword') <span class="text-[11px] text-rose-400 font-mono block mt-1">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="flex items-center justify-end gap-2">
+                            <button type="button" wire:click="cancelPasswordPrompt" class="px-3 py-1.5 rounded text-xs font-mono text-mist hover:text-paper transition-colors">
+                                Bekor qilish
+                            </button>
+                            <button type="submit" class="ks-btn-primary text-xs py-1.5 px-4 font-mono font-bold flex items-center gap-1.5">
+                                <span>Tasdiqlash va kirish</span>
+                                <span>→</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
             <!-- Create New Buddy Read Form -->
             @auth
                 <div class="p-3.5 rounded-card bg-ink-900 border border-ink-border space-y-2.5">
                     <span class="text-xs font-bold text-amber-400 font-mono block">+ Yangi mutolaa xonasi ochish</span>
-                    <form wire:submit.prevent="createBuddyRead" class="flex gap-2">
-                        <input type="text" wire:model.defer="newTitle" placeholder="Masalan: 3-kurs talabalari / Toshkent kitobxonlari" class="ks-input text-xs flex-1">
-                        <button type="submit" class="ks-btn-primary text-xs py-1.5 px-3 shrink-0">
-                            Ochish
-                        </button>
+                    <form wire:submit.prevent="createBuddyRead" class="space-y-2.5">
+                        <div class="flex gap-2">
+                            <input type="text" wire:model.defer="newTitle" placeholder="Masalan: 3-kurs talabalari / Toshkent kitobxonlari" class="ks-input text-xs flex-1">
+                            <button type="submit" class="ks-btn-primary text-xs py-1.5 px-3 shrink-0">
+                                Ochish
+                            </button>
+                        </div>
+                        @error('newTitle') <span class="text-[10px] text-rose-400 font-mono block">{{ $message }}</span> @enderror
+
+                        <!-- Parol opsiyasi -->
+                        <div class="pt-1">
+                            <label class="inline-flex items-center gap-2 cursor-pointer select-none text-xs text-mist hover:text-paper transition-colors">
+                                <input type="checkbox" wire:model="isPrivate" class="rounded border-ink-border text-amber-500 focus:ring-0 w-3.5 h-3.5 bg-ink-950">
+                                <span class="flex items-center gap-1">
+                                    <span>🔒</span>
+                                    <span>Parolli guruh qilish (ixtiyoriy)</span>
+                                </span>
+                            </label>
+
+                            @if($isPrivate)
+                                <div class="mt-2 p-2.5 rounded bg-ink-950/70 border border-amber-500/30 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <label class="text-[11px] font-mono text-amber-400">Guruh paroli:</label>
+                                        <span class="text-[10px] text-mist font-mono">kamida 4 ta belgi</span>
+                                    </div>
+                                    <input type="password" wire:model.defer="roomPassword" placeholder="Masalan: 1234 / mutolaa2026" class="ks-input text-xs w-full border-amber-500/40 focus:border-amber-400">
+                                    @error('roomPassword') <span class="text-[10px] text-rose-400 font-mono block">{{ $message }}</span> @enderror
+                                    <p class="text-[10px] text-mist/80 font-mono">Ushbu parolni faqat guruhga taklif qilmoqchi bo'lgan do'stlaringizga ulashing.</p>
+                                </div>
+                            @endif
+                        </div>
                     </form>
-                    @error('newTitle') <span class="text-[10px] text-rose-400 font-mono">{{ $message }}</span> @enderror
                 </div>
             @else
                 <div class="p-3 rounded bg-ink-900 border border-ink-border text-xs text-center text-mist font-mono">
@@ -1188,13 +1255,32 @@
             <div class="space-y-2">
                 <span class="text-[11px] font-mono text-mist uppercase tracking-wider block">Mavjud guruhlar:</span>
                 @forelse($allRooms as $room)
-                    <div class="p-3 rounded-card bg-ink-900/60 border border-ink-border flex items-center justify-between hover:bg-ink-800/40 transition-colors">
-                        <div>
-                            <h5 class="text-xs font-bold text-paper">{{ $room->title }}</h5>
-                            <span class="text-[11px] text-mist font-mono">Muallif: {{ $room->creator?->name }} • {{ $room->members_count }}/{{ $room->max_members }} a'zo</span>
+                    @php
+                        $userIsMember = Auth::check() && ($room->creator_id === Auth::id() || $room->members->contains('user_id', Auth::id()));
+                    @endphp
+                    <div class="p-3 rounded-card bg-ink-900/60 border {{ $room->is_private ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-ink-border' }} flex items-center justify-between hover:bg-ink-800/40 transition-colors">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <h5 class="text-xs font-bold text-paper">{{ $room->title }}</h5>
+                                @if($room->is_private)
+                                    <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300 inline-flex items-center gap-1" title="Parol bilan himoyalangan guruh">
+                                        🔒 Parolli
+                                    </span>
+                                @endif
+                                @if($userIsMember)
+                                    <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 inline-flex items-center">
+                                        ✓ A'zosiz
+                                    </span>
+                                @endif
+                            </div>
+                            <span class="text-[11px] text-mist font-mono block">Muallif: {{ $room->creator?->name }} • {{ $room->members_count }}/{{ $room->max_members }} a'zo</span>
                         </div>
-                        <button type="button" wire:click="selectBuddyRead({{ $room->id }})" class="px-3 py-1 rounded bg-ink-800 hover:bg-ink-700 text-amber-400 text-xs font-mono font-bold border border-ink-border transition-colors">
-                            Kirish →
+                        <button type="button" wire:click="selectBuddyRead({{ $room->id }})" class="px-3 py-1 rounded {{ $room->is_private && !$userIsMember ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40' : 'bg-ink-800 hover:bg-ink-700 text-amber-400 border-ink-border' }} text-xs font-mono font-bold border transition-colors shrink-0 flex items-center gap-1">
+                            @if($room->is_private && !$userIsMember)
+                                <span>🔒 Kirish</span>
+                            @else
+                                <span>Kirish →</span>
+                            @endif
                         </button>
                     </div>
                 @empty

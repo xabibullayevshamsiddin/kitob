@@ -17,7 +17,24 @@ class BuddyRead extends Model
         'title',
         'status',
         'max_members',
+        'is_private',
+        'password',
     ];
+
+    protected $casts = [
+        'is_private' => 'boolean',
+    ];
+
+    public function checkPassword(?string $inputPassword): bool
+    {
+        if (!$this->is_private || empty($this->password)) {
+            return true;
+        }
+        if (empty($inputPassword)) {
+            return false;
+        }
+        return \Illuminate\Support\Facades\Hash::check($inputPassword, $this->password) || $this->password === trim($inputPassword);
+    }
 
     public function book(): BelongsTo
     {
