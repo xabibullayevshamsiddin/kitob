@@ -11,11 +11,23 @@ use Illuminate\Support\Str;
 
 class TelegramAnnouncementService
 {
-    protected TelegramClient $client;
+    protected ?TelegramClient $client = null;
 
     public function __construct(?TelegramClient $client = null)
     {
-        $this->client = $client ?? new TelegramClient();
+        if ($client !== null) {
+            $this->client = $client;
+        } else {
+            try {
+                $token = config('telegram.bot_token');
+                if (!empty($token)) {
+                    $this->client = new TelegramClient($token);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Telegram client yaratishda xatolik: " . $e->getMessage());
+                $this->client = null;
+            }
+        }
     }
 
     /**
@@ -23,32 +35,42 @@ class TelegramAnnouncementService
      */
     public function broadcastNewBook(Book $book, bool $toChannel = true, bool $toUsers = true): array
     {
-        if (empty(config('telegram.bot_token'))) {
+        if (empty(config('telegram.bot_token')) || !$this->client) {
             return ['channel' => false, 'users_count' => 0, 'reason' => 'bot_token_empty'];
         }
 
-        $appUrl = config('app.url', 'https://kitobxon.elitehost.uz');
+        $appUrl = rtrim(config('app.url', 'https://kitobxon.elitehost.uz'), '/');
         $bookUrl = route('books.show', $book->slug);
-        $miniAppUrl = config('telegram.mini_app_url', "{$appUrl}/tg-app");
+        $miniAppUrl = config('telegram.mini_app_url', "{$appUrl}/tg/app");
 
         $desc = Str::limit(strip_tags($book->description ?? ''), 280);
 
+        $safeTitle = htmlspecialchars($book->title ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeAuthor = htmlspecialchars($book->author ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeGenre = htmlspecialchars($book->genre ?? 'Boshqa', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeDesc = htmlspecialchars($desc, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
         $text = "📚 <b>Yangi kitob kutubxonamizga qo'shildi!</b>\n\n"
-              . "📖 <b>«{$book->title}»</b>\n"
-              . "✍️ <b>Muallif:</b> {$book->author}\n"
-              . "🏷️ <b>Janr:</b> {$book->genre}\n\n"
-              . "📝 <i>{$desc}</i>\n\n"
+              . "📖 <b>«{$safeTitle}»</b>\n"
+              . "✍️ <b>Muallif:</b> {$safeAuthor}\n"
+              . "🏷️ <b>Janr:</b> {$safeGenre}\n\n"
+              . (!empty($safeDesc) ? "📝 <i>{$safeDesc}</i>\n\n" : "")
               . "🔥 Hoziroq mutolaani boshlang va kunlik <b>Streak</b> hamda oltin tangalarga ega bo'ling!";
 
+        $buttons = [
+            [
+                ['text' => '📖 Mutolaa qilish', 'url' => $bookUrl],
+            ]
+        ];
+
+        if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://')) {
+            $buttons[] = [
+                ['text' => '📱 Mini Appda ochish', 'web_app' => ['url' => $miniAppUrl]],
+            ];
+        }
+
         $keyboard = [
-            'inline_keyboard' => [
-                [
-                    ['text' => '📖 Mutolaa qilish', 'url' => $bookUrl],
-                ],
-                [
-                    ['text' => '📱 Mini Appda ochish', 'web_app' => ['url' => $miniAppUrl]],
-                ],
-            ],
+            'inline_keyboard' => $buttons,
         ];
 
         $coverUrl = $book->cover_url;
@@ -85,7 +107,8 @@ class TelegramAnnouncementService
         if ($toUsers) {
             $users = User::whereNotNull('telegram_id')
                 ->whereNull('telegram_blocked_at')
-                ->get(['id', 'telegram_id', 'telegram_notification_preferences']);
+                ->select(['id', 'telegram_id', 'notification_prefs'])
+                ->get();
 
             foreach ($users as $user) {
                 try {
@@ -113,7 +136,7 @@ class TelegramAnnouncementService
      */
     public function broadcastNewQuiz(Quiz $quiz, bool $toChannel = true, bool $toUsers = true): array
     {
-        if (empty(config('telegram.bot_token'))) {
+        if (empty(config('telegram.bot_token')) || !$this->client) {
             return ['channel' => false, 'users_count' => 0, 'reason' => 'bot_token_empty'];
         }
 
@@ -121,9 +144,12 @@ class TelegramAnnouncementService
         $bookTitle = $quiz->book ? "«{$quiz->book->title}» kitobi" : "Umumiy adabiyot";
         $qCount = $quiz->questions()->count();
 
+        $safeTitle = htmlspecialchars($quiz->title ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safeBookTitle = htmlspecialchars($bookTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
         $text = "🧠 <b>Yangi test sinovi platformada!</b>\n\n"
-              . "🏆 <b>Test:</b> {$quiz->title}\n"
-              . "📚 <b>Asoslangan:</b> {$bookTitle}\n"
+              . "🏆 <b>Test:</b> {$safeTitle}\n"
+              . "📚 <b>Asoslangan:</b> {$safeBookTitle}\n"
               . "❓ <b>Savollar soni:</b> {$qCount} ta savol\n"
               . "🪙 <b>Mukofot:</b> Har bir to'g'ri javob uchun oltin tangalar!\n\n"
               . "Bilimingizni sinab ko'ring va umumiy reytingda peshqadamlar qatoriga qo'shiling! 🥇";
@@ -161,7 +187,8 @@ class TelegramAnnouncementService
         if ($toUsers) {
             $users = User::whereNotNull('telegram_id')
                 ->whereNull('telegram_blocked_at')
-                ->get(['id', 'telegram_id', 'telegram_notification_preferences']);
+                ->select(['id', 'telegram_id', 'notification_prefs'])
+                ->get();
 
             foreach ($users as $user) {
                 try {

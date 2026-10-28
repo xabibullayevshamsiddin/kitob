@@ -1361,10 +1361,25 @@ Route::prefix('admin')
     })->name('books.store');
 
     Route::post('/books/{book}/telegram-broadcast', function (\App\Models\Book $book) {
-        $announcer = new \App\Services\Telegram\TelegramAnnouncementService();
-        $res = $announcer->broadcastNewBook($book);
-        $userMsg = $res['users_count'] > 0 ? " ({$res['users_count']} ta bot foydalanuvchisiga yuborildi)" : '';
-        return back()->with('success', "Kitob haqida e'lon Telegramga muvaffaqiyatli yuborildi!" . $userMsg);
+        try {
+            $announcer = new \App\Services\Telegram\TelegramAnnouncementService();
+            $res = $announcer->broadcastNewBook($book);
+
+            if (!empty($res['reason']) && $res['reason'] === 'bot_token_empty') {
+                return back()->with('warning', "Telegram Bot Token sozlanmagan (.env faylida TELEGRAM_BOT_TOKEN kiritilishi lozim).");
+            }
+
+            $userMsg = ($res['users_count'] ?? 0) > 0 ? " ({$res['users_count']} ta bot foydalanuvchisiga yuborildi)" : '';
+            $channelMsg = !empty($res['channel']) ? " va Telegram kanalga" : "";
+
+            return back()->with('success', "«{$book->title}» kitobi haqida e'lon Telegramga muvaffaqiyatli yuborildi{$channelMsg}!{$userMsg}");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Telegram broadcast xatosi: " . $e->getMessage(), [
+                'book_id' => $book->id,
+                'trace'   => $e->getTraceAsString(),
+            ]);
+            return back()->with('error', "Telegramga e'lon yuborishda xatolik yuz berdi: " . $e->getMessage());
+        }
     })->name('books.telegram-broadcast');
 
     Route::get('/books/{book}/edit', function (\App\Models\Book $book) {
