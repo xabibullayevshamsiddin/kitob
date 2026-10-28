@@ -102,6 +102,12 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getLevelAttribute(): int
     {
+        // Agar model qisman yuklangan bo'lsa va total_points bo'lmasa, bazadan olamiz
+        if (!array_key_exists('total_points', $this->attributes) && $this->exists) {
+            $points = (int) static::where('id', $this->id)->value('total_points');
+            $this->attributes['total_points'] = $points;
+        }
+
         return \App\Services\Gamification\LevelService::getLevelForPoints(
             (int) ($this->attributes['total_points'] ?? 0)
         );
@@ -136,6 +142,11 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getLevelProgressAttribute(): array
     {
+        if (!array_key_exists('total_points', $this->attributes) && $this->exists) {
+            $points = (int) static::where('id', $this->id)->value('total_points');
+            $this->attributes['total_points'] = $points;
+        }
+
         return \App\Services\Gamification\LevelService::getLevelProgress(
             (int) ($this->attributes['total_points'] ?? 0)
         );

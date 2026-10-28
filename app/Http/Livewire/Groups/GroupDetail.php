@@ -605,7 +605,7 @@ class GroupDetail extends Component
     {
         $messages = GroupMessage::where('group_id', $this->group->id)
             ->with([
-                'user:id,name,username,avatar',
+                'user:id,name,username,avatar,role,total_points',
                 'user.profile:id,user_id,avatar_frame,chat_style_preference,chat_bubble_theme'
             ])
             ->notDeleted()

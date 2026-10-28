@@ -219,7 +219,7 @@ class LiveChatPanel extends Component
 
         $messages = LiveQuestion::where('live_event_id', $event->id)
             ->with([
-                'user:id,name,username,avatar,role',
+                'user:id,name,username,avatar,role,total_points',
                 'user.profile:id,user_id,avatar_frame,chat_style_preference,chat_bubble_theme'
             ])
             ->latest()
