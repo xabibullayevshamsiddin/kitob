@@ -16,11 +16,11 @@ class BookDiscussionChat extends Component
 
     public int $bookId;
     public string $message = '';
-    public ?int $selectedPage = null;
+    public $selectedPage = null;
     public ?int $replyToId = null;
     public ?string $replyToUserName = null;
     public ?string $replyToSnippet = null;
-    public ?int $rating = null;
+    public $rating = null;
     public string $filterPage = 'all';
     public bool $isDrawerMode = false;
 
@@ -40,8 +40,26 @@ class BookDiscussionChat extends Component
     public function mount(Book $book, ?int $initialPage = null, bool $isDrawerMode = false): void
     {
         $this->bookId = $book->id;
-        $this->selectedPage = $initialPage;
+        $this->selectedPage = ($initialPage && (int) $initialPage > 0) ? (int) $initialPage : null;
         $this->isDrawerMode = $isDrawerMode;
+    }
+
+    public function updatedSelectedPage($value): void
+    {
+        if ($value === '' || $value === 'null' || $value === null) {
+            $this->selectedPage = null;
+        } else {
+            $this->selectedPage = (int) $value;
+        }
+    }
+
+    public function updatedRating($value): void
+    {
+        if ($value === '' || $value === 'null' || $value === null) {
+            $this->rating = null;
+        } else {
+            $this->rating = (int) $value;
+        }
     }
 
     public function onPageChanged($page): void
@@ -49,6 +67,8 @@ class BookDiscussionChat extends Component
         $pageNum = (int) $page;
         if ($pageNum > 0) {
             $this->selectedPage = $pageNum;
+        } else {
+            $this->selectedPage = null;
         }
     }
 
@@ -108,12 +128,22 @@ class BookDiscussionChat extends Component
             }
         }
 
+        $pageNumber = null;
+        if (!empty($this->selectedPage) && is_numeric($this->selectedPage) && (int) $this->selectedPage > 0) {
+            $pageNumber = (int) $this->selectedPage;
+        }
+
+        $ratingValue = null;
+        if (empty($parentId) && !empty($this->rating) && is_numeric($this->rating)) {
+            $ratingValue = max(1, min(5, (int) $this->rating));
+        }
+
         BookComment::create([
             'book_id'     => $book->id,
             'user_id'     => Auth::id(),
             'parent_id'   => $parentId,
-            'page_number' => $this->selectedPage,
-            'rating'      => empty($parentId) ? $this->rating : null,
+            'page_number' => $pageNumber,
+            'rating'      => $ratingValue,
             'comment'     => trim($this->message),
         ]);
 
@@ -176,7 +206,11 @@ class BookDiscussionChat extends Component
             ->latest();
 
         if ($this->filterPage !== 'all') {
-            $commentsQuery->where('page_number', (int) $this->filterPage);
+            if ($this->filterPage === 'general' || $this->filterPage === '') {
+                $commentsQuery->whereNull('page_number');
+            } else {
+                $commentsQuery->where('page_number', (int) $this->filterPage);
+            }
         }
 
         $comments = $commentsQuery->take(50)->get();

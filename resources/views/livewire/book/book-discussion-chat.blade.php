@@ -24,7 +24,7 @@
                     class="px-2 py-0.5 rounded-badge transition-colors {{ $filterPage === 'all' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-mist hover:text-paper bg-ink-900' }}">
                 Barchasi
             </button>
-            @if($selectedPage)
+            @if(!empty($selectedPage))
                 <button type="button" 
                         wire:click="$set('filterPage', '{{ $selectedPage }}')"
                         class="px-2 py-0.5 rounded-badge transition-colors {{ $filterPage == $selectedPage ? 'bg-amber-500 text-ink-950 font-bold' : 'text-mist hover:text-paper bg-ink-900' }}"
@@ -209,7 +209,10 @@
                         <span class="text-[11px] text-mist font-mono">Qaysi bet haqida:</span>
                         <select wire:model="selectedPage" class="bg-ink-900 border border-ink-border text-paper rounded-btn text-xs px-2 py-0.5 focus:border-amber-400 outline-none">
                             <option value="">Umumiy kitob haqida</option>
-                            @for($p = 1; $p <= 100; $p++)
+                            @php
+                                $maxPages = max(100, $book ? ($book->pages()->max('page_number') ?? 100) : 100);
+                            @endphp
+                            @for($p = 1; $p <= $maxPages; $p++)
                                 <option value="{{ $p }}">{{ $p }}-bet</option>
                             @endfor
                         </select>
