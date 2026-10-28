@@ -1,4 +1,4 @@
-<div wire:poll.4s class="flex flex-col h-full bg-ink-900 border border-ink-border rounded-card overflow-hidden shadow-2xl" id="book-discussion-chat-root">
+<div class="flex flex-col h-full bg-ink-900 border border-ink-border rounded-card overflow-hidden shadow-2xl" id="book-discussion-chat-root">
     
     <!-- ── Header ── -->
     <div class="p-3.5 sm:p-4 bg-ink-950/90 border-b border-ink-border flex items-center justify-between gap-3 shrink-0 backdrop-blur-sm">
@@ -36,7 +36,7 @@
     </div>
 
     <!-- ── Messages / Comments Feed ── -->
-    <div class="flex-1 p-3.5 sm:p-5 overflow-y-auto space-y-4 max-h-[550px] min-h-[280px]" id="book-chat-messages-container">
+    <div wire:poll.5s class="flex-1 p-3.5 sm:p-5 overflow-y-auto space-y-4 max-h-[550px] min-h-[280px]" id="book-chat-messages-container">
         @forelse($comments as $comment)
             <div class="p-3.5 sm:p-4 rounded-xl bg-ink-950/60 border border-ink-border/80 space-y-2.5 transition-all hover:border-amber-500/30"
                  id="chat-comment-{{ $comment->id }}">
@@ -208,12 +208,12 @@
                     <div class="flex items-center gap-1.5">
                         <span class="text-[11px] text-mist font-mono">Qaysi bet haqida:</span>
                         <select wire:model="selectedPage" class="bg-ink-900 border border-ink-border text-paper rounded-btn text-xs px-2 py-0.5 focus:border-amber-400 outline-none">
-                            <option value="">Umumiy kitob haqida</option>
+                            <option value="" @if(empty($selectedPage)) selected @endif>Umumiy kitob haqida</option>
                             @php
                                 $maxPages = max(100, $book ? ($book->pages()->max('page_number') ?? 100) : 100);
                             @endphp
                             @for($p = 1; $p <= $maxPages; $p++)
-                                <option value="{{ $p }}">{{ $p }}-bet</option>
+                                <option value="{{ $p }}" @if((string)$selectedPage === (string)$p) selected @endif>{{ $p }}-bet</option>
                             @endfor
                         </select>
                     </div>
@@ -284,12 +284,15 @@
             }
         });
 
-        // Listen for flipbook page changes and notify Livewire
-        window.addEventListener('flipbook:pagechange', (e) => {
-            if (e.detail && e.detail.page && window.Livewire) {
-                Livewire.emit('book:page-changed', e.detail.page);
-            }
-        });
+        // Listen for flipbook page changes and notify Livewire ONLY once globally
+        if (!window.__bookPageChangeRegistered) {
+            window.__bookPageChangeRegistered = true;
+            window.addEventListener('flipbook:pagechange', (e) => {
+                if (e.detail && e.detail.page && window.Livewire) {
+                    Livewire.emit('book:page-changed', e.detail.page);
+                }
+            });
+        }
     });
 </script>
 @endpush

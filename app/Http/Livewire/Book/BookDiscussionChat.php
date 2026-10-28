@@ -64,6 +64,10 @@ class BookDiscussionChat extends Component
 
     public function onPageChanged($page): void
     {
+        if (!$this->isDrawerMode) {
+            return;
+        }
+
         $pageNum = (int) $page;
         if ($pageNum > 0) {
             $this->selectedPage = $pageNum;
@@ -148,6 +152,7 @@ class BookDiscussionChat extends Component
         ]);
 
         $this->reset(['message', 'replyToId', 'replyToUserName', 'replyToSnippet', 'rating']);
+        $this->selectedPage = null;
         $this->dispatchBrowserEvent('book-chat-scroll-bottom');
         $this->toast('success', 'Fikringiz muvaffaqiyatli yuborildi!');
     }
