@@ -66,7 +66,7 @@
 
     $rankRing = match($tier) {
         'gold'   => 'ring-2 ring-amber-500 dark:ring-[#F59E0B] shadow-sm dark:shadow-[0_0_12px_rgba(245,158,11,0.35)]',
-        'silver' => 'ring-2 ring-slate-400 dark:ring-[#E2E8F0] shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.25)]',
+        'silver' => 'ring-2 ring-slate-500 dark:ring-[#E2E8F0] shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.25)]',
         'bronze' => 'ring-2 ring-amber-700 dark:ring-[#D97706] shadow-sm dark:shadow-[0_0_10px_rgba(217,119,6,0.25)]',
         'top5'   => 'ring-2 ring-indigo-500 dark:ring-[#6366F1]/80 shadow-sm dark:shadow-[0_0_8px_rgba(99,102,241,0.25)]',
         default  => null,
@@ -109,7 +109,7 @@
     @if($showRank && $tier && $pref !== 'default')
         <div class="absolute {{ $badgeSizes }} rounded-full flex items-center justify-center shadow-md z-10 animate-fade-in
             {{ $tier === 'gold'   ? 'bg-amber-500 text-ink-950 ring-1 ring-amber-600/40 dark:ring-white/40' : '' }}
-            {{ $tier === 'silver' ? 'bg-slate-300 dark:bg-[#E2E8F0] text-slate-800 dark:text-ink-950 ring-1 ring-slate-400/60 dark:ring-white/40' : '' }}
+            {{ $tier === 'silver' ? 'bg-gradient-to-r from-slate-200 via-white to-slate-200 dark:bg-[#E2E8F0] text-slate-950 dark:text-ink-950 ring-2 ring-slate-500/70 dark:ring-white/40 font-black shadow-sm' : '' }}
             {{ $tier === 'bronze' ? 'bg-amber-700 text-white ring-1 ring-amber-800/40 dark:ring-white/30' : '' }}
             {{ $tier === 'top5'   ? 'bg-indigo-600 text-white ring-1 ring-indigo-700/40 dark:ring-white/30' : '' }}"
             title="{{ $userRank }}-o'rin (Reyting)">

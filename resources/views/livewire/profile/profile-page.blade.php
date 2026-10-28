@@ -85,7 +85,7 @@
         <div class="px-5 pb-6 sm:px-8 sm:pb-7 pt-0 relative z-10 -mt-10 sm:-mt-14">
             <div class="flex flex-col sm:flex-row items-center sm:items-end gap-5 text-center sm:text-left">
                 <!-- Avatar (Single ring, subtle breathing pulse) -->
-                <div class="relative shrink-0 rounded-2xl animate-ring-pulse">
+                <div class="relative shrink-0 rounded-2xl animate-ring-pulse {{ $profileVisual['avatar_ring'] ?? '' }}">
                     <x-ui.avatar :user="$user" size="3xl" shape="rounded-2xl" :showRank="false" />
                 </div>
 
@@ -124,10 +124,10 @@
                                 @endif
 
                                 {{-- Level Badge --}}
-                                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-900 dark:text-amber-300 text-[11px] font-mono font-bold flex items-center gap-1 select-none shadow-sm" title="{{ $user->level_title }}">
-                                    <span>{{ $user->level_icon }}</span>
+                                <span class="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 dark:from-amber-500/15 dark:to-amber-500/15 border-2 border-amber-500/60 dark:border-amber-500/40 text-amber-950 dark:text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 select-none shadow-sm shadow-amber-500/25" title="{{ $user->level_title }}">
+                                    <span class="text-sm">{{ $user->level_icon }}</span>
                                     <span>Lv.{{ $user->level }}</span>
-                                    <span class="hidden sm:inline font-sans font-bold text-[10px] text-amber-800 dark:text-amber-200">({{ $user->level_title }})</span>
+                                    <span class="hidden sm:inline font-sans font-black text-[11px] text-amber-950 dark:text-amber-200">({{ $user->level_title }})</span>
                                 </span>
                             </div>
                             <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
@@ -236,25 +236,25 @@
             @php
                 $lvlProg = $user->level_progress;
             @endphp
-            <div class="mt-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-ink-950/40 to-amber-500/5 border border-amber-500/25 space-y-2.5">
+            <div class="mt-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-amber-500/10 dark:from-amber-500/10 dark:via-ink-950/40 dark:to-amber-500/5 border-2 border-amber-500/40 dark:border-amber-500/25 space-y-2.5 shadow-md shadow-amber-500/10">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                     <div class="flex items-center gap-2">
                         <span class="text-2xl">{{ $user->level_icon }}</span>
                         <div>
-                            <div class="font-serif font-bold text-paper text-sm">
+                            <div class="font-serif font-bold text-slate-900 dark:text-paper text-sm">
                                 Lv.{{ $user->level }} — {{ $user->level_title }}
                             </div>
-                            <div class="text-[11px] text-stone-500 dark:text-mist font-mono">
+                            <div class="text-[11px] text-slate-600 dark:text-mist font-mono font-semibold">
                                 @if($lvlProg['next_level'])
-                                    Keyingi daraja: <strong class="text-amber-400">Lv.{{ $lvlProg['next_level'] }} {{ $lvlProg['next_info']['title'] }}</strong> (yana {{ number_format($lvlProg['points_needed']) }} ball)
+                                    Keyingi daraja: <strong class="text-amber-700 dark:text-amber-400 font-bold">Lv.{{ $lvlProg['next_level'] }} {{ $lvlProg['next_info']['title'] }}</strong> (yana {{ number_format($lvlProg['points_needed']) }} ball)
                                 @else
-                                    <span class="text-amber-400 font-bold">Maksimal darajaga erishildi! 👑</span>
+                                    <span class="text-amber-600 dark:text-amber-400 font-bold">Maksimal darajaga erishildi! 👑</span>
                                 @endif
                             </div>
                         </div>
                     </div>
                     @if($lvlProg['next_level'] && $lvlProg['next_info']['coin_bonus'] > 0)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[11px] font-bold self-start sm:self-auto border border-amber-500/30">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-slate-950 dark:bg-amber-500/20 dark:text-amber-300 font-mono text-[11px] font-black self-start sm:self-auto border border-amber-600/40 dark:border-amber-500/30 shadow-sm shadow-amber-500/20">
                             <span>Bonus:</span>
                             <span>+{{ $lvlProg['next_info']['coin_bonus'] }} tanga 🪙</span>
                         </span>
@@ -262,11 +262,11 @@
                 </div>
 
                 <div class="space-y-1">
-                    <div class="w-full h-2 rounded-full bg-ink-900 border border-ink-border overflow-hidden">
+                    <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-ink-900 border border-slate-300 dark:border-ink-border overflow-hidden">
                         <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-500"
                              style="width: {{ $lvlProg['progress_percent'] }}%"></div>
                     </div>
-                    <div class="flex items-center justify-between text-[10px] font-mono text-mist">
+                    <div class="flex items-center justify-between text-[10px] font-mono text-slate-600 dark:text-mist font-bold">
                         <span>{{ number_format($user->total_points) }} ball</span>
                         <span>{{ $lvlProg['progress_percent'] }}%</span>
                     </div>

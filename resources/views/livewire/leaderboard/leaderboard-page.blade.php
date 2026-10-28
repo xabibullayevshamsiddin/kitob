@@ -104,12 +104,12 @@
             </button>
 
             <button type="button" wire:click="setLeague('silver')"
-                class="p-3 rounded-card text-left border transition-all duration-base cursor-pointer {{ $activeLeague === 'silver' ? 'bg-slate-800/60 border-slate-400 shadow-md ring-1 ring-slate-400/30' : 'bg-ink-900/60 border-ink-border hover:bg-ink-800/50' }}">
+                class="p-3 rounded-card text-left border transition-all duration-base cursor-pointer {{ $activeLeague === 'silver' ? 'bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:bg-slate-800/80 border-2 border-slate-500 dark:border-slate-400 shadow-md ring-1 ring-slate-400/50' : 'bg-ink-900/60 border-ink-border hover:bg-ink-800/50' }}">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-mono font-bold text-slate-300">{{ __('site.league.silver') }}</span>
+                    <span class="text-xs font-mono font-black text-slate-900 dark:text-slate-200">{{ __('site.league.silver') }}</span>
                     <span class="text-base">🥈</span>
                 </div>
-                <div class="text-[11px] text-mist mt-1">{{ __('site.league.silver_desc') }}</div>
+                <div class="text-[11px] text-slate-600 dark:text-mist mt-1 font-medium">{{ __('site.league.silver_desc') }}</div>
             </button>
 
             <button type="button" wire:click="setLeague('gold')"
@@ -183,7 +183,7 @@
         <div class="grid grid-cols-3 gap-2 sm:gap-4 pt-2 sm:pt-4 items-end">
             <!-- 2nd Place Silver -->
             @if(isset($top3[1]))
-                <div class="ks-panel p-2.5 sm:p-5 bg-gradient-to-b from-slate-200/70 via-ink-900 to-ink-900 dark:from-[#E2E8F0]/10 dark:via-ink-900 dark:to-ink-900 border border-slate-300 dark:border-[#E2E8F0]/40 text-center space-y-1.5 sm:space-y-2.5 relative shadow-sm dark:shadow-lg dark:shadow-black/30">
+                <div class="ks-panel p-2.5 sm:p-5 bg-gradient-to-b from-slate-300/80 via-white to-slate-50 dark:from-[#E2E8F0]/15 dark:via-ink-900 dark:to-ink-900 border-2 border-slate-400 dark:border-[#E2E8F0]/40 text-center space-y-1.5 sm:space-y-2.5 relative shadow-md dark:shadow-lg dark:shadow-black/30">
                     <div class="flex items-center justify-center">
                         <x-ui.rank-badge rank="2" size="xs" :compact="true" class="sm:hidden" />
                         <x-ui.rank-badge rank="2" size="sm" class="hidden sm:inline-flex" />
