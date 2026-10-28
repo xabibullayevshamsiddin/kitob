@@ -69,11 +69,13 @@ class PhoneLoginController extends Controller
             || str_ends_with($request->getHost(), '.test')
             || str_ends_with($request->getHost(), '.local');
 
-        if ($isLocal) {
+        $isAdminWithoutTelegram = ($user->isAdmin() && empty($user->telegram_id));
+
+        if ($isLocal || $isAdminWithoutTelegram) {
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
 
-            if ($user->role === 'admin') {
+            if ($user->isAdmin()) {
                 return redirect()->intended(route('admin.dashboard'));
             }
 
@@ -152,12 +154,14 @@ class PhoneLoginController extends Controller
             || str_ends_with(request()->getHost(), '.test')
             || str_ends_with(request()->getHost(), '.local');
 
-        if ($isLocal) {
+        $isAdminWithoutTelegram = ($user->isAdmin() && empty($user->telegram_id));
+
+        if ($isLocal || $isAdminWithoutTelegram) {
             Auth::login($user, (bool) ($loginData['remember'] ?? false));
             request()->session()->regenerate();
             Cache::forget("login_2fa_{$token}");
 
-            if ($user->role === 'admin') {
+            if ($user->isAdmin()) {
                 return redirect()->intended(route('admin.dashboard'));
             }
             return redirect()->intended($user->hasCompletedOnboarding() ? route('home') : route('onboarding'));

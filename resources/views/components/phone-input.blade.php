@@ -35,18 +35,17 @@
             <span class="font-mono text-sm font-semibold {{ $hasError ? 'text-rose-300' : 'text-paper' }} tracking-wider">+998</span>
         </div>
 
-        <!-- 9 ta raqam kiritiladigan maydon -->
+        <!-- 9 ta raqam yoki login kiritiladigan maydon -->
         <input id="{{ $inputId }}"
-               type="tel"
+               type="text"
                name="{{ $name }}"
                value="{{ $rawVal }}"
-               inputmode="numeric"
-               autocomplete="tel-national"
+               autocomplete="username"
                {{ $required ? 'required' : '' }}
                {{ $autofocus ? 'autofocus' : '' }}
-               maxlength="12"
+               maxlength="64"
                class="ks-phone-field w-full bg-transparent border-0 p-0 pl-2.5 text-sm {{ $hasError ? 'text-rose-200' : 'text-paper' }} font-mono tracking-wider placeholder:text-mist/40 focus:ring-0 focus:outline-none"
-               placeholder="90 123 45 67">
+               placeholder="90 123 45 67 yoki login">
     </div>
 
     @if($hasError)
@@ -63,8 +62,14 @@
 (function() {
     const input = document.getElementById('{{ $inputId }}');
     if (!input) return;
+    const prefix = input.parentElement ? input.parentElement.querySelector('.ks-phone-prefix') : null;
 
     function formatUzPhone(val) {
+        if (!val) return { formatted: '', digits: '' };
+        if (/[a-zA-Z@]/.test(val)) {
+            return { formatted: val, digits: '' };
+        }
+
         let digits = (val || '').replace(/\D/g, '');
         if (digits.startsWith('998')) {
             digits = digits.substring(3);
@@ -82,6 +87,9 @@
     }
 
     function applyFormat() {
+        if (prefix) {
+            prefix.style.display = /[a-zA-Z@]/.test(input.value) ? 'none' : 'flex';
+        }
         const { formatted } = formatUzPhone(input.value);
         input.value = formatted;
     }
@@ -94,6 +102,9 @@
     const form = input.closest('form');
     if (form) {
         form.addEventListener('submit', function() {
+            if (/[a-zA-Z@]/.test(input.value)) {
+                return;
+            }
             let digits = input.value.replace(/\D/g, '');
             if (digits.startsWith('998')) digits = digits.substring(3);
             if (digits.length === 9) {

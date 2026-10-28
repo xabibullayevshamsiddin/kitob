@@ -38,7 +38,7 @@
 <form method="POST" action="{{ route('login') }}" class="space-y-4">
     @csrf
 
-    <x-phone-input name="email" id="email" label="Telefon raqam" :required="true" :autofocus="true" />
+    <x-phone-input name="email" id="email" label="Telefon raqam yoki login" :required="true" :autofocus="true" />
 
     <x-password-input name="password" id="password" :label="__('site.auth.password')" :showForgot="true" placeholder="••••••••" />
 
