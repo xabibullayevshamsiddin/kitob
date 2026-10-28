@@ -733,6 +733,17 @@
         box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
     }
 
+    /* Ensure fixed modals are never pushed down by parent layout margins */
+    .fixed.inset-0,
+    [role="dialog"].fixed,
+    .ks-modal-backdrop {
+        margin: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+    }
+
     /* Blur In & Out Effect for static/CSS overlays */
     .overlay-blur .modal,
     .ks-blur-dialog,

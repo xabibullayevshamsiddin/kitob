@@ -1157,7 +1157,8 @@
 
     <!-- Birgalikda Mutolaa (Buddy Read) Modali -->
     <div x-show="showBuddyModal" x-cloak
-         class="fixed inset-0 z-[100] !m-0 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md"
+         style="margin: 0 !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md"
          role="dialog" aria-modal="true">
         <div class="relative w-full max-w-2xl bg-ink-950 border border-amber-500/30 rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto"
              @click.away="showBuddyModal = false; window.dispatchEvent(new CustomEvent('close-buddy-modal'))">
