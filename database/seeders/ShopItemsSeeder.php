@@ -165,7 +165,7 @@ class ShopItemsSeeder extends Seeder
                     'ru' => 'Получайте в 2 раза больше монет за чтение в течение 60 минут (только монеты, без влияния на рейтинг).',
                     'en' => 'Earn 2x coins while reading for 60 minutes (coins only, does not affect leaderboard points).',
                 ],
-                'price_coins'      => 65,
+                'price_coins'      => 35,
                 'rarity'           => 'rare',
                 'payload'          => [
                     'effect'     => 'coin_booster',
