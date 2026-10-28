@@ -2,15 +2,41 @@
 
 namespace App\Services\Gamification;
 
+use App\Models\PointTransaction;
+use App\Models\ShopItem;
 use App\Models\User;
 use App\Models\UserItem;
-use App\Models\ShopItem;
+use App\Models\UserStreak;
 use App\Services\NotifyUser;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class MysteryChestService
 {
-    public const CHEST_COST_POINTS = 300;
+    public const CHEST_COST_POINTS = 450;
+    public const DAILY_LIMIT = 3;
+
+    /**
+     * Foydalanuvchi bugun ochgan sandiqlar sonini hisoblash (Toshkent vaqti bilan)
+     */
+    public static function getTodayOpenedCount(int $userId): int
+    {
+        $startOfDay = Carbon::now('Asia/Tashkent')->startOfDay()->utc();
+
+        return (int) PointTransaction::where('user_id', $userId)
+            ->where('source', 'mystery_chest')
+            ->where('points', '<', 0)
+            ->where('created_at', '>=', $startOfDay)
+            ->count();
+    }
+
+    /**
+     * Foydalanuvchi uchun bugungi qolgan sandiqlar soni
+     */
+    public static function getDailyRemaining(int $userId): int
+    {
+        return max(0, self::DAILY_LIMIT - self::getTodayOpenedCount($userId));
+    }
 
     /**
      * Mukofotlar havzasi va ularning og'irliqlari (weight)
@@ -20,23 +46,21 @@ class MysteryChestService
     {
         return [
             // [type, value, label, icon, weight]
-            ['type' => 'coins', 'value' => 10,  'label' => '10 tanga',          'icon' => '🪙', 'weight' => 280],
-            ['type' => 'coins', 'value' => 20,  'label' => '20 tanga',          'icon' => '🪙', 'weight' => 220],
-            ['type' => 'coins', 'value' => 30,  'label' => '30 tanga',          'icon' => '🪙', 'weight' => 160],
-            ['type' => 'coins', 'value' => 50,  'label' => '50 tanga',          'icon' => '💰', 'weight' => 120],
-            ['type' => 'coins', 'value' => 80,  'label' => '80 tanga',          'icon' => '💰', 'weight' => 70],
-            ['type' => 'coins', 'value' => 120, 'label' => '120 tanga (Katta!)', 'icon' => '💎', 'weight' => 30],
-            ['type' => 'item',  'value' => 'streak_freeze',   'label' => 'Streak Muzlatgich (×1)', 'icon' => '❄️', 'weight' => 70],
-            ['type' => 'item',  'value' => 'coin_booster_60', 'label' => 'Tanga Kuchaytirgich (×1)', 'icon' => '⚡', 'weight' => 40],
-            ['type' => 'points','value' => 100, 'label' => '+100 ball qoʻshimcha', 'icon' => '⭐', 'weight' => 10],
+            ['type' => 'coins', 'value' => 15,  'label' => '15 tanga',          'icon' => '🪙', 'weight' => 260],
+            ['type' => 'coins', 'value' => 30,  'label' => '30 tanga',          'icon' => '🪙', 'weight' => 220],
+            ['type' => 'coins', 'value' => 50,  'label' => '50 tanga',          'icon' => '💰', 'weight' => 180],
+            ['type' => 'coins', 'value' => 80,  'label' => '80 tanga',          'icon' => '💰', 'weight' => 120],
+            ['type' => 'coins', 'value' => 150, 'label' => '150 tanga (Katta!)', 'icon' => '💎', 'weight' => 40],
+            ['type' => 'item',  'value' => 'streak_freeze',   'label' => 'Streak Muzlatgich (×1)', 'icon' => '❄️', 'weight' => 80],
+            ['type' => 'item',  'value' => 'coin_booster_60', 'label' => 'Tanga Kuchaytirgich (×1)', 'icon' => '⚡', 'weight' => 60],
+            ['type' => 'points','value' => 150, 'label' => '+150 ball qoʻshimcha', 'icon' => '⭐', 'weight' => 40],
         ];
     }
 
     /**
      * Mystery Chest ochish.
-     * 300 ball sarflab tasodifiy mukofot olish.
+     * 450 ball sarflab tasodifiy mukofot olish (kuniga max 3 marta).
      * Muvaffaqiyatli bo'lsa reward ma'lumotlarini qaytaradi.
-     * Xato bo'lsa istisno tashlaydi.
      *
      * @throws \RuntimeException
      */
@@ -44,13 +68,18 @@ class MysteryChestService
     {
         $cost = self::CHEST_COST_POINTS;
 
-        // 1. Ball tekshiruvi
+        // 1. Kunlik limit tekshiruvi (max 3 ta)
+        $openedToday = self::getTodayOpenedCount($user->id);
+        if ($openedToday >= self::DAILY_LIMIT) {
+            throw new \RuntimeException("Kunlik limitga yetdingiz! Kuniga ko'pi bilan " . self::DAILY_LIMIT . " ta sandiq ochishingiz mumkin. Ertaga yana urinib ko'ring.");
+        }
+
+        // 2. Ball tekshiruvi
         if ((int) $user->total_points < $cost) {
             throw new \RuntimeException("Yetarli ball yo'q. Sandiq ochish uchun {$cost} ball kerak.");
         }
 
-        // 2. Ball yechib olish
-        $pointsService = app(PointsService::class);
+        // 3. Ball yechib olish
         $deducted = DB::transaction(function () use ($user, $cost) {
             /** @var User $lockedUser */
             $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
@@ -60,7 +89,7 @@ class MysteryChestService
             $lockedUser->decrement('total_points', $cost);
             $lockedUser->increment('points_spent', $cost);
 
-            \App\Models\PointTransaction::create([
+            PointTransaction::create([
                 'user_id'     => $lockedUser->id,
                 'points'      => -$cost,
                 'source'      => 'mystery_chest',
@@ -78,21 +107,34 @@ class MysteryChestService
             throw new \RuntimeException("Yetarli ball yo'q. Sandiq ochish uchun {$cost} ball kerak.");
         }
 
-        // 3. Tasodifiy mukofot tanlash (weighted random)
+        // 4. Tasodifiy mukofot tanlash (weighted random)
         $reward = $this->pickReward();
 
-        // 4. Mukofotni berish
-        $this->grantReward($user, $reward);
+        // 5. Mukofotni berish
+        try {
+            $this->grantReward($user, $reward);
+        } catch (\Throwable $e) {
+            report($e);
+            // Agar biror item berishda xatolik bo'lsa, foydalanuvchi pulsiz qolmasligi uchun tanga beramiz
+            app(PointsService::class)->awardCoins($user, 30, 'mystery_chest_fallback', 'Omad Sandig\'i mukofoti: 30 tanga');
+            $reward = ['type' => 'coins', 'value' => 30, 'label' => '30 tanga', 'icon' => '🪙'];
+        }
 
-        // 5. Bildirishnoma
-        NotifyUser::send(
-            $user,
-            'mystery_chest',
-            "🎁 Omad Sandig'i ochildi!",
-            "Siz sandiqdan {$reward['icon']} {$reward['label']} oldingiz! Baxtli bo'ling!",
-            '🎁',
-            '/shop'
-        );
+        // 6. Bildirishnoma
+        try {
+            NotifyUser::send(
+                $user,
+                'mystery_chest',
+                "🎁 Omad Sandig'i ochildi!",
+                "Siz sandiqdan {$reward['icon']} {$reward['label']} oldingiz! Baxtli bo'ling!",
+                '🎁',
+                '/shop?tab=chest'
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        $reward['remaining_today'] = self::getDailyRemaining($user->id);
 
         return $reward;
     }
@@ -134,15 +176,26 @@ class MysteryChestService
                 "Omad Sandig'i mukofoti: {$reward['label']}"
             );
         } elseif ($reward['type'] === 'item') {
-            // Shop itemini foydalanuvchi inventariga qo'shish
-            $item = ShopItem::where('slug', $reward['value'])->first();
+            // Shop itemini `key` orqali topish (slug emas!)
+            $item = ShopItem::where('key', $reward['value'])->first();
             if ($item) {
-                UserItem::create([
-                    'user_id'    => $user->id,
-                    'item_id'    => $item->id,
-                    'quantity'   => 1,
-                    'expires_at' => now()->addDays(30),
+                $userItem = UserItem::firstOrNew([
+                    'user_id'      => $user->id,
+                    'shop_item_id' => $item->id,
                 ]);
+                $userItem->quantity = ($userItem->exists ? (int)$userItem->quantity : 0) + 1;
+                $userItem->acquired_at = $userItem->acquired_at ?? now();
+                $userItem->expires_at = now()->addDays(30);
+                $userItem->save();
+
+                // Agar Streak Freeze bo'lsa — user_streaks.freeze_count ni ham oshiramiz
+                if ($item->key === 'streak_freeze') {
+                    $streak = UserStreak::firstOrCreate(
+                        ['user_id' => $user->id],
+                        ['current_streak' => 0, 'longest_streak' => 0, 'freeze_count' => 0]
+                    );
+                    $streak->increment('freeze_count', 1);
+                }
             }
         } elseif ($reward['type'] === 'points') {
             // Points qayta berish (level-up ham triggerlanadi)

@@ -255,7 +255,8 @@
                          }
                      }"
                      @points-awarded.window="animateAdd($event.detail.points, $event.detail.newTotal)"
-                     @coins-awarded.window="animateAddCoins($event.detail.coins, $event.detail.newTotal)">
+                     @coins-awarded.window="animateAddCoins($event.detail.coins, $event.detail.newTotal)"
+                     @shop-balance-updated.window="if ($event.detail.newBalance !== undefined) { animateAddCoins(0, $event.detail.newBalance); } if ($event.detail.newPoints !== undefined) { animateAdd(0, $event.detail.newPoints); }">
 
                     {{-- Streak Flame --}}
                     <span x-data="{ streakCount: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
@@ -450,7 +451,8 @@
                                      mobileCoins: {{ auth()->check() ? (int) auth()->user()->coin_balance : 0 }}
                                  }"
                                  @points-awarded.window="mobilePoints = $event.detail.newTotal !== undefined ? $event.detail.newTotal : (mobilePoints + ($event.detail.points || 10))"
-                                 @coins-awarded.window="mobileCoins = $event.detail.newTotal !== undefined ? $event.detail.newTotal : (mobileCoins + ($event.detail.coins || 1))">
+                                 @coins-awarded.window="mobileCoins = $event.detail.newTotal !== undefined ? $event.detail.newTotal : (mobileCoins + ($event.detail.coins || 1))"
+                                 @shop-balance-updated.window="if ($event.detail.newBalance !== undefined) mobileCoins = $event.detail.newBalance; if ($event.detail.newPoints !== undefined) mobilePoints = $event.detail.newPoints">
                                 <span x-data="{ mobileStreak: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                                       @streak-updated.window="mobileStreak = $event.detail.streak"
                                       class="inline-flex items-center gap-1 text-cyan-600 dark:text-cyan-400 font-mono text-[11px] font-medium tabular-nums">

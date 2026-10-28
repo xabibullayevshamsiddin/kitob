@@ -146,6 +146,7 @@ class ShopPage extends Component
             );
 
             $user->refresh();
+            Auth::setUser($user);
             $this->lastPurchasedItemId = $this->confirmingPurchaseItemId;
             $purchasedItem = ShopItem::find($this->confirmingPurchaseItemId);
 
@@ -153,7 +154,13 @@ class ShopPage extends Component
 
             // Brauzerga balans sanash va audio/vizual effekt hodisasi yuborish
             $this->dispatchBrowserEvent('shop-balance-updated', [
-                'newBalance' => $user->coin_balance,
+                'newBalance' => (int) $user->coin_balance,
+                'newPoints'  => (int) $user->total_points,
+            ]);
+
+            $this->dispatchBrowserEvent('coins-awarded', [
+                'coins'    => 0,
+                'newTotal' => (int) $user->coin_balance,
             ]);
 
             $this->dispatchBrowserEvent('shop-item-bought', [
@@ -203,16 +210,23 @@ class ShopPage extends Component
         try {
             $result = $shopService->exchangePointsToCoins($user, $this->exchangePoints);
             $user->refresh();
+            Auth::setUser($user);
 
             $this->toastSuccess($result['message']);
 
             $this->dispatchBrowserEvent('shop-balance-updated', [
-                'newBalance' => $user->coin_balance,
+                'newBalance' => (int) $user->coin_balance,
+                'newPoints'  => (int) $user->total_points,
             ]);
 
             $this->dispatchBrowserEvent('coins-awarded', [
                 'coins'    => $result['coins_received'],
-                'newTotal' => $user->coin_balance,
+                'newTotal' => (int) $user->coin_balance,
+            ]);
+
+            $this->dispatchBrowserEvent('points-awarded', [
+                'points'   => 0,
+                'newTotal' => (int) $user->total_points,
             ]);
 
             $this->confirmingExchange = false;
@@ -224,7 +238,7 @@ class ShopPage extends Component
     }
 
     /**
-     * Mystery Chest ochish (300 ball sarflab tasodifiy mukofot olish).
+     * Mystery Chest ochish (450 ball sarflab tasodifiy mukofot olish, kuniga max 3 marta).
      */
     public function openMysteryChest(): void
     {
@@ -240,18 +254,41 @@ class ShopPage extends Component
             $reward = $chestService->open($user);
 
             $user->refresh();
+            Auth::setUser($user);
             $this->chestReward = $reward;
             $this->showChestResult = true;
+
+            $this->toastSuccess("🎁 Omad Sandig'i ochildi: {$reward['icon']} {$reward['label']}!");
 
             $this->dispatchBrowserEvent('chest-opened', [
                 'reward' => $reward,
             ]);
+
+            // Header va sahifadagi balanslarni darhol jonli yangilash
             $this->dispatchBrowserEvent('shop-balance-updated', [
-                'newBalance' => $user->coin_balance,
+                'newBalance' => (int) $user->coin_balance,
+                'newPoints'  => (int) $user->total_points,
             ]);
+
+            $this->dispatchBrowserEvent('points-awarded', [
+                'points'   => 0,
+                'newTotal' => (int) $user->total_points,
+            ]);
+
+            $this->dispatchBrowserEvent('coins-awarded', [
+                'coins'    => ($reward['type'] === 'coins' ? (int) $reward['value'] : 0),
+                'newTotal' => (int) $user->coin_balance,
+            ]);
+
+            if ($reward['type'] === 'item' && $reward['value'] === 'streak_freeze') {
+                $this->dispatchBrowserEvent('streak-updated', [
+                    'streak' => (int) ($user->streak?->current_streak ?? 0),
+                ]);
+            }
         } catch (\RuntimeException $e) {
             $this->toastWarning($e->getMessage());
         } catch (\Throwable $e) {
+            report($e);
             $this->toastError("Sandiq ochishda xatolik yuz berdi.");
         }
     }
@@ -471,6 +508,8 @@ class ShopPage extends Component
             'starsPaymentsEnabled' => $starsPaymentsEnabled,
             'starPacks'            => $starPacks,
             'chestCost'            => MysteryChestService::getCost(),
+            'dailyRemainingChests' => MysteryChestService::getDailyRemaining($user->id),
+            'dailyMaxChests'       => MysteryChestService::DAILY_LIMIT,
             'chestReward'          => $this->chestReward,
             'showChestResult'      => $this->showChestResult,
         ])->layout('layouts.app', ['title' => trans('shop.title') . ' — Kitobxon']);

@@ -3,23 +3,29 @@
          previewOpen: false,
          previewData: null,
          coinCount: {{ (int) $user->coin_balance }},
+         pointsCount: {{ (int) $user->total_points }},
          init() {
              window.addEventListener('shop-balance-updated', (e) => {
-                 const target = e.detail.newBalance;
-                 const start = this.coinCount;
-                 const duration = 600;
-                 const startTime = performance.now();
-                 const animate = (currentTime) => {
-                     const elapsed = currentTime - startTime;
-                     const progress = Math.min(elapsed / duration, 1);
-                     this.coinCount = Math.floor(start + (target - start) * progress);
-                     if (progress < 1) {
-                         requestAnimationFrame(animate);
-                     } else {
-                         this.coinCount = target;
-                     }
-                 };
-                 requestAnimationFrame(animate);
+                 if (e.detail.newBalance !== undefined) {
+                     const target = e.detail.newBalance;
+                     const start = this.coinCount;
+                     const duration = 600;
+                     const startTime = performance.now();
+                     const animate = (currentTime) => {
+                         const elapsed = currentTime - startTime;
+                         const progress = Math.min(elapsed / duration, 1);
+                         this.coinCount = Math.floor(start + (target - start) * progress);
+                         if (progress < 1) {
+                             requestAnimationFrame(animate);
+                         } else {
+                             this.coinCount = target;
+                         }
+                     };
+                     requestAnimationFrame(animate);
+                 }
+                 if (e.detail.newPoints !== undefined) {
+                     this.pointsCount = e.detail.newPoints;
+                 }
              });
          }
      }">
@@ -88,7 +94,7 @@
                             <span class="text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform shrink-0">&rarr;</span>
                         </div>
                         <div class="font-mono text-xl sm:text-2xl font-bold text-paper leading-none mt-0.5 flex items-baseline gap-1 whitespace-nowrap">
-                            <span>{{ number_format($user->available_points) }}</span>
+                            <span x-text="pointsCount.toLocaleString()">{{ number_format($user->available_points) }}</span>
                             <span class="text-xs text-stone-600 dark:text-mist font-sans font-normal">{{ trans('shop.points') }}</span>
                         </div>
                     </div>
@@ -636,14 +642,20 @@
                 <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
                 <div class="relative space-y-3">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold uppercase tracking-wider">
-                        ✨ Ballar Gamifikatsiyasi
-                    </span>
+                    <div class="flex items-center justify-center gap-2 flex-wrap">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold uppercase tracking-wider">
+                            ✨ Ballar Gamifikatsiyasi
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill {{ $dailyRemainingChests > 0 ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'bg-rose-500/20 border-rose-500/40 text-rose-300' }} border text-xs font-mono font-bold">
+                            <span>⏳ Bugungi limit:</span>
+                            <strong>{{ $dailyRemainingChests }} / {{ $dailyMaxChests }} ta</strong>
+                        </span>
+                    </div>
                     <h2 class="text-2xl sm:text-4xl font-serif font-black text-paper tracking-tight">
                         🎁 Omad Sandig'i
                     </h2>
                     <p class="text-xs sm:text-sm text-stone-600 dark:text-mist max-w-xl mx-auto font-sans leading-relaxed">
-                        To'plagan ballaringizni omadga aylantiring! Har bir sandiqda qimmatli tangalar, streak muzlatgichlari yoki noyob kuchaytirgichlar yashiringan.
+                        To'plagan ballaringizni omadga aylantiring! Har bir sandiqda qimmatli tangalar, streak muzlatgichlari yoki kuchaytirgichlar yashiringan (kuniga 3 tagacha).
                     </p>
                 </div>
 
@@ -661,7 +673,7 @@
                 <div class="max-w-md mx-auto space-y-4">
                     <div class="flex items-center justify-between p-3.5 rounded-btn bg-ink-950/70 border border-ink-border text-xs font-mono">
                         <span class="text-stone-600 dark:text-mist">Sizning ballaringiz:</span>
-                        <span class="font-bold text-purple-700 dark:text-purple-300 text-sm">
+                        <span class="font-bold text-purple-700 dark:text-purple-300 text-sm" x-text="'⭐ ' + pointsCount.toLocaleString() + ' ball'">
                             ⭐ {{ number_format((int)$user->total_points, 0, '.', ' ') }} ball
                         </span>
                     </div>
@@ -670,12 +682,22 @@
                         $hasEnoughForChest = ((int)$user->total_points >= $chestCost);
                     @endphp
 
-                    @if($hasEnoughForChest)
+                    @if($dailyRemainingChests <= 0)
+                        <div class="space-y-2">
+                            <button disabled
+                                    class="w-full py-3.5 px-6 rounded-btn bg-ink-800 border border-ink-border text-stone-500 dark:text-mist/60 font-mono text-sm cursor-not-allowed flex items-center justify-center gap-2">
+                                <span>🔒 Bugungi 3 ta limit tugadi</span>
+                            </button>
+                            <p class="text-[11px] text-stone-500 dark:text-mist font-sans">
+                                Siz bugun barcha 3 ta omad sandig'ini ochib bo'ldingiz. Yangi imkoniyatlar ertaga soat 00:00 da yangilanadi!
+                            </p>
+                        </div>
+                    @elseif($hasEnoughForChest)
                         <button wire:click="openMysteryChest"
                                 wire:loading.attr="disabled"
                                 class="w-full py-3.5 px-6 rounded-btn bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-mono font-bold text-sm tracking-wide shadow-xl shadow-amber-500/30 hover:shadow-amber-500/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2">
                             <span wire:loading.remove wire:target="openMysteryChest">
-                                🔓 Sandiqni ochish ({{ $chestCost }} ball)
+                                🔓 Sandiqni ochish ({{ $chestCost }} ball) — {{ $dailyRemainingChests }} ta qoldi
                             </span>
                             <span wire:loading wire:target="openMysteryChest" class="inline-flex items-center gap-2">
                                 <svg class="w-4 h-4 animate-spin text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="12"/></svg>
