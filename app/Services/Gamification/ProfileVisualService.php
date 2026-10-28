@@ -168,7 +168,7 @@ class ProfileVisualService
             'card_glow' => 'shadow-2xl shadow-slate-400/35 dark:shadow-slate-950/20',
             'card_accent_line' => 'bg-gradient-to-r from-slate-600 via-slate-400 to-transparent',
             'badge_text' => '🥈 Kumush Sovrindor',
-            'badge_class' => 'bg-gradient-to-r from-slate-100 via-white to-slate-200 border-2 border-slate-500 text-slate-950 dark:from-slate-800/80 dark:via-slate-700/80 dark:to-slate-800/80 dark:text-slate-100 dark:border-slate-400/50 font-mono font-black text-xs rounded-full px-4 py-1.5 shadow-md shadow-slate-500/25 ring-2 ring-slate-400/50 backdrop-blur-md',
+            'badge_class' => 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-500 dark:border-slate-400 text-slate-950 dark:text-slate-100 font-mono font-black text-xs rounded-full px-3.5 py-1.5 shadow-md shadow-slate-500/25 dark:shadow-[0_0_12px_rgba(226,232,240,0.25)] ring-2 ring-slate-400/50 backdrop-blur-md',
             'stat_card_class' => 'bg-white dark:bg-ink-950/40 border-slate-200 dark:border-ink-border/60 hover:border-slate-400/60 shadow-sm',
             'avatar_ring' => 'ring-4 ring-slate-400 dark:ring-slate-300 shadow-[0_0_18px_rgba(148,163,184,0.5)]',
             'accent_color' => '#64748B',

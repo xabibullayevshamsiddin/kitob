@@ -19,7 +19,7 @@
 
     $containerClasses = match($tier) {
         'gold'   => 'bg-amber-500/15 dark:bg-[#F59E0B]/15 border border-amber-500/40 dark:border-[#F59E0B]/40 text-amber-700 dark:text-[#F59E0B] shadow-sm dark:shadow-[0_0_10px_rgba(245,158,11,0.2)]',
-        'silver' => 'bg-gradient-to-r from-slate-100 via-white to-slate-200 dark:bg-[#E2E8F0]/15 border-2 border-slate-500 dark:border-[#E2E8F0]/50 text-slate-950 dark:text-[#E2E8F0] shadow-md shadow-slate-400/30 font-black ring-1 ring-slate-400/50',
+        'silver' => 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-500 dark:border-slate-400 text-slate-950 dark:text-slate-100 shadow-sm dark:shadow-[0_0_10px_rgba(226,232,240,0.25)] font-black ring-1 ring-slate-400/50',
         'bronze' => 'bg-amber-700/15 dark:bg-[#D97706]/15 border border-amber-700/35 dark:border-[#D97706]/40 text-amber-800 dark:text-[#D97706] shadow-sm dark:shadow-[0_0_8px_rgba(217,119,6,0.15)]',
         'top5'   => 'bg-indigo-500/15 dark:bg-[#6366F1]/10 border border-indigo-500/35 dark:border-[#6366F1]/30 text-indigo-700 dark:text-[#818CF8]',
     };
