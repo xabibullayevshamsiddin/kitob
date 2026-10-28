@@ -33,12 +33,6 @@
             /* ---------- Brendlangan loader (yangi Davra_books logosi bilan) — barcha sahifa uchun yagona ---------- */
             var logoUrl = @js(asset('storage/logo/photo_2026-10-26_14-48-15.jpg'));
             var logoFallback = @js(asset('images/logo.png'));
-            var brandText = 'Davra_books';
-            var word = brandText.split('').map(function (ch, n) {
-                var isAccent = n >= 5; // '_books'
-                return '<span class="' + (isAccent ? 'ks-cur-accent' : '') + '" style="--n:' + n + '">' + ch + '</span>';
-            }).join('');
-
             var cur = document.createElement('div');
             cur.className = 'ks-curtain';
             cur.setAttribute('aria-hidden', 'true');
@@ -53,7 +47,7 @@
                       '<img src="' + logoUrl + '" onerror="this.onerror=null;this.src=\'' + logoFallback + '\';" alt="Davra_books" class="ks-cur-logo-img">' +
                     '</div>' +
                   '</div>' +
-                  '<div class="ks-cur-word">' + word + '</div>' +
+                  '<div class="ks-cur-word">Davra_books</div>' +
                   '<div class="ks-cur-sub"><span>Yuklanmoqda</span><em></em></div>' +
                   '<div class="ks-cur-bar"></div>' +
                 '</div>';
@@ -371,14 +365,19 @@
     .ks-cur-logo-img { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; pointer-events: none; user-select: none; }
 
     .ks-cur-word {
-        font-family: var(--font-display, "Plus Jakarta Sans", system-ui, sans-serif);
-        font-weight: 700; font-size: clamp(1.85rem, 5.5vw, 2.5rem); letter-spacing: -0.02em; color: #F8FAFC; line-height: 1.2;
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-weight: 700;
+        font-size: 26px;
+        letter-spacing: -0.01em;
+        color: #F8FAFC;
+        line-height: 1.25;
+        margin: 0 auto;
+        display: inline-block;
+        animation: ksWordPulse 2.8s ease-in-out infinite alternate;
     }
-    .ks-cur-word span { display: inline-block; animation: ksLetter 2.2s ease-in-out infinite; animation-delay: calc(var(--n) * .07s); }
-    .ks-cur-word span.ks-cur-accent { color: #00E5FF; }
-    @keyframes ksLetter {
-        0%, 60%, 100% { transform: translateY(0); }
-        30% { transform: translateY(-6px); color: #2DD4BF; text-shadow: 0 0 24px rgba(45, 212, 191, 0.8), 0 0 12px rgba(0, 229, 255, 0.6); }
+    @keyframes ksWordPulse {
+        0%   { text-shadow: 0 0 10px rgba(0, 229, 255, 0.2); color: #F8FAFC; }
+        100% { text-shadow: 0 0 22px rgba(0, 229, 255, 0.6), 0 0 4px #FFFFFF; color: #FFFFFF; }
     }
     .ks-cur-sub {
         margin-top: 10px; font-family: "DM Mono", ui-monospace, monospace; font-size: 11px; font-weight: 600;
