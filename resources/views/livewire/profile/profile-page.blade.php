@@ -75,7 +75,6 @@
             @if($profileVisual['badge_text'])
                 <div class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex items-center animate-badge-float">
                     <span class="{{ $profileVisual['badge_class'] }} flex items-center gap-1.5 shadow-sm">
-                        <span class="text-xs inline-block animate-pulse">{{ $profileVisual['icon'] }}</span>
                         <span>{{ $profileVisual['badge_text'] }}</span>
                     </span>
                 </div>
@@ -125,10 +124,10 @@
                                 @endif
 
                                 {{-- Level Badge --}}
-                                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-mono font-bold flex items-center gap-1 select-none" title="{{ $user->level_title }}">
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-900 dark:text-amber-300 text-[11px] font-mono font-bold flex items-center gap-1 select-none shadow-sm" title="{{ $user->level_title }}">
                                     <span>{{ $user->level_icon }}</span>
                                     <span>Lv.{{ $user->level }}</span>
-                                    <span class="hidden sm:inline font-sans font-medium text-[10px] opacity-80">({{ $user->level_title }})</span>
+                                    <span class="hidden sm:inline font-sans font-bold text-[10px] text-amber-800 dark:text-amber-200">({{ $user->level_title }})</span>
                                 </span>
                             </div>
                             <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
