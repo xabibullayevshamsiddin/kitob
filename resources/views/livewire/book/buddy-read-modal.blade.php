@@ -617,7 +617,7 @@
             <!-- Room Top Bar -->
             <div class="flex items-center justify-between pb-3 border-b border-ink-border flex-wrap gap-2">
                 <div class="flex items-center gap-2">
-                    <button type="button" wire:click="selectBuddyRead(null)" class="text-xs font-mono text-mist hover:text-paper px-2.5 py-1 rounded-btn bg-ink-900 border border-ink-border transition-colors">
+                    <button type="button" wire:click="backToRooms" class="text-xs font-mono text-mist hover:text-paper px-2.5 py-1 rounded-btn bg-ink-900 border border-ink-border transition-colors">
                         ← Barcha xonalar
                     </button>
                     <div>

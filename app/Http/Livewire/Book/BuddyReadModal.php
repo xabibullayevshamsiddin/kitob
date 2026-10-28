@@ -176,9 +176,18 @@ class BuddyReadModal extends Component
         $this->revealedSpoilers[$messageId] = true;
     }
 
-    public function selectBuddyRead(?int $id): void
+    public function backToRooms(): void
     {
-        $this->activeBuddyReadId = $id;
+        $this->activeBuddyReadId = null;
+    }
+
+    public function selectBuddyRead($id = null): void
+    {
+        if ($id === null || $id === 'null' || $id === '' || $id === 0) {
+            $this->activeBuddyReadId = null;
+        } else {
+            $this->activeBuddyReadId = (int) $id;
+        }
     }
 
     public function render()
