@@ -48,41 +48,41 @@
             <span class="ks-eyebrow mr-2 hidden sm:inline-block shrink-0">{{ __('site.catalog.format') }}</span>
             
             <button type="button" wire:click="setFormat('all')"
-                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ ($format === 'all' && $readingStatus === 'all') ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ ($format === 'all' && $readingStatus === 'all') ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.all') }}</span>
-                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ ($format === 'all' && $readingStatus === 'all') ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ ($format === 'all' && $readingStatus === 'all') ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $totalBooksCount }}
                 </span>
             </button>
 
             <button type="button" wire:click="setFormat('pdf')"
-                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'pdf' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'pdf' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.pdf') }}</span>
-                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'pdf' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'pdf' ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $pdfBooksCount }}
                 </span>
             </button>
 
             <button type="button" wire:click="setFormat('audio')"
-                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'audio' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'audio' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.books.audio') }}</span>
-                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'audio' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'audio' ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $audioBooksCount }}
                 </span>
             </button>
 
             <button type="button" wire:click="setFormat('video')"
-                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'video' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'video' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.video_review') }}</span>
-                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'video' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'video' ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $videoBooksCount }}
                 </span>
             </button>
 
             <button type="button" wire:click="setFormat('quiz')"
-                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'quiz' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $format === 'quiz' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                 <span>{{ __('site.catalog.quiz_books') }}</span>
-                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'quiz' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $format === 'quiz' ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                     {{ $quizBooksCount }}
                 </span>
             </button>
@@ -91,27 +91,27 @@
                 <div class="h-5 w-px bg-ink-border mx-1 shrink-0"></div>
 
                 <button type="button" wire:click="setReadingStatus('reading')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'reading' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'reading' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                     <span>{{ __('site.catalog.im_reading') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'reading' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                    <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'reading' ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                         {{ $readingCount }}
                     </span>
                 </button>
 
                 <button type="button" wire:click="setReadingStatus('finished')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'finished' ? 'bg-emerald-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'finished' ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                     <span>{{ __('site.catalog.finished') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'finished' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                    <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'finished' ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                         {{ $finishedCount }}
                     </span>
                 </button>
 
                 <button type="button" wire:click="setReadingStatus('saved')"
-                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'saved' ? 'bg-amber-500 text-ink-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}"
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base flex items-center gap-1.5 cursor-pointer shrink-0 {{ $readingStatus === 'saved' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}"
                     title="{{ __('site.saved_books.filter_title') }}">
-                    <svg class="w-3.5 h-3.5 {{ $readingStatus === 'saved' ? 'text-ink-950' : 'text-amber-400' }}" viewBox="0 0 24 24" fill="{{ $readingStatus === 'saved' ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                    <svg class="w-3.5 h-3.5 {{ $readingStatus === 'saved' ? 'text-slate-950' : 'text-amber-400' }}" viewBox="0 0 24 24" fill="{{ $readingStatus === 'saved' ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                     <span>{{ __('site.catalog.saved') }}</span>
-                    <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'saved' ? 'bg-ink-950/20 text-ink-950 font-bold' : 'bg-ink-700 text-mist' }}">
+                    <span class="px-1.5 py-0.2 rounded-badge font-mono text-[10px] {{ $readingStatus === 'saved' ? 'bg-slate-950/15 text-slate-950 font-bold' : 'bg-ink-700 text-mist' }}">
                         {{ $savedBooksCount }}
                     </span>
                 </button>
@@ -124,13 +124,13 @@
                 <span class="ks-eyebrow mr-2 hidden sm:inline-block shrink-0">{{ __('site.catalog.genre') }}</span>
                 
                 <button type="button" wire:click="setGenre('')"
-                    class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === '' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
+                    class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === '' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                     {{ __('site.catalog.all_genres') }}
                 </button>
 
                 @foreach ($genres as $g)
                     <button type="button" wire:click="setGenre('{{ $g }}')"
-                        class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === $g ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
+                        class="px-3 py-1.5 rounded-btn text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === $g ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-ink-800 text-paper hover:bg-ink-700 border border-ink-border' }}">
                         {{ $g }}
                     </button>
                 @endforeach
