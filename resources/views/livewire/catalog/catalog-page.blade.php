@@ -124,13 +124,13 @@
                 <span class="ks-eyebrow mr-2 hidden sm:inline-block shrink-0">{{ __('site.catalog.genre') }}</span>
                 
                 <button type="button" wire:click="setGenre('')"
-                    class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === '' ? 'bg-paper text-ink-950 font-bold' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
+                    class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === '' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
                     {{ __('site.catalog.all_genres') }}
                 </button>
 
                 @foreach ($genres as $g)
                     <button type="button" wire:click="setGenre('{{ $g }}')"
-                        class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === $g ? 'bg-paper text-ink-950 font-bold' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
+                        class="px-3 py-1 rounded-badge font-mono text-xs font-medium transition-colors duration-base cursor-pointer shrink-0 {{ $genre === $g ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-mist hover:text-paper bg-ink-800 border border-ink-border' }}">
                         {{ $g }}
                     </button>
                 @endforeach
