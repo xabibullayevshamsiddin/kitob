@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TelegramUpdate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
@@ -40,7 +41,7 @@ class TelegramWebhookController extends Controller
             ], 400);
         }
 
-        // 3. De-duplication: Agar ushbu update_id allaqachon qayta ishlangan bo'lsa
+        // 3. De-duplication: Agar ushbu update_id allaqachon muvaffaqiyatli qayta ishlangan bo'lsa
         if (TelegramUpdate::hasBeenProcessed($updateId)) {
             Log::info("Telegram webhook: update_id #{$updateId} avval qayta ishlangan (de-duplicated).");
 
@@ -50,31 +51,51 @@ class TelegramWebhookController extends Controller
             ]);
         }
 
+        // Parallel bir xil update so'rovlarini ushlab qolish (15 soniyalik qulf)
+        $lockKey = "tg_update_lock_{$updateId}";
+        if (!Cache::add($lockKey, true, now()->addSeconds(15))) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Update is currently being processed',
+            ], 429);
+        }
+
         // 4. Update turini va chat ID'sini aniqlash
         $updateType = $this->determineUpdateType($request);
         $chatId = $this->extractChatId($request, $updateType);
 
-        // 5. De-duplication jadvaliga yozib qo'yish
-        TelegramUpdate::recordIfNew($updateId, $chatId, $updateType);
-
-        Log::info("Telegram webhook: update_id #{$updateId} muvaffaqiyatli qabul qilindi.", [
-            'update_id'   => $updateId,
-            'type'        => $updateType,
-            'chat_id'     => $chatId,
-        ]);
-
-        // Bot xizmatiga yangilanishni qayta ishlash uchun uzatish
+        // 5. Bot xizmatiga yangilanishni qayta ishlash uchun uzatish
         try {
             $botService->handleUpdate($request->all());
-        } catch (\Throwable $e) {
-            Log::error("Telegram bot xabarni qayta ishlashda xato: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-        }
 
-        return response()->json([
-            'ok' => true,
-        ]);
+            // Faqat muvaffaqiyatli ishlangandan so'ng de-duplication bazasiga qayd etamiz
+            TelegramUpdate::recordIfNew($updateId, $chatId, $updateType);
+
+            Cache::forget($lockKey);
+
+            Log::info("Telegram webhook: update_id #{$updateId} muvaffaqiyatli qayta ishlandi.", [
+                'update_id'   => $updateId,
+                'type'        => $updateType,
+                'chat_id'     => $chatId,
+            ]);
+
+            return response()->json([
+                'ok' => true,
+            ]);
+        } catch (\Throwable $e) {
+            Cache::forget($lockKey);
+
+            Log::error("Telegram bot xabarni qayta ishlashda xato yuz berdi: " . $e->getMessage(), [
+                'update_id' => $updateId,
+                'trace'     => $e->getTraceAsString(),
+            ]);
+
+            // Xatolikda 500 javobini qaytaramiz — shunda Telegram ushbu xabarni qaytadan jo'natadi (retry)
+            return response()->json([
+                'ok'    => false,
+                'error' => 'Processing failed, please retry',
+            ], 500);
+        }
     }
 
     /**

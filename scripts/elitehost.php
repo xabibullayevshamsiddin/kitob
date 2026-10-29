@@ -15,8 +15,40 @@
 class EliteHost
 {
     private const BASE_URL = 'https://console.elitehost.uz/api/client';
-    private const API_KEY  = 'ptlc_1Gt67uvIOwijNpA863CzJ63P00oM4NGQzAAcqJuCgKe';
     private const SERVER_ID= 'b3357df7';
+
+    public static function getApiKey(): string
+    {
+        if ($envKey = getenv('ELITEHOST_API_KEY')) {
+            return trim($envKey);
+        }
+        if (!empty($_SERVER['ELITEHOST_API_KEY'])) {
+            return trim($_SERVER['ELITEHOST_API_KEY']);
+        }
+        $keyFiles = [
+            __DIR__ . '/../.elitehost.key',
+            __DIR__ . '/.elitehost.key',
+        ];
+        foreach ($keyFiles as $file) {
+            if (file_exists($file)) {
+                $val = trim((string) file_get_contents($file));
+                if (!empty($val)) {
+                    return $val;
+                }
+            }
+        }
+        // Try reading ELITEHOST_API_KEY from root .env
+        $envPath = __DIR__ . '/../.env';
+        if (file_exists($envPath)) {
+            $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                if (str_starts_with(trim($line), 'ELITEHOST_API_KEY=')) {
+                    return trim(explode('=', $line, 2)[1]);
+                }
+            }
+        }
+        throw new RuntimeException("EliteHost API kaliti topilmadi. .elitehost.key fayliga yoki ELITEHOST_API_KEY muhit o'zgaruvchisiga kiriting.");
+    }
 
     public static function request(string $method, string $endpoint, $data = null, array $headers = []): array
     {
@@ -24,7 +56,7 @@ class EliteHost
         $ch = curl_init($url);
 
         $defaultHeaders = [
-            'Authorization: Bearer ' . self::API_KEY,
+            'Authorization: Bearer ' . self::getApiKey(),
             'Accept: Application/vnd.pterodactyl.v1+json',
         ];
 

@@ -1,7 +1,26 @@
 <?php
-$token = "8529445714:AAF4ngytYL5Zl3McsC7D03GEH4W2L4UeHy0";
+// Token va secretni .env fayldan o'qiymiz
+$token = getenv('TELEGRAM_BOT_TOKEN') ?: '';
+$secret = getenv('TELEGRAM_WEBHOOK_SECRET') ?: '';
+
+if (!$token || !$secret) {
+    $envPath = __DIR__ . '/../.env';
+    if (file_exists($envPath)) {
+        $env = file_get_contents($envPath);
+        if (!$token && preg_match('/^TELEGRAM_BOT_TOKEN=(.*)$/m', $env, $m)) {
+            $token = trim($m[1], " \t\n\r\0\x0B\"'");
+        }
+        if (!$secret && preg_match('/^TELEGRAM_WEBHOOK_SECRET=(.*)$/m', $env, $m)) {
+            $secret = trim($m[1], " \t\n\r\0\x0B\"'");
+        }
+    }
+}
+
+if (!$token) {
+    die("❌ TELEGRAM_BOT_TOKEN .env faylida topilmadi.\n");
+}
+
 $webhookUrl = "https://kitobxon.elitehost.uz/telegram/webhook";
-$secret = "007867606sh";  // Remote .env TELEGRAM_WEBHOOK_SECRET
 
 function tgApi(string $token, string $method, array $data = []): array {
     $ch = curl_init("https://api.telegram.org/bot{$token}/{$method}");

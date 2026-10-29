@@ -85,7 +85,7 @@ class PasswordResetController extends Controller
                     . "Platformada parolingizni tiklash yoki yangi parol o'rnatish uchun quyidagi tugmani bosing yoki havolaga kiring:\n\n"
                     . "👉 <a href=\"{$publicResetUrl}\">{$publicResetUrl}</a>\n\n";
 
-                if ($request->getHost() === 'localhost' || $request->getHost() === '127.0.0.1') {
+                if (app()->environment('local', 'testing')) {
                     $message .= "💻 <b>Lokal kompyuter (localhost) havolasi:</b>\n<code>{$localResetUrl}</code>\n\n";
                 }
 

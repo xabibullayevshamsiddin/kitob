@@ -1,27 +1,33 @@
 <?php
-// Update TELEGRAM_BOT_TOKEN and TELEGRAM_BOT_USERNAME in remote .env
-define('LARAVEL_START', microtime(true));
-require __DIR__ . '/../vendor/autoload.php';
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-$kernel->bootstrap();
+// Update TELEGRAM_BOT_TOKEN and TELEGRAM_BOT_USERNAME in .env
+// Usage: php scripts/update_bot_token.php <token> [username]
+$newToken = $argv[1] ?? null;
+$newUsername = $argv[2] ?? null;
 
-$envPath = base_path('.env');
+if (!$newToken) {
+    die("Usage: php scripts/update_bot_token.php <token> [username]\n");
+}
+
+$envPath = __DIR__ . '/../.env';
+if (!file_exists($envPath)) {
+    die("❌ .env fayli topilmadi: {$envPath}\n");
+}
+
 $content = file_get_contents($envPath);
 
-// Update token
 $content = preg_replace(
     '/^TELEGRAM_BOT_TOKEN=.*/m',
-    'TELEGRAM_BOT_TOKEN=8529445714:AAF4ngytYL5Zl3McsC7D03GEH4W2L4UeHy0',
+    'TELEGRAM_BOT_TOKEN=' . $newToken,
     $content
 );
 
-// Update username
-$content = preg_replace(
-    '/^TELEGRAM_BOT_USERNAME=.*/m',
-    'TELEGRAM_BOT_USERNAME=davra_books_bot',
-    $content
-);
+if ($newUsername) {
+    $content = preg_replace(
+        '/^TELEGRAM_BOT_USERNAME=.*/m',
+        'TELEGRAM_BOT_USERNAME=' . $newUsername,
+        $content
+    );
+}
 
 file_put_contents($envPath, $content);
 echo "✅ .env yangilandi!\n";

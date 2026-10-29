@@ -9,6 +9,8 @@
 /vendor
 .env
 .env.backup
+.elitehost.key
+*.key
 .phpunit.result.cache
 docker-compose.override.yml
 Homestead.json

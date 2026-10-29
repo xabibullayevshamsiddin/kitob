@@ -95,11 +95,8 @@ class PhoneRegisterController extends Controller
             'password.confirmed'  => "Kiritilgan parollar bir-biriga mos kelmadi.",
         ]);
 
-        // Localhost muhitida Telegram tasdiqlashni aylanib o'tish (to'g'ridan-to'g'ri hisob ochish)
-        $isLocal = app()->environment('local')
-            || in_array($request->getHost(), ['localhost', '127.0.0.1', '::1'])
-            || str_ends_with($request->getHost(), '.test')
-            || str_ends_with($request->getHost(), '.local');
+        // Local/testing muhitida Telegram tasdiqlashni aylanib o'tish (faqat lokal ishlab chiqish uchun)
+        $isLocal = app()->environment('local', 'testing');
 
         if ($isLocal) {
             $welcomeCoins = (int) setting('welcome_coins', 50);
@@ -182,10 +179,7 @@ class PhoneRegisterController extends Controller
             ]);
         }
 
-        $isLocal = app()->environment('local')
-            || in_array(request()->getHost(), ['localhost', '127.0.0.1', '::1'])
-            || str_ends_with(request()->getHost(), '.test')
-            || str_ends_with(request()->getHost(), '.local');
+        $isLocal = app()->environment('local', 'testing');
 
         if ($isLocal && $pending) {
             $welcomeCoins = (int) setting('welcome_coins', 50);

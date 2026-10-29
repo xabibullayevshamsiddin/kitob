@@ -1,6 +1,17 @@
 <?php
-// 30 soniya kuting va webhook xatolarini tekshiring
-$token = "8529445714:AAF4ngytYL5Zl3McsC7D03GEH4W2L4UeHy0";
+// Webhook xatolarini tekshirish
+$token = getenv('TELEGRAM_BOT_TOKEN') ?: '';
+if (!$token) {
+    $envPath = __DIR__ . '/../.env';
+    if (file_exists($envPath)) {
+        if (preg_match('/^TELEGRAM_BOT_TOKEN=(.*)$/m', file_get_contents($envPath), $m)) {
+            $token = trim($m[1], " \t\n\r\0\x0B\"'");
+        }
+    }
+}
+if (!$token) {
+    die("❌ TELEGRAM_BOT_TOKEN .env faylida topilmadi.\n");
+}
 
 $ch = curl_init("https://api.telegram.org/bot{$token}/getWebhookInfo");
 curl_setopt_array($ch, [

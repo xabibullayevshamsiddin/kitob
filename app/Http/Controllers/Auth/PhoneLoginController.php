@@ -63,11 +63,8 @@ class PhoneLoginController extends Controller
             ]);
         }
 
-        // Localhost muhitida Telegram 2FA kodini aylanib o'tish (to'g'ridan-to'g'ri tizimga kirish)
-        $isLocal = app()->environment('local')
-            || in_array($request->getHost(), ['localhost', '127.0.0.1', '::1'])
-            || str_ends_with($request->getHost(), '.test')
-            || str_ends_with($request->getHost(), '.local');
+        // Localhost/testing muhitida Telegram 2FA kodini aylanib o'tish (faqat lokal ishlab chiqish uchun)
+        $isLocal = app()->environment('local', 'testing');
 
         $isAdminWithoutTelegram = ($user->isAdmin() && empty($user->telegram_id));
 
@@ -148,11 +145,8 @@ class PhoneLoginController extends Controller
             return redirect()->route('login');
         }
 
-        // Localhost muhitida tasdiqlash sahifasiga kelib qolgan bo'lsa ham avtomatik kiritish
-        $isLocal = app()->environment('local')
-            || in_array(request()->getHost(), ['localhost', '127.0.0.1', '::1'])
-            || str_ends_with(request()->getHost(), '.test')
-            || str_ends_with(request()->getHost(), '.local');
+        // Local/testing muhitida tasdiqlash sahifasiga kelib qolgan bo'lsa ham avtomatik kiritish
+        $isLocal = app()->environment('local', 'testing');
 
         $isAdminWithoutTelegram = ($user->isAdmin() && empty($user->telegram_id));
 
@@ -211,10 +205,7 @@ class PhoneLoginController extends Controller
 
         $enteredCode = trim((string) $request->input('code'));
 
-        $isLocal = app()->environment('local')
-            || in_array($request->getHost(), ['localhost', '127.0.0.1', '::1'])
-            || str_ends_with($request->getHost(), '.test')
-            || str_ends_with($request->getHost(), '.local');
+        $isLocal = app()->environment('local', 'testing');
 
         if ($enteredCode !== (string) $loginData['code'] && !($isLocal && in_array($enteredCode, ['111111', '000000', '123456']))) {
             Cache::put("login_2fa_{$token}", $loginData, now()->addMinutes(5));
