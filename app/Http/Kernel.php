@@ -25,12 +25,14 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\TrackDailyStreak::class,
+            \App\Http\Middleware\ProcessExpiredBansMiddleware::class,
             \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         ],
 
         'api' => [
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\ProcessExpiredBansMiddleware::class,
             \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         ],
     ];

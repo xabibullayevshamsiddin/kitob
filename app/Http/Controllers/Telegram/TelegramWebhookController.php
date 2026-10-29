@@ -51,6 +51,15 @@ class TelegramWebhookController extends Controller
             ]);
         }
 
+        // Opportunistic expired bans check on incoming Telegram activity
+        if (Cache::add('process_expired_bans_tg_lock', 1, 30)) {
+            try {
+                \App\Models\User::processExpiredBans();
+            } catch (\Throwable $e) {
+                Log::warning('Telegram webhook expired bans error: ' . $e->getMessage());
+            }
+        }
+
         // Parallel bir xil update so'rovlarini ushlab qolish (15 soniyalik qulf)
         $lockKey = "tg_update_lock_{$updateId}";
         if (!Cache::add($lockKey, true, now()->addSeconds(15))) {

@@ -883,19 +883,22 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isTelegramNotificationEnabled(string $type): bool
     {
+        // Xavfsizlik va Ban/Unban xabarlari hech qachon o'chirilmaydi (doim yoqiq)
+        if ($type === 'ban_status' || $type === 'security') {
+            return true;
+        }
+
         $prefs = is_array($this->notification_prefs) ? $this->notification_prefs : [];
 
         if ($type === 'quiet_hours') {
             return (bool) ($prefs['quiet_hours'] ?? false);
         }
 
-        if ($type !== 'security') {
-            if (array_key_exists('enabled', $prefs) && !$prefs['enabled']) {
-                return false;
-            }
-            if (array_key_exists('telegram_enabled', $prefs) && !$prefs['telegram_enabled']) {
-                return false;
-            }
+        if (array_key_exists('enabled', $prefs) && !$prefs['enabled']) {
+            return false;
+        }
+        if (array_key_exists('telegram_enabled', $prefs) && !$prefs['telegram_enabled']) {
+            return false;
         }
 
         return (bool) ($prefs[$type] ?? true);
@@ -905,6 +908,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         if (!$this->isTelegramLinked() || $this->isTelegramBlocked()) {
             return false;
+        }
+
+        if ($type === 'ban_status' || $type === 'security') {
+            return true;
         }
 
         if ($type === null || $type === '') {

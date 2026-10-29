@@ -51,6 +51,7 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Tashkent');
 
         // Vaqtinchalik ban muddati tugagan foydalanuvchilarni avtomatik blokdan chiqarish va Telegram xabar yuborish
+        $schedule->command('users:process-expired-bans')->everyMinute();
         $schedule->call(function () {
             \App\Models\User::processExpiredBans();
         })->everyMinute();

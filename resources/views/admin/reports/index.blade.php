@@ -114,15 +114,23 @@
                     @php
                         $offender = $report->reportedUser;
                         $reporter = $report->reporter;
-                        $primaryUser = $offender ?? $reporter;
+                        $primaryUser = null;
 
-                        // Agar primaryUser ban olmagan bo'lsa, lekin murojaat matnida yoki mavzusida ko'rsatilgan foydalanuvchi (#ID) bo'lsa:
-                        if ((!$primaryUser || !$primaryUser->isBanned()) && ($report->source === 'Ban Apellyatsiyasi' || str_contains($report->reason ?? '', 'apellyatsiya'))) {
+                        // 1. Agar murojaat matnida yoki mavzuda aniq foydalanuvchi ID (#ID) ko'rsatilgan bo'lsa (apellyatsiyalar uchun):
+                        if ($report->source === 'Ban Apellyatsiyasi' || str_contains($report->reason ?? '', 'apellyatsiya') || str_contains($report->message_content ?? '', 'APELLYATSIYA')) {
                             if (preg_match('/#(\d+)/', ($report->message_content ?? '') . ' ' . ($report->reason ?? ''), $mId)) {
-                                $candidate = \App\Models\User::with('bannedBy')->find((int) $mId[1]);
-                                if ($candidate) {
-                                    $primaryUser = $candidate;
-                                }
+                                $primaryUser = \App\Models\User::with('bannedBy')->find((int) $mId[1]);
+                            }
+                        }
+
+                        // 2. Agar hali aniqlanmagan bo'lsa, shikoyat qilingan yoki yuboruvchidan ban olganini tanlaymiz:
+                        if (!$primaryUser) {
+                            if ($offender && $offender->isBanned()) {
+                                $primaryUser = $offender;
+                            } elseif ($reporter && $reporter->isBanned()) {
+                                $primaryUser = $reporter;
+                            } else {
+                                $primaryUser = $offender ?? $reporter;
                             }
                         }
 

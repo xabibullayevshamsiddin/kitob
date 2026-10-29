@@ -127,13 +127,14 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
         return redirect()->route('contact')->with('success', '🚩 Qoidabuzarlik bo\'yicha shikoyatingiz ma\'muriyatga yetkazildi! Moderatorlar tez orada tekshirib, tegishli chora (ban) ko\'rishadi.');
     }
 
-    // Yuboruvchi foydalanuvchini aniqlash (avtorizatsiya qilingan bo'lsa, yoki appeal_user_id / user_id orqali)
-    $senderUser = auth()->user();
-
-    if (!$senderUser && ($req->filled('appeal_user_id') || $req->filled('user_id'))) {
-        $targetId = (int) ($req->input('appeal_user_id') ?: $req->input('user_id'));
-        $senderUser = \App\Models\User::find($targetId);
+    // 1. Apellyatsiya qilinayotgan maqsadli foydalanuvchini aniqlash (agar user_id yoki appeal_user_id kelsa)
+    $targetAppealUser = null;
+    if ($req->filled('appeal_user_id') || $req->filled('user_id')) {
+        $targetAppealUser = \App\Models\User::find((int) ($req->input('appeal_user_id') ?: $req->input('user_id')));
     }
+
+    // 2. Yuboruvchi foydalanuvchini aniqlash
+    $senderUser = auth()->user() ?: $targetAppealUser;
 
     $rawContact = trim((string) ($req->input('phone') ?? $req->input('email') ?? ''));
 
@@ -147,20 +148,24 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
             ->first();
     }
 
-    // Agar foydalanuvchi tizimda aniqlangan bo'lsa, ism va telefon raqamni o'zgartirib bo'lmaydigan qilib bazadan olamiz
-    $finalName = $senderUser ? $senderUser->name : (trim((string) $req->input('name')) ?: 'Mehmon');
-    $finalPhone = $senderUser
-        ? ($senderUser->phone ?: ('@' . $senderUser->username))
-        : ($rawContact ?: 'Ko\'rsatilmagan');
+    $bannedTarget = ($targetAppealUser && $targetAppealUser->isBanned())
+        ? $targetAppealUser
+        : ($senderUser && $senderUser->isBanned() ? $senderUser : $targetAppealUser);
 
-    $isBannedSender = ($senderUser && $senderUser->isBanned()) || $req->input('is_appeal') == '1';
+    $isBannedSender = (bool) $bannedTarget || $req->input('is_appeal') == '1';
 
     if ($isBannedSender) {
-        $headerInfo = $senderUser
-            ? "👤 Foydalanuvchi: {$finalName} (@{$senderUser->username}, ID: #{$senderUser->id})\n"
+        $primaryAppealUser = $bannedTarget ?: $senderUser;
+        $finalName = $primaryAppealUser ? $primaryAppealUser->name : (trim((string) $req->input('name')) ?: 'Mehmon');
+        $finalPhone = $primaryAppealUser
+            ? ($primaryAppealUser->phone ?: ('@' . $primaryAppealUser->username))
+            : ($rawContact ?: 'Ko\'rsatilmagan');
+
+        $headerInfo = $primaryAppealUser
+            ? "👤 Foydalanuvchi: {$finalName} (@{$primaryAppealUser->username}, ID: #{$primaryAppealUser->id})\n"
               . "📞 Telefon raqam: {$finalPhone}\n"
-              . "🚫 Ban holati: " . ($senderUser->isBanned() ? $senderUser->ban_remaining : 'Faol emas') . "\n"
-              . "⚠️ Ban sababi: " . ($senderUser->ban_reason ?? 'Ko\'rsatilmagan') . "\n"
+              . "🚫 Ban holati: " . ($primaryAppealUser->isBanned() ? $primaryAppealUser->ban_remaining : 'Faol emas') . "\n"
+              . "⚠️ Ban sababi: " . ($primaryAppealUser->ban_reason ?? 'Ko\'rsatilmagan') . "\n"
             : "👤 Yuboruvchi: {$finalName}\n📞 Telefon raqam: {$finalPhone}\n";
 
         $fullContent = "[⚖️ BAN BO'YICHA APELLYATSIYA / MUROJAAT]\n"
@@ -170,7 +175,7 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
 
         \App\Models\Report::create([
             'reporter_id'      => $senderUser?->id ?? auth()->id(),
-            'reported_user_id' => $senderUser?->id ?? auth()->id(),
+            'reported_user_id' => $primaryAppealUser?->id ?? $senderUser?->id ?? auth()->id(),
             'source'           => 'Ban Apellyatsiyasi',
             'message_content'  => $fullContent,
             'link'             => null,
@@ -480,6 +485,21 @@ Route::get('/system/setup', function (\Illuminate\Http\Request $request) {
     return response()->json($results, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 })->name('system.setup');
 
+
+// ── Cron & Webhook trigger for expired bans ──
+Route::get('/cron/process-expired-bans', function () {
+    $beforeUsers = \App\Models\User::where('is_banned', true)->get(['id', 'name', 'username', 'banned_until', 'telegram_id'])->toArray();
+    $unbannedCount = \App\Models\User::processExpiredBans();
+    $afterUsers = \App\Models\User::where('is_banned', true)->get(['id', 'name', 'username', 'banned_until'])->toArray();
+
+    return response()->json([
+        'success'        => true,
+        'unbanned_count' => $unbannedCount,
+        'before'         => $beforeUsers,
+        'remaining'      => $afterUsers,
+        'timestamp'      => now()->toIso8601String(),
+    ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+})->name('cron.expired-bans');
 
 // ── SEO: sitemap.xml va robots.txt ──
 Route::get('/robots.txt', function () {
