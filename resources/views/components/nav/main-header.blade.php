@@ -304,14 +304,6 @@
                             </svg>
                             <span :class="coinsBump ? 'ks-coin-rolling' : ''" x-text="totalCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
                         </a>
-                        @if(auth()->user()->isAdmin() || auth()->user()->hasRole('admin'))
-                            <button type="button"
-                                    onclick="window.openAdminTopupModal && window.openAdminTopupModal()"
-                                    class="ml-1.5 px-2 py-0.5 rounded-badge bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/30 text-amber-600 dark:text-amber-300 font-mono text-[10px] font-bold transition-all shadow-sm active:scale-95"
-                                    title="Admin: O'z hisobingizga tekinga tanga yoki ball qo'shish">
-                                + 🪙
-                            </button>
-                        @endif
 
                         {{-- Floating +Coins Pop Animation (Yuqoriga uchuvchi) --}}
                         <template x-if="coinFloater">
