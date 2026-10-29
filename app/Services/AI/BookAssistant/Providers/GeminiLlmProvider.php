@@ -19,8 +19,8 @@ class GeminiLlmProvider implements LlmProviderInterface
         $cfg = config('ai.providers.gemini', []);
         $this->apiKey = $cfg['api_key'] ?? env('GEMINI_API_KEY');
         $this->baseUrl = rtrim((string) ($cfg['base_url'] ?? 'https://generativelanguage.googleapis.com/v1beta'), '/');
-        $this->model = (string) ($cfg['chat_model'] ?? 'gemini-3.8-flash');
-        $this->timeout = (int) ($cfg['timeout'] ?? 60);
+        $this->model = (string) ($cfg['chat_model'] ?? 'gemini-3.1-flash-lite');
+        $this->timeout = (int) ($cfg['timeout'] ?? 30);
         $this->maxOutputTokens = (int) config('ai.max_output_tokens', 700);
     }
 
@@ -37,7 +37,7 @@ class GeminiLlmProvider implements LlmProviderInterface
     public function chat(array $messages, array $options = []): array
     {
         if (empty($this->apiKey) || str_starts_with($this->apiKey, 'your-')) {
-            throw new AiProviderException("Gemini API kaliti sozlanmagan (GEMINI_API_KEY).");
+            throw new AiProviderException("Gemini API kaliti sozlanmagan (GEMINI_API_KEY).", 401, null, 401);
         }
 
         $model = (string) ($options['model'] ?? $this->model);
@@ -86,41 +86,55 @@ class GeminiLlmProvider implements LlmProviderInterface
 
         $url = $this->baseUrl . '/models/' . urlencode($model) . ':generateContent?key=' . urlencode($this->apiKey);
 
-        $response = Http::withHeaders([
-            'x-goog-api-key' => $this->apiKey,
-        ])
-            ->retry(2, 500, throw: false)
-            ->timeout($this->timeout)
-            ->acceptJson()
-            ->post($url, $payload);
+        try {
+            $response = Http::withHeaders([
+                'x-goog-api-key' => $this->apiKey,
+            ])
+                ->retry(2, 500, throw: false)
+                ->timeout($this->timeout)
+                ->acceptJson()
+                ->post($url, $payload);
+        } catch (\Throwable $e) {
+            throw new AiProviderException("Gemini tarmoq xatosi (timeout/aloqa): " . $e->getMessage(), 408, $e, 408);
+        }
 
         if (!$response->successful()) {
-            $errMsg = $response->json('error.message') ?: ('HTTP ' . $response->status());
+            $status = $response->status();
+            $errMsg = (string) ($response->json('error.message') ?: ('HTTP ' . $status));
 
             // Agar Quota exceeded, 429 yoki 404 bo'lsa, mavjud zaxira modellarni sinab ko'ramiz
-            if (str_contains($errMsg, 'Quota exceeded') || in_array($response->status(), [429, 404], true)) {
-                $fallbacks = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
+            if (str_contains($errMsg, 'Quota exceeded') || in_array($status, [429, 404], true)) {
+                $fallbacks = ['gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.0-flash'];
                 foreach ($fallbacks as $fbModel) {
                     if ($fbModel === $model) {
                         continue;
                     }
                     $fallbackUrl = $this->baseUrl . '/models/' . urlencode($fbModel) . ':generateContent?key=' . urlencode($this->apiKey);
-                    $fbResponse = Http::withHeaders(['x-goog-api-key' => $this->apiKey])
-                        ->timeout($this->timeout)
-                        ->acceptJson()
-                        ->post($fallbackUrl, $payload);
+                    try {
+                        $fbResponse = Http::withHeaders(['x-goog-api-key' => $this->apiKey])
+                            ->timeout($this->timeout)
+                            ->acceptJson()
+                            ->post($fallbackUrl, $payload);
 
-                    if ($fbResponse->successful()) {
-                        $response = $fbResponse;
-                        $model = $fbModel;
-                        break;
+                        if ($fbResponse->successful()) {
+                            $response = $fbResponse;
+                            $model = $fbModel;
+                            break;
+                        }
+                    } catch (\Throwable) {
+                        // keyingi model
                     }
                 }
             }
 
             if (!$response->successful()) {
-                $errMsg = $response->json('error.message') ?: ('HTTP ' . $response->status());
-                throw new AiProviderException('Gemini xatosi: ' . $errMsg);
+                $status = $response->status();
+                $errMsg = (string) ($response->json('error.message') ?: ('HTTP ' . $status));
+                $retryAfter = (int) ($response->header('Retry-After') ?? 0);
+                if ($retryAfter <= 0 && preg_match('/try again in (\d+(\.\d+)?)s/i', $errMsg, $m)) {
+                    $retryAfter = (int) ceil((float) $m[1]);
+                }
+                throw new AiProviderException('Gemini xatosi: ' . $errMsg, $status, null, $status, $retryAfter ?: null);
             }
         }
 
@@ -139,7 +153,7 @@ class GeminiLlmProvider implements LlmProviderInterface
         $content = trim($content);
         if ($content === '') {
             $finishReason = $candidate['finishReason'] ?? 'UNKNOWN';
-            throw new AiProviderException("Gemini bo'sh javob qaytardi (sabab: {$finishReason}).");
+            throw new AiProviderException("Gemini bo'sh javob qaytardi (sabab: {$finishReason}).", 500, null, 500);
         }
 
         $usage = $data['usageMetadata'] ?? [];

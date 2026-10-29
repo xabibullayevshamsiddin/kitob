@@ -12,18 +12,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Asosiy LLM va Embedding Provayderlari
+    | Asosiy LLM va Zaxira LLM Provayderlari
     |--------------------------------------------------------------------------
-    | Qo'llab-quvvatlanadigan LLM provayderlar: "openai", "anthropic"
-    | Qo'llab-quvvatlanadigan Embedding provayderlar: "openai", "none" (faqat FULLTEXT)
+    | Asosiy LLM provayder: "groq"
+    | Zaxira LLM provayder (fallback): "gemini"
+    | Qo'llab-quvvatlanadigan boshqa provayderlar: "openai", "anthropic"
+    | Qo'llab-quvvatlanadigan Embedding provayderlar: "gemini", "openai", "none" (faqat FULLTEXT)
     |
     | Eslatma: Model nomlari kodga qotirilmagan. Rasmiy hujjatlar bo'yicha
     | joriy tavsiya etilgan modellar:
-    | - OpenAI Chat: "gpt-4o-mini" yoki "gpt-4o" (gpt-3.5-turbo eskirgan, ishlatilmaydi)
-    | - OpenAI Embedding: "text-embedding-3-small" (1536 o'lchamli, float32)
+    | - Groq Chat: "qwen/qwen3.8-27b", "openai/gpt-oss-120b", "llama-3.1-8b-instant"
+    | - Gemini Chat: "gemini-flash-lite-latest", "gemini-2.5-flash"
+    | - OpenAI Chat: "gpt-4o-mini" yoki "gpt-4o"
     | - Anthropic Chat: "claude-3-5-haiku-latest" yoki "claude-sonnet-4-20250514"
     */
-    'provider' => env('AI_PROVIDER', 'gemini'),
+    'provider' => env('AI_PROVIDER', 'groq'),
+
+    'fallback_provider' => env('AI_FALLBACK_PROVIDER', 'gemini'),
 
     'embedding_provider' => env('AI_EMBEDDING_PROVIDER', 'gemini'),
 
@@ -47,15 +52,15 @@ return [
         'gemini' => [
             'api_key'         => env('GEMINI_API_KEY'),
             'base_url'        => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
-            'chat_model'      => env('GEMINI_CHAT_MODEL', 'gemini-flash-lite-latest'),
+            'chat_model'      => env('GEMINI_CHAT_MODEL', 'gemini-3.1-flash-lite'),
             'embedding_model' => env('GEMINI_EMBEDDING_MODEL', 'gemini-embedding-2'),
-            'timeout'         => (int) env('GEMINI_TIMEOUT', 60),
+            'timeout'         => (int) env('GEMINI_TIMEOUT', 30),
         ],
 
         'groq' => [
             'api_key'    => env('GROQ_API_KEY'),
             'base_url'   => env('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
-            'chat_model' => env('GROQ_CHAT_MODEL', 'llama-3.3-70b-versatile'),
+            'chat_model' => env('GROQ_CHAT_MODEL', 'qwen/qwen3.8-27b'),
             'timeout'    => (int) env('GROQ_TIMEOUT', 30),
         ],
     ],

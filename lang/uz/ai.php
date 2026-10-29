@@ -4,7 +4,7 @@ return [
     'title' => 'AI yordamchi',
     'off_topic' => 'Bu savol «:book» kitobiga aloqador emas. Kitob mazmuni haqida so\'rang.',
     'no_answer' => 'Kitobda bu haqida ma\'lumot topa olmadim.',
-    'provider_error' => 'AI hozir javob bera olmadi, birozdan keyin urinib ko\'ring.',
+    'provider_error' => 'AI xizmati hozir vaqtincha band. Birozdan keyin qayta urinib ko‘ring.',
     'disabled' => 'AI yordamchi hozircha o\'chirilgan.',
     'book_not_ready' => 'Ushbu kitob uchun AI yordamchi hali tayyor emas.',
     'unauthorized' => 'Ushbu kitobdan foydalanish uchun ruxsatingiz yo\'q.',

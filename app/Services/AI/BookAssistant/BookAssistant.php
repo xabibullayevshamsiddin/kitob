@@ -94,9 +94,10 @@ class BookAssistant
             ->where('created_at', '>=', $todayStart)
             ->count();
 
+        $mustConsumePaidQuestion = false;
         if ($todayUsedCount >= $dailyLimit) {
             $shopService = app(\App\Services\Shop\ShopService::class);
-            if (!$shopService->consumeAiQuestion($user)) {
+            if (!$shopService->hasAvailableAiQuestions($user)) {
                 $resetAt = $nowTashkent->copy()->endOfDay();
                 $diffHours = (int) $nowTashkent->diffInHours($resetAt);
                 $diffMinutes = (int) ($nowTashkent->diffInMinutes($resetAt) % 60);
@@ -114,6 +115,7 @@ class BookAssistant
                     'time_left' => $timeLeft,
                 ]));
             }
+            $mustConsumePaidQuestion = true;
         }
 
         RateLimiter::hit($throttleKey, 60);
@@ -151,6 +153,11 @@ class BookAssistant
             if ($reason === 'conversational') {
                 $convType = (string) ($gate['conversational_type'] ?? 'greeting');
                 $answerText = $this->buildConversationalResponse($book, $convType, $user);
+
+                if ($mustConsumePaidQuestion) {
+                    $shopService = app(\App\Services\Shop\ShopService::class);
+                    $shopService->consumeAiQuestion($user);
+                }
 
                 $history = AiChatHistory::create([
                     'user_id'           => $user->id,
@@ -276,12 +283,17 @@ class BookAssistant
 
         $safeHtml = $this->renderSafeMarkdown($cleanedAnswer);
 
+        if ($mustConsumePaidQuestion) {
+            $shopService = app(\App\Services\Shop\ShopService::class);
+            $shopService->consumeAiQuestion($user);
+        }
+
         $history = AiChatHistory::create([
             'user_id'           => $user->id,
             'book_id'           => $book->id,
             'message'           => $question,
             'response'          => $cleanedAnswer,
-            'provider'          => (string) ($llmResponse['provider'] ?? config('ai.provider', 'gemini')),
+            'provider'          => (string) ($llmResponse['provider'] ?? config('ai.provider', 'groq')),
             'model'             => (string) ($llmResponse['model'] ?? ''),
             'tokens_used'       => (int) ($llmResponse['total_tokens'] ?? 0),
             'sources'           => $verified['sources'],

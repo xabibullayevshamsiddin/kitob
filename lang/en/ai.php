@@ -4,7 +4,7 @@ return [
     'title' => 'AI Assistant',
     'off_topic' => 'This question is not related to the book “:book”. Please ask about the book’s content.',
     'no_answer' => 'I could not find information about this in the book.',
-    'provider_error' => 'AI could not respond right now, please try again later.',
+    'provider_error' => 'AI service is temporarily busy. Please try again in a moment.',
     'disabled' => 'The AI assistant is currently disabled.',
     'book_not_ready' => 'The AI assistant is not ready for this book yet.',
     'unauthorized' => 'You do not have access to this book.',

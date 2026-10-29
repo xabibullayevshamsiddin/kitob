@@ -8,6 +8,7 @@ use App\Services\AI\BookAssistant\Exceptions\AiProviderException;
 use App\Services\AI\BookAssistant\Providers\AnthropicLlmProvider;
 use App\Services\AI\BookAssistant\Providers\GeminiEmbeddingProvider;
 use App\Services\AI\BookAssistant\Providers\GeminiLlmProvider;
+use App\Services\AI\BookAssistant\Providers\GroqLlmProvider;
 use App\Services\AI\BookAssistant\Providers\NullEmbeddingProvider;
 use App\Services\AI\BookAssistant\Providers\OpenAiEmbeddingProvider;
 use App\Services\AI\BookAssistant\Providers\OpenAiLlmProvider;
@@ -29,7 +30,9 @@ class ProviderManager
 
     /**
      * Joriy sozlangan LLM provayderni qaytaradi.
-     * Noma'lum provayder bo'lsa aniq xato beradi (jim zaxira javob YO'Q).
+     * Standart holda (driver ko'rsatilmaganda) asosiy provayder (Groq) va
+     * avtomatik zaxira (Gemini) bilan ishlaydigan ResilientLlmService qaytariladi.
+     * Agar aniq $driver berilsa, to'g'ridan-to'g'ri o'sha drayver qaytariladi.
      */
     public function llm(?string $driver = null): LlmProviderInterface
     {
@@ -37,14 +40,36 @@ class ProviderManager
             return $this->customLlm;
         }
 
-        $name = strtolower(trim((string) ($driver ?? config('ai.provider', 'gemini'))));
+        if ($driver !== null) {
+            return $this->resolveDriver($driver);
+        }
+
+        $primaryName = strtolower(trim((string) config('ai.provider', 'groq')));
+        $fallbackName = strtolower(trim((string) config('ai.fallback_provider', 'gemini')));
+
+        if ($fallbackName === '' || $fallbackName === 'none' || $primaryName === $fallbackName) {
+            return $this->resolveDriver($primaryName);
+        }
+
+        $primary = $this->resolveDriver($primaryName);
+        $fallback = $this->resolveDriver($fallbackName);
+
+        return new ResilientLlmService($primary, $fallback);
+    }
+
+    /**
+     * Berilgan nomdagi aniq drayverni yuklash.
+     */
+    public function resolveDriver(string $driver): LlmProviderInterface
+    {
+        $name = strtolower(trim($driver));
 
         return match ($name) {
+            'groq'      => new GroqLlmProvider(),
+            'gemini'    => new GeminiLlmProvider(),
             'openai'    => new OpenAiLlmProvider(),
             'anthropic' => new AnthropicLlmProvider(),
-            'gemini'    => new GeminiLlmProvider(),
-            'groq'      => new \App\Services\AI\BookAssistant\Providers\GroqLlmProvider(),
-            default     => throw new AiProviderException("Noma'lum AI LLM provayderi: «{$name}». Qo'llab-quvvatlanadiganlar: gemini, groq, openai, anthropic."),
+            default     => throw new AiProviderException("Noma'lum AI LLM provayderi: «{$name}». Qo'llab-quvvatlanadiganlar: groq, gemini, openai, anthropic."),
         };
     }
 

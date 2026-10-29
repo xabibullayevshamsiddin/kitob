@@ -58,8 +58,7 @@ class BookSummaryController extends Controller
     protected function generateSummary(Book $book): string
     {
         $providerManager = new ProviderManager();
-        $driver = config('ai.provider', 'groq');
-        $llm = $providerManager->llm($driver);
+        $llm = $providerManager->llm();
 
         $chaptersInfo = $book->chapters()->limit(5)->pluck('title')->implode(', ');
         $desc = strip_tags($book->description ?? '');

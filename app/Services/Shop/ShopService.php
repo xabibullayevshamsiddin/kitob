@@ -608,6 +608,27 @@ class ShopService
     }
 
     /**
+     * AI savollar paketi: foydalanuvchida sarflashga yaroqli AI savoli bor-yo'qligini tekshirish.
+     */
+    public function hasAvailableAiQuestions(User $user): bool
+    {
+        $item = ShopItem::where('key', 'ai_questions_pack')->first();
+        if (!$item) {
+            return false;
+        }
+
+        $userItem = UserItem::where('user_id', $user->id)
+            ->where('shop_item_id', $item->id)
+            ->first();
+
+        if (!$userItem || $userItem->quantity <= 0 || $userItem->isExpired()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * AI savollar paketi: foydalanuvchidan 1 ta AI savolini sarflash.
      * Parallel so'rovlar poygasi va muddati tugagan chiptalardan himoyalangan (tranzaksiya + lockForUpdate).
      */
