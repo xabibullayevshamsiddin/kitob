@@ -80,7 +80,14 @@ class OnboardingWizard extends Component
 
     public function setLocale(string $locale)
     {
-        $this->preferred_locale = $locale;
+        if (in_array($locale, ['uz', 'ru', 'en'], true)) {
+            $this->preferred_locale = $locale;
+            session()->put('locale', $locale);
+            app()->setLocale($locale);
+            \Illuminate\Support\Facades\Cookie::queue(
+                \Illuminate\Support\Facades\Cookie::make('locale', $locale, 60 * 24 * 365)
+            );
+        }
     }
 
     public function toggleGenre(string $genre)
@@ -165,12 +172,29 @@ class OnboardingWizard extends Component
             ]
         );
 
+        // Sayt asosiy tilini darhol tanlangan tilga o'zgartirish va sessiya/cookieda mustahkamlash
+        session()->put('locale', $this->preferred_locale);
+        app()->setLocale($this->preferred_locale);
+        \Illuminate\Support\Facades\Cookie::queue(
+            \Illuminate\Support\Facades\Cookie::make('locale', $this->preferred_locale, 60 * 24 * 365)
+        );
+
         if ($this->isEdit) {
-            session()->flash('success', 'Shaxsiy mutolaa rejangiz muvaffaqiyatli saqlandi!');
+            $msg = match($this->preferred_locale) {
+                'ru' => 'Персональный план чтения и язык интерфейса успешно сохранены!',
+                'en' => 'Personal reading plan and interface language saved successfully!',
+                default => 'Shaxsiy mutolaa rejangiz va sayt tili muvaffaqiyatli saqlandi!',
+            };
+            session()->flash('success', $msg);
             return redirect()->route('settings');
         }
 
-        session()->flash('success', 'Xush kelibsiz! Onboarding muvaffaqiyatli yakunlandi va 50 ball hisobingizga qo\'shildi!');
+        $msg = match($this->preferred_locale) {
+            'ru' => 'Добро пожаловать! Онбординг успешно пройден, вам начислено 50 баллов! 🎉',
+            'en' => 'Welcome! Onboarding completed successfully and 50 points added to your account! 🎉',
+            default => 'Xush kelibsiz! Onboarding muvaffaqiyatli yakunlandi va 50 ball hisobingizga qo\'shildi! 🎉',
+        };
+        session()->flash('success', $msg);
         return redirect()->route('home');
     }
 
