@@ -458,6 +458,24 @@ Route::get('/system/setup', function (\Illuminate\Http\Request $request) {
         $results['storage_link'] = \Illuminate\Support\Facades\Artisan::output();
     }
 
+    // 5. Unpack public_tar.zip
+    if ($request->has('unzip_public')) {
+        $zipPath = public_path('public_tar.zip');
+        if (file_exists($zipPath)) {
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath) === true) {
+                $zip->extractTo(public_path());
+                $zip->close();
+                @unlink($zipPath);
+                $results['unzip_public'] = 'SUCCESS_EXTRACTED';
+            } else {
+                $results['unzip_public'] = 'FAILED_OPEN_ZIP';
+            }
+        } else {
+            $results['unzip_public'] = 'ZIP_NOT_FOUND';
+        }
+    }
+
     return response()->json($results, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 })->name('system.setup');
 

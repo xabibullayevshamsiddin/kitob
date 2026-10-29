@@ -439,11 +439,11 @@
                     <!-- 1 daqiqalik AI Konspekt Tugmasi -->
                     <button type="button"
                             @click="openAiSummary()"
-                            class="px-3.5 py-2 rounded-btn bg-gradient-to-r from-violet-600/20 via-amber-500/15 to-violet-600/20 hover:from-violet-600/30 hover:to-amber-500/30 text-amber-300 dark:text-amber-200 border border-violet-400/40 hover:border-amber-400 font-bold font-sans text-xs inline-flex items-center gap-1.5 shadow-md shadow-violet-500/10 transition-all active:scale-95 group"
+                            class="px-3.5 py-2 rounded-btn bg-gradient-to-r from-violet-100 via-purple-50 to-amber-100 hover:from-violet-200 hover:via-purple-100 hover:to-amber-200 dark:from-violet-600/25 dark:via-amber-500/15 dark:to-violet-600/25 dark:hover:from-violet-600/35 dark:hover:to-amber-500/30 text-violet-950 dark:text-amber-200 border border-violet-300 hover:border-violet-400 dark:border-violet-400/40 dark:hover:border-amber-400 font-bold font-sans text-xs inline-flex items-center gap-1.5 shadow-sm shadow-violet-500/10 transition-all active:scale-95 group"
                             title="Kitobning 1 daqiqalik qisqacha mazmuni va asosiy saboqlarini o'qish">
                         <span class="text-sm group-hover:scale-110 transition-transform">🧠</span>
-                        <span>AI Konspekt</span>
-                        <span class="px-1 py-0.2 rounded-badge bg-amber-400/20 text-amber-300 text-[10px] font-mono font-bold">1 daqiqa</span>
+                        <span class="font-bold tracking-tight">AI Konspekt</span>
+                        <span class="px-1.5 py-0.5 rounded-badge bg-amber-200/90 text-amber-950 border border-amber-400/50 dark:bg-amber-400/20 dark:text-amber-200 dark:border-amber-400/30 text-[10px] font-mono font-bold">1 daqiqa</span>
                     </button>
 
                     @if($firstAudio = $book->audios->first())
@@ -491,7 +491,7 @@
                            class="ks-btn-ghost inline-flex items-center gap-2">
                             <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                             <span>Videolar</span>
-                            <span class="px-1.5 py-0.2 rounded-badge bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">{{ $book->videos()->count() }}</span>
+                            <span class="px-1.5 py-0.2 rounded-badge bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-mono font-bold">{{ $book->videos()->count() }}</span>
                         </a>
                     @endif
 
@@ -1058,7 +1058,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h3 class="text-sm sm:text-base font-bold font-serif text-paper">1 daqiqalik AI Konspekt</h3>
-                            <span class="px-1.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[10px] font-mono font-bold">Tezkor</span>
+                            <span class="px-1.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-800 dark:text-amber-300 text-[10px] font-mono font-bold">Tezkor</span>
                         </div>
                         <p class="text-[11px] font-mono text-mist truncate max-w-xs">{{ $book->title }} • {{ $book->author }}</p>
                     </div>
@@ -1068,7 +1068,7 @@
                     <button type="button" 
                             @click="toggleSound()" 
                             class="px-2.5 py-1 rounded-btn border text-xs font-mono transition-colors flex items-center gap-1.5"
-                            :class="isSoundMuted ? 'border-ink-border text-mist hover:text-paper bg-ink-950/60' : 'border-amber-500/30 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20'"
+                            :class="isSoundMuted ? 'border-ink-border text-mist hover:text-paper bg-ink-950/60' : 'border-amber-500/30 text-amber-800 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20'"
                             :title="isSoundMuted ? 'Klaviatura ovozini yoqish' : 'Klaviatura ovozini o\'chirish'">
                         <span x-text="isSoundMuted ? '🔇' : '🔊'"></span>
                         <span class="hidden sm:inline text-[10px]" x-text="isSoundMuted ? 'Ovoz: O\'chiq' : 'Ovoz: Yoniq'"></span>
@@ -1102,11 +1102,11 @@
                 <!-- Content State -->
                 <div x-show="!aiSummaryLoading" class="space-y-4">
                     <div class="flex items-center justify-between" x-show="aiSummaryTyping">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-[10px] font-mono text-violet-300">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-[10px] font-mono text-violet-700 dark:text-violet-300">
                             <span class="animate-pulse">⌨️</span>
                             <span>AI yozmoqda...</span>
                         </span>
-                        <button type="button" @click="finishAiTyping()" class="text-[10px] font-mono text-amber-400 hover:underline">
+                        <button type="button" @click="finishAiTyping()" class="text-[10px] font-mono text-amber-600 dark:text-amber-400 hover:underline">
                             To'liq ochish ⏭
                         </button>
                     </div>
@@ -1118,7 +1118,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/80 flex items-center gap-2">
+                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-900 dark:text-amber-200/80 flex items-center gap-2">
                         <span>💡</span>
                         <span>Ushbu konspekt sun'iy intellekt tomonidan kitob mazmunini tez anglab olishingiz uchun tuzildi. To'liq mutolaa zavqi uchun kitobni o'qishni tavsiya etamiz!</span>
                     </div>

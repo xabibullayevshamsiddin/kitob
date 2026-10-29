@@ -311,6 +311,54 @@ class EliteHost
         echo "❌ O'chirib bo'lmadi (HTTP {$res['code']})\n{$res['body']}\n";
         return false;
     }
+
+    public static function uploadBinary(string $localFile, string $remoteDir = '/'): bool
+    {
+        $res = self::request('GET', '/servers/' . self::SERVER_ID . '/files/upload');
+        if ($res['code'] !== 200 || empty($res['json']['attributes']['url'])) {
+            echo "❌ Upload URL olinmadi: HTTP {$res['code']}\n";
+            return false;
+        }
+
+        $uploadUrl = $res['json']['attributes']['url'];
+        if ($remoteDir !== '/') {
+            $uploadUrl .= '&directory=' . urlencode($remoteDir);
+        }
+
+        $ch = curl_init($uploadUrl);
+        $cfile = new CURLFile(realpath($localFile), mime_content_type($localFile) ?: 'application/octet-stream', basename($localFile));
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => ['files' => $cfile],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 300,
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($code >= 200 && $code < 300) {
+            echo "✅ Fayl muvaffaqiyatli yuklandi: " . basename($localFile) . "\n";
+            return true;
+        }
+        echo "❌ Fayl yuklanmadi (HTTP {$code}): {$resp}\n";
+        return false;
+    }
+
+    public static function decompress(string $root, string $file): bool
+    {
+        $res = self::request('POST', '/servers/' . self::SERVER_ID . '/files/decompress', [
+            'root' => $root,
+            'file' => $file,
+        ]);
+        if ($res['code'] === 204) {
+            echo "✅ Arxiv ochildi: {$file} -> {$root}\n";
+            return true;
+        }
+        echo "❌ Arxiv ochilmadi (HTTP {$res['code']})\n{$res['body']}\n";
+        return false;
+    }
 }
 
 // CLI Command Router
@@ -381,6 +429,24 @@ switch ($action) {
         if ($dir === '.') $dir = '/';
         $file = basename($path);
         EliteHost::deleteFiles($dir, [$file]);
+        break;
+
+    case 'upload':
+        $local = $argv[2] ?? null;
+        $remoteDir = $argv[3] ?? '/';
+        if (!$local) {
+            die("Foydalanish: php scripts/elitehost.php upload <local_file> [remote_dir]\n");
+        }
+        EliteHost::uploadBinary($local, $remoteDir);
+        break;
+
+    case 'unzip':
+        $file = $argv[2] ?? null;
+        $root = $argv[3] ?? '/';
+        if (!$file) {
+            die("Foydalanish: php scripts/elitehost.php unzip <file> [root_dir]\n");
+        }
+        EliteHost::decompress($root, $file);
         break;
 
     case 'replace':
