@@ -47,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'banned_until',
         'ban_reason',
         'banned_at',
+        'banned_by_id',
         'league',
         'weekly_points',
         'league_updated_at',
@@ -71,6 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_banned'           => 'boolean',
         'banned_until'        => 'datetime',
         'banned_at'           => 'datetime',
+        'banned_by_id'        => 'integer',
     ];
 
     protected $appends = [
@@ -544,7 +546,20 @@ class User extends Authenticatable implements MustVerifyEmail
         return true;
     }
 
-    public function ban(string $duration, ?string $reason = null): void
+    public function bannedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'banned_by_id');
+    }
+
+    public function getBannedByLabelAttribute(): string
+    {
+        if ($this->bannedBy) {
+            return $this->bannedBy->name . ' (@' . $this->bannedBy->username . ')';
+        }
+        return 'Tizim ma\'muriyati (Admin)';
+    }
+
+    public function ban(string $duration, ?string $reason = null, ?int $bannedById = null): void
     {
         // Adminlar daxlsizdir — ularni hech qanday holatda (boshqa admin ham) bloklay olmaydi
         if ($this->isAdmin()) {
@@ -565,6 +580,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'banned_until' => $until,
             'ban_reason'   => $finalReason,
             'banned_at'    => now(),
+            'banned_by_id' => $bannedById ?? auth()->id(),
         ]);
 
         $durationLabel = match ($duration) {
@@ -637,6 +653,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_banned'    => false,
             'banned_until' => null,
             'ban_reason'   => null,
+            'banned_at'    => null,
+            'banned_by_id' => null,
         ]);
 
         if (!$wasBanned) {
@@ -721,16 +739,38 @@ class User extends Authenticatable implements MustVerifyEmail
         $diffHours = (int) $now->diffInHours($this->banned_until, false);
         $diffDays  = (int) $now->diffInDays($this->banned_until, false);
 
-        if ($diffDays > 0) {
+        if ($diffDays >= 1) {
             return $diffDays . ' kun qoldi';
         }
-
-        if ($diffHours > 0) {
+        if ($diffHours >= 1) {
             return $diffHours . ' soat qoldi';
         }
 
         $diffMinutes = max(1, (int) $now->diffInMinutes($this->banned_until, false));
         return $diffMinutes . ' daqiqa qoldi';
+    }
+
+    public function getBanDurationLabelAttribute(): string
+    {
+        if (!$this->is_banned) {
+            return 'Bloklanmagan';
+        }
+        if (!$this->banned_until) {
+            return 'Doimiy (butun umrga)';
+        }
+        if ($this->banned_at) {
+            $totalMinutes = (int) $this->banned_at->diffInMinutes($this->banned_until, false);
+            if ($totalMinutes <= 65) {
+                return '1 soat';
+            } elseif ($totalMinutes <= 1500) {
+                return '1 kun (24 soat)';
+            } elseif ($totalMinutes <= 10500) {
+                return '1 hafta (7 kun)';
+            } elseif ($totalMinutes <= 45000) {
+                return '1 oy (30 kun)';
+            }
+        }
+        return $this->ban_remaining;
     }
 
     public function reportsReceived()

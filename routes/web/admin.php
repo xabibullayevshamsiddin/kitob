@@ -284,7 +284,7 @@ Route::prefix('admin')
 
         $bannedAppealsCount = \App\Models\Report::tap($bannedAppealsQuery)->count();
 
-        $query = \App\Models\Report::with(['reporter', 'reportedUser']);
+        $query = \App\Models\Report::with(['reporter.bannedBy', 'reportedUser.bannedBy']);
 
         if ($filter === 'banned') {
             $bannedAppealsQuery($query);

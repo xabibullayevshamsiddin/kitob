@@ -127,11 +127,12 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
         return redirect()->route('contact')->with('success', '🚩 Qoidabuzarlik bo\'yicha shikoyatingiz ma\'muriyatga yetkazildi! Moderatorlar tez orada tekshirib, tegishli chora (ban) ko\'rishadi.');
     }
 
-    // Yuboruvchi foydalanuvchini aniqlash (avtorizatsiya qilingan bo'lsa, yoki appeal_user_id / telefon orqali)
+    // Yuboruvchi foydalanuvchini aniqlash (avtorizatsiya qilingan bo'lsa, yoki appeal_user_id / user_id orqali)
     $senderUser = auth()->user();
 
-    if (!$senderUser && $req->filled('appeal_user_id')) {
-        $senderUser = \App\Models\User::find($req->input('appeal_user_id'));
+    if (!$senderUser && ($req->filled('appeal_user_id') || $req->filled('user_id'))) {
+        $targetId = (int) ($req->input('appeal_user_id') ?: $req->input('user_id'));
+        $senderUser = \App\Models\User::find($targetId);
     }
 
     $rawContact = trim((string) ($req->input('phone') ?? $req->input('email') ?? ''));
