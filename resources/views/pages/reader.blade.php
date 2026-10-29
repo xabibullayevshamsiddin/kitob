@@ -423,6 +423,9 @@
                             book_id: {{ $book->id }}, chapter_id: {{ $chapter->id }}, position: Math.round(window.scrollY)
                         });
                         this.bookmarks.push(data.bookmark);
+                        if (window.KitobSound) {
+                            window.KitobSound.play('bookmark');
+                        }
                         this.showAnnotationMessage(@js(__('site.reader.bookmark_saved')));
                     } catch (error) {
                         this.showAnnotationMessage(error.message || @js(__('site.reader.bookmark_save_error')));

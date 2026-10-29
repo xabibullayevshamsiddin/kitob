@@ -40,6 +40,10 @@ class SettingsPage extends Component
     public bool $codeSent = false;
     public int $resendCooldown = 0;
 
+    // Interfeys ovozlari sozlamalari
+    public bool $soundEnabled = true;
+    public int $soundVolume = 20;
+
     public function mount(): void
     {
         $user = Auth::user();
@@ -53,6 +57,10 @@ class SettingsPage extends Component
         $this->hasVerifiedPhone = $user->hasVerifiedPhone();
         $this->isTelegramLinked = $user->isTelegramLinked();
         $this->telegramUsername = $user->telegram_username;
+
+        $prefs = is_array($user->notification_prefs) ? $user->notification_prefs : [];
+        $this->soundEnabled = array_key_exists('sound_enabled', $prefs) ? (bool) $prefs['sound_enabled'] : true;
+        $this->soundVolume  = array_key_exists('sound_volume', $prefs) ? (int) $prefs['sound_volume'] : 20;
     }
 
     protected function rules(): array
@@ -139,9 +147,39 @@ class SettingsPage extends Component
         $hadAvatar = (bool) $this->avatar;
         $this->reset('avatar');
 
+        $this->saveSoundPreferences();
+
         $this->toastSuccess(
             $hadAvatar ? __('site.settings.saved_success') . ' Profil rasmi yangilandi.' : __('site.settings.saved_success')
         );
+        $this->dispatchBrowserEvent('kitob-sound', ['sound' => 'settings_saved']);
+    }
+
+    public function updatedSoundEnabled(): void
+    {
+        $this->saveSoundPreferences();
+    }
+
+    public function updatedSoundVolume(): void
+    {
+        $this->saveSoundPreferences();
+    }
+
+    public function saveSoundPreferences(): void
+    {
+        $user = Auth::user();
+        if (!$user) return;
+
+        $prefs = is_array($user->notification_prefs) ? $user->notification_prefs : [];
+        $prefs['sound_enabled'] = (bool) $this->soundEnabled;
+        $prefs['sound_volume']  = max(0, min(100, (int) $this->soundVolume));
+
+        $user->update(['notification_prefs' => $prefs]);
+
+        $this->dispatchBrowserEvent('sound-settings-updated', [
+            'enabled' => $this->soundEnabled,
+            'volume'  => $this->soundVolume / 100,
+        ]);
     }
 
     public function openPhoneModal(): void

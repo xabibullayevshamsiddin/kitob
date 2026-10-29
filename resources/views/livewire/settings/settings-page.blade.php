@@ -204,6 +204,148 @@
         </a>
     </div>
 
+    <!-- ── 2. Interfeys Ovozlari (Tovush Effektlari) Card ── -->
+    <div class="p-6 sm:p-7 rounded-panel bg-ink-900 border border-ink-border shadow-soft space-y-6"
+         x-data="{
+             previewOpen: false,
+             activePreview: null,
+             playEffect(name) {
+                 this.activePreview = name;
+                 if (window.KitobSound) {
+                     window.KitobSound.test(name);
+                 }
+                 setTimeout(() => {
+                     if (this.activePreview === name) this.activePreview = null;
+                 }, 600);
+             }
+         }">
+        <div class="flex items-center justify-between border-b border-ink-border pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold font-serif text-paper">{{ __('site.settings.sound_card_title') }}</h3>
+                    <p class="text-[11px] font-mono text-mist">{{ __('site.settings.sound_card_subtitle') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button"
+                        @click="playEffect('settings_saved')"
+                        class="px-3 py-1.5 rounded-btn bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all active:scale-95">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <span>{{ __('site.settings.sound_test_btn') }}</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Toggle & Volume Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Toggle -->
+                <div class="p-4 rounded-xl bg-ink-950/60 border border-ink-border flex items-center justify-between gap-3">
+                    <div class="space-y-0.5">
+                        <label for="soundEnabledToggle" class="text-xs font-bold text-paper cursor-pointer">
+                            {{ __('site.settings.sound_toggle_label') }}
+                        </label>
+                        <p class="text-[11px] text-mist font-mono leading-tight">
+                            {{ __('site.settings.sound_toggle_hint') }}
+                        </p>
+                    </div>
+
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox"
+                               id="soundEnabledToggle"
+                               wire:model="soundEnabled"
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-ink-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                </div>
+
+                <!-- Volume Slider -->
+                <div class="p-4 rounded-xl bg-ink-950/60 border border-ink-border space-y-2"
+                     :class="{ 'opacity-50 pointer-events-none': !@entangle('soundEnabled') }">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-paper">{{ __('site.settings.sound_volume_label') }}</span>
+                        <span class="text-xs font-mono font-bold text-amber-400">
+                            {{ $soundVolume }}%
+                        </span>
+                    </div>
+
+                    <input type="range"
+                           min="0"
+                           max="100"
+                           step="5"
+                           wire:model.lazy="soundVolume"
+                           class="w-full h-1.5 bg-ink-800 rounded-lg appearance-none cursor-pointer accent-amber-400">
+
+                    <div class="flex justify-between text-[10px] font-mono text-mist/60 px-0.5">
+                        <span>0%</span>
+                        <span class="text-amber-400/80">20% (Tavsiya)</span>
+                        <span>50%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Preview Accordion / List -->
+            <div class="border border-ink-border rounded-xl overflow-hidden bg-ink-950/40">
+                <button type="button"
+                        @click="previewOpen = !previewOpen"
+                        class="w-full p-3.5 flex items-center justify-between text-left hover:bg-ink-950/80 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-paper font-serif">{{ __('site.settings.sound_list_title') }}</span>
+                        <span class="text-[10px] font-mono text-amber-400/90 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">9 ta mayin ohang</span>
+                    </div>
+                    <span class="text-xs font-mono text-mist flex items-center gap-1">
+                        <span x-text="previewOpen ? 'Yashirish' : 'Ro‘yxatni ko‘rish'"></span>
+                        <span x-text="previewOpen ? '▲' : '▼'"></span>
+                    </span>
+                </button>
+
+                <div x-show="previewOpen" x-cloak class="p-3.5 border-t border-ink-border space-y-2">
+                    @php
+                        $previewItems = [
+                            ['key' => 'bookmark',       'icon' => '🔖', 'name' => __('site.settings.sound_bookmark'),       'desc' => __('site.settings.sound_bookmark_desc')],
+                            ['key' => 'settings_saved', 'icon' => '⚙️', 'name' => __('site.settings.sound_settings_saved'), 'desc' => __('site.settings.sound_settings_saved_desc')],
+                            ['key' => 'quiz_correct',   'icon' => '✅', 'name' => __('site.settings.sound_quiz_correct'),   'desc' => __('site.settings.sound_quiz_correct_desc')],
+                            ['key' => 'quiz_wrong',     'icon' => '💡', 'name' => __('site.settings.sound_quiz_wrong'),     'desc' => __('site.settings.sound_quiz_wrong_desc')],
+                            ['key' => 'quiz_finish',    'icon' => '🏁', 'name' => __('site.settings.sound_quiz_finish'),    'desc' => __('site.settings.sound_quiz_finish_desc')],
+                            ['key' => 'achievement',    'icon' => '🏆', 'name' => __('site.settings.sound_achievement'),    'desc' => __('site.settings.sound_achievement_desc')],
+                            ['key' => 'purchase',       'icon' => '🪙', 'name' => __('site.settings.sound_purchase'),       'desc' => __('site.settings.sound_purchase_desc')],
+                            ['key' => 'chat_message',   'icon' => '💬', 'name' => __('site.settings.sound_chat_message'),   'desc' => __('site.settings.sound_chat_message_desc')],
+                            ['key' => 'error',          'icon' => '⚠️', 'name' => __('site.settings.sound_error'),          'desc' => __('site.settings.sound_error_desc')],
+                        ];
+                    @endphp
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        @foreach($previewItems as $item)
+                            <div class="p-2.5 rounded-lg bg-ink-900 border border-ink-border flex items-center justify-between gap-2 hover:border-amber-400/40 transition-colors">
+                                <div class="min-w-0 flex items-center gap-2">
+                                    <span class="text-base shrink-0">{{ $item['icon'] }}</span>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-semibold text-paper truncate">{{ $item['name'] }}</p>
+                                        <p class="text-[10px] text-mist/70 truncate">{{ $item['desc'] }}</p>
+                                    </div>
+                                </div>
+                                <button type="button"
+                                        @click="playEffect('{{ $item['key'] }}')"
+                                        :class="activePreview === '{{ $item['key'] }}' ? 'bg-amber-400 text-ink-950 scale-105' : 'bg-ink-800 text-amber-300 hover:bg-amber-400/20'"
+                                        class="p-1.5 rounded-btn border border-amber-400/30 text-xs shrink-0 transition-all cursor-pointer"
+                                        title="{{ __('site.settings.sound_listen') }}">
+                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── 2. Telefon Raqamini O'zgartirish Xavfsizlik Modali ── -->
     @if($showPhoneModal)
         <div x-data="{

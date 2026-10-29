@@ -156,6 +156,15 @@
                 if (!detail || !detail.message) return;
 
                 const type = detail.type || 'info';
+
+                // Play acoustic sound for critical errors or explicitly requested sound
+                if (window.KitobSound) {
+                    if (detail.sound) {
+                        window.KitobSound.play(detail.sound, { dedupeKey: 'toast_sound_' + detail.sound });
+                    } else if (type === 'error') {
+                        window.KitobSound.play('error', { dedupeKey: 'toast_error_' + (detail.message || '') });
+                    }
+                }
                 const titles = {
                     success: 'Muvaffaqiyatli!',
                     error: 'Xatolik yuz berdi',

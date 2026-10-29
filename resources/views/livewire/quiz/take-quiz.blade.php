@@ -381,9 +381,13 @@
                                         <p class="text-xs sm:text-sm font-bold text-paper">
                                             {{ $idx + 1 }}. {{ $fb['question_text'] ?? "Savol #".($idx+1) }}
                                         </p>
-                                        <span class="px-2 py-0.5 rounded text-[11px] font-bold shrink-0 {{ ($fb['correct'] ?? null) === true ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-ink-800 text-paper-muted' }}">
-                                            {{ ($fb['type'] ?? '') === 'text' ? 'Tekshiruv kutilmoqda' : (($fb['correct'] ?? false) ? '✓ To\'g\'ri' : '✗ Xato') }}
-                                        </span>
+                                        <button type="button"
+                                                @click="window.KitobSound && window.KitobSound.test('{{ ($fb['correct'] ?? false) ? 'quiz_correct' : 'quiz_wrong' }}')"
+                                                class="px-2 py-0.5 rounded text-[11px] font-bold shrink-0 cursor-pointer hover:opacity-85 transition-opacity flex items-center gap-1 {{ ($fb['correct'] ?? null) === true ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-ink-800 text-paper-muted' }}"
+                                                title="Ovozni tinglash">
+                                            <span>{{ ($fb['type'] ?? '') === 'text' ? 'Tekshiruv kutilmoqda' : (($fb['correct'] ?? false) ? '✓ To\'g\'ri' : '✗ Xato') }}</span>
+                                            <span class="text-[9px] opacity-70">🔊</span>
+                                        </button>
                                     </div>
 
                                     <div class="text-xs space-y-1 text-mist">

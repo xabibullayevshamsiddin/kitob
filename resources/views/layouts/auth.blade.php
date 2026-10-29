@@ -182,8 +182,9 @@
         </div>
     </div>
 
-    <!-- ── Universal Toast Notification Container ── -->
+    <!-- ── Universal Toast Notification Container & Interface Sounds ── -->
     <x-toast-container />
+    <x-interface-sounds />
 
     @if(class_exists('Livewire\Livewire'))
         @livewireScripts

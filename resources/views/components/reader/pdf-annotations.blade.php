@@ -134,6 +134,9 @@
                             note_text: this.formKind === 'note' ? this.noteDraft.trim() : null,
                         });
                         this.annotations.unshift(data.annotation);
+                        if (window.KitobSound) {
+                            window.KitobSound.play('bookmark');
+                        }
                         this.formOpen = false;
                         this.message = this.formKind === 'bookmark' ? 'PDF beti belgilandi.' : 'Betga shaxsiy qayd saqlandi.';
                         this.noteDraft = '';

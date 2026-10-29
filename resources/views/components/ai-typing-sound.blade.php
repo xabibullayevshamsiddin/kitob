@@ -27,6 +27,7 @@
      */
     window.playAiTypingSound = function(volume = 0.35) {
         if (isMuted) return;
+        if (window.KitobSound && !window.KitobSound.isEnabled()) return;
         try {
             const audio = getAudio();
             if (fadeTimer) {
@@ -38,7 +39,11 @@
                 safetyTimer = null;
             }
 
-            audio.volume = Math.max(0.05, Math.min(1.0, volume));
+            let effectiveVolume = volume;
+            if (window.KitobSound && typeof window.KitobSound.getVolume === 'function') {
+                effectiveVolume = volume * (window.KitobSound.getVolume() / 0.20);
+            }
+            audio.volume = Math.max(0.02, Math.min(1.0, effectiveVolume));
 
             if (audio.paused) {
                 if (audio.currentTime === 0 && audio.duration > 3) {
@@ -140,6 +145,11 @@
     });
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
+            window.stopAiTypingSound(false);
+        }
+    });
+    window.addEventListener('kitob-sound-preference-changed', function(e) {
+        if (e.detail && !e.detail.enabled) {
             window.stopAiTypingSound(false);
         }
     });

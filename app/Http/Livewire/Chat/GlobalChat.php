@@ -27,6 +27,11 @@ class GlobalChat extends Component
     {
         // Livewire re-renders automatically
         $this->dispatchBrowserEvent('chat-scroll-bottom');
+
+        $senderId = is_array($payload) ? ($payload['user_id'] ?? null) : (is_object($payload) ? ($payload->user_id ?? null) : null);
+        if ($senderId && (int) $senderId !== (int) Auth::id()) {
+            $this->dispatchBrowserEvent('kitob-sound', ['sound' => 'chat_message']);
+        }
     }
 
     protected $rules = [

@@ -103,8 +103,9 @@
         @endif
     </div>
 
-    <!-- ── Universal Toast Notification Container ── -->
+    <!-- ── Universal Toast Notification Container & Interface Sounds ── -->
     <x-toast-container />
+    <x-interface-sounds />
 
     <!-- ── Universal Book Share Modal ── -->
     <x-book-share-modal />

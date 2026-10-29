@@ -226,6 +226,9 @@
                     if (data.success) {
                         this.isSaved = data.is_saved;
                         this.savedCount = data.total_saved;
+                        if (this.isSaved && window.KitobSound) {
+                            window.KitobSound.play('bookmark');
+                        }
                         if (window.showToast) {
                             window.showToast(data.message, this.isSaved ? 'success' : 'info');
                         }

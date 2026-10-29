@@ -723,6 +723,11 @@ class TakeQuiz extends Component
             $this->toastWarning("Test yakunlandi (0% to'g'ri). Ball berilmadi.", 'Sinov yakunlandi');
         }
 
+        // Quloqqa yoqimli yakuniy ohang yoki yutuq ovozini chiqarish
+        $this->dispatchBrowserEvent('kitob-sound', [
+            'sound' => ($this->percent >= 100) ? 'achievement' : 'quiz_finish'
+        ]);
+
         // Bildirishnoma yuborish
         \App\Services\NotifyUser::send(
             $user,

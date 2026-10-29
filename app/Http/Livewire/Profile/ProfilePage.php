@@ -57,26 +57,40 @@ class ProfilePage extends Component
     protected function checkAndAwardBadges(): void
     {
         $existingBadgeIds = $this->user->badges()->pluck('badges.id')->toArray();
+        $newBadgeAwarded = false;
 
         // Badge 1: Birinchi qadam (kamida 1 ta bob o'qilganda)
         $chaptersCount = $this->user->readingSessions()->distinct('chapter_id')->count('chapter_id');
         if ($chaptersCount >= 1 && !in_array(1, $existingBadgeIds)) {
             $b = Badge::find(1);
-            if ($b) $this->user->badges()->attach(1, ['earned_at' => now()]);
+            if ($b) {
+                $this->user->badges()->attach(1, ['earned_at' => now()]);
+                $newBadgeAwarded = true;
+            }
         }
 
         // Badge 2: 3 kunlik olov (streak >= 3)
         $currentStreak = (int) ($this->user->streak?->current_streak ?? 0);
         if ($currentStreak >= 3 && !in_array(2, $existingBadgeIds)) {
             $b = Badge::find(2);
-            if ($b) $this->user->badges()->attach(2, ['earned_at' => now()]);
+            if ($b) {
+                $this->user->badges()->attach(2, ['earned_at' => now()]);
+                $newBadgeAwarded = true;
+            }
         }
 
         // Badge 4: Bilimdon (100% test topshirilganda)
         $perfectQuiz = $this->user->quizAttempts()->where('percent', '>=', 100)->exists();
         if ($perfectQuiz && !in_array(4, $existingBadgeIds)) {
             $b = Badge::find(4);
-            if ($b) $this->user->badges()->attach(4, ['earned_at' => now()]);
+            if ($b) {
+                $this->user->badges()->attach(4, ['earned_at' => now()]);
+                $newBadgeAwarded = true;
+            }
+        }
+
+        if ($newBadgeAwarded) {
+            $this->dispatchBrowserEvent('kitob-sound', ['sound' => 'achievement']);
         }
 
         // Qayta yuklash
