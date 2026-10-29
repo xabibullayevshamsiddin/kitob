@@ -1,5 +1,5 @@
 <div class="max-w-4xl mx-auto h-[calc(100dvh-12rem)] sm:h-[calc(100vh-8rem)] flex flex-col bg-ink-900 rounded-panel border border-ink-border shadow-soft overflow-hidden relative"
-     wire:poll.visible.15s
+     wire:poll.2500ms
      x-data="{
          deleteModalOpen: false,
          targetMessageId: null,

@@ -57,10 +57,6 @@ Route::prefix('admin')
     })->name('users.index');
 
     Route::get('/users/{user}/edit', function (\App\Models\User $user) {
-        // Adminlar (jumladan o'zi) tahrirlanmaydi — himoyalangan qatlam
-        if ($user->isAdmin() || $user->role === 'admin') {
-            return redirect()->route('admin.users.index')->with('error', "Admin foydalanuvchini tahrirlash mumkin emas. 🛡️");
-        }
         $roles = \Spatie\Permission\Models\Role::all();
 
         // 1. Leaderboard reytingi va o'rni
@@ -175,19 +171,21 @@ Route::prefix('admin')
         ));
     })->name('users.edit');
 
-    Route::put('/users/{user}', function (\Illuminate\Http\Request $req, \App\Models\User $user) {
-        // Adminlar (jumladan o'zi) tahrirlanmaydi
-        if ($user->isAdmin() || $user->role === 'admin') {
-            return redirect()->route('admin.users.index')->with('error', "Admin foydalanuvchini tahrirlash mumkin emas. 🛡️");
-        }
+    // Admin tezkor balans to'ldirish (tekin tanga va ball)
+    Route::post('/balance/topup', [\App\Http\Controllers\Admin\AdminBalanceController::class, 'topup'])
+        ->name('balance.topup');
 
+    Route::put('/users/{user}', function (\Illuminate\Http\Request $req, \App\Models\User $user) {
         $req->validate([
-            'role'   => 'required|string|exists:roles,name',
+            'role'   => 'nullable|string|exists:roles,name',
             'points' => 'nullable|integer|min:0',
             'coins'  => 'nullable|integer|min:0',
         ]);
 
-        $user->syncRoles([$req->role]);
+        // Faqat oddiy foydalanuvchilarning roli o'zgartiriladi, admin roli saqlanadi
+        if (!$user->isAdmin() && !$user->hasRole('admin') && $req->filled('role')) {
+            $user->syncRoles([$req->role]);
+        }
 
         $pointsService = app(\App\Services\Gamification\PointsService::class);
 

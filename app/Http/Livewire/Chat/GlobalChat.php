@@ -16,6 +16,8 @@ class GlobalChat extends Component
 
     public int $perPage = 50;
 
+    public ?int $lastKnownMessageId = null;
+
     protected function getListeners()
     {
         return [
@@ -230,6 +232,17 @@ class GlobalChat extends Component
         $isChatEnabled = (bool) setting('global_chat_enabled', true);
         $isAdmin = Auth::check() && (Auth::user()->role === 'admin' || Auth::user()->hasRole('admin'));
         $topFiveIds = app(\App\Services\LeaderboardService::class)->getTopFiveIds();
+
+        $latest = $messages->last();
+        if ($latest) {
+            if ($this->lastKnownMessageId !== null && $latest->id > $this->lastKnownMessageId) {
+                if ((int) $latest->user_id !== (int) Auth::id()) {
+                    $this->dispatchBrowserEvent('kitob-sound', ['sound' => 'chat_message']);
+                }
+                $this->dispatchBrowserEvent('chat-scroll-bottom');
+            }
+            $this->lastKnownMessageId = $latest->id;
+        }
 
         return view('livewire.chat.global-chat', [
             'messages'      => $messages,

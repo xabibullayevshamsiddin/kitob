@@ -221,6 +221,15 @@
                 <!-- Right: notifications + user -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
+                    <!-- Admin Balance Top-up Quick Trigger -->
+                    <button type="button"
+                            onclick="window.openAdminTopupModal && window.openAdminTopupModal()"
+                            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-btn bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 font-mono text-xs font-bold transition-all shadow-sm active:scale-95"
+                            title="O'z hisobingizga yoki boshqalarga tekinga tanga va ball qo'shish">
+                        <span>🪙</span>
+                        <span class="hidden md:inline">Balans to'ldirish</span>
+                    </button>
+
                     <!-- Notification bell -->
                     <a href="{{ route('admin.reports.index') }}" aria-label="Shikoyatlar"
                        class="relative w-10 h-10 flex items-center justify-center rounded-btn border border-ink-border text-mist hover:text-paper hover:bg-ink-800 transition-colors duration-base">
@@ -267,6 +276,12 @@
                                     {!! $navIcon('settings') !!}
                                     Sozlamalar
                                 </a>
+                                <button type="button"
+                                        onclick="window.openAdminTopupModal && window.openAdminTopupModal()"
+                                        class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-amber-400 hover:bg-amber-500/10 transition-colors duration-base text-left font-semibold">
+                                    <span>🪙</span>
+                                    <span>Hisobni to'ldirish (Tekin)</span>
+                                </button>
                             </div>
                             <div class="py-1 border-t border-ink-border">
                                 <form method="POST" action="{{ route('logout') }}">
@@ -319,6 +334,9 @@
 
     <!-- ── Universal Custom Confirmation Modal (Root Level) ── -->
     <x-confirm-modal />
+
+    <!-- ── Admin Quick Balance Top-up Modal ── -->
+    <x-admin-topup-modal />
 
     @stack('scripts')
 </body>

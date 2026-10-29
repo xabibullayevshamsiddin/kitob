@@ -137,6 +137,8 @@
     <x-ai-typing-sound />
     <!-- ── Universal Custom Confirmation Modal (Root Level) ── -->
     <x-confirm-modal />
+    <!-- ── Admin Quick Balance Top-up Modal ── -->
+    <x-admin-topup-modal />
     <!-- ── Universal Voice Note Player & Livewire-Alpine Integration ── -->
     <x-voice-player-script />
 </body>

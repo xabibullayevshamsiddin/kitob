@@ -46,6 +46,73 @@
     </div>
 </div>
 
+{{-- Admin Fast Recharge & Self Top-up Banner --}}
+<div class="ks-panel p-4 sm:p-5 bg-gradient-to-r from-amber-500/10 via-ink-900 to-cyan-500/10 border-2 border-amber-500/30 rounded-panel mb-5 shadow-lg relative overflow-hidden"
+     x-data="{
+         quickLoading: false,
+         adminCoins: {{ (int) auth()->user()->coin_balance }},
+         adminPoints: {{ (int) auth()->user()->total_points }},
+         async quickAdd(c, p) {
+             this.quickLoading = true;
+             try {
+                 const res = await fetch('{{ route('admin.balance.topup') }}', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                         'Accept': 'application/json',
+                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                     },
+                     body: JSON.stringify({ coins: c, points: p, reason: 'Admin panel tezkor to\'ldirish (Tekin)' })
+                 });
+                 const data = await res.json();
+                 if (data.success) {
+                     this.adminCoins = data.new_coins;
+                     this.adminPoints = data.new_points;
+                     if (window.showToast) window.showToast(data.message, 'success');
+                     if (window.KitobSound) window.KitobSound.play('achievement');
+                     window.dispatchEvent(new CustomEvent('coins-awarded', { detail: { coins: c, newTotal: data.new_coins } }));
+                     window.dispatchEvent(new CustomEvent('points-awarded', { detail: { points: p, newTotal: data.new_points } }));
+                 } else {
+                     if (window.showToast) window.showToast(data.message || 'Xatolik', 'error');
+                 }
+             } catch(e) {
+                 if (window.showToast) window.showToast('Bog\'lanishda xatolik', 'error');
+             } finally {
+                 this.quickLoading = false;
+             }
+         }
+     }">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-[10px] font-mono font-bold text-amber-400">
+                    ADMIN BALANSI • CHEKSIZ VA TEKIN
+                </span>
+            </div>
+            <h2 class="text-base sm:text-lg font-bold font-serif text-paper flex items-center gap-2">
+                <span>Shaxsiy hisobingiz:</span>
+                <span class="font-mono text-amber-400 font-bold" x-text="adminCoins.toLocaleString() + ' 🪙'">{{ number_format(auth()->user()->coin_balance) }} 🪙</span>
+                <span class="text-mist">•</span>
+                <span class="font-mono text-cyan-400 font-bold" x-text="adminPoints.toLocaleString() + ' 🌟'">{{ number_format(auth()->user()->total_points) }} 🌟</span>
+                <span class="text-xs font-mono text-mist">({{ auth()->user()->level_title }})</span>
+            </h2>
+            <p class="text-xs text-mist mt-0.5">
+                Do'kon xaridlari, testlar yoki reytingni tekshirish uchun o'zingizga xohlagancha tanga va ball tashlab oling.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" @click="quickAdd(1000, 0)" :disabled="quickLoading" class="px-2.5 py-1.5 rounded-btn bg-ink-950 border border-amber-500/30 hover:border-amber-400 text-amber-400 text-xs font-mono font-bold transition-all active:scale-95 disabled:opacity-50">+1 000 🪙</button>
+            <button type="button" @click="quickAdd(5000, 0)" :disabled="quickLoading" class="px-2.5 py-1.5 rounded-btn bg-ink-950 border border-amber-500/30 hover:border-amber-400 text-amber-400 text-xs font-mono font-bold transition-all active:scale-95 disabled:opacity-50">+5 000 🪙</button>
+            <button type="button" @click="quickAdd(10000, 0)" :disabled="quickLoading" class="px-2.5 py-1.5 rounded-btn bg-ink-950 border border-amber-500/30 hover:border-amber-400 text-amber-400 text-xs font-mono font-bold transition-all active:scale-95 disabled:opacity-50">+10 000 🪙</button>
+            <button type="button" @click="quickAdd(50000, 0)" :disabled="quickLoading" class="px-2.5 py-1.5 rounded-btn bg-ink-950 border border-amber-500/30 hover:border-amber-400 text-amber-400 text-xs font-mono font-bold transition-all active:scale-95 disabled:opacity-50">+50 000 🪙</button>
+            <button type="button" @click="quickAdd(0, 1000)" :disabled="quickLoading" class="px-2.5 py-1.5 rounded-btn bg-ink-950 border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 text-xs font-mono font-bold transition-all active:scale-95 disabled:opacity-50">+1 000 🌟</button>
+            <button type="button" @click="quickAdd(0, 5000)" :disabled="quickLoading" class="px-2.5 py-1.5 rounded-btn bg-ink-950 border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 text-xs font-mono font-bold transition-all active:scale-95 disabled:opacity-50">+5 000 🌟</button>
+            <button type="button" onclick="window.openAdminTopupModal && window.openAdminTopupModal()" class="px-3 py-1.5 rounded-btn bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-mono font-bold transition-all active:scale-95 shadow-md">⚡ Boshqa miqdor...</button>
+        </div>
+    </div>
+</div>
+
 {{-- KPI Cards Row (DENSITY: 7, p-4) --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 mb-5">
 

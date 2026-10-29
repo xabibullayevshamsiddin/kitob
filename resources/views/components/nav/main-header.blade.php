@@ -304,6 +304,14 @@
                             </svg>
                             <span :class="coinsBump ? 'ks-coin-rolling' : ''" x-text="totalCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
                         </a>
+                        @if(auth()->user()->isAdmin() || auth()->user()->hasRole('admin'))
+                            <button type="button"
+                                    onclick="window.openAdminTopupModal && window.openAdminTopupModal()"
+                                    class="ml-1.5 px-2 py-0.5 rounded-badge bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/30 text-amber-600 dark:text-amber-300 font-mono text-[10px] font-bold transition-all shadow-sm active:scale-95"
+                                    title="Admin: O'z hisobingizga tekinga tanga yoki ball qo'shish">
+                                + 🪙
+                            </button>
+                        @endif
 
                         {{-- Floating +Coins Pop Animation (Yuqoriga uchuvchi) --}}
                         <template x-if="coinFloater">
@@ -477,6 +485,12 @@
                                     <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                                     <span>{{ __('site.nav.dashboard') }}</span>
                                 </a>
+                                <button type="button"
+                                        onclick="window.openAdminTopupModal && window.openAdminTopupModal()"
+                                        class="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors duration-base text-left">
+                                    <span class="text-sm">⚡</span>
+                                    <span>Hisobni to'ldirish (Tekin 🪙 / 🌟)</span>
+                                </button>
                             @elseif(auth()->user()->hasRole('teacher'))
                                 <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-cyan-700 dark:text-cyan-400 hover:bg-ink-700/60 transition-colors duration-base">
                                     <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
