@@ -409,6 +409,114 @@ function generateGroupMessage() {
     return samples;
 }
 
+// 14. theme_light.wav (warm rising chime / sunbeam glow ~160ms)
+function generateThemeLight() {
+    const duration = 0.16;
+    const numSamples = Math.floor(SAMPLE_RATE * duration);
+    const samples = new Float32Array(numSamples);
+
+    const f1 = 587.33; // D5
+    const f2 = 783.99; // G5
+    const t2 = 0.050;
+
+    for (let i = 0; i < numSamples; i++) {
+        const t = i / SAMPLE_RATE;
+        let s = 0;
+
+        // Note 1 (D5)
+        if (t < 0.12) {
+            const phase = 2 * Math.PI * f1 * t;
+            const wave = 0.85 * Math.sin(phase) + 0.15 * Math.sin(2 * phase);
+            const env = t < 0.004 ? (t / 0.004) : Math.exp(-(t - 0.004) / 0.035);
+            s += wave * env * 0.32;
+        }
+
+        // Note 2 (G5)
+        if (t >= t2) {
+            const dt = t - t2;
+            const phase = 2 * Math.PI * f2 * dt;
+            const wave = 0.80 * Math.sin(phase) + 0.20 * Math.sin(2 * phase);
+            const env = dt < 0.005 ? (dt / 0.005) : Math.exp(-(dt - 0.005) / 0.045);
+            s += wave * env * 0.36;
+        }
+
+        samples[i] = s;
+    }
+    return samples;
+}
+
+// 15. theme_dark.wav (calm descending twilight chime ~180ms)
+function generateThemeDark() {
+    const duration = 0.18;
+    const numSamples = Math.floor(SAMPLE_RATE * duration);
+    const samples = new Float32Array(numSamples);
+
+    const f1 = 783.99; // G5
+    const f2 = 587.33; // D5
+    const t2 = 0.050;
+
+    for (let i = 0; i < numSamples; i++) {
+        const t = i / SAMPLE_RATE;
+        let s = 0;
+
+        // Note 1 (G5)
+        if (t < 0.12) {
+            const phase = 2 * Math.PI * f1 * t;
+            const wave = 0.88 * Math.sin(phase) + 0.12 * Math.sin(2 * phase);
+            const env = t < 0.005 ? (t / 0.005) : Math.exp(-(t - 0.005) / 0.035);
+            s += wave * env * 0.30;
+        }
+
+        // Note 2 (D5)
+        if (t >= t2) {
+            const dt = t - t2;
+            const phase = 2 * Math.PI * f2 * dt;
+            const wave = 0.92 * Math.sin(phase) + 0.08 * Math.sin(2 * phase);
+            const env = dt < 0.006 ? (dt / 0.006) : Math.exp(-(dt - 0.006) / 0.055);
+            s += wave * env * 0.34;
+        }
+
+        samples[i] = s;
+    }
+    return samples;
+}
+
+// 16. language_switch.wav (organic tactile page-turn tap ~120ms)
+function generateLanguageSwitch() {
+    const duration = 0.12;
+    const numSamples = Math.floor(SAMPLE_RATE * duration);
+    const samples = new Float32Array(numSamples);
+
+    const t2 = 0.040;
+
+    for (let i = 0; i < numSamples; i++) {
+        const t = i / SAMPLE_RATE;
+        let s = 0;
+
+        // Tap 1
+        if (t < 0.07) {
+            const freq = 480 - (480 - 320) * (t / 0.07);
+            const phase = 2 * Math.PI * freq * t;
+            const wave = 0.85 * Math.sin(phase) + 0.15 * Math.sin(2 * phase);
+            const env = t < 0.003 ? (t / 0.003) : Math.exp(-(t - 0.003) / 0.018);
+            s += wave * env * 0.35;
+        }
+
+        // Tap 2
+        if (t >= t2) {
+            const dt = t - t2;
+            const freq = 620 - (620 - 440) * (dt / 0.07);
+            const phase = 2 * Math.PI * freq * dt;
+            const wave = 0.88 * Math.sin(phase) + 0.12 * Math.sin(2 * phase);
+            const env = dt < 0.003 ? (dt / 0.003) : Math.exp(-(dt - 0.003) / 0.022);
+            s += wave * env * 0.38;
+        }
+
+        samples[i] = s;
+    }
+    return samples;
+}
+
 const generators = {
     'bookmark.wav': generateBookmark,
     'settings_saved.wav': generateSettingsSaved,
@@ -420,6 +528,9 @@ const generators = {
     'daily_bonus.wav': generateDailyBonus,
     'note_saved.wav': generateNoteSaved,
     'group_message.wav': generateGroupMessage,
+    'theme_light.wav': generateThemeLight,
+    'theme_dark.wav': generateThemeDark,
+    'language_switch.wav': generateLanguageSwitch,
     'purchase.wav': generatePurchase,
     'chat_message.wav': generateChatMessage,
     'error.wav': generateError,

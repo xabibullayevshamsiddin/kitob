@@ -52,7 +52,7 @@
                 <a
                     href="{{ url()->current() }}?lang={{ $code }}"
                     class="flex items-center justify-between px-3 py-2 text-xs rounded-btn transition-all {{ $isActive ? 'bg-amber-500/15 text-amber-800 dark:text-amber-400 font-bold border border-amber-500/30' : 'text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60' }}"
-                    @click="langOpen = false"
+                    @click="if (window.KitobSound) window.KitobSound.play('language_switch'); try { sessionStorage.setItem('kitob_just_switched_lang', '1'); } catch(e) {} langOpen = false"
                 >
                     <div class="flex items-center gap-2.5">
                         <x-flag :country="$lang['flag'] ?? 'uz'" class="w-4.5 h-3 rounded-[2px] shadow-xs" />

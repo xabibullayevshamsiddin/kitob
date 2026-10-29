@@ -45,6 +45,9 @@
         daily_bonus: 1500,
         note_saved: 350,
         group_message: 4000,
+        theme_light: 300,
+        theme_dark: 300,
+        language_switch: 300,
         purchase: 600,
         chat_message: 1000,
         error: 500,
@@ -111,6 +114,24 @@
             name: 'Ochiq guruh xabari',
             desc: 'Ochiq guruhga yangi xabar kelganda mayin bildirishnoma (takrorlanish cheklovi bilan)',
             duration: 180
+        },
+        {
+            key: 'theme_light',
+            name: 'Yorug‘ rejim (Light mode)',
+            desc: 'Yorug‘ rejimga o‘tganda mayin va iliq ko‘tariluvchi ohang',
+            duration: 160
+        },
+        {
+            key: 'theme_dark',
+            name: 'Tungi rejim (Dark mode)',
+            desc: 'Tungi qorong‘i rejimga o‘tganda osoyishta va sokin tushuvchi ohang',
+            duration: 180
+        },
+        {
+            key: 'language_switch',
+            name: 'Tilni o‘zgartirish',
+            desc: 'Sayt tili (O‘zbekcha, Ruscha, Inglizcha) almashtirilganda varaqlashdek nafis chertish',
+            duration: 120
         },
         {
             key: 'purchase',
@@ -238,6 +259,26 @@
             window.addEventListener('bonus-claimed-animation', () => this.play('daily_bonus'));
             window.addEventListener('note-saved', () => this.play('note_saved'));
             window.addEventListener('group-message-received', (e) => this.play('group_message', e?.detail || {}));
+            window.addEventListener('theme-changed', (e) => {
+                const theme = e?.detail?.theme;
+                if (theme === 'light') {
+                    this.play('theme_light');
+                } else if (theme === 'dark') {
+                    this.play('theme_dark');
+                }
+            });
+            window.addEventListener('language-switch', () => this.play('language_switch'));
+
+            // Check if page was navigated due to language switch
+            try {
+                if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('kitob_just_switched_lang')) {
+                    sessionStorage.removeItem('kitob_just_switched_lang');
+                    setTimeout(() => {
+                        this.play('language_switch');
+                    }, 120);
+                }
+            } catch (e) {}
+
             window.addEventListener('quiz-correct', () => this.play('quiz_correct'));
             window.addEventListener('quiz-wrong', () => this.play('quiz_wrong'));
             window.addEventListener('quiz-finish', () => this.play('quiz_finish'));
@@ -415,6 +456,15 @@
                         break;
                     case 'group_message':
                         this.synthGroupMessage(ctx);
+                        break;
+                    case 'theme_light':
+                        this.synthThemeLight(ctx);
+                        break;
+                    case 'theme_dark':
+                        this.synthThemeDark(ctx);
+                        break;
+                    case 'language_switch':
+                        this.synthLanguageSwitch(ctx);
                         break;
                     case 'purchase':
                         this.synthPurchase(ctx);
@@ -671,6 +721,78 @@
             const t = ctx.currentTime;
             this.playSineTone(ctx, 587.33, t, 0.16, 0.30, 1800); // D5
             this.playSineTone(ctx, 880.00, t + 0.03, 0.18, 0.34, 2000); // A5
+        }
+
+        /**
+         * 6f. Theme Light: Warm rising acoustic celeste rise (~160ms)
+         */
+        synthThemeLight(ctx) {
+            const t = ctx.currentTime;
+            this.playSineTone(ctx, 587.33, t, 0.12, 0.32, 2200); // D5
+            this.playSineTone(ctx, 783.99, t + 0.05, 0.18, 0.36, 2600); // G5
+        }
+
+        /**
+         * 6g. Theme Dark: Calm descending twilight chime (~180ms)
+         */
+        synthThemeDark(ctx) {
+            const t = ctx.currentTime;
+            this.playSineTone(ctx, 783.99, t, 0.12, 0.30, 1800); // G5
+            this.playSineTone(ctx, 587.33, t + 0.05, 0.20, 0.34, 1400); // D5
+        }
+
+        /**
+         * 6h. Language Switch: Organic tactile page-turn double tap (~120ms)
+         */
+        synthLanguageSwitch(ctx) {
+            const t = ctx.currentTime;
+
+            // Tap 1
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            const filter1 = ctx.createBiquadFilter();
+
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(480, t);
+            osc1.frequency.exponentialRampToValueAtTime(320, t + 0.045);
+
+            filter1.type = 'lowpass';
+            filter1.frequency.setValueAtTime(1800, t);
+
+            gain1.gain.setValueAtTime(0.0001, t);
+            gain1.gain.linearRampToValueAtTime(0.35, t + 0.003);
+            gain1.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+
+            osc1.connect(filter1);
+            filter1.connect(gain1);
+            gain1.connect(this.masterGain);
+
+            osc1.start(t);
+            osc1.stop(t + 0.055);
+
+            // Tap 2
+            const t2 = t + 0.040;
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            const filter2 = ctx.createBiquadFilter();
+
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(620, t2);
+            osc2.frequency.exponentialRampToValueAtTime(440, t2 + 0.055);
+
+            filter2.type = 'lowpass';
+            filter2.frequency.setValueAtTime(2000, t2);
+
+            gain2.gain.setValueAtTime(0.0001, t2);
+            gain2.gain.linearRampToValueAtTime(0.38, t2 + 0.003);
+            gain2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.065);
+
+            osc2.connect(filter2);
+            filter2.connect(gain2);
+            gain2.connect(this.masterGain);
+
+            osc2.start(t2);
+            osc2.stop(t2 + 0.070);
         }
 
         /**

@@ -1,6 +1,6 @@
 {
-  "_page-flip.browser-2e91685f.js": {
-    "file": "assets/page-flip.browser-2e91685f.js",
+  "_page-flip.browser-547949a9.js": {
+    "file": "assets/page-flip.browser-547949a9.js",
     "imports": [
       "resources/js/app.js"
     ],
@@ -17,7 +17,7 @@
     "src": "node_modules/gsap/index.js"
   },
   "resources/css/app.css": {
-    "file": "assets/app-e4ad1bae.css",
+    "file": "assets/app-ea858b34.css",
     "isEntry": true,
     "src": "resources/css/app.css"
   },
@@ -25,9 +25,9 @@
     "dynamicImports": [
       "node_modules/gsap/index.js",
       "node_modules/gsap/ScrollTrigger.js",
-      "_page-flip.browser-2e91685f.js"
+      "_page-flip.browser-547949a9.js"
     ],
-    "file": "assets/app-f9f50197.js",
+    "file": "assets/app-51b38e2f.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   }

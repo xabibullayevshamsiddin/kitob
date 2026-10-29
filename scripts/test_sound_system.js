@@ -19,7 +19,10 @@ const expectedSounds = [
     'group_message.wav',
     'purchase.wav',
     'chat_message.wav',
-    'error.wav'
+    'error.wav',
+    'theme_light.wav',
+    'theme_dark.wav',
+    'language_switch.wav'
 ];
 
 let allFilesExist = true;
@@ -66,6 +69,9 @@ if (fs.existsSync(managerPath)) {
         'synthPurchase',
         'synthChatMessage',
         'synthError',
+        'synthThemeLight',
+        'synthThemeDark',
+        'synthLanguageSwitch',
         'isSuppressed',
         'isMediaPlaying',
         'isMicrophoneActive',

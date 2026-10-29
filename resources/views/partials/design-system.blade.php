@@ -49,6 +49,11 @@
                     el.classList.add('dark');
                 }
                 window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: theme } }));
+                try {
+                    if (window.KitobSound && typeof window.KitobSound.play === 'function') {
+                        window.KitobSound.play(theme === 'light' ? 'theme_light' : 'theme_dark');
+                    }
+                } catch(e) {}
             };
 
             // Haptic feedback (if mobile device supports it)

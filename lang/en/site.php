@@ -992,6 +992,12 @@ return [
         'sound_chat_message_desc' => 'Soft organic droplet ping for incoming chat notifications',
         'sound_error' => 'Warning & Error',
         'sound_error_desc' => 'Calm, muted double pulse for important alerts',
+        'sound_theme_light' => 'Light Theme',
+        'sound_theme_light_desc' => 'Gentle warm rising chime when switching to light mode',
+        'sound_theme_dark' => 'Dark Theme',
+        'sound_theme_dark_desc' => 'Calm and peaceful descending tone when switching to dark mode',
+        'sound_language_switch' => 'Language Switch',
+        'sound_language_switch_desc' => 'Tactile page-turn tap when switching interface language',
         'sound_listen' => 'Play',
     ],
     'theme' => [
