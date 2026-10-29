@@ -1,5 +1,3 @@
-        <div class="space-y-5 live-video-column">
-
             <!-- 0. Placeholder when Docked Mini Mode is active (keeps page layout 100% stable) -->
             <div x-show="isDockedMini" x-cloak
                  class="w-full aspect-video rounded-panel bg-ink-950/70 border-2 border-dashed border-amber-500/30 flex flex-col items-center justify-center p-6 text-center space-y-3 transition-all">

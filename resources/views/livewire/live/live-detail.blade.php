@@ -38,9 +38,9 @@
     @include('livewire.live.partials.header')
 
     <!-- ── 2. TWO-COLUMN STUDIO GRID ── -->
-    <div class="live-studio-grid min-h-[620px] pb-12">
+    <div class="live-studio-grid" :class="chatOpen ? 'chat-is-open' : 'chat-is-closed'">
         <!-- ════ LEFT: BROADCAST VIDEO & HOST CONSOLE ════ -->
-        <div class="space-y-4">
+        <div class="space-y-5 live-video-column">
             @include('livewire.live.partials.video-viewport')
             @include('livewire.live.partials.host-toolbar')
         </div>
