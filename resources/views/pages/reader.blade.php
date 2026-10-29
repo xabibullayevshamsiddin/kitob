@@ -480,6 +480,9 @@
                             note_text: noteText
                         });
                         this.notes.unshift(data.note);
+                        if (window.KitobSound) {
+                            window.KitobSound.play('note_saved');
+                        }
                         this.noteDraft = '';
                         this.noteFormOpen = false;
                         this.showAnnotationMessage(@js(__('site.reader.note_saved_profile')));

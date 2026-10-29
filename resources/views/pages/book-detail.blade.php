@@ -445,8 +445,8 @@
                             class="px-3.5 py-2 rounded-btn bg-gradient-to-r from-violet-100 via-purple-50 to-amber-100 hover:from-violet-200 hover:via-purple-100 hover:to-amber-200 dark:from-violet-600/25 dark:via-amber-500/15 dark:to-violet-600/25 dark:hover:from-violet-600/35 dark:hover:to-amber-500/30 text-violet-950 dark:text-amber-200 border border-violet-300 hover:border-violet-400 dark:border-violet-400/40 dark:hover:border-amber-400 font-bold font-sans text-xs inline-flex items-center gap-1.5 shadow-sm shadow-violet-500/10 transition-all active:scale-95 group"
                             title="Kitobning 1 daqiqalik qisqacha mazmuni va asosiy saboqlarini o'qish">
                         <span class="text-sm group-hover:scale-110 transition-transform">🧠</span>
-                        <span class="font-bold tracking-tight">AI Konspekt</span>
-                        <span class="px-1.5 py-0.5 rounded-badge bg-amber-200/90 text-amber-950 border border-amber-400/50 dark:bg-amber-400/20 dark:text-amber-200 dark:border-amber-400/30 text-[10px] font-mono font-bold">1 daqiqa</span>
+                        <span class="font-bold tracking-tight text-violet-950 dark:text-amber-200">AI Konspekt</span>
+                        <span class="px-1.5 py-0.5 rounded-badge bg-amber-200 text-amber-950 border border-amber-400/50 dark:bg-amber-400/20 dark:text-amber-200 dark:border-amber-400/30 text-[10px] font-mono font-bold">1 daqiqa</span>
                     </button>
 
                     @if($firstAudio = $book->audios->first())

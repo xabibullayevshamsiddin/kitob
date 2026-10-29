@@ -22,6 +22,7 @@ class GroupDetail extends Component
 
     public string $message = '';
     public bool $showDeleteModal = false;
+    public ?int $lastKnownMessageId = null;
 
     // Guruh rasmi
     public $newCoverImage = null;
@@ -458,6 +459,9 @@ class GroupDetail extends Component
             session()->flash('error', '«' . $group->name . '» guruhiga kirish uchun avval guruhga a\'zo bo\'ling.');
             return redirect()->route('groups.index');
         }
+
+        $latest = GroupMessage::where('group_id', $group->id)->latest('id')->first();
+        $this->lastKnownMessageId = $latest?->id;
     }
 
     protected $rules = [
@@ -484,11 +488,12 @@ class GroupDetail extends Component
 
         $this->validate();
 
-        GroupMessage::create([
+        $createdMsg = GroupMessage::create([
             'group_id' => $this->group->id,
             'user_id'  => $user->id,
             'message'  => trim($this->message),
         ]);
+        $this->lastKnownMessageId = $createdMsg->id;
 
         $this->reset('message');
         $this->dispatchBrowserEvent('chat-scroll-bottom');
@@ -517,13 +522,14 @@ class GroupDetail extends Component
             return;
         }
 
-        GroupMessage::create([
+        $createdVoice = GroupMessage::create([
             'group_id'       => $this->group->id,
             'user_id'        => $user->id,
             'message'        => '🎤 Ovozli xabar',
             'audio_path'     => $cleanPath,
             'audio_duration' => max(1, $duration),
         ]);
+        $this->lastKnownMessageId = $createdVoice->id;
 
         $this->dispatchBrowserEvent('chat-scroll-bottom');
     }
@@ -614,6 +620,19 @@ class GroupDetail extends Component
             ->get()
             ->reverse()
             ->values();
+
+        $latestMessage = $messages->last();
+        if ($this->lastKnownMessageId !== null && $latestMessage && $latestMessage->id > $this->lastKnownMessageId) {
+            if ((int) $latestMessage->user_id !== (int) Auth::id()) {
+                $this->dispatchBrowserEvent('kitob-sound', [
+                    'sound'     => 'group_message',
+                    'sender_id' => $latestMessage->user_id,
+                ]);
+            }
+        }
+        if ($latestMessage) {
+            $this->lastKnownMessageId = $latestMessage->id;
+        }
 
         $members = GroupMember::where('group_id', $this->group->id)
             ->with('user:id,name,username,avatar,total_points')

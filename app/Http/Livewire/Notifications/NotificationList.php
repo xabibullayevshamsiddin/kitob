@@ -116,6 +116,7 @@ class NotificationList extends Component
             'points' => 70,
             'coins'  => 10,
         ]);
+        $this->dispatchBrowserEvent('daily-bonus-claimed');
 
         $this->toastSuccess("Barakalla, ertaldo turibsiz! 🌅 +70 ball va +10 tanga hisobingizga qo'shildi!");
     }
@@ -173,6 +174,7 @@ class NotificationList extends Component
             'points' => 200,
             'coins'  => 40,
         ]);
+        $this->dispatchBrowserEvent('daily-bonus-claimed');
 
         $this->toastSuccess("Tabriklaymiz! +200 ball va +40 tanga hisobingizga muvaffaqiyatli qo'shildi! 🏆🪙");
     }

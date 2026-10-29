@@ -41,6 +41,10 @@
         quiz_wrong: 250,
         quiz_finish: 600,
         achievement: 1200,
+        level_up: 4000,
+        daily_bonus: 1500,
+        note_saved: 350,
+        group_message: 4000,
         purchase: 600,
         chat_message: 1000,
         error: 500,
@@ -80,9 +84,33 @@
         },
         {
             key: 'achievement',
-            name: 'Yutuq va yangi daraja',
-            desc: 'Nishon, yangi daraja yoki kunlik maqsad uchun bir soniyalik yutuq ohangi',
+            name: 'Yutuq va nishon',
+            desc: 'Nishon yoki yutuq olinganda bir soniyalik tantanali ohang',
             duration: 950
+        },
+        {
+            key: 'level_up',
+            name: 'Yangi daraja (Level Up)',
+            desc: 'Yangi darajaga ko‘tarilganda bir martalik tantanali yutuq ohangi',
+            duration: 950
+        },
+        {
+            key: 'daily_bonus',
+            name: 'Kunlik maqsad va bonus',
+            desc: 'Kunlik maqsad yoki bonus muvaffaqiyatli olinganda qisqa tabrik ovozi',
+            duration: 420
+        },
+        {
+            key: 'note_saved',
+            name: 'Shaxsiy qayd saqlandi',
+            desc: 'Kitobga shaxsiy qayd yozilganda xatcho‘p ovoziga o‘xshash mayin tasdiqlash',
+            duration: 140
+        },
+        {
+            key: 'group_message',
+            name: 'Ochiq guruh xabari',
+            desc: 'Ochiq guruhga yangi xabar kelganda mayin bildirishnoma (takrorlanish cheklovi bilan)',
+            duration: 180
         },
         {
             key: 'purchase',
@@ -202,8 +230,14 @@
             window.addEventListener('shop-item-bought', () => this.play('purchase'));
             window.addEventListener('chest-opened', () => this.play('purchase'));
             window.addEventListener('badge-awarded', () => this.play('achievement'));
-            window.addEventListener('level-up', () => this.play('achievement'));
-            window.addEventListener('daily-goal-completed', () => this.play('achievement'));
+            window.addEventListener('level-up', (e) => this.play('level_up', {
+                dedupeKey: 'level_up_' + (e?.detail?.level || e?.detail?.new_level || '')
+            }));
+            window.addEventListener('daily-goal-completed', () => this.play('daily_bonus'));
+            window.addEventListener('daily-bonus-claimed', () => this.play('daily_bonus'));
+            window.addEventListener('bonus-claimed-animation', () => this.play('daily_bonus'));
+            window.addEventListener('note-saved', () => this.play('note_saved'));
+            window.addEventListener('group-message-received', (e) => this.play('group_message', e?.detail || {}));
             window.addEventListener('quiz-correct', () => this.play('quiz_correct'));
             window.addEventListener('quiz-wrong', () => this.play('quiz_wrong'));
             window.addEventListener('quiz-finish', () => this.play('quiz_finish'));
@@ -215,6 +249,8 @@
                     this.play(detail.sound, detail);
                 } else if (detail.type === 'error') {
                     this.play('error', { dedupeKey: 'toast_error_' + (detail.message || '') });
+                } else if (detail.type === 'level_up') {
+                    this.play('level_up', detail);
                 }
             });
         }
@@ -367,6 +403,18 @@
                         break;
                     case 'achievement':
                         this.synthAchievement(ctx);
+                        break;
+                    case 'level_up':
+                        this.synthLevelUp(ctx);
+                        break;
+                    case 'daily_bonus':
+                        this.synthDailyBonus(ctx);
+                        break;
+                    case 'note_saved':
+                        this.synthNoteSaved(ctx);
+                        break;
+                    case 'group_message':
+                        this.synthGroupMessage(ctx);
                         break;
                     case 'purchase':
                         this.synthPurchase(ctx);
@@ -525,6 +573,104 @@
             notes.forEach((n) => {
                 this.playChimeNote(ctx, n.freq, t + n.delay, n.dur, n.gain);
             });
+        }
+
+        /**
+         * 6b. Level Up: Majestic celestial fanfare C5 -> E5 -> G5 -> C6 -> E6 (~950ms)
+         */
+        synthLevelUp(ctx) {
+            const t = ctx.currentTime;
+            const notes = [
+                { freq: 523.25, delay: 0.00, dur: 0.35, gain: 0.28 }, // C5
+                { freq: 659.25, delay: 0.10, dur: 0.40, gain: 0.30 }, // E5
+                { freq: 783.99, delay: 0.20, dur: 0.48, gain: 0.32 }, // G5
+                { freq: 1046.50, delay: 0.32, dur: 0.58, gain: 0.34 },// C6
+                { freq: 1318.51, delay: 0.45, dur: 0.65, gain: 0.36 } // E6
+            ];
+
+            notes.forEach((n) => {
+                this.playChimeNote(ctx, n.freq, t + n.delay, n.dur, n.gain);
+            });
+        }
+
+        /**
+         * 6c. Daily Bonus: Joyful congratulatory marimba cascade G5 -> B5 -> D6 -> G6 (~420ms)
+         */
+        synthDailyBonus(ctx) {
+            const t = ctx.currentTime;
+            const notes = [
+                { freq: 783.99, delay: 0.00, dur: 0.14, gain: 0.32 }, // G5
+                { freq: 987.77, delay: 0.06, dur: 0.16, gain: 0.34 }, // B5
+                { freq: 1174.66, delay: 0.12, dur: 0.20, gain: 0.36 },// D6
+                { freq: 1567.98, delay: 0.18, dur: 0.26, gain: 0.38 } // G6
+            ];
+
+            notes.forEach((n) => {
+                this.playChimeNote(ctx, n.freq, t + n.delay, n.dur, n.gain);
+            });
+        }
+
+        /**
+         * 6d. Note Saved: Gentle bookmark-like double tap with acoustic warmth (~140ms)
+         */
+        synthNoteSaved(ctx) {
+            const t = ctx.currentTime;
+
+            // Tap 1: 480Hz -> 300Hz (~65ms)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            const filter1 = ctx.createBiquadFilter();
+
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(480, t);
+            osc1.frequency.exponentialRampToValueAtTime(300, t + 0.06);
+
+            filter1.type = 'lowpass';
+            filter1.frequency.setValueAtTime(1500, t);
+
+            gain1.gain.setValueAtTime(0.0001, t);
+            gain1.gain.exponentialRampToValueAtTime(0.48, t + 0.003);
+            gain1.gain.exponentialRampToValueAtTime(0.0001, t + 0.065);
+
+            osc1.connect(filter1);
+            filter1.connect(gain1);
+            gain1.connect(this.masterGain);
+
+            osc1.start(t);
+            osc1.stop(t + 0.07);
+
+            // Tap 2: 660Hz -> 420Hz (~80ms, starts at t + 0.055)
+            const t2 = t + 0.055;
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            const filter2 = ctx.createBiquadFilter();
+
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(660, t2);
+            osc2.frequency.exponentialRampToValueAtTime(420, t2 + 0.075);
+
+            filter2.type = 'lowpass';
+            filter2.frequency.setValueAtTime(1600, t2);
+
+            gain2.gain.setValueAtTime(0.0001, t2);
+            gain2.gain.exponentialRampToValueAtTime(0.50, t2 + 0.003);
+            gain2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.08);
+
+            osc2.connect(filter2);
+            filter2.connect(gain2);
+            gain2.connect(this.masterGain);
+
+            osc2.start(t2);
+            osc2.stop(t2 + 0.085);
+        }
+
+        /**
+         * 6e. Group Message: Soft ambient harmonic ping for open groups (~180ms)
+         */
+        synthGroupMessage(ctx) {
+            const t = ctx.currentTime;
+            this.playSineTone(ctx, 587.33, t, 0.16, 0.30, 1800); // D5
+            this.playSineTone(ctx, 880.00, t + 0.03, 0.18, 0.34, 2000); // A5
         }
 
         /**

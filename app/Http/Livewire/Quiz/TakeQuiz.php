@@ -708,6 +708,15 @@ class TakeQuiz extends Component
                 'points'   => $pointsToAward,
                 'newTotal' => (int) $user->total_points,
             ]);
+
+            $pointsService = app(\App\Services\Gamification\PointsService::class);
+            $levelUp = $pointsService->getLastLevelUp();
+            if ($levelUp) {
+                $this->dispatchBrowserEvent('level-up', [
+                    'level'      => $levelUp['new_level'],
+                    'level_info' => $levelUp['level_info'] ?? null,
+                ]);
+            }
         }
 
         // Toast bildirishnoma chiqarish

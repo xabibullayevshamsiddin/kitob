@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class PointsService
 {
+    protected ?array $lastLevelUp = null;
+
+    public function getLastLevelUp(): ?array
+    {
+        return $this->lastLevelUp;
+    }
+
     /**
      * Foydalanuvchiga ball berish (Points) + level-up tekshiruvi
      */
@@ -31,7 +38,7 @@ class PointsService
 
         // Level-up tekshiruvi (transaction tashqarisida, chunki awardCoins o'z transaksiyasida)
         $newPoints = (int) ($user->total_points ?? $oldPoints + $points);
-        app(LevelService::class)->checkAndAwardLevelUp($user, $oldPoints, $newPoints);
+        $this->lastLevelUp = app(LevelService::class)->checkAndAwardLevelUp($user, $oldPoints, $newPoints);
 
         return $transaction;
     }

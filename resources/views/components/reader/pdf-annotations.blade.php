@@ -135,7 +135,7 @@
                         });
                         this.annotations.unshift(data.annotation);
                         if (window.KitobSound) {
-                            window.KitobSound.play('bookmark');
+                            window.KitobSound.play(this.formKind === 'note' ? 'note_saved' : 'bookmark');
                         }
                         this.formOpen = false;
                         this.message = this.formKind === 'bookmark' ? 'PDF beti belgilandi.' : 'Betga shaxsiy qayd saqlandi.';
