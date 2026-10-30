@@ -174,7 +174,7 @@
 
         resolveInitialEnabled() {
             try {
-                if (typeof window !== 'undefined' && window.__KITOB_SOUND_SERVER_CONFIG && window.__KITOB_SOUND_SERVER_CONFIG.enabled !== null) {
+                if (typeof window !== 'undefined' && window.__KITOB_SOUND_SERVER_CONFIG && window.__KITOB_SOUND_SERVER_CONFIG.authenticated && window.__KITOB_SOUND_SERVER_CONFIG.enabled !== null) {
                     const srv = Boolean(window.__KITOB_SOUND_SERVER_CONFIG.enabled);
                     localStorage.setItem(STORAGE_KEY_ENABLED, srv ? 'true' : 'false');
                     return srv;
@@ -189,7 +189,7 @@
 
         resolveInitialVolume() {
             try {
-                if (typeof window !== 'undefined' && window.__KITOB_SOUND_SERVER_CONFIG && window.__KITOB_SOUND_SERVER_CONFIG.volume !== null) {
+                if (typeof window !== 'undefined' && window.__KITOB_SOUND_SERVER_CONFIG && window.__KITOB_SOUND_SERVER_CONFIG.authenticated && window.__KITOB_SOUND_SERVER_CONFIG.volume !== null) {
                     const srv = parseFloat(window.__KITOB_SOUND_SERVER_CONFIG.volume);
                     if (!isNaN(srv) && srv >= 0 && srv <= 1) {
                         localStorage.setItem(STORAGE_KEY_VOLUME, srv.toString());
@@ -273,8 +273,10 @@
             try {
                 if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('kitob_just_switched_lang')) {
                     sessionStorage.removeItem('kitob_just_switched_lang');
+                    this.coldStart = false;
+                    this.userInteracted = true;
                     setTimeout(() => {
-                        this.play('language_switch');
+                        this.play('language_switch', { bypassColdStart: true, isTest: true });
                     }, 120);
                 }
             } catch (e) {}
@@ -324,14 +326,15 @@
          * - Active audiobook, video, or flipbook audio playback
          * - Active live stream / mic broadcast
          */
-        isSuppressed(isTest = false) {
+        isSuppressed(soundName = '', isTest = false, options = {}) {
             if (!this.enabled) return true;
             if (this.volume <= 0.001) return true;
 
             // When testing via settings preview button, bypass media suppression
             if (isTest) return false;
 
-            if (this.coldStart) return true;
+            // Language switch or explicit bypass never blocked by cold start
+            if (this.coldStart && !options.bypassColdStart && soundName !== 'language_switch') return true;
             if (typeof document !== 'undefined' && document.hidden) return true;
 
             // Check if any audio/video media is currently playing
@@ -370,9 +373,11 @@
             return false;
         }
 
-        canPlay(soundName, dedupeKey = null, isTest = false) {
+        canPlay(soundName, dedupeKey = null, isTest = false, options = {}) {
+            // Ovoz o'chiq bo'lsa yoki ovoz balandligi 0 bo'lsa, hech qanday holatda (shu jumladan test tugmasida ham) ovoz chiqmaydi
+            if (!this.enabled || this.volume <= 0.001) return false;
             if (isTest) return true;
-            if (this.isSuppressed()) return false;
+            if (this.isSuppressed(soundName, isTest, options)) return false;
 
             const now = Date.now();
 
@@ -398,14 +403,19 @@
         /**
          * Main play entry point
          * @param {string} soundName
-         * @param {object} options { dedupeKey, isTest, forceAudioFile }
+         * @param {object} options { dedupeKey, isTest, bypassColdStart, forceAudioFile }
          */
         play(soundName, options = {}) {
             const isTest = Boolean(options.isTest);
             const dedupeKey = options.dedupeKey || null;
 
-            if (!this.canPlay(soundName, dedupeKey, isTest)) {
+            if (!this.canPlay(soundName, dedupeKey, isTest, options)) {
                 return false;
+            }
+
+            if (options.bypassColdStart || isTest || soundName === 'language_switch') {
+                this.userInteracted = true;
+                this.coldStart = false;
             }
 
             // Ensure AudioContext is available
@@ -415,8 +425,13 @@
                 return this.playLocalAudioFile(soundName);
             }
 
+            // Resume suspended context if user interacted
+            if (ctx.state === 'suspended' && (this.userInteracted || isTest || options.bypassColdStart || soundName === 'language_switch')) {
+                ctx.resume().catch(() => {});
+            }
+
             // If browser autoplay policy suspended the context and no user gesture occurred yet, do not queue
-            if (ctx.state === 'suspended' && !this.userInteracted && !isTest) {
+            if (ctx.state === 'suspended' && !this.userInteracted && !isTest && !options.bypassColdStart) {
                 return false;
             }
 
@@ -490,6 +505,9 @@
          * Test a sound directly (used by settings preview)
          */
         test(soundName = 'settings_saved') {
+            if (!this.enabled || this.volume <= 0.001) {
+                return false;
+            }
             this.userInteracted = true;
             const ctx = this.getAudioContext();
             if (ctx && ctx.state === 'suspended') {

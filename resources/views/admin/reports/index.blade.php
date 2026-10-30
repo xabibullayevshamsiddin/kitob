@@ -114,30 +114,12 @@
                     @php
                         $offender = $report->reportedUser;
                         $reporter = $report->reporter;
-                        $primaryUser = null;
-
-                        // 1. Agar murojaat matnida yoki mavzuda aniq foydalanuvchi ID (#ID) ko'rsatilgan bo'lsa (apellyatsiyalar uchun):
-                        if ($report->source === 'Ban Apellyatsiyasi' || str_contains($report->reason ?? '', 'apellyatsiya') || str_contains($report->message_content ?? '', 'APELLYATSIYA')) {
-                            if (preg_match('/#(\d+)/', ($report->message_content ?? '') . ' ' . ($report->reason ?? ''), $mId)) {
-                                $primaryUser = \App\Models\User::with('bannedBy')->find((int) $mId[1]);
-                            }
-                        }
-
-                        // 2. Agar hali aniqlanmagan bo'lsa, shikoyat qilingan yoki yuboruvchidan ban olganini tanlaymiz:
-                        if (!$primaryUser) {
-                            if ($offender && $offender->isBanned()) {
-                                $primaryUser = $offender;
-                            } elseif ($reporter && $reporter->isBanned()) {
-                                $primaryUser = $reporter;
-                            } else {
-                                $primaryUser = $offender ?? $reporter;
-                            }
-                        }
+                        // Ishonchli bazadagi bog'lanish (xabar matnidagi soxta #ID lardan emas, bazadagi reported_user_id yoki reporter_id orqali)
+                        $primaryUser = $offender ?? $reporter;
 
                         $isFromBannedUser = $report->source === 'Ban Apellyatsiyasi'
-                            || ($reporter && $reporter->isBanned())
                             || ($offender && $offender->isBanned())
-                            || ($primaryUser && $primaryUser->isBanned());
+                            || ($reporter && $reporter->isBanned());
 
                         $isBanned = (bool) ($primaryUser && $primaryUser->isBanned());
                         $bannedBy = $primaryUser?->bannedBy;
@@ -168,6 +150,20 @@
                             'userPhone'        => $primaryUser?->phone,
                             'userAvatar'       => $primaryUser ? $primaryUser->avatar_url : asset('images/default-avatar.png'),
                             'userEditUrl'      => $userEditUrl,
+                            'hasOffender'      => (bool) $offender,
+                            'offenderId'       => $offender?->id,
+                            'offenderName'     => $offender?->name,
+                            'offenderHandle'   => $offender ? ('@' . $offender->username . ' #' . $offender->id) : '',
+                            'offenderPhone'    => $offender?->phone,
+                            'offenderAvatar'   => $offender ? $offender->avatar_url : asset('images/default-avatar.png'),
+                            'offenderEditUrl'  => $offender ? route('admin.users.edit', $offender) : '',
+                            'hasReporter'      => (bool) $reporter,
+                            'reporterId'       => $reporter?->id,
+                            'reporterName'     => $reporter ? $reporter->name : 'Mehmon / Aloqa formasi',
+                            'reporterHandle'   => $reporter ? ('@' . $reporter->username . ' #' . $reporter->id) : 'Mehmon',
+                            'reporterPhone'    => $reporter?->phone,
+                            'reporterAvatar'   => $reporter ? $reporter->avatar_url : asset('images/default-avatar.png'),
+                            'reporterEditUrl'  => $reporter ? route('admin.users.edit', $reporter) : '',
                             'isBanned'         => $isBanned,
                             'bannedByLabel'    => $bannedByLabel,
                             'banRemaining'     => $banRemaining,
@@ -195,33 +191,53 @@
 
                         {{-- Offender / Banned User info --}}
                         <td class="px-3.5 py-3 align-middle">
-                            @if($primaryUser)
+                            @if($offender)
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $primaryUser->avatar_url }}" class="h-9 w-9 rounded-card border {{ $primaryUser->isBanned() ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-ink-border' }} object-cover" alt="{{ $primaryUser->name }}">
+                                    <img src="{{ $offender->avatar_url }}" class="h-9 w-9 rounded-card border {{ $offender->isBanned() ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-ink-border' }} object-cover" alt="{{ $offender->name }}">
                                     <div class="min-w-0">
                                         <div class="flex items-center gap-1.5">
-                                            <a href="{{ route('admin.users.edit', $primaryUser) }}" class="truncate text-xs font-bold text-paper hover:text-amber-400 transition-colors">{{ $primaryUser->name }}</a>
+                                            <a href="{{ route('admin.users.edit', $offender) }}" class="truncate text-xs font-bold text-paper hover:text-amber-400 transition-colors">{{ $offender->name }}</a>
                                         </div>
-                                        <p class="font-mono text-[11px] text-mist">{{ '@' . $primaryUser->username }} <span class="text-mist/70">#{{ $primaryUser->id }}</span></p>
-                                        @if($primaryUser->phone)
-                                            <p class="font-mono text-[11px] text-amber-400/90">📞 {{ $primaryUser->phone }}</p>
+                                        <p class="font-mono text-[11px] text-mist">{{ '@' . $offender->username }} <span class="text-mist/70">#{{ $offender->id }}</span></p>
+                                        @if($offender->phone)
+                                            <p class="font-mono text-[11px] text-amber-400/90">📞 {{ $offender->phone }}</p>
                                         @endif
-                                        @if($primaryUser->isBanned())
+                                        @if($offender->isBanned())
                                             <div class="mt-1 space-y-0.5">
                                                 <span class="inline-block rounded-badge border border-rose-500/40 bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-300">
-                                                    🚫 Bloklangan ({{ $primaryUser->ban_remaining }})
+                                                    🚫 Bloklangan ({{ $offender->ban_remaining }})
                                                 </span>
-                                                @if($primaryUser->ban_reason)
-                                                    <p class="text-[10px] text-rose-200/80 italic truncate max-w-[14rem]" title="{{ $primaryUser->ban_reason }}">
-                                                        Sabab: "{{ $primaryUser->ban_reason }}"
+                                                @if($offender->ban_reason)
+                                                    <p class="text-[10px] text-rose-200/80 italic truncate max-w-[14rem]" title="{{ $offender->ban_reason }}">
+                                                        Sabab: "{{ $offender->ban_reason }}"
                                                     </p>
                                                 @endif
                                             </div>
                                         @endif
                                     </div>
                                 </div>
+                            @elseif($report->source === 'Ban Apellyatsiyasi' && $reporter)
+                                <div class="flex items-center gap-3">
+                                    <img src="{{ $reporter->avatar_url }}" class="h-9 w-9 rounded-card border {{ $reporter->isBanned() ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-ink-border' }} object-cover" alt="{{ $reporter->name }}">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <a href="{{ route('admin.users.edit', $reporter) }}" class="truncate text-xs font-bold text-paper hover:text-amber-400 transition-colors">{{ $reporter->name }}</a>
+                                        </div>
+                                        <p class="font-mono text-[11px] text-mist">{{ '@' . $reporter->username }} <span class="text-mist/70">#{{ $reporter->id }}</span></p>
+                                        @if($reporter->phone)
+                                            <p class="font-mono text-[11px] text-amber-400/90">📞 {{ $reporter->phone }}</p>
+                                        @endif
+                                        @if($reporter->isBanned())
+                                            <div class="mt-1 space-y-0.5">
+                                                <span class="inline-block rounded-badge border border-rose-500/40 bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold text-rose-300">
+                                                    🚫 Bloklangan ({{ $reporter->ban_remaining }})
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                             @else
-                                <span class="font-mono text-xs text-mist">Foydalanuvchi topilmadi</span>
+                                <span class="font-mono text-xs text-mist">Ko'rsatilmagan (Umumiy murojaat)</span>
                             @endif
                         </td>
 
@@ -655,30 +671,51 @@
 
                 {{-- User & Meta Information Grid --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {{-- Shikoyat qilingan (agar mavjud bo'lsa) --}}
+                    <template x-if="activeReport.hasOffender">
+                        <div class="rounded-panel border border-rose-500/30 bg-rose-950/30 p-3 space-y-1.5">
+                            <span class="text-[10px] uppercase font-bold text-rose-300 block">Shikoyat qilingan (Offender):</span>
+                            <div class="flex items-center gap-3">
+                                <img :src="activeReport.offenderAvatar" class="h-10 w-10 rounded-card border border-rose-500/40 object-cover" alt="Avatar">
+                                <div class="min-w-0">
+                                    <a :href="activeReport.offenderEditUrl" target="_blank" class="font-bold text-xs text-paper hover:text-amber-400 truncate block transition-colors" x-text="activeReport.offenderName"></a>
+                                    <p class="font-mono text-[11px] text-mist" x-text="activeReport.offenderHandle"></p>
+                                    <p class="font-mono text-[11px] text-amber-400" x-show="activeReport.offenderPhone" x-text="'📞 ' + activeReport.offenderPhone"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     {{-- Yuboruvchi --}}
-                    <div class="rounded-panel border border-ink-border bg-ink-950/60 p-3 space-y-1.5">
-                        <span class="text-[10px] uppercase font-bold text-mist block">Yuboruvchi ma'lumotlari:</span>
+                    <div class="rounded-panel border border-ink-border bg-ink-950/60 p-3 space-y-1.5"
+                         :class="{ 'sm:col-span-2': !activeReport.hasOffender }">
+                        <span class="text-[10px] uppercase font-bold text-mist block">Murojaat yuboruvchisi (Reporter):</span>
                         <div class="flex items-center gap-3">
-                            <img :src="activeReport.userAvatar" class="h-10 w-10 rounded-card border border-ink-border object-cover" alt="Avatar">
+                            <img :src="activeReport.reporterAvatar" class="h-10 w-10 rounded-card border border-ink-border object-cover" alt="Avatar">
                             <div class="min-w-0">
-                                <a :href="activeReport.userEditUrl" target="_blank" class="font-bold text-xs text-paper hover:text-amber-400 truncate block transition-colors" x-text="activeReport.userName"></a>
-                                <p class="font-mono text-[11px] text-mist" x-text="activeReport.userHandle"></p>
-                                <p class="font-mono text-[11px] text-amber-400" x-show="activeReport.userPhone" x-text="'📞 ' + activeReport.userPhone"></p>
+                                <template x-if="activeReport.hasReporter">
+                                    <a :href="activeReport.reporterEditUrl" target="_blank" class="font-bold text-xs text-paper hover:text-amber-400 truncate block transition-colors" x-text="activeReport.reporterName"></a>
+                                </template>
+                                <template x-if="!activeReport.hasReporter">
+                                    <p class="font-bold text-xs text-paper" x-text="activeReport.reporterName"></p>
+                                </template>
+                                <p class="font-mono text-[11px] text-mist" x-text="activeReport.reporterHandle"></p>
+                                <p class="font-mono text-[11px] text-amber-400" x-show="activeReport.reporterPhone" x-text="'📞 ' + activeReport.reporterPhone"></p>
                             </div>
                         </div>
                     </div>
 
                     {{-- Murojaat yo'nalishi / Mavzusi --}}
-                    <div class="rounded-panel border border-ink-border bg-ink-950/60 p-3 space-y-1.5 flex flex-col justify-between">
+                    <div class="rounded-panel border border-ink-border bg-ink-950/60 p-3 space-y-1.5 flex flex-col justify-between sm:col-span-2">
                         <div>
                             <span class="text-[10px] uppercase font-bold text-mist block">Mavzu / Bo'lim:</span>
                             <p class="font-bold text-xs text-paper truncate mt-0.5" x-text="activeReport.reason || activeReport.source"></p>
                             <p class="text-[11px] text-mist mt-0.5" x-text="'Yuborilgan vaqt: ' + activeReport.createdAt"></p>
                         </div>
-                        <div class="pt-1 flex items-center gap-2">
-                            <a x-show="activeReport.userEditUrl" :href="activeReport.userEditUrl" target="_blank"
+                        <div class="pt-1 flex items-center gap-2" x-show="activeReport.userEditUrl">
+                            <a :href="activeReport.userEditUrl" target="_blank"
                                class="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400 hover:text-sky-300 hover:underline">
-                                <span>Foydalanuvchini tahrirlash →</span>
+                                <span>Foydalanuvchi profilini ochish →</span>
                             </a>
                         </div>
                     </div>

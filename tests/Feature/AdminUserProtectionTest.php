@@ -55,31 +55,51 @@ class AdminUserProtectionTest extends TestCase
     }
 
     /** @test */
-    public function admin_cannot_edit_other_admin(): void
+    public function admin_can_view_edit_page_of_other_admin(): void
     {
         $response = $this->actingAs($this->admin)
             ->get(route('admin.users.edit', $this->admin2));
 
-        $response->assertRedirect(route('admin.users.index'));
-        $response->assertSessionHas('error');
+        $response->assertOk();
     }
 
     /** @test */
-    public function admin_cannot_update_other_admin(): void
+    public function admin_can_update_other_admin_balance_but_cannot_change_role(): void
     {
         $response = $this->actingAs($this->admin)
             ->put(route('admin.users.update', $this->admin2), [
-                'role'   => 'student',
+                'role'   => 'student', // Admin rolini o'zgartirishga urinish
                 'points' => 999,
                 'coins'  => 999,
             ]);
 
-        $response->assertRedirect(route('admin.users.index'));
-        $response->assertSessionHas('error');
+        $response->assertRedirect(route('admin.users.edit', $this->admin2));
+        $response->assertSessionHas('success');
 
         $this->admin2->refresh();
+        // Rol daxlsiz saqlanishi kerak (admin)
         $this->assertEquals('admin', $this->admin2->roles->first()?->name);
-        $this->assertEquals(0, $this->admin2->total_points);
+        // Balans esa muvaffaqiyatli yangilangan bo'lishi kerak
+        $this->assertEquals(999, $this->admin2->total_points);
+        $this->assertEquals(999, $this->admin2->coin_balance);
+    }
+
+    /** @test */
+    public function admin_can_topup_other_admin_balance(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.balance.topup'), [
+                'target_user_id' => $this->admin2->id,
+                'points'         => 250,
+                'coins'          => 100,
+                'reason'         => 'Test admin topup',
+            ]);
+
+        $response->assertSessionHas('success');
+
+        $this->admin2->refresh();
+        $this->assertEquals(250, $this->admin2->total_points);
+        $this->assertEquals(100, $this->admin2->coin_balance);
     }
 
     /** @test */

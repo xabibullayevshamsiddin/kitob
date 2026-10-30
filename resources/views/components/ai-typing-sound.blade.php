@@ -41,9 +41,12 @@
 
             let effectiveVolume = volume;
             if (window.KitobSound && typeof window.KitobSound.getVolume === 'function') {
-                effectiveVolume = volume * (window.KitobSound.getVolume() / 0.20);
+                const masterVol = window.KitobSound.getVolume();
+                if (masterVol <= 0.001) return;
+                effectiveVolume = volume * (masterVol / 0.20);
             }
-            audio.volume = Math.max(0.02, Math.min(1.0, effectiveVolume));
+            if (effectiveVolume <= 0.001) return;
+            audio.volume = Math.max(0, Math.min(1.0, effectiveVolume));
 
             if (audio.paused) {
                 if (audio.currentTime === 0 && audio.duration > 3) {

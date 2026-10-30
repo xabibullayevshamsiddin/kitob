@@ -195,7 +195,7 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
 
     \App\Models\Report::create([
         'reporter_id'      => $senderUser?->id ?? auth()->id(),
-        'reported_user_id' => $senderUser?->id ?? auth()->id(),
+        'reported_user_id' => null,
         'source'           => 'Aloqa bo\'limi',
         'message_content'  => $contactContent,
         'link'             => null,

@@ -210,6 +210,9 @@
              previewOpen: false,
              activePreview: null,
              playEffect(name) {
+                 if (!@entangle('soundEnabled')) {
+                     return;
+                 }
                  this.activePreview = name;
                  if (window.KitobSound) {
                      window.KitobSound.test(name);
@@ -235,6 +238,8 @@
             <div class="flex items-center gap-2">
                 <button type="button"
                         @click="playEffect('settings_saved')"
+                        :class="{ 'opacity-40 cursor-not-allowed pointer-events-none': !@entangle('soundEnabled') }"
+                        :disabled="!@entangle('soundEnabled')"
                         class="px-3 py-1.5 rounded-btn bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all active:scale-95">
                     <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     <span>{{ __('site.settings.sound_test_btn') }}</span>
@@ -292,7 +297,8 @@
             </div>
 
             <!-- Compact Preview Accordion / List -->
-            <div class="border border-ink-border rounded-xl overflow-hidden bg-ink-950/40">
+            <div class="border border-ink-border rounded-xl overflow-hidden bg-ink-950/40"
+                 :class="{ 'opacity-50 pointer-events-none': !@entangle('soundEnabled') }">
                 <button type="button"
                         @click="previewOpen = !previewOpen"
                         class="w-full p-3.5 flex items-center justify-between text-left hover:bg-ink-950/80 transition-colors">
