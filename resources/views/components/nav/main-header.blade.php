@@ -282,9 +282,10 @@
                             <span :class="pointsBump ? 'ks-number-rolling' : ''" x-text="totalPoints.toLocaleString()">{{ number_format(auth()->user()->total_points) }}</span>
                         </span>
 
-                        {{-- Floating +Points Pop Animation (Yuqoriga uchuvchi) --}}
+                        {{-- Floating +Points Pop Animation (Pastga mayin tushuvchi) --}}
                         <template x-if="floater">
-                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-teal-300 to-cyan-500 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(0,168,181,0.7)] border border-cyan-200/90 flex items-center gap-1">
+                            <span class="ks-reward-floater px-2.5 py-1 rounded-full font-mono font-black text-[10px] sm:text-[11px] flex items-center gap-1 select-none"
+                                  style="background: linear-gradient(135deg, #22D3EE, #14B8A6); color: #07090E; border: 1px solid #A5F3FC; box-shadow: 0 4px 16px rgba(0, 168, 181, 0.65);">
                                 <span>⭐</span>
                                 <span x-text="floater"></span>
                             </span>
@@ -305,9 +306,10 @@
                             <span :class="coinsBump ? 'ks-coin-rolling' : ''" x-text="totalCoins.toLocaleString()">{{ number_format(auth()->user()->coin_balance) }}</span>
                         </a>
 
-                        {{-- Floating +Coins Pop Animation (Yuqoriga uchuvchi) --}}
+                        {{-- Floating +Coins Pop Animation (Pastga mayin tushuvchi) --}}
                         <template x-if="coinFloater">
-                            <span class="ks-reward-floater px-2 py-0.5 rounded-full bg-gradient-to-r from-cyan-300 via-teal-300 to-cyan-400 text-ink-950 font-mono font-black text-[10px] sm:text-[11px] shadow-[0_0_16px_rgba(0,168,181,0.7)] border border-cyan-200/90 flex items-center gap-1">
+                            <span class="ks-reward-floater px-2.5 py-1 rounded-full font-mono font-black text-[10px] sm:text-[11px] flex items-center gap-1 select-none"
+                                  style="background: linear-gradient(135deg, #FCD34D, #F59E0B); color: #07090E; border: 1px solid #FEF08A; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.65);">
                                 <span>🪙</span>
                                 <span x-text="coinFloater"></span>
                             </span>
@@ -319,27 +321,30 @@
                 @keyframes ksRewardFloat {
                   0% {
                     opacity: 0;
-                    transform: translate(-50%, 6px) scale(0.7);
+                    transform: translate(-50%, -6px) scale(0.75);
                   }
-                  15% {
+                  18% {
                     opacity: 1;
-                    transform: translate(-50%, -8px) scale(1.1);
+                    transform: translate(-50%, 4px) scale(1.1);
                   }
-                  50% {
+                  35% {
+                    transform: translate(-50%, 2px) scale(1.0);
+                  }
+                  70% {
                     opacity: 1;
-                    transform: translate(-50%, -18px) scale(1);
+                    transform: translate(-50%, 8px) scale(0.98);
                   }
                   100% {
                     opacity: 0;
-                    transform: translate(-50%, -32px) scale(0.85);
+                    transform: translate(-50%, 18px) scale(0.85);
                   }
                 }
                 .ks-reward-floater {
                   position: absolute;
                   left: 50%;
-                  bottom: calc(100% + 4px);
+                  top: calc(100% + 6px);
                   pointer-events: none;
-                  animation: ksRewardFloat 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                  animation: ksRewardFloat 1.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                   z-index: 60;
                   white-space: nowrap;
                 }
