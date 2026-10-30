@@ -359,6 +359,116 @@
         </div>
     </div>
 
+    <!-- ── 3. Animatsiyalar va Harakatlar (Motion & Animations) Card ── -->
+    <div class="p-6 sm:p-7 rounded-panel bg-ink-900 border border-ink-border shadow-soft space-y-6"
+         x-data="{
+             previewActive: false,
+             triggerPreview() {
+                 this.previewActive = true;
+                 setTimeout(() => { this.previewActive = false; }, 600);
+             }
+         }">
+        <div class="flex items-center justify-between border-b border-ink-border pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-btn bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold font-serif text-paper">{{ __('site.settings.motion_card_title') }}</h3>
+                    <p class="text-[11px] font-mono text-mist">{{ __('site.settings.motion_card_subtitle') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button"
+                        @click="triggerPreview()"
+                        class="px-3 py-1.5 rounded-btn bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all active:scale-95">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                    <span>{{ __('site.settings.motion_test_btn') }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Radio Options Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <!-- System -->
+            <label class="relative p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-3 text-left"
+                   :class="$wire.motionPreference === 'system' ? 'bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80'">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <input type="radio"
+                               name="motionPreference"
+                               value="system"
+                               wire:model="motionPreference"
+                               class="text-amber-500 focus:ring-amber-500/40 h-4 w-4 bg-ink-900 border-ink-border">
+                        <span class="text-xs font-bold text-paper font-serif">{{ __('site.settings.motion_mode_system') }}</span>
+                    </div>
+                    <span class="text-[10px] font-mono font-semibold text-mist bg-ink-800 px-1.5 py-0.5 rounded border border-ink-border">OS</span>
+                </div>
+                <p class="text-[11px] text-mist font-mono leading-relaxed">
+                    {{ __('site.settings.motion_mode_system_desc') }}
+                </p>
+            </label>
+
+            <!-- Gentle -->
+            <label class="relative p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-3 text-left"
+                   :class="$wire.motionPreference === 'gentle' ? 'bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80'">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <input type="radio"
+                               name="motionPreference"
+                               value="gentle"
+                               wire:model="motionPreference"
+                               class="text-amber-500 focus:ring-amber-500/40 h-4 w-4 bg-ink-900 border-ink-border">
+                        <span class="text-xs font-bold text-amber-400 font-serif">{{ __('site.settings.motion_mode_gentle') }}</span>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold text-amber-300 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30">Tavsiya</span>
+                </div>
+                <p class="text-[11px] text-mist font-mono leading-relaxed">
+                    {{ __('site.settings.motion_mode_gentle_desc') }}
+                </p>
+            </label>
+
+            <!-- Minimal -->
+            <label class="relative p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between gap-3 text-left"
+                   :class="$wire.motionPreference === 'minimal' ? 'bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30' : 'bg-ink-950/60 border-ink-border hover:border-ink-border/80'">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <input type="radio"
+                               name="motionPreference"
+                               value="minimal"
+                               wire:model="motionPreference"
+                               class="text-amber-500 focus:ring-amber-500/40 h-4 w-4 bg-ink-900 border-ink-border">
+                        <span class="text-xs font-bold text-paper font-serif">{{ __('site.settings.motion_mode_minimal') }}</span>
+                    </div>
+                    <span class="text-[10px] font-mono font-semibold text-mist bg-ink-800 px-1.5 py-0.5 rounded border border-ink-border">Tezkor</span>
+                </div>
+                <p class="text-[11px] text-mist font-mono leading-relaxed">
+                    {{ __('site.settings.motion_mode_minimal_desc') }}
+                </p>
+            </label>
+        </div>
+
+        <!-- Live Preview Showcase Box -->
+        <div class="p-4 rounded-xl bg-ink-950/40 border border-ink-border flex items-center justify-between gap-4 flex-wrap">
+            <div class="space-y-0.5">
+                <p class="text-xs font-bold text-paper font-serif">{{ __('site.settings.motion_preview_card') }}</p>
+                <p class="text-[11px] font-mono text-mist">{{ __('site.settings.motion_preview_hint') }}</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="px-3.5 py-2 rounded-card bg-ink-900 border border-ink-border text-xs font-mono transition-all flex items-center gap-2"
+                     :class="previewActive ? 'scale-[1.03] border-amber-500/50 shadow-lg shadow-amber-500/10 text-amber-300' : 'text-paper'">
+                    <span class="w-2 h-2 rounded-full" :class="previewActive ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'"></span>
+                    <span>Harakat holati:</span>
+                    <span class="font-bold uppercase tracking-wider text-amber-400" x-text="$wire.motionPreference"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── 2. Telefon Raqamini O'zgartirish Xavfsizlik Modali ── -->
     @if($showPhoneModal)
         <div x-data="{

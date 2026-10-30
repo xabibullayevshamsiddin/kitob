@@ -1,5 +1,6 @@
 import './bootstrap';
 import './sound-manager';
+import './motion';
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
 

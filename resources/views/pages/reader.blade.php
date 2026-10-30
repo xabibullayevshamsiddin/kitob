@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
+      data-motion-zone="calm"
       x-data="readerApp(@js($bookmarks->toArray()), @js($notes->toArray()))" 
       :class="{ 'dark': theme === 'dark', 'light': theme !== 'dark', 'reader-sepia': theme === 'sepia', 'reader-light': theme === 'light' }">
 <head>

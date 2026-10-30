@@ -30,6 +30,28 @@
         } catch(e) {}
     })();
 
+    // FOUC oldini oluvchi animatsiya sozlamasi (system / gentle / minimal)
+    (function() {
+        try {
+            var el = document.documentElement;
+            var savedMotion = localStorage.getItem('kitob_motion_pref');
+            @auth
+                @php
+                    $userMotionPref = auth()->user()->notification_prefs['motion_preference'] ?? null;
+                @endphp
+                var authMotionPref = @js($userMotionPref);
+                if (authMotionPref && ['system', 'gentle', 'minimal'].indexOf(authMotionPref) !== -1) {
+                    savedMotion = authMotionPref;
+                    try { localStorage.setItem('kitob_motion_pref', authMotionPref); } catch(e) {}
+                }
+            @endauth
+            if (!savedMotion || ['system', 'gentle', 'minimal'].indexOf(savedMotion) === -1) {
+                savedMotion = 'system';
+            }
+            el.dataset.motion = savedMotion;
+        } catch(e) {}
+    })();
+
     window.__setKitobTheme = function(theme, evt) {
         try {
             localStorage.setItem('kitob_theme', theme);
@@ -842,81 +864,69 @@
         animation: ksBackdropFadeOutKeyframes 0.3s ease-in both !important;
     }
 
-    /* Alpine.js transition utility classes for Blur-In modals (Enter) */
+    /* Alpine.js transition utility classes for Modals & Dialogs (Gentle & Smooth) */
     .ks-blur-in-enter,
     .ks-blur-in-enter-start {
-        filter: blur(20px) !important;
-        transform: scale(1.2) !important;
+        transform: translateY(8px) scale(0.985) !important;
         opacity: 0 !important;
     }
     .ks-blur-in-enter-active {
-        transition: filter 0.48s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 0.48s cubic-bezier(0.16, 1, 0.3, 1),
-                    opacity 0.38s ease !important;
-        will-change: transform, filter, opacity;
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1) !important;
+        will-change: transform, opacity;
     }
     .ks-blur-in-enter-end {
-        filter: blur(0px) !important;
-        transform: scale(1) !important;
+        transform: translateY(0) scale(1) !important;
         opacity: 1 !important;
     }
 
-    /* Alpine.js transition utility classes for Blur-Out (Leave / Exit) */
+    /* Alpine.js transition utility classes for Modals (Leave / Exit) */
     .ks-blur-in-leave,
     .ks-blur-in-leave-start,
     .ks-blur-out-leave,
     .ks-blur-out-leave-start {
-        filter: blur(0px) !important;
-        transform: scale(1) !important;
+        transform: translateY(0) scale(1) !important;
         opacity: 1 !important;
     }
     .ks-blur-in-leave-active,
     .ks-blur-out-leave-active {
-        transition: filter 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-                    opacity 0.28s ease !important;
-        will-change: transform, filter, opacity;
+        transition: transform 0.20s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.18s ease-in !important;
+        will-change: transform, opacity;
     }
     .ks-blur-in-leave-end,
     .ks-blur-out-leave-end {
-        filter: blur(20px) !important;
-        transform: scale(1.18) !important;
+        transform: translateY(4px) scale(0.99) !important;
         opacity: 0 !important;
     }
 
-    /* Blur for Dropdown Menus (Navigation / User menus) */
+    /* Dropdown Menus (Navigation / User menus) */
     .ks-menu-blur-enter,
     .ks-menu-blur-enter-start {
-        filter: blur(14px) !important;
-        transform: scale(1.1) translateY(-8px) !important;
+        transform: translateY(-4px) scale(0.99) !important;
         opacity: 0 !important;
     }
     .ks-menu-blur-enter-active {
-        transition: filter 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                    opacity 0.3s ease !important;
-        will-change: transform, filter, opacity;
+        transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.14s ease-out !important;
+        will-change: transform, opacity;
     }
     .ks-menu-blur-enter-end {
-        filter: blur(0px) !important;
-        transform: scale(1) translateY(0) !important;
+        transform: translateY(0) scale(1) !important;
         opacity: 1 !important;
     }
     .ks-menu-blur-leave,
     .ks-menu-blur-leave-start {
-        filter: blur(0px) !important;
-        transform: scale(1) translateY(0) !important;
+        transform: translateY(0) scale(1) !important;
         opacity: 1 !important;
     }
     .ks-menu-blur-leave-active {
-        transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-                    opacity 0.2s ease !important;
-        will-change: transform, filter, opacity;
+        transition: transform 0.12s ease-in,
+                    opacity 0.12s ease-in !important;
+        will-change: transform, opacity;
     }
     .ks-menu-blur-leave-end {
-        filter: blur(12px) !important;
-        transform: scale(0.96) translateY(-4px) !important;
+        transform: translateY(-4px) scale(0.99) !important;
         opacity: 0 !important;
     }
 </style>

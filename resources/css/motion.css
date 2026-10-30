@@ -1,0 +1,377 @@
+/**
+ * Kitobxon — Yagona Mayin Animatsiyalar Tizimi (Sitewide Motion System)
+ * MASTER Design System v1.2 — "Kitobxon Editorial & Reading Motion"
+ * 
+ * Tokenlar:
+ *   - Tez javob: 140ms (120-160ms)
+ *   - Odatiy o'tish: 200ms (180-240ms)
+ *   - Modal & panel: 280ms (240-320ms)
+ *   - Bo'lim kirishi: 340ms (300-420ms)
+ *   - Asosiy easing: cubic-bezier(0.22, 1, 0.36, 1) [sokin, sakrashsiz, yumshoq to'xtash]
+ *   - Masofalar: sm=4px, md=8px, lg=12px
+ *   - Stagger: 30ms (25-40ms), umumiy kutish <= 180ms
+ */
+
+:root {
+    --ks-dur-fast: 140ms;
+    --ks-dur-normal: 200ms;
+    --ks-dur-modal: 280ms;
+    --ks-dur-reveal: 340ms;
+
+    --ks-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --ks-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ks-ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+    --ks-dist-sm: 4px;
+    --ks-dist-md: 8px;
+    --ks-dist-lg: 12px;
+
+    --ks-stagger-step: 30ms;
+    --ks-stagger-max: 180ms;
+
+    --ks-card-lift: -2px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   1. USER MOTION MODES & ACCESSIBILITY
+   ───────────────────────────────────────────────────────────── */
+
+/* Minimal Mode: User explicitly requested minimal animations */
+html[data-motion="minimal"] {
+    --ks-dur-fast: 0ms !important;
+    --ks-dur-normal: 60ms !important;
+    --ks-dur-modal: 100ms !important;
+    --ks-dur-reveal: 0ms !important;
+    --ks-dist-sm: 0px !important;
+    --ks-dist-md: 0px !important;
+    --ks-dist-lg: 0px !important;
+    --ks-card-lift: 0px !important;
+}
+
+/* System Reduced Motion (OS preference always takes top priority) */
+@media (prefers-reduced-motion: reduce) {
+    :root, html, html[data-motion="gentle"], html[data-motion="system"] {
+        --ks-dur-fast: 0ms !important;
+        --ks-dur-normal: 0ms !important;
+        --ks-dur-modal: 80ms !important;
+        --ks-dur-reveal: 0ms !important;
+        --ks-dist-sm: 0px !important;
+        --ks-dist-md: 0px !important;
+        --ks-dist-lg: 0px !important;
+        --ks-card-lift: 0px !important;
+    }
+
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .ks-aurora,
+    .ks-float,
+    .ks-progress,
+    .animate-ambient-breathe,
+    .animate-laser-scan,
+    .animate-aurora-drift,
+    .animate-star-twinkle,
+    .animate-badge-float,
+    .animate-ring-pulse,
+    .animate-flame {
+        animation: none !important;
+        display: none !important;
+    }
+
+    .ks-reveal,
+    [data-ks] {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   2. BUTTONS & INTERACTIVE PRESS
+   ───────────────────────────────────────────────────────────── */
+.ks-btn,
+[class*="ks-btn"],
+.ks-pressable {
+    transition: background-color var(--ks-dur-fast) var(--ks-ease),
+                border-color var(--ks-dur-fast) var(--ks-ease),
+                color var(--ks-dur-fast) var(--ks-ease),
+                box-shadow var(--ks-dur-fast) var(--ks-ease),
+                transform var(--ks-dur-fast) var(--ks-ease);
+    will-change: transform;
+}
+
+.ks-btn:active,
+[class*="ks-btn"]:active,
+.ks-pressable:active {
+    transform: scale(0.98);
+}
+
+.ks-btn:focus-visible,
+[class*="ks-btn"]:focus-visible,
+.ks-pressable:focus-visible {
+    outline: 2px solid #F59E0B;
+    outline-offset: 2px;
+}
+
+.ks-btn:disabled,
+[class*="ks-btn"]:disabled,
+.ks-btn[aria-disabled="true"],
+[class*="ks-btn"][aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+    transform: none !important;
+    cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. BOOK & INTERACTIVE CARDS (Touch-safe elevation)
+   ───────────────────────────────────────────────────────────── */
+.ks-card-interactive,
+.ks-card-hover,
+.spotlight-card,
+[data-motion-card] {
+    transition: transform var(--ks-dur-normal) var(--ks-ease),
+                box-shadow var(--ks-dur-normal) var(--ks-ease),
+                border-color var(--ks-dur-fast) var(--ks-ease);
+}
+
+/* Only fine pointer (desktop mouse) elevates — avoids sticky hover on mobile touch */
+@media (hover: hover) and (pointer: fine) {
+    .ks-card-interactive:hover,
+    .ks-card-hover:hover,
+    .spotlight-card:hover,
+    [data-motion-card]:hover {
+        transform: translateY(var(--ks-card-lift));
+        box-shadow: 0 10px 25px -6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(245, 158, 11, 0.15);
+    }
+
+    html.light .ks-card-interactive:hover,
+    html.light .ks-card-hover:hover,
+    html.light .spotlight-card:hover,
+    html.light [data-motion-card]:hover {
+        box-shadow: 0 10px 25px -6px rgba(12, 28, 54, 0.12), 0 0 0 1px rgba(203, 213, 225, 0.6);
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. MENUS, DROPDOWNS & POPOVERS
+   ───────────────────────────────────────────────────────────── */
+.ks-dropdown-content,
+[data-motion-dropdown] {
+    transform-origin: top;
+    transition: opacity var(--ks-dur-fast) var(--ks-ease),
+                transform var(--ks-dur-fast) var(--ks-ease);
+}
+
+.ks-dropdown-enter {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--ks-dist-sm))) scale(0.99);
+}
+
+.ks-dropdown-enter-active {
+    transition: opacity var(--ks-dur-fast) var(--ks-ease),
+                transform var(--ks-dur-fast) var(--ks-ease);
+}
+
+.ks-dropdown-enter-to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.ks-dropdown-leave-active {
+    transition: opacity var(--ks-dur-fast) var(--ks-ease-in),
+                transform var(--ks-dur-fast) var(--ks-ease-in);
+}
+
+.ks-dropdown-leave-to {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--ks-dist-sm))) scale(0.99);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5. MODALS & CONFIRMATION DIALOGS
+   ───────────────────────────────────────────────────────────── */
+.ks-modal-overlay {
+    transition: opacity var(--ks-dur-modal) var(--ks-ease);
+}
+
+.ks-modal-card {
+    transition: transform var(--ks-dur-modal) var(--ks-ease),
+                opacity var(--ks-dur-modal) var(--ks-ease);
+    will-change: transform, opacity;
+}
+
+/* Alpine.js modal transitions */
+.ks-modal-enter {
+    opacity: 0;
+    transform: translateY(var(--ks-dist-md)) scale(0.985);
+}
+
+.ks-modal-enter-to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.ks-modal-leave-to {
+    opacity: 0;
+    transform: translateY(calc(var(--ks-dist-sm))) scale(0.99);
+    transition-duration: var(--ks-dur-normal) !important;
+}
+
+/* Prevent layout shift during modal open */
+body.ks-modal-open {
+    overflow: hidden;
+    padding-right: var(--ks-scrollbar-width, 0px);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. TABS, FILTERS & PAGINATION
+   ───────────────────────────────────────────────────────────── */
+.ks-tab-pill,
+.ks-filter-pill {
+    transition: background-color var(--ks-dur-fast) var(--ks-ease),
+                color var(--ks-dur-fast) var(--ks-ease),
+                border-color var(--ks-dur-fast) var(--ks-ease),
+                transform var(--ks-dur-fast) var(--ks-ease);
+}
+
+.ks-tab-pill:active,
+.ks-filter-pill:active {
+    transform: scale(0.97);
+}
+
+/* Gentle crossfade for list updates */
+.ks-fade-transition {
+    transition: opacity var(--ks-dur-normal) var(--ks-ease);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   7. FORM INPUTS & VALIDATION FEEDBACK
+   ───────────────────────────────────────────────────────────── */
+.ks-input,
+input.ks-input,
+textarea.ks-input,
+select.ks-input {
+    transition: border-color var(--ks-dur-fast) var(--ks-ease),
+                background-color var(--ks-dur-fast) var(--ks-ease),
+                box-shadow var(--ks-dur-fast) var(--ks-ease);
+}
+
+.ks-form-error {
+    animation: ksErrorReveal var(--ks-dur-normal) var(--ks-ease) forwards;
+}
+
+@keyframes ksErrorReveal {
+    from {
+        opacity: 0;
+        transform: translateY(calc(-1 * var(--ks-dist-sm)));
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   8. CHAT & NEW MESSAGES (No infinite re-animation)
+   ───────────────────────────────────────────────────────────── */
+.ks-chat-new {
+    animation: ksChatEnter var(--ks-dur-normal) var(--ks-ease) backwards;
+}
+
+@keyframes ksChatEnter {
+    from {
+        opacity: 0;
+        transform: translateY(var(--ks-dist-sm));
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   9. ACCORDIONS & EXPANDING PANELS
+   ───────────────────────────────────────────────────────────── */
+.ks-accordion-content {
+    transition: max-height var(--ks-dur-modal) var(--ks-ease),
+                opacity var(--ks-dur-modal) var(--ks-ease);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   10. ONE-TIME SECTION REVEAL (IntersectionObserver)
+   ───────────────────────────────────────────────────────────── */
+.ks-reveal {
+    opacity: 0;
+    transform: translateY(var(--ks-dist-lg));
+    transition: opacity var(--ks-dur-reveal) var(--ks-ease),
+                transform var(--ks-dur-reveal) var(--ks-ease);
+    transition-delay: var(--ks-reveal-delay, 0ms);
+    will-change: opacity, transform;
+}
+
+.ks-reveal.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Clean up transforms once entered to protect fixed/sticky children */
+.ks-reveal.is-revealed.is-settled {
+    transform: none !important;
+    will-change: auto !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   11. CALM & DENSE ZONES (Reader, Quiz, Live Stream)
+   Rock-solid stability: zero jitter, zero decorative transforms.
+   ───────────────────────────────────────────────────────────── */
+[data-motion-zone="calm"],
+[data-motion-calm],
+.reader-content,
+#online-reader,
+.quiz-question-box,
+.live-stream-viewport {
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+}
+
+[data-motion-zone="calm"] .ks-reveal,
+[data-motion-calm] .ks-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+}
+
+/* Dense zone (Admin / Teacher): faster, snappier transitions */
+[data-motion-zone="dense"],
+[data-motion-dense],
+html.ks-dense {
+    --ks-dur-normal: 140ms;
+    --ks-dur-modal: 200ms;
+    --ks-dur-reveal: 180ms;
+    --ks-dist-md: 4px;
+    --ks-dist-lg: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   12. COIN / STAT COUNTER ROLL
+   ───────────────────────────────────────────────────────────── */
+.ks-stat-counter {
+    font-variant-numeric: tabular-nums;
+    transition: color var(--ks-dur-fast) var(--ks-ease);
+}
+
+.ks-coin-bump {
+    animation: ksCoinBump 300ms var(--ks-ease);
+}
+
+@keyframes ksCoinBump {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}

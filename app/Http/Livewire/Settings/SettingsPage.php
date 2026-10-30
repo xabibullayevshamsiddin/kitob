@@ -44,6 +44,9 @@ class SettingsPage extends Component
     public bool $soundEnabled = true;
     public int $soundVolume = 20;
 
+    // Harakat va animatsiyalar sozlamasi ('system' | 'gentle' | 'minimal')
+    public string $motionPreference = 'system';
+
     public function mount(): void
     {
         $user = Auth::user();
@@ -61,6 +64,9 @@ class SettingsPage extends Component
         $prefs = is_array($user->notification_prefs) ? $user->notification_prefs : [];
         $this->soundEnabled = array_key_exists('sound_enabled', $prefs) ? (bool) $prefs['sound_enabled'] : true;
         $this->soundVolume  = array_key_exists('sound_volume', $prefs) ? (int) $prefs['sound_volume'] : 20;
+
+        $rawMotion = $prefs['motion_preference'] ?? 'system';
+        $this->motionPreference = in_array($rawMotion, ['system', 'gentle', 'minimal'], true) ? $rawMotion : 'system';
     }
 
     protected function rules(): array
@@ -148,6 +154,7 @@ class SettingsPage extends Component
         $this->reset('avatar');
 
         $this->saveSoundPreferences();
+        $this->saveMotionPreferences();
 
         $this->toastSuccess(
             $hadAvatar ? __('site.settings.saved_success') . ' Profil rasmi yangilandi.' : __('site.settings.saved_success')
@@ -179,6 +186,30 @@ class SettingsPage extends Component
         $this->dispatchBrowserEvent('sound-settings-updated', [
             'enabled' => $this->soundEnabled,
             'volume'  => $this->soundVolume / 100,
+        ]);
+    }
+
+    public function updatedMotionPreference(): void
+    {
+        $this->saveMotionPreferences();
+    }
+
+    public function saveMotionPreferences(): void
+    {
+        $user = Auth::user();
+        if (!$user) return;
+
+        if (!in_array($this->motionPreference, ['system', 'gentle', 'minimal'], true)) {
+            $this->motionPreference = 'system';
+        }
+
+        $prefs = is_array($user->notification_prefs) ? $user->notification_prefs : [];
+        $prefs['motion_preference'] = $this->motionPreference;
+
+        $user->update(['notification_prefs' => $prefs]);
+
+        $this->dispatchBrowserEvent('motion-settings-updated', [
+            'mode' => $this->motionPreference,
         ]);
     }
 

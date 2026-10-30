@@ -249,10 +249,7 @@
         if (window.ksCurtain) window.ksCurtain.show();
 
         try {
-            const [response] = await Promise.all([
-                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }),
-                new Promise(r => setTimeout(r, 650)) // loader animatsiyasi ko'rinib ulgurishi uchun
-            ]);
+            const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
 
             if (!response.ok) {
                 window.location.href = url;

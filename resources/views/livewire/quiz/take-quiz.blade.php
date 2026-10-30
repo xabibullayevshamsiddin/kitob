@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto space-y-6 pb-20" x-data="quizDraftStore(@js($quizId), @js(auth()->id()))" x-init="init()">
+<div class="max-w-4xl mx-auto space-y-6 pb-20" data-motion-zone="calm" x-data="quizDraftStore(@js($quizId), @js(auth()->id()))" x-init="init()">
 
     {{-- ── Top Navigation & Book Info ── --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-ink-900 border border-ink-border backdrop-blur-md">

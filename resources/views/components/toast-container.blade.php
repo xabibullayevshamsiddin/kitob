@@ -155,6 +155,10 @@
             addToast(detail) {
                 if (!detail || !detail.message) return;
 
+                // Deduplicate identical toasts appearing in quick succession
+                const isDuplicate = this.toasts.some(t => !t.exiting && t.message === detail.message && (Date.now() - (t.createdAt || 0)) < 2000);
+                if (isDuplicate) return;
+
                 const type = detail.type || 'info';
 
                 // Play acoustic sound for critical errors or explicitly requested sound
@@ -193,6 +197,7 @@
                     paused: false,
                     visible: false,
                     exiting: false,
+                    createdAt: Date.now(),
                     lastTick: Date.now(),
                     accentColor: colors[type] || '#6366F1',
                     reducedMotion: this.reducedMotion
