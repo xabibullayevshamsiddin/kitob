@@ -12,8 +12,8 @@
     $isHome = request()->routeIs('home');
 @endphp
 <header id="site-header"
-        x-data="{ 
-            mobileMenu: false, 
+        x-data="{
+            mobileMenu: false,
             moreOpen: false,
             scrolled: false,
             isHome: @js($isHome),
@@ -51,11 +51,11 @@
         </a>
 
         {{-- Desktop Nav — asosiy linklar --}}
-        <nav class="hidden lg:flex items-stretch self-stretch gap-0.5 xl:gap-1 text-[12.5px] xl:text-[13px] font-medium flex-1 justify-center min-w-0">
+        <nav class="hidden lg:flex items-stretch self-stretch gap-1 text-[13px] font-medium flex-1 justify-center">
             @foreach($navLinks as $link)
                 @php $active = request()->routeIs(...$link['match']); @endphp
                 <a href="{{ route($link['route']) }}"
-                   class="relative inline-flex items-center px-2 xl:px-3 whitespace-nowrap transition-colors duration-base {{ $active ? 'text-paper' : 'text-mist hover:text-paper' }}"
+                   class="relative inline-flex items-center px-3 whitespace-nowrap transition-colors duration-base {{ $active ? 'text-paper' : 'text-mist hover:text-paper' }}"
                    @if($active) aria-current="page" @endif>
                     {{ $link['label'] }}
                     <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $active ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
@@ -108,7 +108,7 @@
             <x-lang-switcher class="hidden lg:block" />
 
             {{-- Mavzu almashtirgich (Light / Dark mode toggle) --}}
-            <button @click="toggleTheme($event)" 
+            <button @click="toggleTheme($event)"
                     type="button"
                     class="header-theme-btn relative inline-flex items-center justify-center w-8 h-8 rounded-btn border border-ink-border bg-ink-800 text-mist hover:text-paper hover:bg-ink-700 transition-colors duration-base select-none shrink-0 group focus:outline-none"
                     :title="theme === 'dark' ? '{{ addslashes(__('site.theme.light')) }}' : '{{ addslashes(__('site.theme.dark')) }}'"
@@ -139,8 +139,8 @@
             @auth
                 {{-- Streak / Points / Coins — barcha ekranlarda chiroyli ko'rinadi va jonli o'zgaradi --}}
                 <div class="header-stats-pill flex items-center divide-x rounded-btn relative transition-all duration-300 {{ $isHome ? 'divide-white/15 border border-white/20 bg-white/[0.08] backdrop-blur-md shadow-sm' : 'divide-ink-border border border-ink-border bg-ink-950/90' }}"
-                     :class="(!isHome || scrolled || mobileMenu) 
-                         ? 'divide-ink-border border border-ink-border bg-ink-950/90 shadow-none' 
+                     :class="(!isHome || scrolled || mobileMenu)
+                         ? 'divide-ink-border border border-ink-border bg-ink-950/90 shadow-none'
                          : 'divide-white/15 border border-white/20 bg-white/[0.08] backdrop-blur-md shadow-sm'"
                      x-data="{
                          totalPoints: {{ auth()->check() ? (int) auth()->user()->total_points : 0 }},
@@ -375,18 +375,18 @@
 
                 {{-- Admin / Teacher panel tugmasi --}}
                 @if(auth()->user()->hasRole('admin'))
-                    <a href="{{ route('admin.dashboard') }}" class="hidden xl:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap shrink-0">
+                    <a href="{{ route('admin.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
                         {{ __('site.nav.dashboard') }} →
                     </a>
                 @elseif(auth()->user()->hasRole('teacher'))
-                    <a href="{{ route('teacher.dashboard') }}" class="hidden xl:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap shrink-0">
+                    <a href="{{ route('teacher.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
                         {{ __('site.nav.teacher_panel') }} →
                     </a>
                 @endif
 
                 {{-- Avatar Dropdown --}}
                 <div x-data="{ userMenuOpen: false }" x-on:click.outside="userMenuOpen = false" class="relative shrink-0">
-                    <button @click="userMenuOpen = !userMenuOpen" type="button" 
+                    <button @click="userMenuOpen = !userMenuOpen" type="button"
                             class="header-avatar-btn flex items-center gap-2 pl-1 pr-2 py-1 rounded-btn transition-colors duration-base select-none {{ $isHome ? 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md' : 'hover:bg-ink-800 border border-ink-border' }}"
                             :class="(!isHome || scrolled || mobileMenu) ? 'hover:bg-ink-800 border border-ink-border bg-transparent' : 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md'">
                         <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover" alt="{{ auth()->user()->name }}">
@@ -446,7 +446,7 @@
 
                             {{-- Stats for small screens --}}
                             <div class="mt-3 pt-3 border-t border-ink-border grid grid-cols-3 gap-2 md:hidden"
-                                 x-data="{ 
+                                 x-data="{
                                      mobilePoints: {{ auth()->check() ? (int) auth()->user()->total_points : 0 }},
                                      mobileCoins: {{ auth()->check() ? (int) auth()->user()->coin_balance : 0 }}
                                  }"
@@ -481,7 +481,7 @@
                                         onclick="window.openAdminTopupModal && window.openAdminTopupModal()"
                                         class="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors duration-base text-left">
                                     <span class="text-sm">⚡</span>
-                                    <span>Hisobni to'ldirish (Tekin 🪙 / 🌟)</span>
+                                    <span>Hisobni to'ldirish</span>
                                 </button>
                             @elseif(auth()->user()->hasRole('teacher'))
                                 <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium text-cyan-700 dark:text-cyan-400 hover:bg-ink-700/60 transition-colors duration-base">
@@ -600,9 +600,9 @@
             @endauth
 
             {{-- Hamburger (mobil) — 3-line animated morph --}}
-            <button @click="mobileMenu = !mobileMenu" type="button" 
+            <button @click="mobileMenu = !mobileMenu" type="button"
                     class="lg:hidden relative w-9 h-9 rounded-btn flex flex-col items-center justify-center gap-1 text-mist hover:text-paper hover:bg-ink-800 active:scale-95 transition-all duration-200 shrink-0 select-none focus:outline-none border border-transparent hover:border-ink-border"
-                    :class="mobileMenu ? 'text-cyan-600 dark:text-cyan-400 !bg-ink-800 border-cyan-500/30' : ''" 
+                    :class="mobileMenu ? 'text-cyan-600 dark:text-cyan-400 !bg-ink-800 border-cyan-500/30' : ''"
                     aria-label="{{ __('site.nav.menu') }}" :aria-expanded="mobileMenu.toString()">
                 <span class="w-5 h-[2px] bg-current rounded-full transition-all duration-300 ease-out origin-center pointer-events-none"
                       :class="mobileMenu ? 'rotate-45 translate-y-[6px]' : ''"></span>
@@ -696,7 +696,7 @@
             {{-- Mavzu almashtirgich (mobil) --}}
             <div class="pt-3 mt-1 flex items-center justify-between border-t border-ink-border/50">
                 <span class="ks-eyebrow">{{ __('site.theme.theme') }}</span>
-                <button @click="toggleTheme($event)" type="button" data-theme-toggle 
+                <button @click="toggleTheme($event)" type="button" data-theme-toggle
                         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-btn border border-ink-border bg-ink-800 text-paper text-xs font-mono transition-all duration-200 hover:bg-ink-700 active:scale-95">
                     <span x-show="theme === 'dark'" class="flex items-center gap-1.5 text-cyan-400">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -710,7 +710,7 @@
             </div>
 
             {{-- Sayt ovozlari (mobil) --}}
-            <div x-data="kitobHeaderSoundControl()" 
+            <div x-data="kitobHeaderSoundControl()"
                  x-init="init()"
                  @click.stop
                  @keydown.stop
@@ -989,6 +989,12 @@ html.light:not(.force-dark) #site-header:not(.is-hero-header) {
     --ink-800-rgb: 237 243 248 !important;
     --ink-700-rgb: 221 231 241 !important;
     color: #0C1C36 !important;
+}
+
+/* Nav link sizes across all modes */
+#site-header nav > a,
+#site-header nav > div > button {
+    font-size: 13px !important;
 }
 
 /* Nav links in Light Mode (Scrolled / Subpages) */
