@@ -269,15 +269,80 @@
     });
 
     // ─────────────────────────────────────────────────────────────
-    // 7. Livewire 2 Lifecycle Hooks
+    // 7. Micro-Interactions (Icons, Bells & Books)
+    // ─────────────────────────────────────────────────────────────
+    function popIcon(el) {
+        if (!el || isReducedMotion()) return;
+        el.classList.remove('ks-icon-popping');
+        void el.offsetWidth;
+        el.classList.add('ks-icon-popping');
+        setTimeout(() => el.classList.remove('ks-icon-popping'), 350);
+    }
+
+    function ringBell() {
+        const bell = document.querySelector('.header-notification-btn svg');
+        if (!bell || isReducedMotion()) return;
+        bell.classList.remove('ks-bell-ring');
+        void bell.offsetWidth;
+        bell.classList.add('ks-bell-ring');
+    }
+
+    function animateCatalogCards(scope) {
+        if (!scope || isReducedMotion()) return;
+        const grid = scope.querySelector('.grid, [data-catalog-grid]');
+        if (!grid) return;
+
+        const cards = grid.querySelectorAll('.ks-book:not([data-ks-animated])');
+        cards.forEach((card, idx) => {
+            card.dataset.ksAnimated = '1';
+            const delay = Math.min(idx * 30, 180);
+            card.style.animation = `ksCardFadeIn 260ms var(--ks-ease) ${delay}ms both`;
+            setTimeout(() => {
+                card.style.animation = '';
+            }, delay + 300);
+        });
+    }
+
+    window.addEventListener('bookmark-toggled', function (e) {
+        if (e.detail && e.detail.target) {
+            popIcon(e.detail.target);
+        }
+    });
+
+    window.addEventListener('notification-received', function () {
+        ringBell();
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // 8. Livewire 2 Lifecycle Hooks
     // ─────────────────────────────────────────────────────────────
     function hookLivewire() {
         if (window.Livewire && window.Livewire.hook) {
+            window.Livewire.hook('message.sent', function (message, component) {
+                if (component && component.el) {
+                    const hasGrid = component.el.querySelector('.grid, [data-catalog-grid]');
+                    const isPolling = message.updateQueue && message.updateQueue.some(u =>
+                        u.type === 'callMethod' && (u.payload.method === 'poll' || u.payload.method === 'ping' || u.payload.method === 'checkLive')
+                    );
+                    if (hasGrid && !isPolling) {
+                        component.el.classList.add('ks-livewire-loading');
+                    }
+                }
+            });
+
             window.Livewire.hook('message.processed', function (message, component) {
                 if (component && component.el) {
+                    component.el.classList.remove('ks-livewire-loading');
                     scanRevealElements(component.el);
+                    animateCatalogCards(component.el);
                 }
                 scanChatMessages();
+            });
+
+            window.Livewire.hook('message.failed', function (message, component) {
+                if (component && component.el) {
+                    component.el.classList.remove('ks-livewire-loading');
+                }
             });
         }
     }
@@ -289,7 +354,7 @@
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 8. Public API Export
+    // 9. Public API Export
     // ─────────────────────────────────────────────────────────────
     window.KitobMotion = {
         getMode: resolveMode,
@@ -297,6 +362,9 @@
         isReduced: isReducedMotion,
         rollCounter: rollCounter,
         celebrate: celebrate,
+        popIcon: popIcon,
+        ringBell: ringBell,
+        animateCards: animateCatalogCards,
         scanReveals: function (scope) { scanRevealElements(scope || document.body); },
         scanChat: scanChatMessages
     };

@@ -38,6 +38,35 @@ class BookIndexer
         @ini_set('memory_limit', '1024M');
         @set_time_limit(600);
 
+        // Parallel yoki bir vaqtdagi indekslashdan himoyalovchi atomik qulf
+        $lockKey = "ai_indexing_lock_{$book->id}";
+        $lock = Cache::lock($lockKey, (int) config('ai.queue.lock_seconds', 900));
+
+        if (!$lock->get()) {
+            return [
+                'status'                  => 'failed',
+                'quality_score'           => (float) ($book->ai_text_quality ?? 0.0),
+                'pages_count'             => (int) ($book->pages()->count()),
+                'chunks_count'            => (int) ($book->chunks()->count()),
+                'embedded_new_count'      => 0,
+                'reused_embeddings_count' => 0,
+                'embedding_mode'          => 'none',
+                'error_message'           => 'Kitob ayni vaqtda boshqa jarayonda indekslanmoqda.',
+            ];
+        }
+
+        try {
+            return $this->performIndexBook($book, $force, $onProgress);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Haqiqiy indekslash mantiqi (qulf ichida xavfsiz bajariladi).
+     */
+    protected function performIndexBook(Book $book, bool $force = false, ?callable $onProgress = null): array
+    {
         $book->update([
             'ai_index_status' => 'indexing',
             'ai_index_error'  => null,
@@ -309,60 +338,75 @@ class BookIndexer
             $indexWarnings[] = 'Embedding xizmati vaqtincha ishlamadi; kitob matnli qidiruv bilan indekslandi.';
         }
 
-        // 6. book_chunks jadvaliga saqlash (agar hech bir bo'lak o'zgarmagan bo'lsa, mavjud qatorlarni saqlab qolamiz)
+        // 6. book_chunks jadvaliga ATOMIK tarzda saqlash
+        // MUHIM QOIDA: Yangi indeks to'liq tayyor bo'lgachгина DB transaction orqali almashtiriladi.
+        // Jarayon o'rtasida uzilish yoki xatolik yuz bersa, oldingi yaroqli indeks aslo o'chib ketmaydi!
         $allUnchanged = !$force
             && $embeddedNewCount === 0
             && !empty($existingOrderedHashes)
             && $existingOrderedHashes === $plannedHashes;
-
-        if (!$allUnchanged) {
-            BookChunk::where('book_id', $book->id)->delete();
-
-            $now = now();
-            $insertBatch = [];
-            foreach ($plannedChunks as $ordinal => $c) {
-                $insertBatch[] = [
-                    'book_id'         => $book->id,
-                    'chapter_id'      => $c['chapter_id'],
-                    'page_start'      => $c['page_start'],
-                    'page_end'        => $c['page_end'],
-                    'ordinal'         => $ordinal,
-                    'text'            => $c['text'],
-                    'token_count'     => $c['token_count'],
-                    'content_hash'    => $c['content_hash'],
-                    'embedding'       => $c['embedding'],
-                    'embedding_model' => $c['embedding_model'],
-                    'created_at'      => $now,
-                    'updated_at'      => $now,
-                ];
-
-                if (count($insertBatch) >= 50) {
-                    BookChunk::insert($insertBatch);
-                    $insertBatch = [];
-                }
-            }
-
-            if (!empty($insertBatch)) {
-                BookChunk::insert($insertBatch);
-            }
-        }
-
-        // 7. Kitob va boblar qisqa mazmunini (ai_summary) tayyorlash
-        $this->populateSummaries($book, $usableChapters->all(), $plannedChunks, $force);
 
         $indexedAt = now();
         $finalStatus = $isPartialOnly ? 'partial' : 'ready';
         if ($isPartialOnly) {
             $indexWarnings[] = trans('ai.partial_notice');
         }
-
         $warningMessage = $indexWarnings ? mb_substr(implode(' ', $indexWarnings), 0, 500) : null;
-        $book->update([
-            'ai_index_status' => $finalStatus,
-            'ai_indexed_at'   => $indexedAt,
-            'ai_text_quality' => $qualityScore,
-            'ai_index_error'  => $warningMessage,
-        ]);
+        $nextVersion = ((int) ($book->ai_index_version ?? 1)) + 1;
+
+        if (!$allUnchanged) {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($book, $plannedChunks, $nextVersion, $finalStatus, $indexedAt, $qualityScore, $warningMessage) {
+                // Yangi bo'laklarni kiritishdan oldin eski bo'laklarni tozalash (bitta tranzaksiya ichida atomik)
+                BookChunk::where('book_id', $book->id)->delete();
+
+                $now = now();
+                $insertBatch = [];
+                foreach ($plannedChunks as $ordinal => $c) {
+                    $insertBatch[] = [
+                        'book_id'         => $book->id,
+                        'chapter_id'      => $c['chapter_id'],
+                        'page_start'      => $c['page_start'],
+                        'page_end'        => $c['page_end'],
+                        'ordinal'         => $ordinal,
+                        'index_version'   => $nextVersion,
+                        'text'            => $c['text'],
+                        'token_count'     => $c['token_count'],
+                        'content_hash'    => $c['content_hash'],
+                        'embedding'       => $c['embedding'],
+                        'embedding_model' => $c['embedding_model'],
+                        'created_at'      => $now,
+                        'updated_at'      => $now,
+                    ];
+
+                    if (count($insertBatch) >= 50) {
+                        BookChunk::insert($insertBatch);
+                        $insertBatch = [];
+                    }
+                }
+
+                if (!empty($insertBatch)) {
+                    BookChunk::insert($insertBatch);
+                }
+
+                $book->update([
+                    'ai_index_status'  => $finalStatus,
+                    'ai_indexed_at'    => $indexedAt,
+                    'ai_text_quality'  => $qualityScore,
+                    'ai_index_version' => $nextVersion,
+                    'ai_index_error'   => $warningMessage,
+                ]);
+            });
+        } else {
+            $book->update([
+                'ai_index_status' => $finalStatus,
+                'ai_indexed_at'   => $indexedAt,
+                'ai_text_quality' => $qualityScore,
+                'ai_index_error'  => $warningMessage,
+            ]);
+        }
+
+        // 7. Kitob va boblar qisqa mazmunini (ai_summary) ierarxik tarzda tayyorlash
+        $this->populateSummaries($book, $usableChapters->all(), $plannedChunks, $force);
 
         // Vektor matritsasi keshini yangilash
         Cache::forget("ai_book_matrix:{$book->id}");
@@ -513,12 +557,12 @@ class BookIndexer
 
     /**
      * Kitob va boblar uchun ierarxik qisqa xulosa (ai_summary) tayyorlaydi.
-     * 1. Avval har bir bob uchun alohida konspekt yig'iladi.
-     * 2. Butun kitob konspekti barcha boblar va kitobning boshi, o'rtasi, oxiri bo'laklaridan tuziladi.
+     * 1. Avval har bir bobning to'liq matnini hisobga olgan holda bob konspekti tuziladi (kesib tashlanmasdan).
+     * 2. Butun kitob konspekti barcha boblar va butun kitob bo'ylab taqsimlangan bo'laklar asosida shakllantiriladi.
      */
     protected function populateSummaries(Book $book, array $chapters, array $plannedChunks, bool $force = false): void
     {
-        // 1. Boblar xulosalarini yig'ish
+        // 1. Boblar xulosalarini yig'ish (kesilishlarsiz, to'liq mazmun bilan)
         $chapterSummaries = [];
         foreach ($chapters as $chapter) {
             if (!$force && !empty($chapter->ai_summary)) {
@@ -527,10 +571,22 @@ class BookIndexer
             }
 
             $clean = $this->extractor->sanitizeUtf8Text(strip_tags((string) $chapter->content));
-            $sample = mb_substr($clean, 0, 1800);
+            $cleanLen = mb_strlen($clean);
+
+            if ($cleanLen <= 3500) {
+                $sourceText = $clean;
+            } else {
+                // Katta boblarni 2-3 ta qismga ajratib, umumlashtiramiz
+                $part1 = mb_substr($clean, 0, 1800);
+                $mid = (int) floor($cleanLen / 2);
+                $part2 = mb_substr($clean, max(0, $mid - 900), 1800);
+                $part3 = mb_substr($clean, max(0, $cleanLen - 1800), 1800);
+                $sourceText = "Bob boshi:\n{$part1}\n\nBob o'rtasi:\n{$part2}\n\nBob oxiri:\n{$part3}";
+            }
+
             $chSummary = $this->generateSummaryText(
                 "«{$chapter->title}» bobi matni asosida faqat matndagi faktlarga tayanib 2-3 gaplik qisqa xulosa yozing:",
-                $sample
+                $sourceText
             );
 
             if ($chSummary !== '') {
@@ -545,7 +601,7 @@ class BookIndexer
             $summaryText = '';
 
             if (!empty($chapterSummaries)) {
-                // Boblar konspektlaridan butun kitob xulosasini shakllantirish
+                // Barcha boblar konspektlaridan butun kitob xulosasini shakllantirish
                 $combinedChapters = '';
                 foreach ($chapterSummaries as $idx => $s) {
                     $combinedChapters .= ($idx + 1) . "-bob: " . $s . "\n";
@@ -556,26 +612,36 @@ class BookIndexer
                     $combinedChapters
                 );
             } elseif (!empty($plannedChunks)) {
-                // Agar boblar bo'lmasa, kitobning boshi, o'rtasi va oxiridagi bo'laklaridan qamrab olish
+                // Agar boblar bo'lmasa, kitobning butun bo'yi bo'ylab 5 ta teng nuqtadan (0%, 25%, 50%, 75%, 100%) namuna olish
                 $chunkCount = count($plannedChunks);
-                $beginning = implode("\n", array_map(fn ($c) => $c['text'], array_slice($plannedChunks, 0, min(2, $chunkCount))));
-                $midStart = max(0, (int) floor($chunkCount / 2) - 1);
-                $middle = implode("\n", array_map(fn ($c) => $c['text'], array_slice($plannedChunks, $midStart, min(2, $chunkCount))));
-                $endStart = max(0, $chunkCount - 2);
-                $ending = implode("\n", array_map(fn ($c) => $c['text'], array_slice($plannedChunks, $endStart, min(2, $chunkCount))));
+                $samplePoints = [
+                    'Boshi'   => 0,
+                    'Chorak'  => (int) floor($chunkCount * 0.25),
+                    'O\'rtasi'=> (int) floor($chunkCount * 0.50),
+                    'Uchinchi chorak' => (int) floor($chunkCount * 0.75),
+                    'Oxiri'   => max(0, $chunkCount - 1),
+                ];
 
-                $combinedPdfSections = "Kitob boshi:\n" . mb_substr($beginning, 0, 900)
-                    . "\n\nKitob o'rtasi:\n" . mb_substr($middle, 0, 900)
-                    . "\n\nKitob oxiri:\n" . mb_substr($ending, 0, 900);
+                $samples = [];
+                foreach ($samplePoints as $label => $idx) {
+                    $chunk = $plannedChunks[$idx] ?? null;
+                    if ($chunk && !empty($chunk['text'])) {
+                        $pNum = $chunk['page_start'] ? "({$chunk['page_start']}-bet)" : '';
+                        $samples[] = "Qism {$label} {$pNum}:\n" . mb_substr($chunk['text'], 0, 1000);
+                    }
+                }
+
+                $combinedPdfSections = implode("\n\n", $samples);
 
                 $summaryText = $this->generateSummaryText(
-                    "«{$book->title}» kitobining boshi, o'rtasi va oxiridagi bo'laklariga tayanib butun kitob uchun 3-5 gaplik qisqa xulosa yozing (hech narsa to'qimang):",
+                    "«{$book->title}» kitobining butun asar bo'ylab olingan bo'laklariga tayanib butun kitob uchun 3-5 gaplik qisqa xulosa yozing (hech narsa to'qimang):",
                     $combinedPdfSections
                 );
             }
 
             if ($summaryText !== '') {
                 $book->ai_summary = $summaryText;
+                $book->ai_summary_origin = 'auto';
                 $book->save();
             }
         }
@@ -593,13 +659,13 @@ class BookIndexer
             $res = $llm->chat([
                 [
                     'role'    => 'system',
-                    'content' => "Sen kitob bo'laklaridan faqat matnga tayanib qisqa o'zbekcha xulosa tuzuvchi yordamchisan.",
+                    'content' => "Sen kitob bo'laklaridan faqat matnga tayanib qisqa o'zbekcha xulosa tuzuvchi repetitor yordamchisan.",
                 ],
                 [
                     'role'    => 'user',
-                    'content' => $instruction . "\n\n<bolak>\n" . mb_substr($sourceText, 0, 2500) . "\n</bolak>",
+                    'content' => $instruction . "\n\n<bolak>\n" . mb_substr($sourceText, 0, 10000) . "\n</bolak>",
                 ],
-            ], ['max_tokens' => 220, 'temperature' => 0.1]);
+            ], ['max_tokens' => 300, 'temperature' => 0.1]);
 
             return trim($res['content'] ?? '');
         } catch (\Throwable $e) {

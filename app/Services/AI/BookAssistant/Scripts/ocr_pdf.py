@@ -19,6 +19,7 @@ def main():
     parser.add_argument("pdf_path", help="Path to PDF file")
     parser.add_argument("--max-pages", type=int, default=50, help="Maximum pages to OCR (default: 50)")
     parser.add_argument("--start-page", type=int, default=1, help="1-based start page (default: 1)")
+    parser.add_argument("--pages", type=str, default="", help="Comma-separated 1-based page numbers to OCR (e.g. 1,4,12)")
     args = parser.parse_args()
 
     pdf_path = args.pdf_path
@@ -33,13 +34,24 @@ def main():
         sys.exit(1)
 
     total_pdf_pages = len(doc)
-    start_idx = max(0, args.start_page - 1)
-    end_idx = min(total_pdf_pages, start_idx + args.max_pages)
+    target_indices = []
+
+    if args.pages.strip():
+        for p in args.pages.split(","):
+            p = p.strip()
+            if p.isdigit():
+                p_num = int(p)
+                if 1 <= p_num <= total_pdf_pages:
+                    target_indices.append(p_num - 1)
+    else:
+        start_idx = max(0, args.start_page - 1)
+        end_idx = min(total_pdf_pages, start_idx + args.max_pages)
+        target_indices = list(range(start_idx, end_idx))
 
     ocr = RapidOCR()
     extracted_pages = []
 
-    for i in range(start_idx, end_idx):
+    for i in target_indices:
         page_num = i + 1
         page = doc[i]
         try:

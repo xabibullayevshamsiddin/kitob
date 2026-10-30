@@ -152,8 +152,11 @@
         }
     });
     window.addEventListener('kitob-sound-preference-changed', function(e) {
-        if (e.detail && !e.detail.enabled) {
-            window.stopAiTypingSound(false);
+        if (!e.detail || !e.detail.enabled || (typeof e.detail.volume === 'number' && e.detail.volume <= 0.001)) {
+            window.stopAiTypingSound(true);
+        } else if (typingAudio && !typingAudio.paused && typeof e.detail.volume === 'number') {
+            const masterVol = e.detail.volume;
+            typingAudio.volume = Math.max(0, Math.min(1.0, 0.35 * (masterVol / 0.20)));
         }
     });
 

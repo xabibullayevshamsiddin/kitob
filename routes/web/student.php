@@ -197,6 +197,7 @@ Route::middleware(['auth'])->group(function () {
     // Profil, Sozlamalar, Bildirishnomalar — barcha rollar uchun
     Route::get('/profile/{username}', ProfilePage::class)->name('profile.show');
     Route::get('/settings', SettingsPage::class)->name('settings');
+    Route::post('/settings/sound-preferences', [\App\Http\Controllers\UserSoundPreferenceController::class, 'update'])->name('settings.sound.update');
     Route::get('/notifications', NotificationList::class)->name('notifications');
 
     // Kitobni PDF sifatida yuklab olish — barcha login bo'lgan foydalanuvchilar uchun

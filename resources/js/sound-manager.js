@@ -166,6 +166,7 @@
             // Load saved settings (Guest: localStorage; Authenticated: seeded server config if available)
             this.enabled = this.resolveInitialEnabled();
             this.volume = this.resolveInitialVolume();
+            this.lastNonZeroVolume = (this.volume > 0.001) ? this.volume : DEFAULT_VOLUME;
 
             if (typeof window !== 'undefined') {
                 this.initLifecycle();
@@ -987,16 +988,68 @@
         // USER PREFERENCE MANAGEMENT
         // ═══════════════════════════════════════════════════════════════════
 
+        stopAll() {
+            if (this.masterGain && this.audioCtx) {
+                try {
+                    this.masterGain.gain.cancelScheduledValues(this.audioCtx.currentTime);
+                    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.audioCtx.currentTime);
+                    this.masterGain.gain.setTargetAtTime(0, this.audioCtx.currentTime, 0.015);
+                } catch (e) {}
+            }
+            try {
+                this.audioElementCache.forEach((audio) => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                });
+            } catch (e) {}
+            if (typeof window !== 'undefined' && typeof window.stopAiTypingSound === 'function') {
+                try { window.stopAiTypingSound(true); } catch (e) {}
+            }
+        }
+
         setEnabled(val, persist = true) {
-            this.enabled = Boolean(val);
+            const next = Boolean(val);
+            if (this.enabled === next) return;
+
+            this.enabled = next;
+
+            if (!this.enabled) {
+                if (this.volume > 0.001) {
+                    this.lastNonZeroVolume = this.volume;
+                }
+                this.stopAll();
+            } else {
+                if (this.volume <= 0.001) {
+                    this.volume = this.lastNonZeroVolume || DEFAULT_VOLUME;
+                    if (persist) {
+                        try {
+                            localStorage.setItem(STORAGE_KEY_VOLUME, this.volume.toString());
+                        } catch (e) {}
+                    }
+                }
+                if (this.masterGain && this.audioCtx) {
+                    try {
+                        this.masterGain.gain.cancelScheduledValues(this.audioCtx.currentTime);
+                        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.audioCtx.currentTime);
+                        this.masterGain.gain.setTargetAtTime(this.volume, this.audioCtx.currentTime, 0.02);
+                    } catch (e) {}
+                }
+            }
+
             if (persist) {
                 try {
                     localStorage.setItem(STORAGE_KEY_ENABLED, this.enabled ? 'true' : 'false');
                 } catch (e) {}
             }
+
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('kitob-sound-preference-changed', {
-                    detail: { enabled: this.enabled, volume: this.volume }
+                    detail: {
+                        enabled: this.enabled,
+                        volume: this.volume,
+                        percentage: Math.round(this.volume * 100),
+                        previousVolume: this.lastNonZeroVolume
+                    }
                 }));
             }
         }
@@ -1004,19 +1057,55 @@
         setVolume(val, persist = true) {
             const num = Math.max(0, Math.min(1, parseFloat(val) || 0));
             this.volume = num;
-            if (this.masterGain && this.audioCtx) {
-                this.masterGain.gain.setValueAtTime(this.volume, this.audioCtx.currentTime);
+
+            if (this.volume > 0.001) {
+                this.lastNonZeroVolume = this.volume;
+                if (!this.enabled) {
+                    this.enabled = true;
+                    if (persist) {
+                        try {
+                            localStorage.setItem(STORAGE_KEY_ENABLED, 'true');
+                        } catch (e) {}
+                    }
+                }
+            } else {
+                this.stopAll();
             }
+
+            if (this.masterGain && this.audioCtx) {
+                const targetGain = this.enabled ? this.volume : 0;
+                try {
+                    this.masterGain.gain.cancelScheduledValues(this.audioCtx.currentTime);
+                    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.audioCtx.currentTime);
+                    this.masterGain.gain.setTargetAtTime(targetGain, this.audioCtx.currentTime, 0.02);
+                } catch (e) {}
+            }
+
             if (persist) {
                 try {
                     localStorage.setItem(STORAGE_KEY_VOLUME, this.volume.toString());
                 } catch (e) {}
             }
+
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('kitob-sound-preference-changed', {
-                    detail: { enabled: this.enabled, volume: this.volume }
+                    detail: {
+                        enabled: this.enabled,
+                        volume: this.volume,
+                        percentage: Math.round(this.volume * 100),
+                        previousVolume: this.lastNonZeroVolume
+                    }
                 }));
             }
+        }
+
+        toggle(persist = true) {
+            this.setEnabled(!this.enabled, persist);
+            return this.enabled;
+        }
+
+        getLastNonZeroVolume() {
+            return this.lastNonZeroVolume || DEFAULT_VOLUME;
         }
 
         isEnabled() {
@@ -1035,6 +1124,130 @@
     const instance = new KitobSoundManager();
     if (typeof window !== 'undefined') {
         window.KitobSound = instance;
+
+        function kitobHeaderSoundControl() {
+            return {
+                soundEnabled: true,
+                soundVolume: 20,
+                syncTimer: null,
+                syncVersion: 0,
+
+                init() {
+                    if (window.KitobSound) {
+                        this.soundEnabled = window.KitobSound.isEnabled();
+                        this.soundVolume = Math.round(window.KitobSound.getVolume() * 100);
+                    } else {
+                        try {
+                            const savedEn = localStorage.getItem('kitob_sound_enabled');
+                            this.soundEnabled = savedEn !== null ? (savedEn === 'true') : true;
+                            const savedVol = localStorage.getItem('kitob_sound_volume');
+                            this.soundVolume = savedVol !== null ? Math.round(parseFloat(savedVol) * 100) : 20;
+                        } catch (e) {}
+                    }
+
+                    window.addEventListener('kitob-sound-preference-changed', (e) => {
+                        const detail = e.detail || {};
+                        if (typeof detail.enabled === 'boolean') {
+                            this.soundEnabled = detail.enabled;
+                        }
+                        if (typeof detail.percentage === 'number') {
+                            this.soundVolume = detail.percentage;
+                        } else if (typeof detail.volume === 'number') {
+                            this.soundVolume = Math.round(detail.volume * 100);
+                        }
+                    });
+
+                    window.addEventListener('sound-settings-updated', (e) => {
+                        const detail = e.detail || {};
+                        if (typeof detail.enabled === 'boolean') {
+                            this.soundEnabled = detail.enabled;
+                        }
+                        if (typeof detail.volume === 'number') {
+                            this.soundVolume = Math.round(detail.volume * 100);
+                        }
+                    });
+                },
+
+                toggleSound() {
+                    if (window.KitobSound) {
+                        const nextState = !this.soundEnabled;
+                        window.KitobSound.setEnabled(nextState, true);
+                        this.soundEnabled = window.KitobSound.isEnabled();
+                        this.soundVolume = Math.round(window.KitobSound.getVolume() * 100);
+                    } else {
+                        this.soundEnabled = !this.soundEnabled;
+                    }
+                    this.syncServerDebounced();
+                },
+
+                onSliderInput(val) {
+                    const num = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
+                    this.soundVolume = num;
+
+                    if (window.KitobSound) {
+                        window.KitobSound.setVolume(num / 100, true);
+                        this.soundEnabled = window.KitobSound.isEnabled();
+                    } else {
+                        if (num > 0 && !this.soundEnabled) {
+                            this.soundEnabled = true;
+                        }
+                    }
+                },
+
+                onSliderChange(val) {
+                    this.onSliderInput(val);
+                    this.syncServerDebounced();
+                },
+
+                syncServerDebounced() {
+                    if (this.syncTimer) {
+                        clearTimeout(this.syncTimer);
+                    }
+                    this.syncTimer = setTimeout(() => {
+                        this.syncServer();
+                    }, 350);
+                },
+
+                syncServer() {
+                    const isAuth = !!(window.__KITOB_SOUND_SERVER_CONFIG && window.__KITOB_SOUND_SERVER_CONFIG.authenticated);
+                    if (!isAuth) return;
+
+                    const currentVersion = ++this.syncVersion;
+                    const tokenEl = document.querySelector('meta[name="csrf-token"]');
+                    const token = tokenEl ? tokenEl.getAttribute('content') : '';
+
+                    fetch('/settings/sound-preferences', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({
+                            enabled: this.soundEnabled,
+                            volume: this.soundVolume,
+                        }),
+                    })
+                    .then((res) => res.json())
+                    .then((data) => {
+                        if (currentVersion !== this.syncVersion) return;
+                    })
+                    .catch(() => {});
+                }
+            };
+        }
+
+        window.kitobHeaderSoundControl = kitobHeaderSoundControl;
+        if (window.Alpine && typeof window.Alpine.data === 'function') {
+            window.Alpine.data('kitobHeaderSoundControl', kitobHeaderSoundControl);
+        } else {
+            document.addEventListener('alpine:init', () => {
+                if (window.Alpine && typeof window.Alpine.data === 'function') {
+                    window.Alpine.data('kitobHeaderSoundControl', kitobHeaderSoundControl);
+                }
+            });
+        }
     }
     return instance;
 }));

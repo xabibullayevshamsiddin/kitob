@@ -158,38 +158,49 @@ html[data-motion="minimal"] {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   4. MENUS, DROPDOWNS & POPOVERS
+   4. MENUS, DROPDOWNS & POPOVERS (Unified Alpine & CSS)
    ───────────────────────────────────────────────────────────── */
 .ks-dropdown-content,
 [data-motion-dropdown] {
-    transform-origin: top;
+    transform-origin: top right;
     transition: opacity var(--ks-dur-fast) var(--ks-ease),
                 transform var(--ks-dur-fast) var(--ks-ease);
 }
 
-.ks-dropdown-enter {
-    opacity: 0;
-    transform: translateY(calc(-1 * var(--ks-dist-sm))) scale(0.99);
+.ks-dropdown-enter,
+.ks-dropdown-enter-start,
+.ks-menu-blur-enter,
+.ks-menu-blur-enter-start {
+    opacity: 0 !important;
+    transform: translateY(calc(-1 * var(--ks-dist-sm))) scale(0.985) !important;
 }
 
-.ks-dropdown-enter-active {
-    transition: opacity var(--ks-dur-fast) var(--ks-ease),
-                transform var(--ks-dur-fast) var(--ks-ease);
+.ks-dropdown-enter-active,
+.ks-menu-blur-enter-active {
+    transition: opacity var(--ks-dur-normal) var(--ks-ease),
+                transform var(--ks-dur-normal) var(--ks-ease) !important;
+    will-change: opacity, transform;
 }
 
-.ks-dropdown-enter-to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+.ks-dropdown-enter-to,
+.ks-dropdown-enter-end,
+.ks-menu-blur-enter-end {
+    opacity: 1 !important;
+    transform: translateY(0) scale(1) !important;
 }
 
-.ks-dropdown-leave-active {
-    transition: opacity var(--ks-dur-fast) var(--ks-ease-in),
-                transform var(--ks-dur-fast) var(--ks-ease-in);
+.ks-dropdown-leave-active,
+.ks-menu-blur-leave-active {
+    transition: opacity 140ms var(--ks-ease-in),
+                transform 140ms var(--ks-ease-in) !important;
+    will-change: opacity, transform;
 }
 
-.ks-dropdown-leave-to {
-    opacity: 0;
-    transform: translateY(calc(-1 * var(--ks-dist-sm))) scale(0.99);
+.ks-dropdown-leave-to,
+.ks-dropdown-leave-end,
+.ks-menu-blur-leave-end {
+    opacity: 0 !important;
+    transform: translateY(calc(-1 * var(--ks-dist-sm))) scale(0.99) !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -375,3 +386,75 @@ html.ks-dense {
     40%  { transform: scale(1.12); }
     100% { transform: scale(1); }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   13. LIVEWIRE SCOPED FILTERING & SECTION LOADING
+   ───────────────────────────────────────────────────────────── */
+.ks-livewire-loading {
+    position: relative;
+}
+
+.ks-livewire-loading .grid,
+.ks-livewire-loading [data-catalog-grid] {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity var(--ks-dur-fast) var(--ks-ease);
+}
+
+/* Card Stagger Entrance for Livewire Results */
+@keyframes ksCardFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(var(--ks-dist-md));
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ks-card-entering {
+    animation: ksCardFadeIn var(--ks-dur-normal) var(--ks-ease) both;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   14. ICON MICRO-INTERACTIONS (Kinetic Pop & Swings)
+   ───────────────────────────────────────────────────────────── */
+@keyframes ksIconPop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.22) rotate(-3deg); }
+    75%  { transform: scale(0.96) rotate(1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.ks-icon-popping,
+.ks-icon-pop:active {
+    animation: ksIconPop 320ms var(--ks-ease) !important;
+}
+
+@keyframes ksBellRing {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(14deg); }
+    30% { transform: rotate(-12deg); }
+    45% { transform: rotate(8deg); }
+    60% { transform: rotate(-5deg); }
+    75% { transform: rotate(2deg); }
+}
+
+.ks-bell-ring {
+    animation: ksBellRing 1.1s cubic-bezier(0.22, 1, 0.36, 1) 1;
+    transform-origin: top center;
+}
+
+.ks-copy-btn {
+    transition: background-color var(--ks-dur-fast) var(--ks-ease),
+                color var(--ks-dur-fast) var(--ks-ease),
+                transform var(--ks-dur-fast) var(--ks-ease);
+}
+
+.ks-copy-btn.ks-copied {
+    background-color: #10B981 !important;
+    color: #FFFFFF !important;
+    transform: scale(1.02);
+}
+

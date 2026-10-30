@@ -24,7 +24,29 @@ class BookTextExtractor
      *     error_message: string|null
      * }
      */
-    public function extractBookPdf(Book $book, bool $force = false): array
+    /**
+     * Kitobning PDF faylidan bet-bet matn ajratadi, sifatini baholaydi va book_pages jadvaliga saqlaydi.
+     * Ko'p sahifali (masalan 120+ betli) kitoblarni partiyalab to'liq qamrab oladi va matnli/skaner
+     * sahifalar aralash bo'lsa, faqat kerakli sahifalargagina OCR qo'llaydi.
+     *
+     * @return array{
+     *     passed: bool,
+     *     quality_score: float,
+     *     pages_count: int,
+     *     total_pages: int,
+     *     valid_text_pages: int,
+     *     ocr_pages: int,
+     *     blank_pages: int,
+     *     error_pages: int,
+     *     processed_percentage: float,
+     *     quality_percentage: float,
+     *     avg_chars_per_page: float,
+     *     extractor: string,
+     *     error_message: string|null,
+     *     metrics: array<string, mixed>
+     * }
+     */
+    public function extractBookPdf(Book $book, bool $force = false, ?callable $onProgress = null): array
     {
         @ini_set('memory_limit', '1024M');
         @set_time_limit(600);
@@ -33,98 +55,166 @@ class BookTextExtractor
 
         if (!$pdfFullPath || !is_file($pdfFullPath)) {
             return [
-                'passed'             => false,
-                'quality_score'      => 0.0,
-                'pages_count'        => 0,
-                'avg_chars_per_page' => 0.0,
-                'extractor'          => 'none',
-                'error_message'      => 'Kitob PDF fayli topilmadi.',
+                'passed'               => false,
+                'quality_score'        => 0.0,
+                'pages_count'          => 0,
+                'total_pages'          => 0,
+                'valid_text_pages'     => 0,
+                'ocr_pages'            => 0,
+                'blank_pages'          => 0,
+                'error_pages'          => 0,
+                'processed_percentage' => 0.0,
+                'quality_percentage'   => 0.0,
+                'avg_chars_per_page'   => 0.0,
+                'extractor'            => 'none',
+                'error_message'        => 'Kitob PDF fayli topilmadi.',
+                'metrics'              => [],
             ];
         }
 
         $pdfContentHash = hash_file('sha256', $pdfFullPath);
         if (!is_string($pdfContentHash)) {
             return [
-                'passed'             => false,
-                'quality_score'      => 0.0,
-                'pages_count'        => 0,
-                'avg_chars_per_page' => 0.0,
-                'extractor'          => 'none',
-                'error_message'      => 'PDF faylini o\'qib bo\'lmadi.',
+                'passed'               => false,
+                'quality_score'        => 0.0,
+                'pages_count'          => 0,
+                'total_pages'          => 0,
+                'valid_text_pages'     => 0,
+                'ocr_pages'            => 0,
+                'blank_pages'          => 0,
+                'error_pages'          => 0,
+                'processed_percentage' => 0.0,
+                'quality_percentage'   => 0.0,
+                'avg_chars_per_page'   => 0.0,
+                'extractor'            => 'none',
+                'error_message'        => 'PDF faylini o\'qib bo\'lmadi.',
+                'metrics'              => [],
             ];
         }
 
+        $totalPdfPages = $this->detectTotalPdfPages($pdfFullPath);
         $existingPagesCount = BookPage::where('book_id', $book->id)->count();
         $cachedPdfHash = (string) ($book->ai_pdf_content_hash ?? '');
+
         if (!$force && $existingPagesCount > 0 && $cachedPdfHash !== '' && hash_equals($cachedPdfHash, $pdfContentHash)) {
-            return $this->evaluateSavedPages($book, 'cached');
+            return $this->evaluateSavedPages($book, 'cached', $totalPdfPages);
         }
 
+        if ($onProgress) {
+            $onProgress('extracting_native_pages', 0, max(1, $totalPdfPages));
+        }
+
+        // 1. Asosiy matnli (native) ekstraksiya
         $extraction = $this->extractRawPagesFromFile($pdfFullPath);
         $rawPages = $extraction['pages'];
         $extractorName = $extraction['extractor'];
-        $pageSource = 'pdf';
 
-        // Skanerlangan yoki matnsiz PDF holatini tekshirish
-        $totalRawChars = 0;
-        $uniqueHashes = [];
-        foreach ($rawPages as $rp) {
-            $t = trim((string) $rp);
-            $totalRawChars += mb_strlen($t);
-            if ($t !== '') {
-                $uniqueHashes[md5(mb_strtolower($t))] = true;
+        $totalPagesCount = max(count($rawPages), $totalPdfPages);
+        if ($totalPagesCount === 0) {
+            $totalPagesCount = count($rawPages);
+        }
+
+        // 2. Har bir sahifaning sifatini tekshirish va OCR talab qiladigan sahifalarni aniqlash
+        $pagesNeedingOcr = [];
+        $pageData = []; // page_number => ['text' => ..., 'source' => ..., 'quality_score' => ...]
+
+        for ($i = 0; $i < $totalPagesCount; $i++) {
+            $pageNum = $i + 1;
+            $rawText = $rawPages[$i] ?? '';
+            $cleaned = $this->sanitizeUtf8Text((string) $rawText);
+            $score = $this->scorePageTextQuality($cleaned);
+            $trimmedLen = mb_strlen(trim($cleaned));
+
+            $isGenuinelyBlank = $trimmedLen < 20 && preg_match('/^[\s\p{P}]*$/u', $cleaned);
+
+            $pageData[$pageNum] = [
+                'page_number'   => $pageNum,
+                'text'          => $cleaned,
+                'source'        => 'pdf',
+                'quality_score' => $score,
+                'is_blank'      => $isGenuinelyBlank,
+            ];
+
+            // Agar matn yetarli bo'lmasa yoki sifati past bo'lsa (va sahifa shunchaki bo'sh emas bo'lsa)
+            if (($score < 0.45 || $trimmedLen < 40) && !$isGenuinelyBlank) {
+                $pagesNeedingOcr[] = $pageNum;
             }
         }
-        $avgRawChars = !empty($rawPages) ? ($totalRawChars / count($rawPages)) : 0;
-        $isWatermarkRepetitive = count($rawPages) >= 4 && count($uniqueHashes) <= 2;
 
-        // Agar matn yo'q bo'lsa yoki skanerlangan rasm bo'lsa (avg chars < 40 yoki faqat takroriy watermark)
-        if (empty($rawPages) || $avgRawChars < 40 || $isWatermarkRepetitive) {
-            if (config('ai.ocr.enabled', true) && $this->isOcrAvailable()) {
-                $ocrRes = $this->extractViaOcr($pdfFullPath);
-                if (!empty($ocrRes['pages'])) {
-                    $rawPages = $ocrRes['pages'];
-                    $extractorName = $this->isPythonOcrAvailable() ? 'rapid_ocr' : 'tesseract_ocr';
-                    $pageSource = 'ocr';
+        $ocrAvailable = config('ai.ocr.enabled', true) && $this->isOcrAvailable();
+        $ocrSuccessCount = 0;
+
+        // 3. OCR zarur bo'lgan sahifalarni partiyalab (batch: 1-50, 51-100 va h.k.) qayta ishlash
+        if (!empty($pagesNeedingOcr) && $ocrAvailable) {
+            $batchSize = max(1, (int) config('ai.ocr.max_pages', 50));
+            $ocrBatches = array_chunk($pagesNeedingOcr, $batchSize);
+            $totalBatches = count($ocrBatches);
+
+            foreach ($ocrBatches as $bIdx => $pageBatch) {
+                if ($onProgress) {
+                    $onProgress('ocr_processing', $bIdx + 1, $totalBatches);
+                }
+
+                $pagesListStr = implode(',', $pageBatch);
+                $ocrRes = $this->extractViaOcr($pdfFullPath, $onProgress, 1, $batchSize, $pagesListStr);
+                $ocrPages = $ocrRes['pages'] ?? [];
+
+                // Olingan OCR matnlarini o'z o'rniga joylashtiramiz
+                foreach ($ocrPages as $ocrP) {
+                    $pNum = (int) ($ocrP['page_number'] ?? 0);
+                    $ocrText = $this->sanitizeUtf8Text((string) ($ocrP['text'] ?? ''));
+                    if ($pNum > 0 && isset($pageData[$pNum])) {
+                        $ocrScore = $this->scorePageTextQuality($ocrText);
+                        $nativeScore = $pageData[$pNum]['quality_score'];
+
+                        // MUHIM QOIDA: To'g'ri ajratilgan matnni sifati pastroq OCR natijasi bilan almashtirmaymiz!
+                        if ($ocrScore > $nativeScore && mb_strlen($ocrText) >= 30) {
+                            $pageData[$pNum]['text'] = $ocrText;
+                            $pageData[$pNum]['source'] = 'ocr';
+                            $pageData[$pNum]['quality_score'] = $ocrScore;
+                            $ocrSuccessCount++;
+                        }
+                    }
                 }
             }
         }
 
-        if (empty($rawPages)) {
-            $msg = $this->isOcrAvailable()
-                ? "Skanerlangan PDF'dan matnni o'qib bo'lmadi (sahifalar bo'sh yoki xira)."
-                : trans('ai.low_text_quality') . " (Skanerlangan PDF. Matnni tanish uchun serverda RapidOCR yoki Poppler va Tesseract OCR o'rnatilgan bo'lishi lozim).";
-
-            $book->update([
-                'ai_text_quality' => 0.0,
-                'ai_index_status' => 'failed',
-                'ai_index_error'  => $msg,
-            ]);
-
-            return [
-                'passed'             => false,
-                'quality_score'      => 0.0,
-                'pages_count'        => 0,
-                'avg_chars_per_page' => 0.0,
-                'extractor'          => $extractorName,
-                'error_message'      => $msg,
-            ];
-        }
-
+        // 4. Ma'lumotlarni book_pages jadvaliga saqlash
         $now = now();
         $rowsToUpsert = [];
+        $validTextPages = 0;
+        $blankPages = 0;
+        $errorPages = 0;
+        $ocrPages = 0;
+        $totalChars = 0;
+        $totalScore = 0.0;
 
-        foreach ($rawPages as $index => $rawPageText) {
-            $pageNum = $index + 1;
-            $cleanedText = $this->sanitizeUtf8Text((string) $rawPageText);
-            $pageScore = $this->scorePageTextQuality($cleanedText);
+        foreach ($pageData as $pageNum => $pInfo) {
+            $cleanedText = $pInfo['text'];
+            $pScore = $pInfo['quality_score'];
+            $pSource = $pInfo['source'];
+
+            if ($pInfo['is_blank'] && mb_strlen(trim($cleanedText)) < 15) {
+                $blankPages++;
+            } elseif ($pScore >= 0.45) {
+                $validTextPages++;
+            } else {
+                $errorPages++;
+            }
+
+            if ($pSource === 'ocr') {
+                $ocrPages++;
+            }
+
+            $totalChars += mb_strlen(trim($cleanedText));
+            $totalScore += $pScore;
 
             $rowsToUpsert[] = [
                 'book_id'       => $book->id,
                 'page_number'   => $pageNum,
                 'text'          => $cleanedText,
-                'source'        => $pageSource,
-                'quality_score' => $pageScore,
+                'source'        => $pSource,
+                'quality_score' => $pScore,
                 'created_at'    => $now,
                 'updated_at'    => $now,
             ];
@@ -149,45 +239,74 @@ class BookTextExtractor
 
         // Ortiqcha eski betlar bo'lsa o'chirish
         BookPage::where('book_id', $book->id)
-            ->where('page_number', '>', count($rawPages))
+            ->where('page_number', '>', $totalPagesCount)
             ->delete();
 
-        // Eski betlar faqat yangi PDF matni saqlangandan keyin shu fayl hashiga bog'lanadi.
         $book->forceFill(['ai_pdf_content_hash' => $pdfContentHash])->save();
 
-        return $this->evaluateSavedPages($book, $extractorName);
+        return $this->evaluateSavedPages($book, $extractorName, $totalPagesCount);
     }
 
     /**
-     * Saqlangan book_pages asosida umumiy kitob matni sifatini tekshiradi.
+     * Saqlangan book_pages asosida umumiy kitob matni sifatini tekshiradi va to'liq hisobot tuzadi.
      */
-    public function evaluateSavedPages(Book $book, string $extractorName = 'pdf'): array
+    public function evaluateSavedPages(Book $book, string $extractorName = 'pdf', int $detectedTotalPages = 0): array
     {
         $pages = BookPage::where('book_id', $book->id)
             ->orderBy('page_number')
-            ->get(['page_number', 'text', 'quality_score']);
+            ->get(['page_number', 'text', 'quality_score', 'source']);
 
         $pagesCount = $pages->count();
+        $totalPages = max($pagesCount, $detectedTotalPages);
+
         if ($pagesCount === 0) {
             return [
-                'passed'             => false,
-                'quality_score'      => 0.0,
-                'pages_count'        => 0,
-                'avg_chars_per_page' => 0.0,
-                'extractor'          => $extractorName,
-                'error_message'      => trans('ai.low_text_quality'),
+                'passed'               => false,
+                'quality_score'        => 0.0,
+                'pages_count'          => 0,
+                'total_pages'          => $totalPages,
+                'valid_text_pages'     => 0,
+                'ocr_pages'            => 0,
+                'blank_pages'          => 0,
+                'error_pages'          => 0,
+                'processed_percentage' => 0.0,
+                'quality_percentage'   => 0.0,
+                'avg_chars_per_page'   => 0.0,
+                'extractor'            => $extractorName,
+                'error_message'        => trans('ai.low_text_quality'),
+                'metrics'              => [],
             ];
         }
 
         $totalChars = 0;
         $totalScore = 0.0;
         $uniqueHashes = [];
+        $validTextPages = 0;
+        $ocrPages = 0;
+        $blankPages = 0;
+        $errorPages = 0;
 
         foreach ($pages as $p) {
             $trimmed = trim((string) $p->text);
             $len = mb_strlen($trimmed);
+            $score = (float) $p->quality_score;
+            $source = (string) $p->source;
+
             $totalChars += $len;
-            $totalScore += (float) $p->quality_score;
+            $totalScore += $score;
+
+            if ($len < 20 && preg_match('/^[\s\p{P}]*$/u', $trimmed)) {
+                $blankPages++;
+            } elseif ($score >= 0.45) {
+                $validTextPages++;
+            } else {
+                $errorPages++;
+            }
+
+            if ($source === 'ocr') {
+                $ocrPages++;
+            }
+
             if ($trimmed !== '') {
                 $uniqueHashes[md5(mb_strtolower($trimmed))] = true;
             }
@@ -196,7 +315,7 @@ class BookTextExtractor
         $avgCharsPerPage = round($totalChars / $pagesCount, 1);
         $avgQuality = round($totalScore / $pagesCount, 3);
 
-        // Agar ko'p betli kitobda barcha betlarda faqat bitta watermark (masalan "http://eduportal.uz") takrorlansa
+        // Agar ko'p betli kitobda barcha betlarda faqat bitta watermark takrorlansa
         if ($pagesCount >= 4 && count($uniqueHashes) <= 1) {
             $avgQuality = min($avgQuality, 0.05);
         }
@@ -204,22 +323,96 @@ class BookTextExtractor
         $minQuality = (float) config('ai.min_text_quality', 0.45);
         $minAvgChars = (int) config('ai.min_avg_chars_per_page', 120);
 
+        // Qamrov va sifat foizlari
+        $processedPercentage = $totalPages > 0 ? round(($pagesCount / $totalPages) * 100, 1) : 100.0;
+        $activePages = max(1, $totalPages - $blankPages);
+        $qualityPercentage = round(($validTextPages / $activePages) * 100, 1);
+
         $passed = ($avgQuality >= $minQuality) && ($avgCharsPerPage >= $minAvgChars);
         $errorMessage = $passed ? null : trans('ai.low_text_quality');
 
+        $metrics = [
+            'total_pages'          => $totalPages,
+            'processed_pages'      => $pagesCount,
+            'valid_text_pages'     => $validTextPages,
+            'ocr_pages'            => $ocrPages,
+            'blank_pages'          => $blankPages,
+            'error_pages'          => $errorPages,
+            'processed_percentage' => $processedPercentage,
+            'quality_percentage'   => $qualityPercentage,
+            'avg_chars_per_page'   => $avgCharsPerPage,
+            'avg_quality_score'    => $avgQuality,
+            'extractor'            => $extractorName,
+        ];
+
         $book->update([
-            'ai_text_quality' => $avgQuality,
-            'ai_index_error'  => $errorMessage,
+            'ai_text_quality'    => $avgQuality,
+            'ai_index_error'     => $errorMessage,
+            'ai_total_pages'     => $totalPages,
+            'ai_processed_pages' => $pagesCount,
+            'ai_index_metrics'   => $metrics,
         ]);
 
         return [
-            'passed'             => $passed,
-            'quality_score'      => $avgQuality,
-            'pages_count'        => $pagesCount,
-            'avg_chars_per_page' => $avgCharsPerPage,
-            'extractor'          => $extractorName,
-            'error_message'      => $errorMessage,
+            'passed'               => $passed,
+            'quality_score'        => $avgQuality,
+            'pages_count'          => $pagesCount,
+            'total_pages'          => $totalPages,
+            'valid_text_pages'     => $validTextPages,
+            'ocr_pages'            => $ocrPages,
+            'blank_pages'          => $blankPages,
+            'error_pages'          => $errorPages,
+            'processed_percentage' => $processedPercentage,
+            'quality_percentage'   => $qualityPercentage,
+            'avg_chars_per_page'   => $avgCharsPerPage,
+            'extractor'            => $extractorName,
+            'error_message'        => $errorMessage,
+            'metrics'              => $metrics,
         ];
+    }
+
+    /**
+     * PDF faylining haqiqiy sahifalar sonini mustaqil aniqlaydi.
+     */
+    public function detectTotalPdfPages(string $pdfFullPath): int
+    {
+        if (!is_file($pdfFullPath)) {
+            return 0;
+        }
+
+        // 1. PDF /Count regex in binary stream (juda tez va samarali)
+        $fh = @fopen($pdfFullPath, 'rb');
+        if ($fh) {
+            $buffer = '';
+            while (!feof($fh) && strlen($buffer) < 1500000) {
+                $chunk = fread($fh, 65536);
+                if ($chunk === false) break;
+                $buffer .= $chunk;
+            }
+            fclose($fh);
+
+            if (preg_match_all('/\/Count\s+(\d+)/', $buffer, $matches)) {
+                $counts = array_map('intval', $matches[1]);
+                $maxCount = !empty($counts) ? max($counts) : 0;
+                if ($maxCount > 0 && $maxCount < 10000) {
+                    return $maxCount;
+                }
+            }
+        }
+
+        // 2. smalot/pdfparser orqali tekshirish
+        try {
+            $cfg = new PdfParserConfig();
+            $cfg->setRetainImageContent(false);
+            $parser = new PdfParser([], $cfg);
+            $doc = $parser->parseFile($pdfFullPath);
+            $count = count($doc->getPages());
+            if ($count > 0) {
+                return $count;
+            }
+        } catch (\Throwable $e) {}
+
+        return 0;
     }
 
     /**
@@ -646,12 +839,17 @@ class BookTextExtractor
      * OCR yordamida skanerlangan PDF fayldan betma-bet matn ajratadi.
      * RapidOCR mavjud bo'lsa undan, aks holda Poppler va Tesseract OCR'dan foydalanadi.
      *
-     * @return array{pages: string[], warnings: array}
+     * @return array{pages: array<int, array{page_number: int, text: string}>, warnings: array}
      */
-    public function extractViaOcr(string $pdfFullPath, ?callable $onProgress = null): array
-    {
+    public function extractViaOcr(
+        string $pdfFullPath,
+        ?callable $onProgress = null,
+        int $startPage = 1,
+        int $maxPages = 50,
+        string $pagesList = ''
+    ): array {
         if ($this->isPythonOcrAvailable()) {
-            return $this->extractViaPythonOcr($pdfFullPath, $onProgress);
+            return $this->extractViaPythonOcr($pdfFullPath, $onProgress, $startPage, $maxPages, $pagesList);
         }
 
         $pdftoppm = (string) config('ai.ocr.pdftoppm_bin', 'pdftoppm');
@@ -670,18 +868,22 @@ class BookTextExtractor
         $pages = [];
 
         try {
-            // 1. PDF sahifalarini PNG formatiga o'tkazish
-            $renderProcess = new Process([
-                $pdftoppm,
-                '-png',
-                '-r', (string) $dpi,
-                $pdfFullPath,
-                $tmpDir . DIRECTORY_SEPARATOR . 'page'
-            ]);
+            // PDF sahifalarini PNG formatiga o'tkazish
+            $ppmArgs = [$pdftoppm, '-png', '-r', (string) $dpi];
+            if ($pagesList === '' && $startPage > 0 && $maxPages > 0) {
+                $ppmArgs[] = '-f';
+                $ppmArgs[] = (string) $startPage;
+                $ppmArgs[] = '-l';
+                $ppmArgs[] = (string) ($startPage + $maxPages - 1);
+            }
+            $ppmArgs[] = $pdfFullPath;
+            $ppmArgs[] = $tmpDir . DIRECTORY_SEPARATOR . 'page';
+
+            $renderProcess = new Process($ppmArgs);
             $renderProcess->setTimeout($timeout);
             $renderProcess->run();
 
-            // 2. Hosil bo'lgan rasmlarni tartiblash
+            // Hosil bo'lgan rasmlarni tartiblash
             $imageFiles = glob($tmpDir . DIRECTORY_SEPARATOR . 'page-*.png') ?: [];
             natsort($imageFiles);
             $imageFiles = array_values($imageFiles);
@@ -690,6 +892,12 @@ class BookTextExtractor
             foreach ($imageFiles as $idx => $imgFile) {
                 if ($onProgress) {
                     $onProgress('ocr', $idx + 1, $totalImages);
+                }
+
+                // Fayl nomidan sahifa raqamini ajratish (masalan page-000001.png -> 1)
+                $realPageNum = $startPage + $idx;
+                if (preg_match('/page-(\d+)\.png$/', $imgFile, $m)) {
+                    $realPageNum = (int) $m[1];
                 }
 
                 $ocrProcess = new Process([
@@ -701,7 +909,11 @@ class BookTextExtractor
                 $ocrProcess->setTimeout(60);
                 $ocrProcess->run();
 
-                $pages[] = $ocrProcess->isSuccessful() ? (string) $ocrProcess->getOutput() : '';
+                $text = $ocrProcess->isSuccessful() ? (string) $ocrProcess->getOutput() : '';
+                $pages[] = [
+                    'page_number' => $realPageNum,
+                    'text'        => $text,
+                ];
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('OCR extraction failed', ['error' => $e->getMessage()]);
@@ -731,11 +943,17 @@ class BookTextExtractor
 
     /**
      * Python RapidOCR (ONNX Runtime + PyMuPDF) orqali skanerlangan PDF fayldan matn ajratadi.
+     * Partiyalab (start-page, max-pages) yoki maxsus tanlangan sahifalar (pagesList) bo'yicha ishlaydi.
      *
-     * @return array{pages: string[], warnings: array}
+     * @return array{pages: array<int, array{page_number: int, text: string}>, warnings: array}
      */
-    public function extractViaPythonOcr(string $pdfFullPath, ?callable $onProgress = null): array
-    {
+    public function extractViaPythonOcr(
+        string $pdfFullPath,
+        ?callable $onProgress = null,
+        int $startPage = 1,
+        int $maxPages = 50,
+        string $pagesList = ''
+    ): array {
         $cmdPrefix = $this->resolvePythonOrUvCommand();
         if (!$cmdPrefix) {
             return [
@@ -745,14 +963,22 @@ class BookTextExtractor
         }
 
         $script = app_path('Services/AI/BookAssistant/Scripts/ocr_pdf.py');
-        $maxPages = (int) config('ai.ocr.max_pages', 50);
         $timeout = (int) config('ai.ocr.timeout_seconds', 600);
 
         $cmd = array_merge($cmdPrefix, [
             $script,
             $pdfFullPath,
-            '--max-pages', (string) $maxPages,
         ]);
+
+        if (trim($pagesList) !== '') {
+            $cmd[] = '--pages';
+            $cmd[] = trim($pagesList);
+        } else {
+            $cmd[] = '--start-page';
+            $cmd[] = (string) max(1, $startPage);
+            $cmd[] = '--max-pages';
+            $cmd[] = (string) max(1, $maxPages);
+        }
 
         $pages = [];
         $warnings = [];
@@ -771,7 +997,14 @@ class BookTextExtractor
                 $data = json_decode($rawOut, true);
                 if (is_array($data) && !empty($data['pages'])) {
                     foreach ($data['pages'] as $p) {
-                        $pages[] = (string) ($p['text'] ?? '');
+                        $pNum = (int) ($p['page_number'] ?? 0);
+                        $pText = (string) ($p['text'] ?? '');
+                        if ($pNum > 0) {
+                            $pages[] = [
+                                'page_number' => $pNum,
+                                'text'        => $pText,
+                            ];
+                        }
                     }
                 }
             }
@@ -787,7 +1020,14 @@ class BookTextExtractor
                     $data = json_decode($rawOut, true);
                     if (is_array($data) && !empty($data['pages'])) {
                         foreach ($data['pages'] as $p) {
-                            $pages[] = (string) ($p['text'] ?? '');
+                            $pNum = (int) ($p['page_number'] ?? 0);
+                            $pText = (string) ($p['text'] ?? '');
+                            if ($pNum > 0) {
+                                $pages[] = [
+                                    'page_number' => $pNum,
+                                    'text'        => $pText,
+                                ];
+                            }
                         }
                     }
                 } else {

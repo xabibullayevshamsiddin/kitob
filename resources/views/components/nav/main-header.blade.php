@@ -51,11 +51,11 @@
         </a>
 
         {{-- Desktop Nav — asosiy linklar --}}
-        <nav class="hidden lg:flex items-stretch self-stretch gap-1 text-[13px] font-medium flex-1 justify-center">
+        <nav class="hidden lg:flex items-stretch self-stretch gap-0.5 xl:gap-1 text-[12.5px] xl:text-[13px] font-medium flex-1 justify-center min-w-0">
             @foreach($navLinks as $link)
                 @php $active = request()->routeIs(...$link['match']); @endphp
                 <a href="{{ route($link['route']) }}"
-                   class="relative inline-flex items-center px-3 whitespace-nowrap transition-colors duration-base {{ $active ? 'text-paper' : 'text-mist hover:text-paper' }}"
+                   class="relative inline-flex items-center px-2 xl:px-3 whitespace-nowrap transition-colors duration-base {{ $active ? 'text-paper' : 'text-mist hover:text-paper' }}"
                    @if($active) aria-current="page" @endif>
                     {{ $link['label'] }}
                     <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $active ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
@@ -366,26 +366,26 @@
                 </style>
 
                 {{-- Bildirishnomalar --}}
-                <a href="{{ route('notifications') }}" class="header-notification-btn hidden md:inline-flex relative p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-all duration-base focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/70" title="{{ __('site.nav.notifications') }}">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                <a href="{{ route('notifications') }}" class="header-notification-btn hidden md:inline-flex relative p-2 rounded-btn text-mist hover:text-paper hover:bg-ink-800 transition-all duration-base focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/70 group" title="{{ __('site.nav.notifications') }}">
+                    <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110 {{ auth()->user()->unreadNotifications->count() > 0 ? 'ks-bell-ring' : '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                     @if(auth()->user()->unreadNotifications->count() > 0)
-                        <span class="header-notification-dot absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-ink-900"></span>
+                        <span class="header-notification-dot absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-ink-900 animate-pulse"></span>
                     @endif
                 </a>
 
                 {{-- Admin / Teacher panel tugmasi --}}
                 @if(auth()->user()->hasRole('admin'))
-                    <a href="{{ route('admin.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
+                    <a href="{{ route('admin.dashboard') }}" class="hidden xl:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap shrink-0">
                         {{ __('site.nav.dashboard') }} →
                     </a>
                 @elseif(auth()->user()->hasRole('teacher'))
-                    <a href="{{ route('teacher.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
+                    <a href="{{ route('teacher.dashboard') }}" class="hidden xl:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap shrink-0">
                         {{ __('site.nav.teacher_panel') }} →
                     </a>
                 @endif
 
                 {{-- Avatar Dropdown --}}
-                <div x-data="{ userMenuOpen: false }" x-on:click.outside="userMenuOpen = false" class="relative">
+                <div x-data="{ userMenuOpen: false }" x-on:click.outside="userMenuOpen = false" class="relative shrink-0">
                     <button @click="userMenuOpen = !userMenuOpen" type="button" 
                             class="header-avatar-btn flex items-center gap-2 pl-1 pr-2 py-1 rounded-btn transition-colors duration-base select-none {{ $isHome ? 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md' : 'hover:bg-ink-800 border border-ink-border' }}"
                             :class="(!isHome || scrolled || mobileMenu) ? 'hover:bg-ink-800 border border-ink-border bg-transparent' : 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md'">
@@ -400,7 +400,7 @@
                          x-transition:leave="ks-menu-blur-leave-active"
                          x-transition:leave-start="ks-menu-blur-leave"
                          x-transition:leave-end="ks-menu-blur-leave-end"
-                         class="header-dropdown-menu absolute right-0 mt-2 w-64 bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
+                         class="header-dropdown-menu absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
 
                         {{-- User Profile Header --}}
                         <div class="px-4 py-3.5 border-b border-ink-border">
@@ -503,6 +503,71 @@
                                 <span>{{ __('site.nav.settings') }}</span>
                             </a>
 
+                            {{-- Sayt ovozlari va balandlik boshqaruvi (Profile Dropdown) --}}
+                            <div x-data="kitobHeaderSoundControl()"
+                                 x-init="init()"
+                                 @click.stop
+                                 @keydown.stop
+                                 class="header-sound-panel px-4 py-2.5 my-1 border-y border-ink-border/50 bg-ink-950/40 select-none">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <button type="button"
+                                                @click="toggleSound()"
+                                                class="header-sound-icon-btn text-mist hover:text-paper transition-colors shrink-0 p-0.5 focus:outline-none"
+                                                :title="soundEnabled && soundVolume > 0 ? '{{ addslashes(__('site.settings.sound_header_title')) }}: {{ addslashes(__('site.common.active') ?? 'Yoqilgan') }}' : '{{ addslashes(__('site.settings.sound_header_title')) }}: {{ addslashes(__('site.common.disabled') ?? 'O‘chirilgan') }}'"
+                                                aria-label="{{ __('site.settings.sound_toggle_aria') }}">
+                                            <template x-if="soundEnabled && soundVolume > 0">
+                                                <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                                </svg>
+                                            </template>
+                                            <template x-if="!soundEnabled || soundVolume === 0">
+                                                <svg class="w-4 h-4 text-mist/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                                                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                                                </svg>
+                                            </template>
+                                        </button>
+                                        <span class="text-[13px] font-medium text-paper/90 dark:text-mist truncate">
+                                            {{ __('site.settings.sound_header_title') }}
+                                        </span>
+                                    </div>
+
+                                    <button type="button"
+                                            role="switch"
+                                            :aria-checked="soundEnabled && soundVolume > 0 ? 'true' : 'false'"
+                                            aria-label="{{ __('site.settings.sound_toggle_aria') }}"
+                                            @click="toggleSound()"
+                                            class="header-sound-switch relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+                                            :class="(soundEnabled && soundVolume > 0) ? '!bg-cyan-600 dark:!bg-cyan-500' : '!bg-ink-700'">
+                                        <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
+                                              :class="(soundEnabled && soundVolume > 0) ? 'translate-x-4' : 'translate-x-0'"></span>
+                                    </button>
+                                </div>
+
+                                <div class="mt-2 flex items-center justify-between text-[11px] font-mono">
+                                    <span class="text-mist">{{ __('site.settings.sound_volume_label') }}</span>
+                                    <span class="font-bold tabular-nums"
+                                          :class="(soundEnabled && soundVolume > 0) ? 'text-cyan-600 dark:text-cyan-400' : 'text-mist/60'"
+                                          x-text="soundEnabled ? soundVolume + '%' : '0%'"></span>
+                                </div>
+
+                                <div class="mt-1 flex items-center gap-2">
+                                    <input type="range"
+                                           min="0"
+                                           max="100"
+                                           step="5"
+                                           :value="soundEnabled ? soundVolume : 0"
+                                           @input="onSliderInput($event.target.value)"
+                                           @change="onSliderChange($event.target.value)"
+                                           aria-label="{{ __('site.settings.sound_slider_aria') }}"
+                                           class="header-sound-slider w-full h-1.5 bg-ink-700 rounded-lg appearance-none cursor-pointer accent-cyan-600 dark:accent-cyan-400 focus:outline-none"
+                                           :class="{ 'opacity-50 cursor-not-allowed': !soundEnabled }">
+                                </div>
+                            </div>
+
                             {{-- Mavzu almashtirgich (Profile Dropdown) --}}
                             <button @click="toggleTheme($event); userMenuOpen = false" type="button" data-theme-toggle class="w-full flex items-center justify-between px-4 py-2 text-[13px] text-paper/85 dark:text-mist hover:text-paper hover:bg-ink-700/60 transition-colors duration-base">
                                 <span class="flex items-center gap-2.5">
@@ -569,7 +634,7 @@
          x-transition:leave="transition-all duration-200 ease-in"
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 -translate-y-3 scale-[0.98]"
-         class="lg:hidden border-t border-ink-border bg-ink-950/98 backdrop-blur-2xl px-5 sm:px-6 pt-4 pb-6 max-h-[calc(100vh-4rem)] overflow-y-auto relative z-40 shadow-2xl">
+         class="lg:hidden border-t border-ink-border bg-ink-950/98 backdrop-blur-2xl px-5 sm:px-6 pt-4 pb-28 max-h-[calc(100vh-4rem)] overflow-y-auto relative z-40 shadow-2xl">
         <p class="ks-eyebrow pb-2 text-[10px] tracking-widest text-mist uppercase font-mono">{{ __('site.nav.sections') }}</p>
         <div class="space-y-1">
             @foreach($navLinks as $link)
@@ -642,6 +707,69 @@
                         <span>{{ __('site.theme.dark') }}</span>
                     </span>
                 </button>
+            </div>
+
+            {{-- Sayt ovozlari (mobil) --}}
+            <div x-data="kitobHeaderSoundControl()" 
+                 x-init="init()"
+                 @click.stop
+                 @keydown.stop
+                 class="header-sound-panel pt-3 mt-1 border-t border-ink-border/50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <button type="button"
+                                @click="toggleSound()"
+                                class="header-sound-icon-btn text-mist hover:text-paper transition-colors shrink-0 p-0.5 focus:outline-none"
+                                :title="soundEnabled && soundVolume > 0 ? '{{ addslashes(__('site.settings.sound_header_title')) }}: {{ addslashes(__('site.common.active') ?? 'Yoqilgan') }}' : '{{ addslashes(__('site.settings.sound_header_title')) }}: {{ addslashes(__('site.common.disabled') ?? 'O‘chirilgan') }}'"
+                                aria-label="{{ __('site.settings.sound_toggle_aria') }}">
+                            <template x-if="soundEnabled && soundVolume > 0">
+                                <svg class="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                </svg>
+                            </template>
+                            <template x-if="!soundEnabled || soundVolume === 0">
+                                <svg class="w-4 h-4 text-mist/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                                </svg>
+                            </template>
+                        </button>
+                        <span class="ks-eyebrow">{{ __('site.settings.sound_header_title') }}</span>
+                    </div>
+
+                    <button type="button"
+                            role="switch"
+                            :aria-checked="soundEnabled && soundVolume > 0 ? 'true' : 'false'"
+                            aria-label="{{ __('site.settings.sound_toggle_aria') }}"
+                            @click="toggleSound()"
+                            class="header-sound-switch relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                            :class="(soundEnabled && soundVolume > 0) ? '!bg-cyan-600 dark:!bg-cyan-500' : '!bg-ink-700'">
+                        <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out"
+                              :class="(soundEnabled && soundVolume > 0) ? 'translate-x-4' : 'translate-x-0'"></span>
+                    </button>
+                </div>
+
+                <div class="mt-2.5 flex items-center justify-between text-[11px] font-mono">
+                    <span class="text-mist">{{ __('site.settings.sound_volume_label') }}</span>
+                    <span class="font-bold tabular-nums"
+                          :class="(soundEnabled && soundVolume > 0) ? 'text-cyan-600 dark:text-cyan-400' : 'text-mist/60'"
+                          x-text="soundEnabled ? soundVolume + '%' : '0%'"></span>
+                </div>
+
+                <div class="mt-1.5 flex items-center gap-2">
+                    <input type="range"
+                           min="0"
+                           max="100"
+                           step="5"
+                           :value="soundEnabled ? soundVolume : 0"
+                           @input="onSliderInput($event.target.value)"
+                           @change="onSliderChange($event.target.value)"
+                           aria-label="{{ __('site.settings.sound_slider_aria') }}"
+                           class="header-sound-slider w-full h-1.5 bg-ink-700 rounded-lg appearance-none cursor-pointer accent-cyan-600 dark:accent-cyan-400 focus:outline-none"
+                           :class="{ 'opacity-50 cursor-not-allowed': !soundEnabled }">
+                </div>
             </div>
         </div>
     </div>
@@ -1165,5 +1293,41 @@ html:not(.light) #site-header.is-hero-header .header-notification-dot {
         -webkit-backdrop-filter: none !important;
         background: rgba(10, 24, 42, 0.96) !important;
     }
+}
+
+/* Sound Controller (Dropdown & Mobile) */
+.header-sound-switch {
+    background-color: #334155 !important;
+}
+.header-sound-switch[aria-checked="true"] {
+    background-color: #00A8B5 !important;
+}
+html.light:not(.force-dark) #site-header .header-dropdown-menu .header-sound-panel {
+    background-color: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+}
+html.light:not(.force-dark) #site-header .header-dropdown-menu .header-sound-panel span.text-paper\/90 {
+    color: #0C1C36 !important;
+}
+html.light:not(.force-dark) #site-header .header-dropdown-menu .header-sound-panel .text-mist {
+    color: #64748B !important;
+}
+html.light:not(.force-dark) #site-header .header-sound-icon-btn:hover {
+    background-color: transparent !important;
+}
+html.light:not(.force-dark) #site-header .header-sound-switch {
+    background-color: #CBD5E1 !important;
+}
+html.light:not(.force-dark) #site-header .header-sound-switch[aria-checked="true"] {
+    background-color: #008D99 !important;
+}
+html.light:not(.force-dark) #site-header .header-sound-switch:hover {
+    background-color: #CBD5E1 !important;
+}
+html.light:not(.force-dark) #site-header .header-sound-switch[aria-checked="true"]:hover {
+    background-color: #008D99 !important;
+}
+html.light:not(.force-dark) #site-header .header-sound-slider {
+    background-color: #E2E8F0 !important;
 }
 </style>

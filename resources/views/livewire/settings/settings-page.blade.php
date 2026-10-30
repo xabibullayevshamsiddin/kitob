@@ -221,7 +221,19 @@
                      if (this.activePreview === name) this.activePreview = null;
                  }, 600);
              }
-         }">
+         }"
+         @kitob-sound-preference-changed.window="
+             if ($event.detail && typeof $event.detail.enabled === 'boolean') {
+                 if (@this.get('soundEnabled') !== $event.detail.enabled) {
+                     @this.set('soundEnabled', $event.detail.enabled, false);
+                 }
+             }
+             if ($event.detail && typeof $event.detail.percentage === 'number') {
+                 if (@this.get('soundVolume') !== $event.detail.percentage) {
+                     @this.set('soundVolume', $event.detail.percentage, false);
+                 }
+             }
+         ">
         <div class="flex items-center justify-between border-b border-ink-border pb-3 flex-wrap gap-2">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-btn bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
@@ -275,7 +287,7 @@
                      :class="{ 'opacity-50 pointer-events-none': !@entangle('soundEnabled') }">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-paper">{{ __('site.settings.sound_volume_label') }}</span>
-                        <span class="text-xs font-mono font-bold text-amber-400">
+                        <span class="text-xs font-mono font-bold text-amber-400" x-text="$wire.soundVolume + '%'">
                             {{ $soundVolume }}%
                         </span>
                     </div>
@@ -402,6 +414,7 @@
                                name="motionPreference"
                                value="system"
                                wire:model="motionPreference"
+                               @change="window.KitobMotion && window.KitobMotion.setMode('system')"
                                class="text-amber-500 focus:ring-amber-500/40 h-4 w-4 bg-ink-900 border-ink-border">
                         <span class="text-xs font-bold text-paper font-serif">{{ __('site.settings.motion_mode_system') }}</span>
                     </div>
@@ -421,6 +434,7 @@
                                name="motionPreference"
                                value="gentle"
                                wire:model="motionPreference"
+                               @change="window.KitobMotion && window.KitobMotion.setMode('gentle')"
                                class="text-amber-500 focus:ring-amber-500/40 h-4 w-4 bg-ink-900 border-ink-border">
                         <span class="text-xs font-bold text-amber-400 font-serif">{{ __('site.settings.motion_mode_gentle') }}</span>
                     </div>
@@ -440,6 +454,7 @@
                                name="motionPreference"
                                value="minimal"
                                wire:model="motionPreference"
+                               @change="window.KitobMotion && window.KitobMotion.setMode('minimal')"
                                class="text-amber-500 focus:ring-amber-500/40 h-4 w-4 bg-ink-900 border-ink-border">
                         <span class="text-xs font-bold text-paper font-serif">{{ __('site.settings.motion_mode_minimal') }}</span>
                     </div>

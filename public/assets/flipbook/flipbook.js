@@ -184,6 +184,14 @@
 
   function playPaperTurnSound() {
     if (!soundEnabled) return;
+    if (window.KitobSound && !window.KitobSound.isEnabled()) return;
+
+    let masterVol = 0.20;
+    if (window.KitobSound && typeof window.KitobSound.getVolume === 'function') {
+      masterVol = window.KitobSound.getVolume();
+      if (masterVol <= 0.001) return;
+    }
+
     const now = performance.now();
     if (now - lastSoundTimestamp < 190) return;
     lastSoundTimestamp = now;
@@ -211,7 +219,7 @@
         source.playbackRate.value = 0.98 + Math.random() * 0.05;
 
         const gainNode = webAudioCtx.createGain();
-        gainNode.gain.value = 0.95;
+        gainNode.gain.value = Math.max(0, Math.min(1.0, 0.95 * (masterVol / 0.20)));
 
         source.connect(gainNode);
         gainNode.connect(webAudioCtx.destination);
@@ -225,6 +233,7 @@
         const audio = htmlAudioFallbackPool[htmlAudioPoolIdx];
         htmlAudioPoolIdx = (htmlAudioPoolIdx + 1) % HTML_AUDIO_POOL_SIZE;
         audio.currentTime = 0.12;
+        audio.volume = Math.max(0, Math.min(1.0, 0.95 * (masterVol / 0.20)));
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {});
@@ -378,6 +387,12 @@
 
     ['pointerdown', 'mousedown', 'touchstart', 'keydown'].forEach((evt) => {
       window.addEventListener(evt, unlockAudioContext, { passive: true });
+    });
+
+    window.addEventListener('kitob-sound-preference-changed', (e) => {
+      if (e && e.detail) {
+        soundEnabled = Boolean(e.detail.enabled) && (e.detail.volume > 0.001);
+      }
     });
 
     loadDocument(pdfUrl);

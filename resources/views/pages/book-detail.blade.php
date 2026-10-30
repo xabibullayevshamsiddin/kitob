@@ -412,10 +412,13 @@
                             :class="isSaved 
                                 ? 'bg-amber-500 text-ink-950 font-bold border-amber-400 shadow-md shadow-amber-500/20' 
                                 : 'ks-btn-ghost text-amber-600 dark:text-amber-400 border-amber-500/30 hover:border-amber-400'"
-                            class="px-3.5 py-2 rounded-btn text-xs font-semibold inline-flex items-center gap-2 transition-all active:scale-95"
+                            class="px-3.5 py-2 rounded-btn text-xs font-semibold inline-flex items-center gap-2 transition-all active:scale-95 group"
                             :title="isSaved ? @js(__('site.saved_books.remove_title')) : @js(__('site.saved_books.save_title'))">
-                        <span x-show="!isSaved">📌</span>
-                        <span x-show="isSaved">✓</span>
+                        <svg class="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
+                             :class="isSaved ? 'fill-current scale-105' : 'fill-none'"
+                             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
                         <span x-text="isSaved ? @js(__('site.saved_books.saved_btn')) : @js(__('site.saved_books.save_btn'))">{{ __('site.saved_books.save_btn') }}</span>
                     </button>
 
