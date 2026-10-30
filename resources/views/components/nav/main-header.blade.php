@@ -51,28 +51,28 @@
         </a>
 
         {{-- Desktop Nav — asosiy linklar --}}
-        <nav class="hidden lg:flex items-stretch self-stretch gap-1 text-[13px] font-medium flex-1 justify-center">
+        <nav class="hidden lg:flex items-stretch self-stretch gap-0.5 xl:gap-1 text-[13px] font-medium flex-1 justify-center">
             @foreach($navLinks as $link)
                 @php $active = request()->routeIs(...$link['match']); @endphp
                 <a href="{{ route($link['route']) }}"
-                   class="relative inline-flex items-center px-3 whitespace-nowrap transition-colors duration-base {{ $active ? 'text-paper' : 'text-mist hover:text-paper' }}"
+                   class="relative inline-flex items-center px-2 xl:px-3 whitespace-nowrap transition-colors duration-base {{ $active ? 'text-paper' : 'text-mist hover:text-paper' }}"
                    @if($active) aria-current="page" @endif>
                     {{ $link['label'] }}
-                    <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $active ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
+                    <span class="absolute left-2 right-2 xl:left-3 xl:right-3 bottom-0 h-[2px] {{ $active ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
                 </a>
             @endforeach
 
             {{-- "Ko'proq" dropdown --}}
             <div class="relative flex items-stretch" @click.outside="moreOpen = false">
                 <button @click="moreOpen = !moreOpen" type="button"
-                        class="relative inline-flex items-center gap-1.5 px-3 whitespace-nowrap font-medium select-none transition-colors duration-base {{ $moreActive ? 'text-paper' : 'text-mist hover:text-paper' }}"
+                        class="relative inline-flex items-center gap-1.5 px-2 xl:px-3 whitespace-nowrap font-medium select-none transition-colors duration-base {{ $moreActive ? 'text-paper' : 'text-mist hover:text-paper' }}"
                         :aria-expanded="moreOpen.toString()">
                     <span>{{ __('site.nav.more') ?? 'Ko\'proq' }}</span>
                     <svg class="w-3.5 h-3.5 transition-transform duration-base" :class="moreOpen ? 'rotate-180 text-cyan-600 dark:text-cyan-400' : ''"
                          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="m6 9 6 6 6-6"/>
                     </svg>
-                    <span class="absolute left-3 right-3 bottom-0 h-[2px] {{ $moreActive ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
+                    <span class="absolute left-2 right-2 xl:left-3 xl:right-3 bottom-0 h-[2px] {{ $moreActive ? 'bg-cyan-500 dark:bg-cyan-400' : 'bg-transparent' }}"></span>
                 </button>
                 <div x-show="moreOpen" x-cloak
                      x-transition:enter="ks-menu-blur-enter-active"
@@ -261,9 +261,9 @@
                     {{-- Streak Flame --}}
                     <span x-data="{ streakCount: {{ (int) (auth()->user()->current_streak ?? 0) }} }"
                           @streak-updated.window="streakCount = $event.detail.streak"
-                          class="header-streak-pill inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 text-cyan-600 dark:text-cyan-400 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums"
+                          class="header-streak-pill inline-flex items-center gap-1 xl:gap-1.5 px-1.5 xl:px-2.5 h-8 text-cyan-600 dark:text-cyan-400 font-mono text-[11px] xl:text-[12px] font-medium tabular-nums"
                           title="{{ __('site.common.streak') }}">
-                        <svg class="ks-flame w-3.5 h-3.5 sm:w-4 sm:h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <svg class="ks-flame w-3.5 h-3.5 xl:w-4 xl:h-4" :class="streakCount > 0 ? 'is-lit' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
                         </svg>
                         <span x-text="streakCount">{{ auth()->user()->current_streak }}</span>
@@ -271,10 +271,10 @@
 
                     {{-- Points with Live Counting and Floating Badge --}}
                     <div class="relative">
-                        <span class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200"
+                        <span class="inline-flex items-center gap-1 xl:gap-1.5 px-1.5 xl:px-2.5 h-8 font-mono text-[11px] xl:text-[12px] font-medium tabular-nums tracking-tight transition-colors duration-200"
                               :class="pointsBump ? 'bg-cyan-500/20 text-cyan-300' : 'text-paper'"
                               title="{{ __('site.common.points') }}">
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 transition-transform duration-300"
+                            <svg class="w-3.5 h-3.5 xl:w-4 xl:h-4 text-cyan-600 dark:text-cyan-400 transition-transform duration-300"
                                  :class="pointsBump ? 'scale-125 rotate-12' : ''"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -295,10 +295,10 @@
                     {{-- Coins with Live Counting and Floating Badge (mobilda profil menyusida, sm dan boshlab ko'rinadi) --}}
                     <div class="relative hidden sm:block">
                         <a href="{{ route('shop.index') }}"
-                           class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 h-8 font-mono text-[11px] sm:text-[12px] font-medium tabular-nums transition-colors duration-200 hover:text-cyan-600 dark:hover:text-cyan-400"
+                           class="inline-flex items-center gap-1 xl:gap-1.5 px-1.5 xl:px-2.5 h-8 font-mono text-[11px] xl:text-[12px] font-medium tabular-nums tracking-tight transition-colors duration-200 hover:text-cyan-600 dark:hover:text-cyan-400"
                               :class="coinsBump ? 'bg-cyan-500/20 text-cyan-300' : 'text-paper'"
                               title="{{ __('site.common.coins') }}">
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 transition-transform duration-300"
+                            <svg class="w-3.5 h-3.5 xl:w-4 xl:h-4 text-cyan-600 dark:text-cyan-400 transition-transform duration-300"
                                  :class="coinsBump ? 'scale-125 -rotate-12' : ''"
                                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>
@@ -380,23 +380,25 @@
 
                 {{-- Admin / Teacher panel tugmasi --}}
                 @if(auth()->user()->hasRole('admin'))
-                    <a href="{{ route('admin.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
-                        {{ __('site.nav.dashboard') }} →
+                    <a href="{{ route('admin.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-2.5 xl:!px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
+                        <span class="hidden xl:inline">{{ __('site.nav.dashboard') }}</span>
+                        <span class="xl:hidden">Admin</span> →
                     </a>
                 @elseif(auth()->user()->hasRole('teacher'))
-                    <a href="{{ route('teacher.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
-                        {{ __('site.nav.teacher_panel') }} →
+                    <a href="{{ route('teacher.dashboard') }}" class="hidden md:inline-flex ks-btn-gold !px-2.5 xl:!px-3 !py-1.5 font-mono !text-[11px] uppercase tracking-[0.08em] whitespace-nowrap">
+                        <span class="hidden xl:inline">{{ __('site.nav.teacher_panel') }}</span>
+                        <span class="xl:hidden">Ustoz</span> →
                     </a>
                 @endif
 
                 {{-- Avatar Dropdown --}}
                 <div x-data="{ userMenuOpen: false }" x-on:click.outside="userMenuOpen = false" class="relative shrink-0">
                     <button @click="userMenuOpen = !userMenuOpen" type="button"
-                            class="header-avatar-btn flex items-center gap-2 pl-1 pr-2 py-1 rounded-btn transition-colors duration-base select-none {{ $isHome ? 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md' : 'hover:bg-ink-800 border border-ink-border' }}"
+                            class="header-avatar-btn flex items-center gap-1.5 xl:gap-2 pl-1 pr-1.5 xl:pr-2 py-1 rounded-btn transition-colors duration-base select-none {{ $isHome ? 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md' : 'hover:bg-ink-800 border border-ink-border' }}"
                             :class="(!isHome || scrolled || mobileMenu) ? 'hover:bg-ink-800 border border-ink-border bg-transparent' : 'border border-white/20 bg-white/[0.08] hover:bg-white/[0.14] backdrop-blur-md'">
-                        <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover" alt="{{ auth()->user()->name }}">
-                        <span class="text-xs font-medium text-paper hidden lg:inline max-w-[90px] truncate">{{ auth()->user()->name }}</span>
-                        <svg class="w-3.5 h-3.5 text-mist transition-transform duration-base" :class="userMenuOpen ? 'rotate-180 text-cyan-600 dark:text-cyan-400' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        <img src="{{ auth()->user()->avatar_url }}" class="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-ink-border/50" alt="{{ auth()->user()->name }}">
+                        <span class="text-xs font-medium text-paper hidden xl:inline max-w-[95px] truncate">{{ auth()->user()->name }}</span>
+                        <svg class="w-3.5 h-3.5 text-mist transition-transform duration-base shrink-0" :class="userMenuOpen ? 'rotate-180 text-cyan-600 dark:text-cyan-400' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                     <div x-show="userMenuOpen" x-cloak
                          x-transition:enter="ks-menu-blur-enter-active"
@@ -405,30 +407,32 @@
                          x-transition:leave="ks-menu-blur-leave-active"
                          x-transition:leave-start="ks-menu-blur-leave"
                          x-transition:leave-end="ks-menu-blur-leave-end"
-                         class="header-dropdown-menu absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
+                         class="header-dropdown-menu absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
 
                         {{-- User Profile Header --}}
-                        <div class="px-4 py-3.5 border-b border-ink-border">
-                            <div class="flex items-center gap-3">
-                                <img src="{{ auth()->user()->avatar_url }}" class="w-10 h-10 rounded-full object-cover" alt="{{ auth()->user()->name }}">
+                        <div class="px-4 py-3.5 border-b border-ink-border bg-ink-950/30">
+                            <div class="flex items-start gap-3">
+                                <img src="{{ auth()->user()->avatar_url }}" class="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-ink-border/80" alt="{{ auth()->user()->name }}">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-1.5 flex-wrap">
-                                        <p class="font-display text-[15px] font-semibold text-paper truncate leading-tight">{{ auth()->user()->name }}</p>
-                                        @if($headerTitle = auth()->user()->equipped_title)
-                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold"
-                                                  style="background-color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}25; color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}; border: 1px solid {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}50;">
-                                                {{ $headerTitle->name_text }}
-                                            </span>
+                                        <p class="font-display text-[15px] font-semibold text-paper truncate leading-snug" title="{{ auth()->user()->name }}">{{ auth()->user()->name }}</p>
+                                        @if(auth()->user()->hasRole('admin'))
+                                            <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold !text-[9px] !px-1.5 !py-0.5">Admin</span>
+                                        @elseif(auth()->user()->hasRole('teacher'))
+                                            <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold !text-[9px] !px-1.5 !py-0.5">Ustoz</span>
                                         @endif
                                     </div>
                                     <p class="text-[11px] font-mono text-mist truncate mt-0.5">{{ '@' . auth()->user()->username }}</p>
+                                    @if($headerTitle = auth()->user()->equipped_title)
+                                        <div class="mt-1.5">
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold whitespace-nowrap shadow-sm"
+                                                  style="background-color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}25; color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}; border: 1px solid {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}50;">
+                                                {{ $headerTitle->name_text }}
+                                            </span>
+                                        </div>
+                                    @endif
                                 </div>
-                                @if(auth()->user()->hasRole('admin'))
-                                    <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold">Admin</span>
-                                @elseif(auth()->user()->hasRole('teacher'))
-                                    <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400 font-bold">Ustoz</span>
-                                @endif
-                                <span class="ks-badge shrink-0 bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 font-bold font-mono text-[10px]" title="{{ auth()->user()->level_title }}">
+                                <span class="ks-badge shrink-0 bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 font-bold font-mono text-[10px] px-2 py-0.5" title="{{ auth()->user()->level_title }}">
                                     {{ auth()->user()->level_icon }} Lv.{{ auth()->user()->level }}
                                 </span>
                             </div>
@@ -436,13 +440,13 @@
                             @php
                                 $headerLvlProg = auth()->user()->level_progress;
                             @endphp
-                            <div class="mt-2.5 pt-2 border-t border-ink-border/50 space-y-1">
-                                <div class="flex items-center justify-between text-[10px] font-mono">
-                                    <span class="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-                                        <span>{{ auth()->user()->level_icon }}</span>
-                                        <span>Lv.{{ auth()->user()->level }} {{ auth()->user()->level_title }}</span>
+                            <div class="mt-3 pt-2.5 border-t border-ink-border/50 space-y-1.5">
+                                <div class="flex items-center justify-between text-[11px] font-mono">
+                                    <span class="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1 min-w-0 truncate">
+                                        <span class="shrink-0">{{ auth()->user()->level_icon }}</span>
+                                        <span class="truncate">Lv.{{ auth()->user()->level }} {{ auth()->user()->level_title }}</span>
                                     </span>
-                                    <span class="text-mist">{{ $headerLvlProg['progress_percent'] }}%</span>
+                                    <span class="text-mist font-semibold shrink-0 ml-2">{{ $headerLvlProg['progress_percent'] }}%</span>
                                 </div>
                                 <div class="w-full h-1.5 rounded-full bg-ink-950 overflow-hidden border border-ink-border/50">
                                     <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300" style="width: {{ $headerLvlProg['progress_percent'] }}%"></div>
