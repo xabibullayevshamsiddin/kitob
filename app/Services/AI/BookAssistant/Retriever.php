@@ -70,9 +70,15 @@ class Retriever
         $limit = max(1, min(12, $limit));
         $expandedQuery = $this->buildExpandedQuery($query, $previousUserQuestion);
         $isOverview = $this->isOverviewQuestion($query) || $this->isOverviewQuestion($expandedQuery);
-        $targetPage = $this->extractPageNumber($query) ?? $this->extractPageNumber($expandedQuery);
-        $targetChapter = $this->extractChapterNumber($query) ?? $this->extractChapterNumber($expandedQuery);
-        $targetExercise = $this->extractExerciseNumber($query) ?? $this->extractExerciseNumber($expandedQuery);
+        $targetPage = $this->extractPageNumber($query);
+        if ($targetPage === null && $expandedQuery !== $query && $previousUserQuestion && preg_match('/(?:shu|o[\'`ʻ’]sha|unda(?:gi)?)\s*(?:bet|sahifa|yerda)/ui', $query)) {
+            $targetPage = $this->extractPageNumber($previousUserQuestion);
+        }
+        $targetChapter = $this->extractChapterNumber($query);
+        if ($targetChapter === null && $expandedQuery !== $query && $previousUserQuestion && preg_match('/(?:shu|o[\'`ʻ’]sha|unda(?:gi)?)\s*bob/ui', $query)) {
+            $targetChapter = $this->extractChapterNumber($previousUserQuestion);
+        }
+        $targetExercise = $this->extractExerciseNumber($query);
         $isPageTask = $this->isPageTaskQuery($expandedQuery, $targetPage, $targetChapter);
 
         $book = Book::select(['id', 'title', 'ai_indexed_at', 'ai_summary'])->find($bookId);
@@ -336,26 +342,36 @@ class Retriever
             return $trimmed;
         }
 
-        $words = preg_split('/\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        // Do'stona muloqot (salomlashish, minnatdorchilik) yoki butun kitob bo'yicha umumiy savollarni
+        // aslo oldingi sahifa/misol savollariga ulamaymiz!
+        /** @var RelevanceGate $gate */
+        $gate = app(RelevanceGate::class);
+        if ($gate->getConversationalType($trimmed) !== null) {
+            return $trimmed;
+        }
+
+        if ($this->isOverviewQuestion($trimmed)) {
+            return $trimmed;
+        }
+
         $lower = mb_strtolower($trimmed);
 
         $anaphoricPatterns = [
             'buni', 'shuni', 'uni', 'bu haqda', 'shu haqda', 'u haqda',
             'tushuntir', 'batafsil', 'misol', 'nega unday', 'qanday qilib',
-            'davom et', 'explain this', 'more about', 'подробнее', 'объясни это',
+            'davom et', 'keyingisi', 'yana', 'explain this', 'more about',
+            'подробнее', 'объясни это', 'продолжай', 'следующий',
         ];
 
-        $needsExpansion = count($words) <= 4;
-        if (!$needsExpansion) {
-            foreach ($anaphoricPatterns as $p) {
-                if (str_contains($lower, $p)) {
-                    $needsExpansion = true;
-                    break;
-                }
+        $hasAnaphora = false;
+        foreach ($anaphoricPatterns as $p) {
+            if (str_contains($lower, $p)) {
+                $hasAnaphora = true;
+                break;
             }
         }
 
-        if ($needsExpansion) {
+        if ($hasAnaphora) {
             return trim($previousUserQuestion) . ' ' . $trimmed;
         }
 

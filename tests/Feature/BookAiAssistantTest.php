@@ -745,14 +745,14 @@ class BookAiAssistantTest extends TestCase
         $this->assertSame(1, AiChatHistory::where('user_id', $user2->id)->where('book_id', $book1->id)->count(), 'Boshqa foydalanuvchi tarixi o\'chmasligi kerak!');
         $this->assertSame(1, AiChatHistory::where('user_id', $user1->id)->where('book_id', $book2->id)->count(), 'Boshqa kitob tarixi o\'chmasligi kerak!');
 
-        // $bookId ni nofaol kitobga o'zgartirib (tampering) so'rov yuborish bloklanishi shart
+        // $bookId ni nofaol kitobga o'zgartirib (tampering) so'rov yuborish bloklanishi shart —
+        // bookId qulflangan, shuning uchun o'zgartirish urinishining o'zi 403 qaytaradi
         $callsBefore = $this->llmCallCount;
         Livewire::actingAs($user1)
             ->test(\App\Http\Livewire\Book\BookAssistant::class, ['book' => $book1])
             ->set('bookId', $inactiveBook->id)
-            ->set('question', 'Maxfiy bob matni haqida ayt')
-            ->call('ask')
-            ->assertSee('Ushbu kitob uchun AI yordamchi hali tayyor emas.');
+            ->assertForbidden()
+            ->assertSet('bookId', $book1->id);
 
         $this->assertSame($callsBefore, $this->llmCallCount);
     }
@@ -826,7 +826,7 @@ class BookAiAssistantTest extends TestCase
                 return 'simulated-scanned-pdf';
             }
 
-            public function extractBookPdf(Book $book, bool $force = false): array
+            public function extractBookPdf(Book $book, bool $force = false, ?callable $onProgress = null): array
             {
                 return [
                     'passed' => false,
@@ -1217,7 +1217,7 @@ class BookAiAssistantTest extends TestCase
     public function test_indexing_deduplicates_identical_chapter_content_present_in_pdf(): void
     {
         $this->app->instance(BookTextExtractor::class, new class extends BookTextExtractor {
-            public function extractBookPdf(Book $book, bool $force = false): array
+            public function extractBookPdf(Book $book, bool $force = false, ?callable $onProgress = null): array
             {
                 return [
                     'passed' => true,
@@ -1341,7 +1341,9 @@ class BookAiAssistantTest extends TestCase
 
         $this->assertIsArray($res);
         $this->assertNotEmpty($res['pages']);
-        $this->assertStringContainsString('ALGEBRA', mb_strtoupper($res['pages'][0]));
+        // extractViaPythonOcr sahifalarni ['page_number' => .., 'text' => ..] ko'rinishida qaytaradi
+        $firstPage = $res['pages'][0];
+        $this->assertStringContainsString('ALGEBRA', mb_strtoupper(is_array($firstPage) ? (string) ($firstPage['text'] ?? '') : (string) $firstPage));
     }
 
     /**

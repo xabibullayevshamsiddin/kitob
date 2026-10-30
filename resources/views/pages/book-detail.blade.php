@@ -5,7 +5,7 @@
 @php
     $bookAiReady = (bool) config('ai.enabled', true) 
         && (bool) $book->ai_enabled 
-        && $book->ai_index_status === 'ready'
+        && in_array($book->ai_index_status, ['ready', 'partial'], true)
         && ((int) ($book->chunks_count ?? ($book->relationLoaded('chunks') ? $book->chunks->count() : $book->chunks()->count()))) > 0;
 @endphp
 

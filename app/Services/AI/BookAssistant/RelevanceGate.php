@@ -31,7 +31,7 @@ class RelevanceGate
             : (float) config('ai.min_fulltext_score', 0.12);
 
         // 0. Do'stona jonli muloqot (salomlashish, hol-ahvol, minnatdorchilik, xayrlashish)
-        if (!$hasTarget && $this->isPureConversational($question)) {
+        if ($this->isPureConversational($question)) {
             return [
                 'passed'              => false,
                 'reason'              => 'conversational',
@@ -64,7 +64,7 @@ class RelevanceGate
         // 2. Agar bo'laklar topilmagan bo'lsa -> dalil yo'q
         if (empty($chunks)) {
             // Do'stona muloqot (salomlashish, hol-ahvol, minnatdorchilik) bo'lsa, rad etmaymiz
-            if (!$hasTarget && ($convType = $this->getConversationalType($question)) !== null) {
+            if (($convType = $this->getConversationalType($question)) !== null) {
                 return [
                     'passed'              => false,
                     'reason'              => 'conversational',
@@ -95,7 +95,7 @@ class RelevanceGate
         // 4. Baho chegaradan past bo'lsa
         if ($topScore < $threshold) {
             // Do'stona muloqot (salomlashish, hol-ahvol, minnatdorchilik) bo'lsa, rad etmaymiz
-            if (!$hasTarget && ($convType = $this->getConversationalType($question)) !== null) {
+            if (($convType = $this->getConversationalType($question)) !== null) {
                 return [
                     'passed'              => false,
                     'reason'              => 'conversational',
