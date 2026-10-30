@@ -1350,6 +1350,7 @@
       fbStopAutoPlay();
       return false;
     } else {
+      window.__fbIsAutoPlaying = true;
       autoPlayInterval = setInterval(() => {
         if (!pageFlipInstance || !pdfDoc) {
           fbStopAutoPlay();
@@ -1372,6 +1373,7 @@
   }
 
   function fbStopAutoPlay() {
+    window.__fbIsAutoPlaying = false;
     if (autoPlayInterval) {
       clearInterval(autoPlayInterval);
       autoPlayInterval = null;

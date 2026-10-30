@@ -152,8 +152,8 @@
                     <span x-show="pageType !== 'video' && pageType !== 'audio' && pageType !== 'quiz'">📖 Ha, mutolaani davom ettiraman</span>
                 </button>
                 <button type="button" 
-                        @click="showAfkModal = false; isPaused = true;" 
-                        class="w-full py-2 text-xs text-slate-400 hover:text-white transition-colors">
+                        @click="keepPaused()" 
+                        class="w-full py-2 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer">
                     Hozircha pauzada tursin
                 </button>
             </div>
@@ -182,6 +182,7 @@ function readingTracker(config) {
         lastCoinsAwarded: 0,
         
         isPaused: config.pageType === 'audio',
+        isManuallyPaused: false,
         isAfk: false,
         afkReason: 'idle',
         isSending: false,
@@ -196,9 +197,6 @@ function readingTracker(config) {
 
         isPageFocused() {
             if (document.hidden || document.visibilityState !== 'visible') {
-                return false;
-            }
-            if (typeof document.hasFocus === 'function' && !document.hasFocus()) {
                 return false;
             }
             return true;
@@ -219,38 +217,55 @@ function readingTracker(config) {
                 });
             });
 
-            // User faolligini kuzatuvchi voqealar (sahifa varaqlash, sichqoncha, klaviatura, sensor)
-            const events = ['mousemove', 'mousedown', 'click', 'keydown', 'touchstart', 'scroll', 'wheel', 'reading-activity'];
+            // User faolligini kuzatuvchi barcha voqealar (sahifa varaqlash, sichqoncha, klaviatura, sensor/mobil)
+            const events = [
+                'mousemove', 'mousedown', 'mouseup', 'click',
+                'keydown', 'keyup',
+                'touchstart', 'touchmove', 'touchend',
+                'pointerdown', 'pointermove', 'pointerup',
+                'scroll', 'wheel',
+                'reading-activity', 'flipbook:pagechange', 'reader:scroll', 'reader:pagechange'
+            ];
             let lastEventTime = Date.now();
 
-            const recordActivity = () => {
+            const recordActivity = (e) => {
                 if (document.hidden || document.visibilityState !== 'visible') return;
-                // Anti-cheat: Modal ochiq bo'lsa yoki AFK / Fokus pauzada tursa,
-                // sichqoncha harakati modalni o'chirib yubormasligi shart!
+
+                // Anti-cheat: Modal ochiq bo'lsa yoki AFK pauzada tursa,
+                // sichqoncha/ekran harakati modalni bekor qilmasligi shart!
+                // Foydalanuvchi modal ichidagi tugmani bosishi lozim.
                 if (this.showAfkModal || this.isAfk) {
                     return;
                 }
+
+                // Autoplay (avtomatik sahifa varaqlash) orqali kelgan sun'iy signallarni inson harakati deb olmaymiz
+                if (e && (e.type === 'reading-activity' || e.type === 'flipbook:pagechange') && window.__fbIsAutoPlaying) {
+                    return;
+                }
+
                 const now = Date.now();
-                if (now - lastEventTime > 800) {
+                if (now - lastEventTime > 400) {
                     lastEventTime = now;
                     this.idleSeconds = 0;
-                    if (this.isPaused && this.pageType !== 'audio') {
+                    if (this.isPaused && !this.isManuallyPaused && this.pageType !== 'audio') {
                         this.isPaused = false;
                     }
                 }
             };
 
+            // Barcha hodisalarni ham window, ham document ga ulash (canvas va sensor uchun)
             events.forEach(evt => {
                 window.addEventListener(evt, recordActivity, { passive: true });
+                document.addEventListener(evt, recordActivity, { passive: true });
             });
 
-            // Media tinglash holatlari
+            // Media tinglash holatlari (audio/video sahifalarida)
             const syncMedia = () => {
                 const videoEl = document.querySelector('video');
                 if (videoEl && !videoEl._hasTrackerListener) {
                     videoEl._hasTrackerListener = true;
                     videoEl.addEventListener('play', () => {
-                        if (!this.showAfkModal) {
+                        if (!this.showAfkModal && this.pageType === 'video') {
                             this.isPaused = false;
                             this.isAfk = false;
                             this.idleSeconds = 0;
@@ -267,7 +282,7 @@ function readingTracker(config) {
                     if (!audioEl._hasTrackerListener) {
                         audioEl._hasTrackerListener = true;
                         audioEl.addEventListener('play', () => {
-                            if (!this.showAfkModal) {
+                            if (!this.showAfkModal && this.pageType === 'audio') {
                                 this.isPaused = false;
                                 this.isAfk = false;
                                 this.idleSeconds = 0;
@@ -288,14 +303,14 @@ function readingTracker(config) {
             syncMedia();
             setInterval(syncMedia, 2000);
 
-            // Tab o'zgarishini aniqlash (boshqa tabga o'tganda DARHOL to'xtatish va modal chiqarish)
+            // Tab o'zgarishini aniqlash (boshqa tabga o'tganda yoki brauzer minimizatsiya bo'lganda DARHOL to'xtatish)
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden || document.visibilityState !== 'visible') {
                     this.triggerFocusPause('focus');
                 }
             });
 
-            // Ilova yoki oyna fokusini yo'qotganda (Telegram, boshqa oyna yoki monitordagi ilovalarga o'tganda)
+            // Ilova yoki oyna fokusini yo'qotganda
             window.addEventListener('blur', () => {
                 if (isTransitioningFullscreen) return;
                 setTimeout(() => {
@@ -303,7 +318,7 @@ function readingTracker(config) {
                     if (!this.isPageFocused()) {
                         this.triggerFocusPause('focus');
                     }
-                }, 150);
+                }, 300);
             });
 
             // Sahifani yopish yoki boshqa sahifaga o'tishda yig'ilgan vaqtni yo'qotmasdan yuborish
@@ -316,28 +331,36 @@ function readingTracker(config) {
 
             // Sekundlik yurak urishi (ticker)
             this.timerInterval = setInterval(() => {
-                // Anti-cheat: agar sahifa fokusda bo'lmasa, yoki afk/pauza bo'lsa — sekund mutlaqo hisoblanmaydi!
-                if (!this.isPageFocused() || this.isAfk || this.isPaused) {
-                    if (!this.isPageFocused() && !this.showAfkModal && !isTransitioningFullscreen) {
+                // Anti-cheat: agar sahifa fokusda bo'lmasa, pauza qilish
+                if (!this.isPageFocused()) {
+                    if (!this.showAfkModal && !isTransitioningFullscreen) {
                         this.triggerFocusPause('focus');
                     }
                     return;
                 }
 
-                const videoEl = document.querySelector('video');
-                const isVideoPlaying = videoEl && !videoEl.paused && !videoEl.ended && videoEl.readyState > 2;
-
-                const bookAudios = this.getBookAudios();
-                const isBookAudioPlaying = bookAudios.some(a => !a.paused && !a.ended);
-
-                // Audio sahifasida audio qo'yilmagan bo'lsa, taymer hisoblamaydi
-                if (this.pageType === 'audio' && !isBookAudioPlaying) {
-                    this.isPaused = true;
+                // Agar allaqachon pauza yoki AFK bo'lsa — soniyalar mutlaqo hisoblanmaydi!
+                if (this.isAfk || this.isPaused) {
                     return;
                 }
 
-                // Video yoki kitob audiosi o'ynayotgan bo'lsa, harakatsizlik bo'lmaydi
-                if (isVideoPlaying || isBookAudioPlaying) {
+                // Faqat audio dars sahifasida audio o'ynayotgan bo'lsa yoki video darsda video o'ynayotgan bo'lsa
+                // harakatsizlik hisoblanmaydi. Kitob mutolaasida esa foydalanuvchi kitobni varaqlashi/harakat qilishi shart!
+                if (this.pageType === 'audio') {
+                    const bookAudios = this.getBookAudios();
+                    const isBookAudioPlaying = bookAudios.some(a => !a.paused && !a.ended);
+                    if (!isBookAudioPlaying) {
+                        this.isPaused = true;
+                        return;
+                    }
+                    this.idleSeconds = 0;
+                } else if (this.pageType === 'video') {
+                    const videoEl = document.querySelector('video');
+                    const isVideoPlaying = videoEl && !videoEl.paused && !videoEl.ended && videoEl.readyState > 2;
+                    if (!isVideoPlaying) {
+                        this.isPaused = true;
+                        return;
+                    }
                     this.idleSeconds = 0;
                 }
 
@@ -357,7 +380,7 @@ function readingTracker(config) {
                         }
                     }));
 
-                    // 5 daqiqa mutlaq harakatsizlik bo'lganda AFK rejimiga o'tish
+                    // 5 DAQIQA (300 SONIYA) MUTLAQ HARAKATSIZLIK — ANTI-CHEAT PAUZA VA AFK MODAL
                     if (this.idleSeconds >= this.afkLimitSeconds) {
                         this.triggerFocusPause('idle');
                         return;
@@ -385,8 +408,6 @@ function readingTracker(config) {
                         // 3. Serverga saqlash
                         this.sendHeartbeat(1);
                     }
-                } else if (this.isAfk) {
-                    this.idleSeconds++;
                 }
             }, 1000);
         },
@@ -422,6 +443,9 @@ function readingTracker(config) {
                     isPaused: true
                 }
             }));
+            window.dispatchEvent(new CustomEvent('reading-tracker-paused', {
+                detail: { reason: reason }
+            }));
         },
 
         triggerAfk(reason = 'idle') {
@@ -432,6 +456,7 @@ function readingTracker(config) {
             this.showAfkModal = false;
             this.isAfk = false;
             this.isPaused = false;
+            this.isManuallyPaused = false;
             this.idleSeconds = 0;
 
             if (this.wasMediaPlayingBeforeAfk && this.pausedMediaElements.length > 0) {
@@ -459,10 +484,27 @@ function readingTracker(config) {
                     isPaused: false
                 }
             }));
+            window.dispatchEvent(new CustomEvent('reading-tracker-resumed'));
+        },
+
+        keepPaused() {
+            this.showAfkModal = false;
+            this.isPaused = true;
+            this.isManuallyPaused = true;
+            window.dispatchEvent(new CustomEvent('reading-tracker-tick', {
+                detail: {
+                    sessionSeconds: this.sessionSeconds,
+                    formattedTime: this.formatTime(this.sessionSeconds),
+                    totalMinutesToday: this.totalMinutesToday,
+                    totalMinutesAll: this.totalMinutesAll,
+                    isPaused: true
+                }
+            }));
         },
 
         toggleManualPause() {
             this.isPaused = !this.isPaused;
+            this.isManuallyPaused = this.isPaused;
             if (!this.isPaused) {
                 this.idleSeconds = 0;
                 this.isAfk = false;
