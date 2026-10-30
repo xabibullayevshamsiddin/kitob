@@ -35,7 +35,7 @@ class LiveStreamingTest extends TestCase
         ]);
 
         // Host sends offer to viewer_123
-        $sendResponse = $this->postJson(route('live.signal.send', $event), [
+        $sendResponse = $this->actingAs($host)->postJson(route('live.signal.send', $event), [
             'sender_id'   => 'host',
             'receiver_id' => 'viewer_123',
             'type'        => 'offer',
@@ -391,7 +391,7 @@ class LiveStreamingTest extends TestCase
         $event = $this->makeLiveEvent($host, 'Viewer Count Room');
 
         // Host broadcasts viewer-count signal to 'all'
-        $sendResponse = $this->postJson(route('live.signal.send', $event), [
+        $sendResponse = $this->actingAs($host)->postJson(route('live.signal.send', $event), [
             'sender_id'   => 'host_123',
             'receiver_id' => 'all',
             'type'        => 'viewer-count',

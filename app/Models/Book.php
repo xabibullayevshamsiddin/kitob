@@ -57,6 +57,29 @@ class Book extends Model
     }
 
     /**
+     * Kitob mazmunini (bob, PDF, audio) ko'rish huquqi — books.show sahifasidagi qoidalar bilan bir xil:
+     * nofaol kitobni faqat admin yoki muallif ko'radi, e'lon qilinmaganini esa Top 5 kitobxonlar ham.
+     */
+    public function isViewableBy(?User $user): bool
+    {
+        if ($user && ($user->isAdmin() || (int) $this->created_by === (int) $user->id)) {
+            return true;
+        }
+
+        if (!$this->is_active) {
+            return false;
+        }
+
+        if ($this->published_at && $this->published_at->isFuture()) {
+            $rank = $user ? app(\App\Services\LeaderboardService::class)->getUserRank($user) : null;
+
+            return $rank !== null && $rank <= 5;
+        }
+
+        return true;
+    }
+
+    /**
      * Retrieve the model for a bound value (supports both ID and slug).
      */
     public function resolveRouteBinding($value, $field = null)

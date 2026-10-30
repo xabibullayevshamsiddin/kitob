@@ -15,6 +15,8 @@ class BookPdfController extends Controller
      */
     public function read(Book $book)
     {
+        abort_unless($book->isViewableBy(auth()->user()), 404);
+
         // 1) Yuklangan haqiqiy PDF fayl bormi?
         if ($book->pdf_path && Storage::disk('public')->exists($book->pdf_path)) {
             $absolute = Storage::disk('public')->path($book->pdf_path);
@@ -64,6 +66,8 @@ class BookPdfController extends Controller
      */
     public function download(Book $book)
     {
+        abort_unless($book->isViewableBy(auth()->user()), 404);
+
         // 1) Yuklangan haqiqiy PDF fayl bormi?
         if ($book->pdf_path && Storage::disk('public')->exists($book->pdf_path)) {
             $absolute = Storage::disk('public')->path($book->pdf_path);
@@ -102,6 +106,8 @@ class BookPdfController extends Controller
      */
     public function stream(Book $book)
     {
+        abort_unless($book->isViewableBy(auth()->user()), 404);
+
         abort_unless($book->pdf_path && Storage::disk('public')->exists($book->pdf_path), 404);
         $path = Storage::disk('public')->path($book->pdf_path);
 

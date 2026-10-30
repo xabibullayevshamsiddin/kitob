@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Quiz;
 
+use App\Http\Livewire\Concerns\LocksProperties;
 use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Book;
 use App\Models\PointTransaction;
@@ -16,6 +17,18 @@ use Livewire\Component;
 class TakeQuiz extends Component
 {
     use WithToast;
+    use LocksProperties;
+
+    /**
+     * Brauzerdan faqat writtenAnswer (wire:model) o'zgaradi. Qolganlari (ball, to'g'ri javoblar soni,
+     * taymer, savollar) qulflangan — aks holda correctCount/maxRewardPoints ni o'zgartirib cheksiz ball olish mumkin edi.
+     */
+    protected array $lockedProperties = [
+        'quizId', 'quizTitle', 'quizDescription', 'quizDifficulty', 'timeLimitMinutes', 'maxRewardPoints',
+        'currentQuestion', 'draftAnswers', 'correctCount', 'finished', 'confirmFinishOpen',
+        'score', 'maxScore', 'percent', 'pointsAwarded', 'alreadyHadFullPoints', 'feedback', 'startedAt',
+        'timedOut', 'pendingReview', 'resumedSavedDraft', 'questions',
+    ];
 
     public Book $book;
 
@@ -168,7 +181,7 @@ class TakeQuiz extends Component
         $this->alreadyHadFullPoints = false;
         $this->feedback = [];
         $this->questions = [];
-        $this->startedAt = time();
+        $this->startedAt = now()->timestamp;
         $this->timedOut = false;
         $this->pendingReview = false;
         $this->resumedSavedDraft = false;
@@ -183,7 +196,7 @@ class TakeQuiz extends Component
             return null;
         }
 
-        return max(0, (int) $this->startedAt + ((int) $this->timeLimitMinutes * 60) - time());
+        return max(0, (int) $this->startedAt + ((int) $this->timeLimitMinutes * 60) - now()->timestamp);
     }
 
     protected function saveCurrentDraft(): void
@@ -316,7 +329,7 @@ class TakeQuiz extends Component
 
         $this->draftAnswers = $this->sanitizeDraftAnswers($draft->answers ?? []);
         $this->currentQuestion = min(max(0, $draft->current_question), count($this->questions) - 1);
-        $this->startedAt = $draft->started_at?->timestamp ?? time();
+        $this->startedAt = $draft->started_at?->timestamp ?? now()->timestamp;
         $this->resumedSavedDraft = true;
         $this->restoreQuestionDraft($this->currentQuestion);
     }
@@ -617,6 +630,9 @@ class TakeQuiz extends Component
         if (!$quiz || !$user) {
             return;
         }
+
+        // Himoya qatlami: ball hech qachon testning bazadagi mukofot chegarasidan oshmaydi
+        $calculatedPoints = max(0, min($calculatedPoints, (int) ($quiz->reward_points ?: 50)));
 
         $hasWrittenQuestions = collect($this->questions)->contains(fn ($question) => ($question['type'] ?? 'single') === 'text');
         if ($hasWrittenQuestions) {

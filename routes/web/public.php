@@ -187,6 +187,9 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
     }
 
     // Oddiy aloqa xabarini ham ma'muriyat "Aloqa va shikoyatlar" bo'limiga saqlaymiz
+    $finalName = $senderUser?->name ?: (trim((string) $req->input('name')) ?: 'Mehmon');
+    $finalPhone = $rawContact ?: ($senderUser?->phone ?: 'Ko\'rsatilmagan');
+
     $contactContent = "[✉️ ALOQA BO'LIMIDAN XABAR]\n"
         . "👤 Yuboruvchi: {$finalName}\n"
         . "📞 Telefon raqam: {$finalPhone}\n"
@@ -204,7 +207,7 @@ Route::post('/contact', function (\Illuminate\Http\Request $req) {
     ]);
 
     return back()->with('success', 'Xabaringiz qabul qilindi! Tez orada javob beramiz.');
-})->name('contact.send');
+})->middleware('throttle:5,1')->name('contact.send');
 
 // FAQ
 Route::get('/faq', function () {
@@ -248,6 +251,7 @@ Route::get('/books/{book}/audio-view', function ($book) {
 // Kitob audio ro'yxati (Global Audio Player uchun ochiq JSON API)
 Route::get('/books/{book}/audios-json', function ($bookId) {
     $book = \App\Models\Book::with(['audios.chapter'])->findOrFail($bookId);
+    abort_unless($book->isViewableBy(auth()->user()), 404);
     $audios = $book->audios->map(function ($audio) {
         return [
             'id'            => $audio->id,
@@ -346,6 +350,7 @@ Route::get('/books/{slug}', function ($slug) {
 
 // 1 daqiqalik AI Kitob Konspekti (Public)
 Route::get('/books/{book}/ai-summary', [\App\Http\Controllers\BookSummaryController::class, 'show'])
+    ->middleware('throttle:20,1')
     ->name('books.ai-summary');
 
 // Legacy AI Chat 301 Permanent Redirect -> Katalog sahifasiga yo'naltirish
@@ -372,8 +377,10 @@ Route::get('/live/{event}/signals', [\App\Http\Controllers\LiveSignalController:
 
 // Fallback storage route (Hostingda symlink bo'lmaganda yoki buzilganda rasmlar 404 bo'lmasligi uchun)
 Route::get('/storage/{path}', function ($path) {
-    $fullPath = storage_path('app/public/' . $path);
-    if (! file_exists($fullPath) || is_dir($fullPath)) {
+    // Path traversal himoyasi: "../" orqali .env kabi fayllarni o'qishga yo'l qo'ymaymiz
+    $root = realpath(storage_path('app/public'));
+    $fullPath = realpath(storage_path('app/public/' . $path));
+    if (! $root || ! $fullPath || ! str_starts_with($fullPath, $root . DIRECTORY_SEPARATOR) || is_dir($fullPath)) {
         abort(404);
     }
     return response()->file($fullPath);
@@ -392,13 +399,14 @@ Route::prefix('errors')->group(function () {
 });
 
 // Server / Deploy Setup Endpoint (Terminal / SSH ruxsati bo'lmagan hostinglar uchun)
+// Faqat .env da SETUP_TOKEN (kamida 16 belgi) o'rnatilgan bo'lsa ishlaydi; standart token yo'q.
 Route::get('/system/setup', function (\Illuminate\Http\Request $request) {
     $token = (string) $request->query('token', '');
-    $secretToken = env('SETUP_TOKEN', 'kitobxon2026');
+    $secretToken = (string) config('app.setup_token', '');
     $appKey = (string) config('app.key', '');
 
-    if (empty($token) || ($token !== $secretToken && $token !== $appKey)) {
-        abort(403, 'Maxsus ruxsat belgisi (token) xato. URL oxiriga ?token=kitobxon2026 qo\'shing.');
+    if (strlen($secretToken) < 16 || $token === '' || !hash_equals($secretToken, $token)) {
+        abort(404);
     }
 
     $results = [
@@ -483,23 +491,21 @@ Route::get('/system/setup', function (\Illuminate\Http\Request $request) {
     }
 
     return response()->json($results, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->name('system.setup');
+})->middleware('throttle:10,1')->name('system.setup');
 
 
 // ── Cron & Webhook trigger for expired bans ──
+// Ommaviy trigger: foydalanuvchi ma'lumotlarini (ism, telegram_id) oshkor qilmaydi, faqat sonlarni qaytaradi.
 Route::get('/cron/process-expired-bans', function () {
-    $beforeUsers = \App\Models\User::where('is_banned', true)->get(['id', 'name', 'username', 'banned_until', 'telegram_id'])->toArray();
     $unbannedCount = \App\Models\User::processExpiredBans();
-    $afterUsers = \App\Models\User::where('is_banned', true)->get(['id', 'name', 'username', 'banned_until'])->toArray();
 
     return response()->json([
-        'success'        => true,
-        'unbanned_count' => $unbannedCount,
-        'before'         => $beforeUsers,
-        'remaining'      => $afterUsers,
-        'timestamp'      => now()->toIso8601String(),
-    ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->name('cron.expired-bans');
+        'success'         => true,
+        'unbanned_count'  => $unbannedCount,
+        'remaining_count' => \App\Models\User::where('is_banned', true)->count(),
+        'timestamp'       => now()->toIso8601String(),
+    ]);
+})->middleware('throttle:6,1')->name('cron.expired-bans');
 
 // ── SEO: sitemap.xml va robots.txt ──
 Route::get('/robots.txt', function () {

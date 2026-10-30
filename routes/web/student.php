@@ -117,6 +117,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/books/{book}/read/{chapter}', function ($book, $chapter) {
         $book    = \App\Models\Book::findOrFail($book);
+        abort_unless($book->isViewableBy(request()->user()), 404);
         $chapter = \App\Models\BookChapter::where('book_id', $book->id)->findOrFail($chapter);
         $user = request()->user();
         $bookmarks = $user->bookmarks()
@@ -157,6 +158,7 @@ Route::middleware(['auth'])->group(function () {
     // reader alias route
     Route::get('/reader/{book}', function ($bookId) {
         $book = \App\Models\Book::findOrFail($bookId);
+        abort_unless($book->isViewableBy(request()->user()), 404);
         if ($book->pdf_path) {
             return redirect()->route('books.pdf.read', $book->id);
         }
@@ -170,6 +172,7 @@ Route::middleware(['auth'])->group(function () {
     // Audio darslar va tahlillar
     Route::get('/books/{book}/audio', function ($bookId) {
         $book = \App\Models\Book::with('audios')->findOrFail($bookId);
+        abort_unless($book->isViewableBy(request()->user()), 404);
         return view('pages.audio', compact('book'));
     })->name('audio.show');
 
@@ -242,7 +245,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Anti-cheat: Bir nechta tab ochib yoki fokusdan tashqari tez-tez so'rov yuborishni bloklash (kamida 52 soniya oraliq)
         $cooldownKey = 'reading_heartbeat_lock_' . $user->id;
-        if (\Illuminate\Support\Facades\Cache::has($cooldownKey)) {
+        // Cache::add atomar: bir vaqtda kelgan bir nechta so'rovdan faqat bittasi ball oladi
+        if (!\Illuminate\Support\Facades\Cache::add($cooldownKey, true, now()->addSeconds(52))) {
             $activity = \App\Models\DailyActivity::getTodayActivity($user->id, $today);
             $streak = \App\Models\UserStreak::firstOrCreate(['user_id' => $user->id]);
             return response()->json([
@@ -259,7 +263,6 @@ Route::middleware(['auth'])->group(function () {
                 'daily_goal_claimed'  => (bool) ($activity->hourly_bonus_claimed ?? false),
             ]);
         }
-        \Illuminate\Support\Facades\Cache::put($cooldownKey, true, now()->addSeconds(52));
 
         // Oxirgi 30 daqiqa ichidagi sessiyani davom ettirish yoki yangi yaratish
         $sessionQuery = \App\Models\ReadingSession::where('user_id', $user->id)
@@ -399,10 +402,21 @@ Route::middleware(['auth'])->group(function () {
             ], 422);
         }
 
+        // Atomar belgilash: parallel so'rovlardan faqat bittasi bonusni oladi
+        $claimed = \App\Models\DailyActivity::whereKey($activity->getKey())
+            ->where(fn ($q) => $q->where('hourly_bonus_claimed', false)->orWhereNull('hourly_bonus_claimed'))
+            ->update(['hourly_bonus_claimed' => true]);
+
+        if ($claimed !== 1) {
+            return response()->json([
+                'success' => false,
+                'message' => "Bugungi 1 soatlik super bonus allaqachon qabul qilingan!"
+            ], 422);
+        }
+
         $pointsService = app(\App\Services\Gamification\PointsService::class);
         $pointsService->awardPoints($user, 200, 'bonus', "Kunlik 1 soatlik mutolaa super bonusi (+200 ball)");
         $pointsService->awardCoins($user, 40, 'bonus', "Kunlik 1 soatlik mutolaa super bonusi (+40 tanga 🪙)");
-        $activity->update(['hourly_bonus_claimed' => true]);
 
         $freshUser = $user->fresh();
 

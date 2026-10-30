@@ -125,6 +125,9 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
+    // /system/setup endpoint uchun maxfiy token (bo'sh yoki 16 belgidan qisqa bo'lsa endpoint o'chiq)
+    'setup_token' => env('SETUP_TOKEN'),
+
     /*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers

@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 
 class LiveSignalController extends Controller
 {
+    /** Faqat broadcaster yuboradigan signal turlari */
+    private const HOST_ONLY_TYPES = ['offer', 'stream-status', 'viewer-count'];
+
     /**
      * Send WebRTC signal (join, offer, answer, ice-candidate, stream-status)
      */
@@ -23,23 +26,8 @@ class LiveSignalController extends Controller
             ], 410);
         }
 
-        if ($event->group_id) {
-            $user = $request->user();
-            if (!$user) {
-                return response()->json(['error' => 'Guruh efiriga ulanish uchun avval tizimga kiring.'], 401);
-            }
-
-            $isMember = \App\Models\GroupMember::where('group_id', $event->group_id)
-                ->where('user_id', $user->id)
-                ->exists();
-
-            $isAdmin = (method_exists($user, 'hasRole') && $user->hasRole('admin'))
-                || ($user->role === 'admin')
-                || ($event->host_user_id === $user->id);
-
-            if (!$isMember && !$isAdmin) {
-                return response()->json(['error' => 'Bu efir faqat guruh a\'zolari uchun.'], 403);
-            }
+        if ($denied = $this->denyAccess($request, $event)) {
+            return $denied;
         }
 
         $validated = $request->validate([
@@ -48,6 +36,15 @@ class LiveSignalController extends Controller
             'type'        => 'required|string|max:40',
             'payload'     => 'present',
         ]);
+
+        // Host nomidan signal (offer, stream-status, viewer-count) faqat haqiqiy host yubora oladi —
+        // aks holda istalgan tomoshabin o'z videosini boshqalarga "host" sifatida uzatishi mumkin edi.
+        $claimsHost = $this->isHostPeerId($validated['sender_id'])
+            || in_array($validated['type'], self::HOST_ONLY_TYPES, true);
+
+        if ($claimsHost && !$event->isBroadcaster($request->user())) {
+            return response()->json(['error' => 'Bu signalni faqat efir egasi yubora oladi.'], 403);
+        }
 
         $payload = is_string($validated['payload'])
             ? $validated['payload']
@@ -109,23 +106,8 @@ class LiveSignalController extends Controller
             ]);
         }
 
-        if ($event->group_id) {
-            $user = $request->user();
-            if (!$user) {
-                return response()->json(['error' => 'Guruh efiriga ulanish uchun avval tizimga kiring.'], 401);
-            }
-
-            $isMember = \App\Models\GroupMember::where('group_id', $event->group_id)
-                ->where('user_id', $user->id)
-                ->exists();
-
-            $isAdmin = (method_exists($user, 'hasRole') && $user->hasRole('admin'))
-                || ($user->role === 'admin')
-                || ($event->host_user_id === $user->id);
-
-            if (!$isMember && !$isAdmin) {
-                return response()->json(['error' => 'Bu efir faqat guruh a\'zolari uchun.'], 403);
-            }
+        if ($denied = $this->denyAccess($request, $event)) {
+            return $denied;
         }
 
         $peerId = (string) $request->query('peer_id', '');
@@ -135,8 +117,12 @@ class LiveSignalController extends Controller
             return response()->json(['signals' => [], 'server_time' => now()->timestamp]);
         }
 
-        // 'host:*' ga yuborilgan signallar barcha host peer'lariga yetib boradi
-        $isHostPeer = str_starts_with($peerId, 'host_');
+        // 'host:*' ga yuborilgan signallar barcha host peer'lariga yetib boradi —
+        // tomoshabinlarning join/answer (SDP, IP manzillar) signallarini faqat haqiqiy host o'qiy oladi
+        $isHostPeer = $this->isHostPeerId($peerId);
+        if ($isHostPeer && !$event->isBroadcaster($request->user())) {
+            return response()->json(['error' => 'Bu signallarni faqat efir egasi o\'qiy oladi.'], 403);
+        }
 
         $signals = LiveSignal::where('live_event_id', $event->id)
             ->where('id', '>', $sinceId)
@@ -165,5 +151,25 @@ class LiveSignalController extends Controller
             }),
             'server_time' => now()->timestamp,
         ]);
+    }
+
+    /** Guruh efiriga faqat a'zolar, admin va host ulanadi. */
+    protected function denyAccess(Request $request, LiveEvent $event): ?JsonResponse
+    {
+        if ($event->isViewableBy($request->user())) {
+            return null;
+        }
+
+        return $request->user()
+            ? response()->json(['error' => 'Bu efir faqat guruh a\'zolari uchun.'], 403)
+            : response()->json(['error' => 'Guruh efiriga ulanish uchun avval tizimga kiring.'], 401);
+    }
+
+    /** Frontend host peer'lari "host_{userId}_{rand}" ko'rinishida; server peer'lari "server_{userId}". */
+    protected function isHostPeerId(string $peerId): bool
+    {
+        return $peerId === 'host'
+            || str_starts_with($peerId, 'host_')
+            || str_starts_with($peerId, 'server_');
     }
 }

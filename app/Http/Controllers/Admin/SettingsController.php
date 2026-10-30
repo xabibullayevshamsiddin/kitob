@@ -213,11 +213,13 @@ class SettingsController extends Controller
 
         try {
             if ($shouldEnable) {
+                // Har safar tasodifiy secret: oldindan ma'lum "/admin-bypass" manzili orqali begonalar kira olmaydi
+                $secret = \Illuminate\Support\Str::random(40);
                 Artisan::call('down', [
-                    '--secret' => 'admin-bypass',
+                    '--secret' => $secret,
                 ]);
                 $msg = "⚠️ Texnik xizmat ko'rsatish rejimi yoqildi! Oddiy foydalanuvchilar uchun sayt vaqtincha yopildi (Adminlar barcha sahifalarga bemalol kira oladi).";
-                $cookie = \Illuminate\Foundation\Http\MaintenanceModeBypassCookie::create('admin-bypass');
+                $cookie = \Illuminate\Foundation\Http\MaintenanceModeBypassCookie::create($secret);
                 return back()->withCookie($cookie)->with('success', $msg);
             } else {
                 Artisan::call('up');

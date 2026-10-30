@@ -35,7 +35,7 @@ class PreventRequestsDuringMaintenance extends Middleware
         if ($this->app->maintenanceMode()->active()) {
             $data = $this->app->maintenanceMode()->data();
 
-            // 1. Secret bypass URL (/admin-bypass)
+            // 1. Secret bypass URL (/{secret}; admin panelidan yoqilganda tasodifiy yaratiladi)
             if (isset($data['secret']) && ($request->path() === $data['secret'] || $request->is($data['secret']))) {
                 return $this->bypassResponse($data['secret']);
             }

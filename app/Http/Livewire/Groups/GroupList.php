@@ -8,6 +8,7 @@ use App\Models\GroupMember;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -355,7 +356,15 @@ class GroupList extends Component
 
         $group = Group::findOrFail($this->targetGroupId);
 
-        if ($group->password && trim($this->joinPassword) !== trim($group->password)) {
+        // Parolni tanlab topish (brute-force) dan himoya: guruh+foydalanuvchi bo'yicha daqiqasiga 5 urinish
+        $throttleKey = 'group-join:' . $group->id . ':' . $user->id;
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $this->addError('joinPassword', 'Juda ko\'p urinish. ' . RateLimiter::availableIn($throttleKey) . ' soniyadan keyin qayta urinib ko\'ring.');
+            return;
+        }
+
+        if ($group->password && !hash_equals(trim((string) $group->password), trim($this->joinPassword))) {
+            RateLimiter::hit($throttleKey, 60);
             $this->addError('joinPassword', 'Kiritilgan parol noto\'g\'ri! Qaytadan urinib ko\'ring.');
             return;
         }

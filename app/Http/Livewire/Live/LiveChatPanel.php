@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Live;
 
+use App\Http\Livewire\Concerns\LocksProperties;
 use App\Http\Livewire\Concerns\WithToast;
 use App\Http\Livewire\Live\Concerns\SubmitsLiveQuestion;
 use App\Models\LiveEvent;
@@ -21,6 +22,10 @@ class LiveChatPanel extends Component
 {
     use WithToast;
     use SubmitsLiveQuestion;
+    use LocksProperties;
+
+    /** Brauzer o'zgartira olmaydigan maydonlar (aks holda istalgan tomoshabin o'zini host qila olardi) */
+    protected array $lockedProperties = ['eventId', 'isHost', 'myLikedIds'];
 
     /**
      * Event faqat ID sifatida saqlanadi (model emas!).
@@ -55,13 +60,16 @@ class LiveChatPanel extends Component
     public function mount(LiveEvent $event, $isHost = false): void
     {
         $this->eventId = $event->id;
-        $this->isHost  = (bool) $isHost;
+        // Parent bergan qiymatga ko'r-ko'rona ishonmaymiz — host huquqi serverda tekshiriladi
+        $this->isHost  = (bool) $isHost && $event->isBroadcaster(Auth::user());
     }
 
-    /** Har safar DB'dan yangi o'qiladi — event o'chirilgan bo'lsa null */
+    /** Har safar DB'dan yangi o'qiladi — event o'chirilgan yoki ko'rish huquqi bo'lmasa null */
     public function getEventProperty(): ?LiveEvent
     {
-        return LiveEvent::find($this->eventId);
+        $event = LiveEvent::find($this->eventId);
+
+        return $event && $event->isViewableBy(Auth::user()) ? $event : null;
     }
 
     /** Yozma chatga ruxsat (server tomonda tekshiruv) */

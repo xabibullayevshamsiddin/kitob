@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Book;
 
+use App\Http\Livewire\Concerns\LocksProperties;
 use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Book;
 use App\Models\BuddyRead;
@@ -14,6 +15,10 @@ use Livewire\Component;
 class BuddyReadModal extends Component
 {
     use WithToast;
+    use LocksProperties;
+
+    /** Xona ID faqat serverda (parol/a'zolik tekshiruvidan keyin) o'rnatiladi */
+    protected array $lockedProperties = ['activeBuddyReadId'];
 
     public Book $book;
     public ?int $activeBuddyReadId = null;

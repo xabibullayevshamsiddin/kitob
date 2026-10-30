@@ -64,6 +64,15 @@ class BuddyReadVoiceController extends Controller
         $userId = Auth::id();
         $afterId = (int) $request->input('after_id', 0);
 
+        // Boshqa xonalarning WebRTC signallarini (SDP, IP manzillar) o'qishga yo'l qo'ymaymiz
+        $isMember = BuddyReadMember::where('buddy_read_id', $id)
+            ->where('user_id', $userId)
+            ->exists();
+
+        if (!$isMember) {
+            return response()->json(['error' => 'Not a member of this room'], 403);
+        }
+
         // Keep this user's voice presence fresh
         BuddyReadMember::where('buddy_read_id', $id)
             ->where('user_id', $userId)

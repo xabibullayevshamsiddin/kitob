@@ -9,7 +9,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE buddy_read_messages MODIFY message TEXT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE buddy_read_messages MODIFY message TEXT NULL");
+        }
 
         Schema::table('buddy_read_messages', function (Blueprint $table) {
             $table->string('audio_path', 500)->nullable()->after('message');

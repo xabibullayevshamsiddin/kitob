@@ -241,8 +241,9 @@ class QuizTimerTest extends TestCase
 
         $component = Livewire::test(TakeQuiz::class, ['book' => $book]);
 
-        // startedAt'ni o'tmishga surib, vaqt tugaganini simulyatsiya qilamiz
-        $component->set('startedAt', time() - (16 * 60));
+        // Vaqtni 16 daqiqa oldinga surib, taymer tugaganini simulyatsiya qilamiz
+        // (startedAt qulflangan — uni brauzerdan o'zgartirib bo'lmaydi)
+        $this->travel(16)->minutes();
 
         $component->set('selectedOption', $correctIds[0])->call('nextQuestion')
             ->assertSet('finished', true)

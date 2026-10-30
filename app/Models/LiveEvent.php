@@ -250,6 +250,36 @@ class LiveEvent extends Model
     /**
      * Whether this event belongs to a group.
      */
+    /**
+     * WebRTC broadcaster (host) huquqi — LiveDetail::getIsHostProperty bilan bir xil qoida:
+     * efir egasi yoki host tayinlanmagan bo'lsa teacher.
+     */
+    public function isBroadcaster(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return (int) $this->host_user_id === (int) $user->id
+            || ($this->host_user_id === null && $user->hasRole('teacher'));
+    }
+
+    /** Guruh efirini faqat guruh a'zolari, admin va host ko'radi; umumiy efir hammaga ochiq. */
+    public function isViewableBy(?User $user): bool
+    {
+        if (!$this->group_id) {
+            return true;
+        }
+
+        if (!$user) {
+            return false;
+        }
+
+        return $user->isAdmin()
+            || (int) $this->host_user_id === (int) $user->id
+            || GroupMember::where('group_id', $this->group_id)->where('user_id', $user->id)->exists();
+    }
+
     public function getIsGroupEventAttribute(): bool
     {
         return !is_null($this->group_id);

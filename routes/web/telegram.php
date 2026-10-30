@@ -56,7 +56,7 @@ Route::post('/tg-app/auth', [\App\Http\Controllers\Telegram\TelegramMiniAppContr
 
 // Telefon orqali ro'yxatdan o'tish va Telegram orqali tasdiqlash
 Route::post('/register', [\App\Http\Controllers\Auth\PhoneRegisterController::class, 'register'])
-    ->middleware('guest');
+    ->middleware(['guest', 'throttle:10,1']);
 
 Route::get('/register/verify/{token}', [\App\Http\Controllers\Auth\PhoneRegisterController::class, 'showVerify'])
     ->name('register.verify')
@@ -67,8 +67,9 @@ Route::get('/register/check/{token}', [\App\Http\Controllers\Auth\PhoneRegisterC
     ->middleware('guest');
 
 // Telefon + Parol kiritilganda Telegram orqali 6 xonali kod bilan kirish (2FA Login)
+// throttle:login — FortifyServiceProvider dagi limiter (login + IP bo'yicha 5/daqiqa), parolni brute-force qilishdan himoya
 Route::post('/login', [\App\Http\Controllers\Auth\PhoneLoginController::class, 'login'])
-    ->middleware('guest');
+    ->middleware(['guest', 'throttle:login']);
 
 Route::get('/login/verify-code/{token}', [\App\Http\Controllers\Auth\PhoneLoginController::class, 'showVerifyCode'])
     ->name('login.verify-code')

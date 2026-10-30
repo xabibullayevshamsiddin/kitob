@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Book;
 
+use App\Http\Livewire\Concerns\LocksProperties;
 use App\Http\Livewire\Concerns\WithToast;
 use App\Models\Book;
 use App\Models\BookComment;
@@ -13,6 +14,9 @@ use Livewire\Component;
 class BookDiscussionChat extends Component
 {
     use WithToast;
+    use LocksProperties;
+
+    protected array $lockedProperties = ['bookId'];
 
     public int $bookId;
     public string $message = '';
