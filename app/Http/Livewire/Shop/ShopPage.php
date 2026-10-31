@@ -507,6 +507,9 @@ class ShopPage extends Component
             'coinsToReceive'       => $coinsToReceive,
             'starsPaymentsEnabled' => $starsPaymentsEnabled,
             'starPacks'            => $starPacks,
+            'cardTopupEnabled'     => $cardTopupEnabled = app(\App\Services\Topup\TopupService::class)->isEnabled(),
+            // O'chiq paytda tugma faqat adminga ko'rinadi (sozlab sinash uchun)
+            'cardTopupVisible'     => $cardTopupEnabled || $user->isAdmin(),
             'chestCost'            => MysteryChestService::getCost(),
             'dailyRemainingChests' => MysteryChestService::getDailyRemaining($user->id),
             'dailyMaxChests'       => MysteryChestService::DAILY_LIMIT,

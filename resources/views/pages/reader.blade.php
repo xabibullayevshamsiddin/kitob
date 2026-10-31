@@ -64,7 +64,10 @@
                 @php
                     $hlHex = $equippedHighlight->safeColor('color', '#84CC16');
                 @endphp
-                ::selection { background-color: {{ $hlHex }}66 !important; color: #fff !important; }
+                ::selection { background-color: {{ $hlHex }}77 !important; color: #ffffff !important; }
+                ::-moz-selection { background-color: {{ $hlHex }}77 !important; color: #ffffff !important; }
+                .reader-content ::selection { background-color: {{ $hlHex }}77 !important; color: inherit !important; }
+                .reader-content ::-moz-selection { background-color: {{ $hlHex }}77 !important; color: inherit !important; }
                 .reader-highlight-custom { background-color: {{ $hlHex }}55 !important; border-bottom: 2px solid {{ $hlHex }} !important; }
             @endif
         @endauth
@@ -119,6 +122,18 @@
                 <span x-text="formatTime(activeSeconds)">00:00</span>
                 <span x-show="isIdle" class="text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-400 font-sans hidden sm:inline">{{ __('site.reader.pause') }}</span>
             </div>
+
+            @auth
+                @if($equippedHighlight)
+                    <!-- Equipped Highlighter Indicator -->
+                    <span class="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-badge border text-[11px] font-mono select-none"
+                          style="background-color: {{ $equippedHighlight->safeColor('color', '#84CC16') }}18; border-color: {{ $equippedHighlight->safeColor('color', '#84CC16') }}50; color: {{ $equippedHighlight->safeColor('color', '#84CC16') }};"
+                          title="{{ $equippedHighlight->name_text }} (Faol matn belgilagich)">
+                        <span class="w-2 h-2 rounded-full" style="background-color: {{ $equippedHighlight->safeColor('color', '#84CC16') }};"></span>
+                        <span class="font-medium truncate max-w-[120px]">{{ $equippedHighlight->name_text }}</span>
+                    </span>
+                @endif
+            @endauth
 
             <!-- Right Controls: Font size, Serif/Sans, Theme, Music -->
             <div class="flex items-center justify-end gap-1 sm:gap-2 shrink-0 w-full sm:w-auto pt-1 sm:pt-0 border-t border-black/5 dark:border-white/5 sm:border-0">
@@ -250,7 +265,21 @@
                 <p class="text-xs text-mist">{{ rtrim(__('site.reader.note_pos_hint', ['pos' => '']), ' .:') }}: <span class="font-semibold text-amber-400" x-text="formatLocation(currentPosition)"></span>.</p>
                 <div class="flex items-center justify-between">
                     <label for="reader-note-text" class="block text-xs font-semibold">{{ __('site.reader.note_color_label') }}</label>
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        @auth
+                            @if($equippedHighlight)
+                                @php
+                                    $hlBtnColor = $equippedHighlight->safeColor('color', '#84CC16');
+                                @endphp
+                                <button type="button" @click="noteColor = 'custom'" :aria-pressed="noteColor === 'custom'"
+                                        :class="noteColor === 'custom' ? 'ring-2 ring-offset-2 ring-offset-ink-950 scale-110 shadow-lg' : 'opacity-75 hover:opacity-100'"
+                                        class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition relative group"
+                                        title="{{ $equippedHighlight->name_text }} (Kiyilgan belgilagich)">
+                                    <span class="h-5 w-5 rounded-full ring-1 ring-white/50 shadow-sm" style="background-color: {{ $hlBtnColor }};"></span>
+                                    <span class="absolute -top-1 -right-1 text-[10px]">✨</span>
+                                </button>
+                            @endif
+                        @endauth
                         <button type="button" @click="noteColor = 'amber'" :aria-pressed="noteColor === 'amber'" :class="noteColor === 'amber' ? 'ring-2 ring-amber-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="{{ __('site.reader.color_amber') }}"><span class="h-5 w-5 rounded-full bg-amber-400"></span></button>
                         <button type="button" @click="noteColor = 'emerald'" :aria-pressed="noteColor === 'emerald'" :class="noteColor === 'emerald' ? 'ring-2 ring-emerald-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="{{ __('site.reader.color_emerald') }}"><span class="h-5 w-5 rounded-full bg-emerald-400"></span></button>
                         <button type="button" @click="noteColor = 'sky'" :aria-pressed="noteColor === 'sky'" :class="noteColor === 'sky' ? 'ring-2 ring-sky-400' : 'opacity-70'" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition" aria-label="{{ __('site.reader.color_sky') }}"><span class="h-5 w-5 rounded-full bg-sky-400"></span></button>
@@ -260,6 +289,7 @@
                 </div>
                 <template x-if="selectedText">
                     <div class="p-2.5 rounded-btn bg-ink-950/70 border text-xs italic font-serif flex items-center justify-between gap-2"
+                         @auth @if($equippedHighlight) :style="noteColor === 'custom' ? 'border-color: {{ $equippedHighlight->safeColor('color', '#84CC16') }}80; color: {{ $equippedHighlight->safeColor('color', '#84CC16') }}; background-color: {{ $equippedHighlight->safeColor('color', '#84CC16') }}18;' : ''" @endif @endauth
                          :class="{
                              'border-amber-400/50 text-amber-200': noteColor === 'amber',
                              'border-emerald-400/50 text-emerald-200': noteColor === 'emerald',
@@ -308,8 +338,9 @@
                                 </button>
                                 <template x-if="note.selected_text">
                                     <blockquote class="mb-1 border-l-2 pl-2 text-[11px] italic"
+                                                @auth @if($equippedHighlight) :style="note.color === 'custom' ? 'border-color: {{ $equippedHighlight->safeColor('color', '#84CC16') }}; color: {{ $equippedHighlight->safeColor('color', '#84CC16') }};' : ''" @endif @endauth
                                                 :class="{
-                                                    'border-amber-400 text-amber-300/90': note.color === 'amber' || !note.color,
+                                                    'border-amber-400 text-amber-300/90': note.color === 'amber' || (!note.color && note.color !== 'custom'),
                                                     'border-emerald-400 text-emerald-300/90': note.color === 'emerald',
                                                     'border-sky-400 text-sky-300/90': note.color === 'sky',
                                                     'border-rose-400 text-rose-300/90': note.color === 'rose',
@@ -388,7 +419,7 @@
                 notes: initialNotes,
                 noteFormOpen: false,
                 noteDraft: '',
-                noteColor: 'amber',
+                noteColor: @auth @if($equippedHighlight) 'custom' @else 'amber' @endif @else 'amber' @endauth,
                 savingBookmark: false,
                 savingNote: false,
                 annotationMessage: '',
@@ -508,6 +539,14 @@
                         const article = document.querySelector('.reader-content');
                         if (selected && article?.contains(selection.anchorNode)) {
                             this.selectedText = selected.slice(0, 5000);
+                        }
+                    });
+
+                    // Reading tracker bilan real vaqtda sinxronizatsiya
+                    window.addEventListener('reading-tracker-tick', (e) => {
+                        if (e.detail) {
+                            this.activeSeconds = e.detail.sessionSeconds || 0;
+                            this.isIdle = !!e.detail.isPaused;
                         }
                     });
 

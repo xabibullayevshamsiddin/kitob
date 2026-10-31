@@ -120,6 +120,14 @@ class SecurityHardeningTest extends TestCase
             'event' => $event, 'peer_id' => 'host_' . $viewer->id . '_abc',
         ]))->assertForbidden();
 
+        $this->actingAs($viewer)->getJson(route('live.signal.poll', [
+            'event' => $event, 'peer_id' => 'host:*',
+        ]))->assertForbidden();
+
+        $this->getJson(route('live.signal.poll', [
+            'event' => $event, 'peer_id' => 'host:*',
+        ]))->assertForbidden();
+
         // Tomoshabinning oddiy join signali ishlaydi
         $this->actingAs($viewer)->postJson(route('live.signal.send', $event), [
             'sender_id' => 'viewer_' . $viewer->id . '_abc', 'receiver_id' => 'host:*', 'type' => 'join', 'payload' => [],

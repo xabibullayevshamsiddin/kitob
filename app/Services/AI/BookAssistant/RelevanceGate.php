@@ -295,6 +295,13 @@ class RelevanceGate
         }
 
         $clean = mb_strtolower(trim($question));
+
+        // Agar so'roqda savol belgisi yoki savol so'zlari (kim, nima, qayerda, qachon, nega, qanday, qanaqa...)
+        // bo'lsa, bu sof salomlashuv emas, balki kitobga yoki biror mavzuga oid savol hisoblanadi!
+        if (str_contains($question, '?') || preg_match('/\b(kim|nima|qayerda|qachon|nega|qanday|qanaqa|qaysi|nechta|yech|tushuntir|ayt|tarif|ta\'rif|formula)\b/ui', $clean)) {
+            return false;
+        }
+
         $words = preg_split('/\s+/u', $clean, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         if (count($words) > 6) {
             return false;

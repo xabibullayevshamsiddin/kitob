@@ -212,27 +212,39 @@ class TelegramPaymentService
         $providerChargeId = $successfulPayment['provider_payment_charge_id'] ?? null;
         $totalAmount = (int) ($successfulPayment['total_amount'] ?? 0);
 
-        // 1. Takroriy tranzaksiya himoyasi (Idempotency)
-        if (!empty($chargeId)) {
-            $alreadyProcessed = TelegramStarPayment::where('telegram_payment_charge_id', $chargeId)
-                ->where('status', 'completed')
-                ->first();
+        $receiptData = null;
 
-            if ($alreadyProcessed) {
-                Log::info("Telegram Stars to'lovi allaqachon qayta ishlangan: Charge #{$chargeId}");
+        // Atomik tranzaksiya va lockForUpdate orqali ikki marta yozilish (race condition) himoyasi
+        $success = DB::transaction(function () use ($payload, $chargeId, $providerChargeId, $successfulPayment, $totalAmount, &$receiptData) {
+            if (!empty($chargeId)) {
+                $alreadyProcessed = TelegramStarPayment::where('telegram_payment_charge_id', $chargeId)
+                    ->where('status', 'completed')
+                    ->first();
+
+                if ($alreadyProcessed) {
+                    Log::info("Telegram Stars to'lovi allaqachon qayta ishlangan: Charge #{$chargeId}");
+                    return true;
+                }
+            }
+
+            // Payment satrini tranzaksiya ichida lockForUpdate bilan qulflab tekshiramiz
+            $starPayment = TelegramStarPayment::where('payload', $payload)->lockForUpdate()->first();
+
+            if (!$starPayment) {
+                Log::error("Telegram Stars to'lovi topilmadi: Payload {$payload}");
+                return false;
+            }
+
+            if ($starPayment->status === 'completed') {
+                Log::info("Telegram Stars to'lovi allaqachon completed holatda: Payment #{$starPayment->id}");
                 return true;
             }
-        }
 
-        $starPayment = TelegramStarPayment::where('payload', $payload)->first();
+            if ($totalAmount > 0 && $starPayment->stars_amount !== $totalAmount) {
+                Log::error("Telegram Stars to'lov summasi mos kelmadi: {$totalAmount} vs {$starPayment->stars_amount}");
+                return false;
+            }
 
-        if (!$starPayment) {
-            Log::error("Telegram Stars to'lovi topilmadi: Payload {$payload}");
-            return false;
-        }
-
-        // 2. Tranzaksiyada tangalarni hisobga qo'shish va to'lovni yakunlash
-        return DB::transaction(function () use ($starPayment, $chargeId, $providerChargeId, $successfulPayment) {
             $user = User::lockForUpdate()->find($starPayment->user_id);
 
             if (!$user) {
@@ -262,28 +274,37 @@ class TelegramPaymentService
                 'balance_after'  => $user->coin_balance,
             ]);
 
-            // 3. Foydalanuvchiga Telegram bot orqali chek/xabar yuborish
             if ($user->telegram_id) {
-                $coins = number_format($starPayment->coins_awarded);
-                $newBalance = number_format($user->coin_balance);
-
-                $text = "⭐️ <b>To'lovingiz muvaffaqiyatli qabul qilindi!</b>\n\n"
-                      . "Sizning hisobingizga <b>{$coins} 🪙 oltin tanga</b> qo'shildi.\n"
-                      . "• Tranzaksiya: <code>{$chargeId}</code>\n"
-                      . "• Sarflangan yulduzlar: <b>{$starPayment->stars_amount} ⭐️</b>\n"
-                      . "• Joriy tanga balansingiz: <b>{$newBalance} 🪙</b>\n\n"
-                      . "Platformadagi do'kon bo'limidan sara imtiyozlarni xarid qilishingiz mumkin! 🛍";
-
-                try {
-                    $this->client()->sendMessage($user->telegram_id, $text);
-                } catch (\Throwable $e) {
-                    Log::warning("Telegram Stars chek xabarini yuborishda xato: " . $e->getMessage());
-                }
+                $receiptData = [
+                    'chat_id'        => $user->telegram_id,
+                    'coins'          => number_format($starPayment->coins_awarded),
+                    'new_balance'    => number_format($user->coin_balance),
+                    'charge_id'      => $chargeId,
+                    'stars_amount'   => $starPayment->stars_amount,
+                ];
             }
 
             Log::info("Telegram Stars to'lovi yakunlandi: User #{$user->id}, +{$starPayment->coins_awarded} tanga.");
             return true;
         });
+
+        // Chek xabarini tranzaksiya commit bo'lgandan keyin yuborish
+        if ($success && $receiptData) {
+            $text = "⭐️ <b>To'lovingiz muvaffaqiyatli qabul qilindi!</b>\n\n"
+                  . "Sizning hisobingizga <b>{$receiptData['coins']} 🪙 oltin tanga</b> qo'shildi.\n"
+                  . "• Tranzaksiya: <code>{$receiptData['charge_id']}</code>\n"
+                  . "• Sarflangan yulduzlar: <b>{$receiptData['stars_amount']} ⭐️</b>\n"
+                  . "• Joriy tanga balansingiz: <b>{$receiptData['new_balance']} 🪙</b>\n\n"
+                  . "Platformadagi do'kon bo'limidan sara imtiyozlarni xarid qilishingiz mumkin! 🛍";
+
+            try {
+                $this->client()->sendMessage($receiptData['chat_id'], $text);
+            } catch (\Throwable $e) {
+                Log::warning("Telegram Stars chek xabarini yuborishda xato: " . $e->getMessage());
+            }
+        }
+
+        return (bool) $success;
     }
 
     /**

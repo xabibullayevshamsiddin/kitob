@@ -90,6 +90,7 @@
     <!-- ── 2. AFK & Fokus Pauza Modal (Anti-Cheat & Harakatsizlik xavfsizligi) ── -->
     <div x-show="showAfkModal" 
          x-cloak
+         style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 9999999 !important;"
          class="reading-tracker-modal fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 scale-95"
@@ -227,13 +228,18 @@ function readingTracker(config) {
                 'reading-activity', 'flipbook:pagechange', 'reader:scroll', 'reader:pagechange'
             ];
             let lastEventTime = Date.now();
+            let lastClientX = null;
+            let lastClientY = null;
+            let lastTouchX = null;
+            let lastTouchY = null;
+            let lastScrollY = typeof window.scrollY !== 'undefined' ? window.scrollY : 0;
 
             const recordActivity = (e) => {
                 if (document.hidden || document.visibilityState !== 'visible') return;
 
                 // Anti-cheat: Modal ochiq bo'lsa yoki AFK pauzada tursa,
                 // sichqoncha/ekran harakati modalni bekor qilmasligi shart!
-                // Foydalanuvchi modal ichidagi tugmani bosishi lozim.
+                // Foydalanuvchi modal ichidagi tasdiqlash tugmasini bosishi lozim.
                 if (this.showAfkModal || this.isAfk) {
                     return;
                 }
@@ -241,6 +247,45 @@ function readingTracker(config) {
                 // Autoplay (avtomatik sahifa varaqlash) orqali kelgan sun'iy signallarni inson harakati deb olmaymiz
                 if (e && (e.type === 'reading-activity' || e.type === 'flipbook:pagechange') && window.__fbIsAutoPlaying) {
                     return;
+                }
+
+                // Sichqoncha va pointer harakati: Haqiqiy harakat bo'lishi shart (kamida 8 piksel siljish)
+                // Joyida turgan sichqoncha, hoverlar yoki Livewire/CSS renderining sun'iy eventlari hisobga olinmaydi
+                if (e.type === 'mousemove' || e.type === 'pointermove') {
+                    if (typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+                        if (lastClientX !== null && lastClientY !== null) {
+                            const dist = Math.hypot(e.clientX - lastClientX, e.clientY - lastClientY);
+                            if (dist < 8) {
+                                return; // Sichqoncha qimirlamagan, bu haqiqiy harakat emas!
+                            }
+                        }
+                        lastClientX = e.clientX;
+                        lastClientY = e.clientY;
+                    }
+                }
+
+                // Barmoq harakati (mobil qurilmalar va sensor ekranlar uchun)
+                if (e.type === 'touchmove') {
+                    if (e.touches && e.touches[0]) {
+                        const touch = e.touches[0];
+                        if (lastTouchX !== null && lastTouchY !== null) {
+                            const dist = Math.hypot(touch.clientX - lastTouchX, touch.clientY - lastTouchY);
+                            if (dist < 8) {
+                                return;
+                            }
+                        }
+                        lastTouchX = touch.clientX;
+                        lastTouchY = touch.clientY;
+                    }
+                }
+
+                // Sahifani aylantirish (scroll) - kamida 15 piksel siljish bo'lishi kerak
+                if (e.type === 'scroll') {
+                    const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+                    if (Math.abs(currentY - lastScrollY) < 15) {
+                        return;
+                    }
+                    lastScrollY = currentY;
                 }
 
                 const now = Date.now();
@@ -376,6 +421,7 @@ function readingTracker(config) {
                             formattedTime: this.formatTime(this.sessionSeconds),
                             totalMinutesToday: this.totalMinutesToday,
                             totalMinutesAll: this.totalMinutesAll,
+                            idleSeconds: this.idleSeconds,
                             isPaused: this.isPaused
                         }
                     }));

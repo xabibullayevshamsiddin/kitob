@@ -125,18 +125,16 @@ class BookTextExtractor
             $score = $this->scorePageTextQuality($cleaned);
             $trimmedLen = mb_strlen(trim($cleaned));
 
-            $isGenuinelyBlank = $trimmedLen < 20 && preg_match('/^[\s\p{P}]*$/u', $cleaned);
-
             $pageData[$pageNum] = [
                 'page_number'   => $pageNum,
                 'text'          => $cleaned,
                 'source'        => 'pdf',
                 'quality_score' => $score,
-                'is_blank'      => $isGenuinelyBlank,
+                'is_blank'      => false,
             ];
 
-            // Agar matn yetarli bo'lmasa yoki sifati past bo'lsa (va sahifa shunchaki bo'sh emas bo'lsa)
-            if (($score < 0.45 || $trimmedLen < 40) && !$isGenuinelyBlank) {
+            // Agar matn yetarli bo'lmasa yoki sifati past bo'lsa (skanerlangan / tasvirli sahifalar ham kiradi)
+            if ($score < 0.45 || $trimmedLen < 40) {
                 $pagesNeedingOcr[] = $pageNum;
             }
         }
@@ -178,6 +176,14 @@ class BookTextExtractor
                 }
             }
         }
+
+        // OCR'dan so'ng har bir sahifaning haqiqiy holatini (yakuniy matn bo'shligini) aniqlaymiz
+        foreach ($pageData as $pNum => &$pInfo) {
+            $finalText = $pInfo['text'];
+            $finalLen = mb_strlen(trim($finalText));
+            $pInfo['is_blank'] = ($finalLen < 20 && preg_match('/^[\s\p{P}]*$/u', $finalText));
+        }
+        unset($pInfo);
 
         // 4. Ma'lumotlarni book_pages jadvaliga saqlash
         $now = now();

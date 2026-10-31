@@ -232,12 +232,10 @@
             // Hook server preference updates from Livewire
             window.addEventListener('sound-settings-updated', (e) => {
                 const detail = e.detail || {};
-                if (typeof detail.enabled === 'boolean') {
-                    this.setEnabled(detail.enabled, false);
-                }
-                if (typeof detail.volume === 'number') {
-                    this.setVolume(detail.volume, false);
-                }
+                this.applyPreferences({
+                    enabled: typeof detail.enabled === 'boolean' ? detail.enabled : undefined,
+                    volume: typeof detail.volume === 'number' ? detail.volume : undefined
+                }, false);
             });
 
             // Universal event listener for custom triggers
@@ -277,7 +275,7 @@
                     this.coldStart = false;
                     this.userInteracted = true;
                     setTimeout(() => {
-                        this.play('language_switch', { bypassColdStart: true, isTest: true });
+                        this.play('language_switch', { bypassColdStart: true });
                     }, 120);
                 }
             } catch (e) {}
@@ -1054,13 +1052,61 @@
             }
         }
 
-        setVolume(val, persist = true) {
+        applyPreferences(prefs = {}, persist = true) {
+            if (typeof prefs.volume === 'number') {
+                const num = Math.max(0, Math.min(1, parseFloat(prefs.volume) || 0));
+                this.volume = num;
+                if (this.volume > 0.001) {
+                    this.lastNonZeroVolume = this.volume;
+                }
+                if (persist) {
+                    try {
+                        localStorage.setItem(STORAGE_KEY_VOLUME, String(this.volume));
+                    } catch (e) {}
+                }
+            }
+
+            if (typeof prefs.enabled === 'boolean') {
+                this.enabled = prefs.enabled;
+                if (persist) {
+                    try {
+                        localStorage.setItem(STORAGE_KEY_ENABLED, this.enabled ? 'true' : 'false');
+                    } catch (e) {}
+                }
+            }
+
+            if (this.masterGain && this.audioCtx) {
+                const targetGain = this.enabled ? this.volume : 0;
+                try {
+                    this.masterGain.gain.cancelScheduledValues(this.audioCtx.currentTime);
+                    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, this.audioCtx.currentTime);
+                    this.masterGain.gain.setTargetAtTime(targetGain, this.audioCtx.currentTime, 0.02);
+                } catch (e) {}
+            }
+
+            if (!this.enabled) {
+                this.stopAll();
+            }
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('kitob-sound-preference-changed', {
+                    detail: {
+                        enabled: this.enabled,
+                        volume: this.volume,
+                        percentage: Math.round(this.volume * 100),
+                        previousVolume: this.lastNonZeroVolume
+                    }
+                }));
+            }
+        }
+
+        setVolume(val, persist = true, autoEnable = true) {
             const num = Math.max(0, Math.min(1, parseFloat(val) || 0));
             this.volume = num;
 
             if (this.volume > 0.001) {
                 this.lastNonZeroVolume = this.volume;
-                if (!this.enabled) {
+                if (!this.enabled && autoEnable) {
                     this.enabled = true;
                     if (persist) {
                         try {

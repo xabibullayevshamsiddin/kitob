@@ -22,7 +22,7 @@
         else window.dispatchEvent(new CustomEvent('toast', { detail: { type, message } }));
     };
     const swUrl = @json(asset('sw.js'));
-    const pingUrl = @json(route('pwa.ping'));
+    const pingUrl = @json(\Illuminate\Support\Facades\Route::has('pwa.ping') ? route('pwa.ping') : url('/ping'));
     const offlinePageUrl = @json(asset('offline/index.html'));
     if ('serviceWorker' in navigator) {
         if (enabled) {

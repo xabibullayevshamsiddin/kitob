@@ -16,8 +16,12 @@ class BookAssistant
         protected Retriever $retriever,
         protected RelevanceGate $relevanceGate,
         protected PromptBuilder $promptBuilder,
-        protected ProviderManager $providers
+        protected ProviderManager $providers,
+        protected ?ConversationRouter $router = null,
+        protected ?ConversationResponder $responder = null
     ) {
+        $this->router = $router ?? app(ConversationRouter::class);
+        $this->responder = $responder ?? app(ConversationResponder::class);
     }
 
     /**

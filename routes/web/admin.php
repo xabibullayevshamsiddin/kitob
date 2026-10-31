@@ -533,6 +533,18 @@ Route::prefix('admin')
     Route::post('/shop/settings', [\App\Http\Controllers\Admin\ShopController::class, 'updateSettings'])->name('shop.settings.update');
     Route::post('/shop/refund', [\App\Http\Controllers\Admin\ShopController::class, 'refundUserItem'])->name('shop.refund');
 
+    // ── Karta orqali to'lovlar (chek tekshiruvi) ──
+    Route::get('/topups', [\App\Http\Controllers\Admin\TopupController::class, 'index'])->name('topups.index');
+    Route::get('/topups/settings', [\App\Http\Controllers\Admin\TopupController::class, 'settings'])->name('topups.settings');
+    Route::post('/topups/settings', [\App\Http\Controllers\Admin\TopupController::class, 'updateSettings'])->name('topups.settings.update');
+    Route::get('/topups/{topup}', [\App\Http\Controllers\Admin\TopupController::class, 'show'])->name('topups.show');
+    Route::get('/topups/{topup}/receipt', [\App\Http\Controllers\Admin\TopupController::class, 'receipt'])->name('topups.receipt');
+    Route::post('/topups/{topup}/approve', [\App\Http\Controllers\Admin\TopupController::class, 'approve'])->name('topups.approve');
+    Route::post('/topups/{topup}/reject', [\App\Http\Controllers\Admin\TopupController::class, 'reject'])->name('topups.reject');
+    Route::post('/topups/{topup}/reanalyze', [\App\Http\Controllers\Admin\TopupController::class, 'reanalyze'])
+        ->middleware('throttle:10,1')
+        ->name('topups.reanalyze');
+
     // ── Telegram Bot & Stars Boshqaruvi (Admin Telegram Management) ──
     Route::get('/telegram', [\App\Http\Controllers\Admin\TelegramAdminController::class, 'index'])->name('telegram.index');
     Route::post('/telegram/broadcast', [\App\Http\Controllers\Admin\TelegramAdminController::class, 'broadcast'])->name('telegram.broadcast');

@@ -54,7 +54,7 @@ class ReaderAnnotationController extends Controller
             'chapter_id' => ['required', 'integer', 'exists:book_chapters,id'],
             'position' => ['required', 'integer', 'min:0', 'max:10000000'],
             'selected_text' => ['nullable', 'string', 'max:5000'],
-            'color' => ['nullable', 'string', 'in:amber,emerald,sky,rose,purple'],
+            'color' => ['nullable', 'string', 'in:amber,emerald,sky,rose,purple,custom'],
             'note_text' => ['required', 'string', 'min:1', 'max:5000'],
         ]);
 

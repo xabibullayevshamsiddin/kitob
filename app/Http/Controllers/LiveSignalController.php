@@ -169,11 +169,18 @@ class LiveSignalController extends Controller
             : response()->json(['error' => 'Guruh efiriga ulanish uchun avval tizimga kiring.'], 401);
     }
 
-    /** Frontend host peer'lari "host_{userId}_{rand}" ko'rinishida; server peer'lari "server_{userId}". */
+    /** Frontend host peer'lari "host", "host:*", "host_{userId}_{rand}", "server_{userId}" va h.k. */
     protected function isHostPeerId(string $peerId): bool
     {
-        return $peerId === 'host'
-            || str_starts_with($peerId, 'host_')
-            || str_starts_with($peerId, 'server_');
+        $normalized = strtolower(trim($peerId));
+
+        return $normalized === 'host'
+            || $normalized === 'host:*'
+            || str_starts_with($normalized, 'host:')
+            || str_starts_with($normalized, 'host_')
+            || str_starts_with($normalized, 'host-')
+            || str_starts_with($normalized, 'server_')
+            || str_starts_with($normalized, 'server:')
+            || str_starts_with($normalized, 'server-');
     }
 }

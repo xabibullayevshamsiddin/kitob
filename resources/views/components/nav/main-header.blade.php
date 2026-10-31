@@ -407,7 +407,7 @@
                          x-transition:leave="ks-menu-blur-leave-active"
                          x-transition:leave-start="ks-menu-blur-leave"
                          x-transition:leave-end="ks-menu-blur-leave-end"
-                         class="header-dropdown-menu absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
+                         class="header-dropdown-menu absolute right-0 mt-2 w-80 sm:w-84 min-w-[280px] max-w-[calc(100vw-1.5rem)] bg-ink-800 border border-ink-border rounded-panel shadow-popover z-50 overflow-hidden">
 
                         {{-- User Profile Header --}}
                         <div class="px-4 py-3.5 border-b border-ink-border bg-ink-950/30">
@@ -415,7 +415,7 @@
                                 <img src="{{ auth()->user()->avatar_url }}" class="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-ink-border/80" alt="{{ auth()->user()->name }}">
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-1.5 flex-wrap">
-                                        <p class="font-display text-[15px] font-semibold text-paper truncate leading-snug" title="{{ auth()->user()->name }}">{{ auth()->user()->name }}</p>
+                                        <p class="font-display text-[15px] font-semibold text-paper truncate leading-snug max-w-[140px] sm:max-w-[170px]" title="{{ auth()->user()->name }}">{{ auth()->user()->name }}</p>
                                         @if(auth()->user()->hasRole('admin'))
                                             <span class="ks-badge shrink-0 bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold !text-[9px] !px-1.5 !py-0.5">Admin</span>
                                         @elseif(auth()->user()->hasRole('teacher'))
@@ -425,14 +425,14 @@
                                     <p class="text-[11px] font-mono text-mist truncate mt-0.5">{{ '@' . auth()->user()->username }}</p>
                                     @if($headerTitle = auth()->user()->equipped_title)
                                         <div class="mt-1.5">
-                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold whitespace-nowrap shadow-sm"
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold whitespace-nowrap shadow-sm max-w-full truncate"
                                                   style="background-color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}25; color: {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}; border: 1px solid {{ $headerTitle->payload['badge_color'] ?? '#00A8B5' }}50;">
                                                 {{ $headerTitle->name_text }}
                                             </span>
                                         </div>
                                     @endif
                                 </div>
-                                <span class="ks-badge shrink-0 bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 font-bold font-mono text-[10px] px-2 py-0.5" title="{{ auth()->user()->level_title }}">
+                                <span class="ks-badge shrink-0 bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 font-bold font-mono text-[10px] px-2 py-0.5 whitespace-nowrap" title="{{ auth()->user()->level_title }}">
                                     {{ auth()->user()->level_icon }} Lv.{{ auth()->user()->level }}
                                 </span>
                             </div>

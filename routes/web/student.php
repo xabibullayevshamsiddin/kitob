@@ -48,6 +48,10 @@ Route::middleware(['auth', 'onboarding.complete', 'role.student'])->group(functi
 Route::middleware(['auth'])->group(function () {
     // Shop (Tanga Do'koni)
     Route::get('/shop', ShopPage::class)->name('shop.index');
+    // Karta orqali tanga/ball sotib olish (chek + admin tasdig'i)
+    if (class_exists(\App\Http\Livewire\Shop\TopupPage::class)) {
+        Route::get('/shop/topup', \App\Http\Livewire\Shop\TopupPage::class)->name('topup.index');
+    }
 
     // Kitobni "Keyinroq o'qiyman" ro'yxatiga qo'shish / o'chirish (Toggle)
     Route::post('/books/{book}/toggle-save', function (\App\Models\Book $book) {
@@ -160,7 +164,7 @@ Route::middleware(['auth'])->group(function () {
         $book = \App\Models\Book::findOrFail($bookId);
         abort_unless($book->isViewableBy(request()->user()), 404);
         if ($book->pdf_path) {
-            return redirect()->route('books.pdf.read', $book->id);
+            return redirect()->route('books.flipbook', $book->id);
         }
         $firstChapter = $book->chapters()->first();
         if ($firstChapter) {

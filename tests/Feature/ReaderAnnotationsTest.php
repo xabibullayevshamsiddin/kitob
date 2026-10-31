@@ -82,6 +82,19 @@ class ReaderAnnotationsTest extends TestCase
             'note_text' => 'Bu fikrni keyin qayta ko‘raman.',
         ]);
 
+        $this->actingAs($user)
+            ->postJson(route('reader.notes.store'), [
+                'book_id' => $book->id,
+                'chapter_id' => $chapter->id,
+                'position' => 500,
+                'selected_text' => 'Maxsus marjon pushti belgilangan matn',
+                'color' => 'custom',
+                'note_text' => 'Belgilagich rangida saqlangan qayd.',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('note.color', 'custom')
+            ->assertJsonPath('note.selected_text', 'Maxsus marjon pushti belgilangan matn');
+
         $this->get(route('reader.show', ['book' => $book->id, 'chapter' => $chapter->id]))
             ->assertOk()
             ->assertSee('Xatcho‘p va qaydlar')

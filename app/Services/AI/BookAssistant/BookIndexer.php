@@ -40,11 +40,26 @@ class BookIndexer
 
         // Parallel yoki bir vaqtdagi indekslashdan himoyalovchi atomik qulf
         $lockKey = "ai_indexing_lock_{$book->id}";
+        $legacyLockKey = "ai_index_book_lock:{$book->id}";
+
+        if (Cache::has($legacyLockKey) || Cache::has("ai_index_book_lock_{$book->id}")) {
+            return [
+                'status'                  => 'busy',
+                'quality_score'           => (float) ($book->ai_text_quality ?? 0.0),
+                'pages_count'             => (int) ($book->pages()->count()),
+                'chunks_count'            => (int) ($book->chunks()->count()),
+                'embedded_new_count'      => 0,
+                'reused_embeddings_count' => 0,
+                'embedding_mode'          => 'none',
+                'error_message'           => 'Kitob ayni vaqtda boshqa jarayonda indekslanmoqda.',
+            ];
+        }
+
         $lock = Cache::lock($lockKey, (int) config('ai.queue.lock_seconds', 900));
 
         if (!$lock->get()) {
             return [
-                'status'                  => 'failed',
+                'status'                  => 'busy',
                 'quality_score'           => (float) ($book->ai_text_quality ?? 0.0),
                 'pages_count'             => (int) ($book->pages()->count()),
                 'chunks_count'            => (int) ($book->chunks()->count()),
@@ -206,7 +221,7 @@ class BookIndexer
 
         if (empty($plannedChunks) && $hasManualSummary) {
             $isPartialOnly = true;
-            $fullSummaryChunk = "Kitob: {$book->title}\nMuallif: {$book->author}\nJanr: {$book->genre}\nTavsifi va konspekti:\n" . $manualSummaryText;
+            $fullSummaryChunk = $manualSummaryText;
             $plannedChunks[] = [
                 'chapter_id'   => null,
                 'page_start'   => 1,

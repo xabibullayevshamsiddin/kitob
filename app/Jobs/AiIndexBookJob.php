@@ -35,15 +35,6 @@ class AiIndexBookJob implements ShouldQueue
             return;
         }
 
-        // Parallel indekslashdan himoya qilish uchun atomik qulf (Lock)
-        $lockKey = "ai_indexing_lock_{$this->bookId}";
-        $lock = Cache::lock($lockKey, 900);
-
-        if (!$lock->get()) {
-            Log::warning("Kitob #{$this->bookId} allaqachon boshqa jarayonda indekslanmoqda.");
-            return;
-        }
-
         $progressKey = "ai_indexing_progress_{$this->bookId}";
         Cache::put($progressKey, [
             'status'     => 'indexing',
@@ -66,6 +57,11 @@ class AiIndexBookJob implements ShouldQueue
                     'updated_at' => now()->toIso8601String(),
                 ], 900);
             });
+
+            if (($result['status'] ?? null) === 'busy') {
+                Log::warning("Kitob #{$this->bookId} allaqachon boshqa jarayonda indekslanmoqda.");
+                return;
+            }
 
             Cache::put("ai_indexing_result_{$this->bookId}", $result, 3600);
             Cache::put($progressKey, [
@@ -96,8 +92,6 @@ class AiIndexBookJob implements ShouldQueue
             ], 900);
 
             throw $e;
-        } finally {
-            $lock->release();
         }
     }
 }

@@ -99,6 +99,18 @@
                         </div>
                     </div>
                 </button>
+
+                {{-- Karta orqali sotib olish --}}
+                @if($cardTopupVisible)
+                    <a href="{{ route('topup.index') }}"
+                       class="sm:col-span-2 md:col-span-1 flex items-center justify-center gap-2 px-5 py-3 rounded-card bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-colors whitespace-nowrap">
+                        <span aria-hidden="true">💳</span>
+                        <span>Sotib olish</span>
+                        @unless($cardTopupEnabled)
+                            <span class="px-1.5 py-0.5 rounded-full bg-slate-950/15 text-[10px] font-mono uppercase">o'chiq</span>
+                        @endunless
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -118,6 +130,14 @@
                 ['id' => 'wallet',     'label' => trans('shop.tabs.wallet'),     'icon' => 'history'],
             ];
         @endphp
+
+        @if($cardTopupVisible)
+            <a href="{{ route('topup.index') }}"
+               class="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-btn text-xs sm:text-sm whitespace-nowrap shrink-0 border border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 font-semibold transition-colors">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                <span>Sotib olish</span>
+            </a>
+        @endif
 
         @foreach($tabs as $tab)
             @php $isActive = ($activeTab === $tab['id']); @endphp
@@ -779,6 +799,20 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Karta orqali tanga/ball sotib olish --}}
+            @if($cardTopupEnabled)
+                <a href="{{ route('topup.index') }}" class="flex items-center justify-between gap-4 p-5 sm:p-6 rounded-panel border border-amber-500/30 bg-ink-900/80 hover:border-amber-500/50 transition-colors group">
+                    <span class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-lg">💳</span>
+                        <span>
+                            <span class="block font-serif font-bold text-lg text-paper">Karta orqali tanga va ball sotib olish</span>
+                            <span class="block text-xs text-stone-600 dark:text-mist">Uzcard / Humo kartaga o'tkazing, chekni yuklang — admin tasdiqlagach hisobga tushadi</span>
+                        </span>
+                    </span>
+                    <span class="shrink-0 text-sm font-bold text-amber-700 dark:text-amber-300 group-hover:translate-x-0.5 transition-transform">Sotib olish →</span>
+                </a>
+            @endif
 
             {{-- Telegram Stars Tanga To'plamlari --}}
             <div class="p-5 sm:p-6 rounded-panel border border-ink-border bg-ink-900/80 space-y-4">
