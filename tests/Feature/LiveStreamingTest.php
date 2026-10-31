@@ -500,4 +500,48 @@ class LiveStreamingTest extends TestCase
         $response->assertSee('Chatni yopish');
         $response->assertSee('Obuna bo‘lish');
     }
+
+    public function test_live_index_filters_and_sorts_by_viewers_and_likes(): void
+    {
+        $host = $this->makeUser('sort_host');
+
+        $eventA = $this->makeLiveEvent($host, 'Stream Alpha (Kop Laykli)');
+        \Illuminate\Support\Facades\DB::table('live_events')->where('id', $eventA->id)->update([
+            'status'        => LiveEvent::STATUS_LIVE,
+            'likes_count'   => 150,
+            'viewers_count' => 10,
+            'created_at'    => now()->subMinutes(10),
+        ]);
+
+        $eventB = $this->makeLiveEvent($host, 'Stream Beta (Kop Odamli)');
+        \Illuminate\Support\Facades\DB::table('live_events')->where('id', $eventB->id)->update([
+            'status'        => LiveEvent::STATUS_LIVE,
+            'likes_count'   => 20,
+            'viewers_count' => 500,
+            'created_at'    => now()->subMinutes(5),
+        ]);
+
+        $eventC = $this->makeLiveEvent($host, 'Stream Gamma (Eng Yangi)');
+        \Illuminate\Support\Facades\DB::table('live_events')->where('id', $eventC->id)->update([
+            'status'        => LiveEvent::STATUS_LIVE,
+            'likes_count'   => 5,
+            'viewers_count' => 2,
+            'created_at'    => now(),
+        ]);
+
+        // 1. Standart (newest): Stream Gamma birinchi chiqishi kerak
+        \Livewire\Livewire::test(\App\Http\Livewire\Live\LiveIndex::class)
+            ->set('sortBy', 'newest')
+            ->assertSeeInOrder(['Stream Gamma', 'Stream Beta', 'Stream Alpha']);
+
+        // 2. Sort by viewers: Stream Beta (500 tomoshabin) birinchi chiqishi kerak
+        \Livewire\Livewire::test(\App\Http\Livewire\Live\LiveIndex::class)
+            ->set('sortBy', 'viewers')
+            ->assertSeeInOrder(['Stream Beta', 'Stream Alpha', 'Stream Gamma']);
+
+        // 3. Sort by likes: Stream Alpha (150 like) birinchi chiqishi kerak
+        \Livewire\Livewire::test(\App\Http\Livewire\Live\LiveIndex::class)
+            ->set('sortBy', 'likes')
+            ->assertSeeInOrder(['Stream Alpha', 'Stream Beta', 'Stream Gamma']);
+    }
 }

@@ -36,13 +36,15 @@ class LiveEvent extends Model
         'is_recording',
         'replay_url',
         'likes_count',
+        'viewers_count',
     ];
 
     protected $casts = [
-        'scheduled_at' => 'datetime',
-        'started_at'   => 'datetime',
-        'is_recording' => 'boolean',
-        'likes_count'  => 'integer',
+        'scheduled_at'  => 'datetime',
+        'started_at'    => 'datetime',
+        'is_recording'  => 'boolean',
+        'likes_count'   => 'integer',
+        'viewers_count' => 'integer',
     ];
 
     // -------------------------------------------------------------------------
@@ -90,6 +92,10 @@ class LiveEvent extends Model
             return (int) $cached;
         }
 
+        if (isset($this->attributes['viewers_count']) && (int) $this->attributes['viewers_count'] > 0) {
+            return (int) $this->attributes['viewers_count'];
+        }
+
         $signal = \App\Models\LiveSignal::where('live_event_id', $this->id)
             ->where('type', 'viewer-count')
             ->where('created_at', '>', now()->subSeconds(30))
@@ -98,10 +104,14 @@ class LiveEvent extends Model
 
         if ($signal) {
             $decoded = is_array($signal) ? $signal : json_decode($signal, true);
-            return (int) ($decoded['count'] ?? 0);
+            $cnt = (int) ($decoded['count'] ?? 0);
+            if ($cnt > 0) {
+                \Illuminate\Support\Facades\Cache::put("live_event_{$this->id}_viewers", $cnt, 30);
+            }
+            return $cnt;
         }
 
-        return 0;
+        return (int) ($this->attributes['viewers_count'] ?? 0);
     }
 
     // -------------------------------------------------------------------------

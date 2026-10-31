@@ -64,7 +64,11 @@ class LiveSignalController extends Controller
                 ? $validated['payload']
                 : json_decode($validated['payload'], true);
             if (isset($decodedPayload['count'])) {
-                \Illuminate\Support\Facades\Cache::put("live_event_{$event->id}_viewers", (int) $decodedPayload['count'], 30);
+                $count = max(0, (int) $decodedPayload['count']);
+                \Illuminate\Support\Facades\Cache::put("live_event_{$event->id}_viewers", $count, 30);
+                if (\Illuminate\Support\Facades\Schema::hasColumn('live_events', 'viewers_count')) {
+                    $event->updateQuietly(['viewers_count' => $count]);
+                }
             }
         }
 

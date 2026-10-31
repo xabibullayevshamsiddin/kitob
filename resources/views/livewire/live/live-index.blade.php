@@ -190,11 +190,38 @@
             </div>
         </div>
 
-        <!-- 2-qator: Qo'shimcha filtrlar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-ink-border text-xs font-mono">
-            <div class="flex flex-wrap items-center gap-3">
+        <!-- 2-qator: Qo'shimcha filtrlar va Saralash (Sort By) -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-3 border-t border-ink-border text-xs font-mono">
+            <div class="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                <!-- Saralash (Quick Sort Tabs / Pills) -->
                 <div class="flex items-center gap-1.5">
-                    <span class="text-mist">{{ __('site.live.book_filter') }}</span>
+                    <span class="text-mist text-[11px] shrink-0">{{ __('site.live.sort_label') }}</span>
+                    <div class="inline-flex items-center gap-1 p-0.5 bg-ink-950/90 border border-ink-border rounded-btn overflow-x-auto no-scrollbar">
+                        <button type="button" wire:click="setSortBy('newest')"
+                                class="px-2.5 py-1 rounded-btn text-[11px] font-medium transition-all whitespace-nowrap {{ $sortBy === 'newest' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 font-bold border border-amber-500/30 shadow-xs' : 'text-mist hover:text-paper' }}"
+                                title="{{ __('site.live.sort_newest') }}">
+                            {{ __('site.live.sort_newest') }}
+                        </button>
+                        <button type="button" wire:click="setSortBy('viewers')"
+                                class="px-2.5 py-1 rounded-btn text-[11px] font-medium transition-all whitespace-nowrap {{ $sortBy === 'viewers' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 font-bold border border-amber-500/30 shadow-xs' : 'text-mist hover:text-paper' }}"
+                                title="{{ __('site.live.sort_viewers') }}">
+                            {{ __('site.live.sort_viewers') }}
+                        </button>
+                        <button type="button" wire:click="setSortBy('likes')"
+                                class="px-2.5 py-1 rounded-btn text-[11px] font-medium transition-all whitespace-nowrap {{ $sortBy === 'likes' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-300 font-bold border border-rose-500/30 shadow-xs' : 'text-mist hover:text-paper' }}"
+                                title="{{ __('site.live.sort_likes') }}">
+                            {{ __('site.live.sort_likes') }}
+                        </button>
+                        <button type="button" wire:click="setSortBy('scheduled')"
+                                class="px-2.5 py-1 rounded-btn text-[11px] font-medium transition-all whitespace-nowrap {{ $sortBy === 'scheduled' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 font-bold border border-cyan-500/30 shadow-xs' : 'text-mist hover:text-paper' }}"
+                                title="{{ __('site.live.sort_scheduled') }}">
+                            {{ __('site.live.sort_scheduled') }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <span class="text-mist text-[11px]">{{ __('site.live.book_filter') }}</span>
                     <select wire:model="bookFilter"
                         class="px-2.5 py-1 bg-ink-950/80 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none">
                         <option value="">{{ __('site.live.book_filter_all') }}</option>
@@ -205,7 +232,7 @@
                 </div>
 
                 <div class="flex items-center gap-1.5">
-                    <span class="text-mist">{{ __('site.live.perm_filter') }}</span>
+                    <span class="text-mist text-[11px]">{{ __('site.live.perm_filter') }}</span>
                     <select wire:model="permissionFilter"
                         class="px-2.5 py-1 bg-ink-950/80 border border-ink-border rounded-btn text-xs text-paper focus:border-amber-400 focus:outline-none">
                         <option value="all">{{ __('site.live.perm_filter_all') }}</option>
@@ -216,11 +243,13 @@
             </div>
 
             @if($hasActiveFilters)
-                <button type="button" wire:click="resetFilters"
-                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-btn bg-ink-800 hover:bg-ink-700/60 border border-ink-border text-amber-400 text-xs transition-all">
-                    <span>{{ __('site.live.clear_filters') }}</span>
-                    <span>✕</span>
-                </button>
+                <div class="flex items-center gap-2 shrink-0 self-start lg:self-auto">
+                    <button type="button" wire:click="resetFilters"
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-btn bg-ink-800 hover:bg-ink-700/60 border border-ink-border text-amber-400 hover:text-amber-300 text-xs transition-all">
+                        <span>{{ __('site.live.clear_filters') }}</span>
+                        <span class="text-[11px]">✕</span>
+                    </button>
+                </div>
             @endif
         </div>
     </div>
@@ -259,7 +288,7 @@
                     <div class="flex items-center gap-2">
                         @if($event->is_live)
                             {{-- Jonli tomoshabinlar soni --}}
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-bold"
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-pill {{ $sortBy === 'viewers' ? 'bg-amber-500/20 border-amber-400 text-amber-500 dark:text-amber-300 ring-1 ring-amber-400/40' : 'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400' }} border font-mono text-[11px] font-bold transition-all"
                                 title="Jonli tomoshabinlar soni">
                                 <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -270,7 +299,7 @@
                         @endif
 
                         {{-- Jami like'lar — efir ro'yxatida ham ko'rinadi --}}
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-300 font-mono text-[11px] font-bold"
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-pill {{ $sortBy === 'likes' ? 'bg-rose-500/20 border-rose-400 text-rose-500 dark:text-rose-300 ring-1 ring-rose-400/40' : 'bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-300' }} border font-mono text-[11px] font-bold transition-all"
                             title="{{ __('site.live.likes_total_title') }}">
                             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             <span wire:key="likes-count-{{ $event->id }}">{{ (int) ($event->likes_count ?? 0) }}</span>

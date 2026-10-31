@@ -27,12 +27,14 @@ class LiveIndex extends Component
     public string $statusFilter = 'all'; // 'all', 'live', 'scheduled'
     public string $bookFilter = '';
     public string $permissionFilter = 'all'; // 'all', 'chat_only', 'view_only'
+    public string $sortBy = 'newest'; // 'newest', 'viewers', 'likes', 'scheduled'
 
     protected $queryString = [
         'search'           => ['except' => ''],
         'statusFilter'     => ['except' => 'all'],
         'bookFilter'       => ['except' => ''],
         'permissionFilter' => ['except' => 'all'],
+        'sortBy'           => ['except' => 'newest'],
     ];
 
     public function mount(): void
@@ -64,9 +66,20 @@ class LiveIndex extends Component
         $this->resetPage();
     }
 
+    public function updatedSortBy(): void
+    {
+        $this->resetPage();
+    }
+
     public function setStatusFilter(string $status): void
     {
         $this->statusFilter = $status;
+        $this->resetPage();
+    }
+
+    public function setSortBy(string $sort): void
+    {
+        $this->sortBy = in_array($sort, ['newest', 'viewers', 'likes', 'scheduled'], true) ? $sort : 'newest';
         $this->resetPage();
     }
 
@@ -76,6 +89,7 @@ class LiveIndex extends Component
         $this->statusFilter = 'all';
         $this->bookFilter = '';
         $this->permissionFilter = 'all';
+        $this->sortBy = 'newest';
         $this->resetPage();
     }
 
@@ -334,10 +348,51 @@ class LiveIndex extends Component
             });
         }
 
-        $upcoming = $query
-            ->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
-            ->orderByDesc('created_at')
-            ->paginate(6);
+        // Faol efirlarning live tomoshabinlar sonini keshdan sinxronlash (mavjud bo'lsa)
+        if (\Illuminate\Support\Facades\Schema::hasColumn('live_events', 'viewers_count')) {
+            $liveEvents = LiveEvent::where('status', LiveEvent::STATUS_LIVE)->get();
+            foreach ($liveEvents as $liveEv) {
+                $cachedViewers = \Illuminate\Support\Facades\Cache::get("live_event_{$liveEv->id}_viewers");
+                if ($cachedViewers !== null && (int) $cachedViewers !== (int) $liveEv->viewers_count) {
+                    $liveEv->updateQuietly(['viewers_count' => (int) $cachedViewers]);
+                }
+            }
+        }
+
+        $hasViewersCol = \Illuminate\Support\Facades\Schema::hasColumn('live_events', 'viewers_count');
+
+        if ($this->sortBy === 'viewers') {
+            // Eng ko'p tomoshabin (Eng gavjum efirlar)
+            if ($hasViewersCol) {
+                $query->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+                      ->orderByDesc('viewers_count')
+                      ->orderByDesc('likes_count')
+                      ->orderByDesc('created_at');
+            } else {
+                $query->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+                      ->orderByDesc('likes_count')
+                      ->orderByDesc('created_at');
+            }
+        } elseif ($this->sortBy === 'likes') {
+            // Eng ko'p layk to'plaganlar
+            $query->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+                  ->orderByDesc('likes_count');
+            if ($hasViewersCol) {
+                $query->orderByDesc('viewers_count');
+            }
+            $query->orderByDesc('created_at');
+        } elseif ($this->sortBy === 'scheduled') {
+            // Rejalashtirilgan / yaqinda boshlanadigan vaqti bo'yicha
+            $query->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+                  ->orderBy('scheduled_at')
+                  ->orderByDesc('created_at');
+        } else {
+            // 'newest' (standart): Eng yangi boshlangan yoki yaratilgan efirlar
+            $query->orderByRaw("CASE WHEN status = 'live' THEN 0 ELSE 1 END")
+                  ->orderByDesc('created_at');
+        }
+
+        $upcoming = $query->paginate(6);
 
         $myQuestions = LiveQuestion::where('user_id', Auth::id())
             ->inPriorityOrder()
@@ -353,7 +408,7 @@ class LiveIndex extends Component
             'totalActiveCount'  => $totalActiveCount,
             'liveCount'         => $liveCount,
             'scheduledCount'    => $scheduledCount,
-            'hasActiveFilters'  => ($this->search !== '' || $this->statusFilter !== 'all' || $this->bookFilter !== '' || $this->permissionFilter !== 'all'),
+            'hasActiveFilters'  => ($this->search !== '' || $this->statusFilter !== 'all' || $this->bookFilter !== '' || $this->permissionFilter !== 'all' || $this->sortBy !== 'newest'),
         ])->layout('layouts.app', ['title' => 'Jonli efirlar']);
     }
 }
